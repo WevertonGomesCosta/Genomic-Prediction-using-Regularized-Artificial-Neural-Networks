@@ -1,0 +1,105 @@
+library(abind)
+library(flextable)
+library(MASS)
+library(ANN2)
+library(NeuralNetTools)
+library(neuralnet)
+
+rm(list=ls())
+
+# Lendo o Banco de Dados
+data <- read.table("C:\\Users\\T.i\\Desktop\\IC\\Dados.txt",header = TRUE, sep = "\t", dec = ",")
+
+# Escalonando o Banco de Dados
+maxs <- apply(data, 2, max) # fornece o m?ximo por coluna (2)
+mins <- apply(data, 2, min) # fornece o m?nimo por coluna (2)
+scaled <- as.data.frame(scale(data, center = mins, scale = maxs - mins))
+
+# Definindo Variaveis para Entrada da Rede
+iterations <- c(20,30,40,50,60,100,300,500,1000)
+i_0 <- 20 # n?mero de neur?nios
+i_1 <- 20
+Results <- list()
+m <- 1
+n <- 0 #numero de iterações
+p <- 1
+
+index <- sample(1:nrow(data), round(0.80 * nrow(data)))
+train_x     <- scaled[index,5:3828]
+train_y     <- scaled[index,4]
+test_x      <- scaled[-index,5:3828]
+test_y      <- scaled[-index,4]
+
+
+# As Redes MLP para predi??o s?o escolhidas pelo menor EQM e maior R2
+for (k in 1:length(iterations)){
+  iter <- iterations[m]
+  
+  R <- matrix(NA, i_0*i_1*length(iterations), 8) #matriz de todos os resultados
+  colnames(R) <- c("Itera??es","N_Neuronios_Cam1", "N_Neuronios_Cam2", "R_Train",
+                   "R_test", "Time", "EQM_Train", "EQM_test")
+  R[,1] <- c(rep(20, times=i_0*i_1), rep(30, times=i_0*i_1),rep(40, times=i_0*i_1),
+             rep(50, times=i_0*i_1),rep(60, times=i_0*i_1),rep(100, times=i_0*i_1),
+             rep(300, times=i_0*i_1), rep(500, times=i_0*i_1),rep(1000, times=i_0*i_1))
+  
+  
+    #Rede Neural
+    for(i in 1:i_0) {
+      for(s in 1:i_1) {
+        n <- n + 1
+        a <- Sys.time()
+        set.seed(2021)
+        NN <- neuralnetwork(X = train_x, y = train_y, 
+                            hidden.layers = c(i,s),
+                            optim.type = 'sgd', 
+                            learn.rates = 0.01, 
+                            val.prop = 0,
+                            regression = TRUE,
+                            loss.type = 'squared',
+                            n.epochs = iter)
+                            
+        
+        b <- Sys.time()
+        predictions.test <- predict(NN, test_x)
+        predictions.train <- predict(NN, train_x)
+        predictions.test <- as.numeric(predictions.test$predictions)
+        predictions.train <- as.numeric(predictions.train$predictions)
+        
+        EQM_train <- sum((train_y-c(predictions.train))^2)
+        EQM_test <- sum((c(test_y)-c(predictions.test))^2)
+        
+        
+        R_train <- cor(train_y, c(predictions.train))
+        R_test <- cor(test_y, predictions.test) #correla??o temporaria
+        
+        if (p == 1) { # Escolhe a primeira rede como refer?ncia
+          NN.menor.EQM_test = NN
+          NN.maior.R_test = NN
+          menor.EQM_test = EQM_test
+          maior.R_test = R_test
+        }
+        
+        if (EQM_test < menor.EQM_test) {
+          NN.menor.EQM_test = NN
+          menor.EQM_test = EQM_test
+        }
+        
+        if (R_test > maior.R_test) {
+          NN.maior.R_test = NN
+          maior.R_test = R_test
+        }
+        
+        R[n,2:8] <- c(i, s, R_train, R_test, b-a, EQM_train, EQM_test)
+        
+        p <- p + 1
+      
+      }
+    }
+  
+  Results[[m]] <- R
+  
+  m <- m + 1  
+}
+
+
+Resultados <- write.table(Results, row.names = FALSE, dec = ",", sep = ";", file = "C:\\Users\\T.i\\Desktop\\IC\\Dados\\Produtividade\\BM.csv")

@@ -1,0 +1,102 @@
+rm(list=ls())
+library(abind)
+library(flextable)
+library(MASS)
+library(ANN2)
+library(NeuralNetTools)
+library(neuralnet)
+
+
+# Lendo o Banco de Dados
+dados <- read.table("C:\\Users\\T.i\\Desktop\\IC\\Dados.txt",header = TRUE, sep = "\t", dec = ",")
+
+# Escalonando o Banco de Dados
+maxs <- apply(dados, 2, max) # fornece o m?ximo por coluna (2)
+mins <- apply(dados, 2, min) # fornece o m?nimo por coluna (2)
+scaled <- as.data.frame(scale(dados, center = mins, scale = maxs - mins))
+
+# Definindo Vari?veis para Entrada da Rede
+regularizacoes <- c(2,4,6,8,10,20)
+i_0 <- 20 # n?mero de neur?nios
+i_1 <- 20
+Results <- list()
+m <- 1
+n <- 0 #numero de regulariza??es
+p <- 1
+
+index <- sample(1:nrow(dados), round(0.75 * nrow(dados)))
+train_x     <- scaled[index,5:3828]
+train_y     <- scaled[index,3]
+test_x      <- scaled[-index,5:3828]
+test_y      <- scaled[-index,3]
+
+# As Redes MLP para predi??o s?o escolhidas pelo menor EQM e maior R2
+
+for (k in 1:length(regularizacoes)){
+  reg <- regularizacoes[m]
+  
+  
+  R <- matrix(NA,i_0*i_1*length(regularizacoes), 8) #matriz de todos os resultados
+  colnames(R) <- c("Regulariza??es", "N_Neuronios_Cam1", "N_Neuronios_Cam2", "R_Train",
+                   "R_test", "Time", "EQM_Train", "EQM_test")
+  R[,1] <- c(rep(2, times=i_0*i_1), rep(4, times=i_0*i_1),rep(6, times=i_0*i_1),
+             rep(8, times=i_0*i_1),rep(10, times=i_0*i_1),rep(20, times=i_0*i_1))
+  
+  #Rede Neural
+  for(i in 1:i_0) {
+    for(s in 1:i_1) {
+      n <- n + 1
+      a <- Sys.time()
+      set.seed(2021)
+      NN <- neuralnetwork(X = train_x, y = train_y, 
+                          hidden.layers = c(i,s),
+                          optim.type = 'rmsprop', 
+                          learn.rates = 0.01, 
+                          val.prop = 0,
+                          regression = TRUE,
+                          loss.type = 'squared',
+                          n.epochs = 50,
+                          L1 = reg)
+      
+      b <- Sys.time()
+      predictions <- predict(NN, test_x)
+      predictions2 <- predict(NN, train_x)
+      predictions <- as.numeric(predictions$predictions)
+      predictions2 <- as.numeric(predictions2$predictions)
+      
+      EQM_train <- sum((train_y-c(predictions2))^2)
+      EQM_test <- sum((c(test_y)-c(predictions))^2)
+      
+      
+      R_train <- cor(train_y, c(predictions2))
+      R_test <- cor(test_y, predictions) #correla??o temporaria
+      
+      if (p == 1) { # Escolhe a primeira rede como refer?ncia
+        NN.menor.EQM_test = NN
+        NN.maior.R_test = NN
+        menor.EQM_test = EQM_test
+        maior.R_test = R_test
+      }
+      
+      if (EQM_test < menor.EQM_test) {
+        NN.menor.EQM_test = NN
+        menor.EQM_test = EQM_test
+      }
+      
+      if (R_test > maior.R_test) {
+        NN.maior.R_test = NN
+        maior.R_test = R_test
+      }
+      
+      R[n,2:8] <- c(i, s, R_train, R_test, b-a, EQM_train, EQM_test)
+      
+    }
+    p <- p + 1
+  }
+  
+  Results[[m]] <- R
+  
+  m <- m + 1
+}
+
+Resultados <- write.table(Results, row.names = FALSE, dec = ",", sep = ";", file = "C:\\Users\\T.i\\Desktop\\IC\\Dados\\Produtividade\\cerc_reg_50.csv")

@@ -1,0 +1,103 @@
+library(RSNNS)
+library(tidyverse)
+library(abind)
+library(flextable)
+library(MASS)
+library(ANN2)
+library(NeuralNetTools)
+library(neuralnet)
+
+rm(list=ls())
+
+# Lendo o Banco de Dados
+dados <- Boston
+
+# Escalonando o Banco de Dados
+maxs <- apply(dados, 2, max) # fornece o m?ximo por coluna (2)
+mins <- apply(dados, 2, min) # fornece o m?nimo por coluna (2)
+scaled <- as.data.frame(scale(dados, center = mins, scale = maxs - mins))
+
+# Definindo Vari?veis para Entrada da Rede
+iterations <- c(50, 100, 500, 1000)
+i_0 <- 2 # n?mero de neur?nios
+i_1 <- 2
+p <- 5 # N?mero de folds
+Results <- list()
+m <- 1
+
+# As Redes MLP para predi??o s?o escolhidas pelo menor EQM e maior R2
+
+for (k in 1:length(iterations)){
+  iter <- iterations[m]
+  n <- 0 #numero de itera??es
+  
+  set.seed(2021)
+  set <- sample(1:100, replace = FALSE)
+  
+  R <- matrix(NA, p*i_0*i_1, 8) #matriz de todos os resultados
+  colnames(R) <- c("Fold", "N_Neuronios_Cam1", "N_Neuronios_Cam2", "R2_Train",
+                   "R2_Val", "Time", "EQM_Train", "EQM_Val")
+
+  R[,1] <- c(rep(1, times=(i_0*i_1)),rep(2, times=(i_0*i_1)),
+             rep(3, times=(i_0*i_1)),rep(4, times=(i_0*i_1)),rep(5, times=(i_0*i_1)))
+
+  
+
+  for(l in 1:p){
+    #Separar o conjunto de dados
+    fold <- set[(20*(l-1)+1):(20*(l))] 
+    dados_train <- scaled[-fold,]
+    dados_val <- scaled[fold,] 
+    
+  
+
+    #Rede Neural
+    for(i in 1:i_0) {
+      for(s in 1:i_1) {
+      n <- n + 1
+      a <- Sys.time()
+      set.seed(2021)
+      rna <- mlp(dados_train[,-14], dados_train[,14], 
+                 size=c(i,s), learnFunc = "Std_Backpropagation", 
+                 learnFuncParams = c(0.01,0), 
+                 maxit = iter, 
+                 outputActFunc = "Act_Identity",
+                 inputsTest = dados_val[,-14], 
+                 targetsTest = dados_val[,14])
+      b <- Sys.time()
+      predictions <- predict(rna, dados_val[,-14])
+      
+      EQM_train <- sum((dados_train[,14]-predict(rna, dados_train[,-14]))^2)
+      EQM_val <- sum((c(dados_val[,14])-c(predictions))^2)
+      
+      
+      R2_train <- cor(dados_train[,14], predict(rna,dados_train[,-14]))^2
+      R2_val <- cor(dados_val[,14], predictions)^2 #correla??o temporaria
+    
+
+      if (m == 1) { # Escolhe a primeira rede como refer?ncia
+        rna.menor.EQM_val = rna
+        rna.maior.R2_val = rna
+        menor.EQM_val = EQM_val
+        maior.R2_val = R2_val
+      }
+      
+      if (EQM_val < menor.EQM_val) {
+        rna.menor.EQM_val = rna
+        menor.EQM_val = EQM_val
+      }
+      
+      if (R2_val > maior.R2_val) {
+        NN.maior.R2_val = rna
+        maior.R2_val = R2_val
+      }
+      
+      R[n,2:8] <- c(i, s, R2_train, R2_val, b-a, EQM_train, EQM_val)
+      
+      }
+    }
+  }
+  Results[[m]] <- R
+  
+  m <- m + 1
+}
