@@ -649,15 +649,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef9c736e2dee90241607b4ec489aabaebad7ee9a3targetblankf9c736ea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree0ec25daeacc78b484efd7fccaf38ea35898aef49targetblank0ec25daa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f9c736e2dee90241607b4ec489aabaebad7ee9a3" target="_blank">f9c736e</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/0ec25daeacc78b484efd7fccaf38ea35898aef49" target="_blank">0ec25da</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef9c736e2dee90241607b4ec489aabaebad7ee9a3targetblankf9c736ea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree0ec25daeacc78b484efd7fccaf38ea35898aef49targetblank0ec25daa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -667,7 +667,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f9c736e2dee90241607b4ec489aabaebad7ee9a3" target="_blank">f9c736e</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/0ec25daeacc78b484efd7fccaf38ea35898aef49" target="_blank">0ec25da</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -684,7 +684,7 @@ were generated:
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
-    Ignored:    analysis/output/
+    Ignored:    .local/
     Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica (1).xlsx
     Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica.xlsx
     Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012
@@ -701,8 +701,6 @@ Ignored files:
     Ignored:    data/dados_reais/pheno_real.rds
     Ignored:    data/dados_reais/plants-13-01876-v2.pdf
     Ignored:    data/dados_reais/pos_geno_real.rds
-    Ignored:    logs/
-    Ignored:    output/checkpoints/
 
 </code></pre>
 <p>
@@ -747,6 +745,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/0ec25daeacc78b484efd7fccaf38ea35898aef49/analysis/simulated_data_gblup.Rmd" target="_blank">0ec25da</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-27
+</td>
+<td>
+refactor: organize canonical outputs and local runtime artifacts
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/e48bb5733e9fb96c645e18009d23d90dff7c897b/docs/simulated_data_gblup.html" target="_blank">e48bb57</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-27
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -807,114 +839,139 @@ Run the complete analysis from the project root with:</p>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a></span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">options</span>(<span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20260821</span><span class="dt">L</span></span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>N_ITERS_SOMMER <span class="ot">&lt;-</span> <span class="dv">20</span><span class="dt">L</span></span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>RUN_GBLUP <span class="ot">&lt;-</span> <span class="fu">identical</span>(<span class="fu">Sys.getenv</span>(<span class="st">&quot;RUN_GBLUP&quot;</span>, <span class="st">&quot;0&quot;</span>), <span class="st">&quot;1&quot;</span>)</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a></span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>DATA_FILE <span class="ot">&lt;-</span> <span class="st">&quot;output/preprocessed_simulated_common.rds&quot;</span></span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>CV_FILE <span class="ot">&lt;-</span> <span class="st">&quot;output/simulated_cv_design.rds&quot;</span></span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>DATA_AUDIT_FILE <span class="ot">&lt;-</span> <span class="st">&quot;output/simulated_audit_summary.csv&quot;</span></span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>CV_AUDIT_FILE <span class="ot">&lt;-</span> <span class="st">&quot;output/simulated_cv_design_audit.csv&quot;</span></span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a></span>
-<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>RESULTS_RDS <span class="ot">&lt;-</span> <span class="st">&quot;output/simulated_gblup_ade_results.rds&quot;</span></span>
-<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>PREDICTIONS_RDS <span class="ot">&lt;-</span> <span class="st">&quot;output/simulated_gblup_ade_predictions.rds&quot;</span></span>
-<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>RESULTS_CSV <span class="ot">&lt;-</span> <span class="st">&quot;output/simulated_gblup_ade_results.csv&quot;</span></span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>PREDICTIONS_CSV <span class="ot">&lt;-</span> <span class="st">&quot;output/simulated_gblup_ade_predictions.csv&quot;</span></span>
-<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>KERNEL_CSV <span class="ot">&lt;-</span> <span class="st">&quot;output/simulated_gblup_ade_kernel_summary.csv&quot;</span></span>
-<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>RUN_RDS <span class="ot">&lt;-</span> <span class="st">&quot;output/simulated_gblup_ade_run_metadata.rds&quot;</span></span>
-<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a></span>
-<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>safe_cor <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
-<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
-<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">sum</span>(ok) <span class="sc">&lt;</span> <span class="dv">3</span><span class="dt">L</span> <span class="sc">||</span> <span class="fu">sd</span>(pred[ok]) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">||</span> <span class="fu">sd</span>(obs[ok]) <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
-<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>  <span class="fu">cor</span>(pred[ok], obs[ok])</span>
-<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a>}</span>
-<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a></span>
-<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a>safe_rmse <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
-<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
-<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">any</span>(ok)) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
-<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a>  <span class="fu">sqrt</span>(<span class="fu">mean</span>((pred[ok] <span class="sc">-</span> obs[ok])<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a>}</span>
-<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a></span>
-<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a>safe_mae <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
-<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
-<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">any</span>(ok)) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
-<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">abs</span>(pred[ok] <span class="sc">-</span> obs[ok]))</span>
-<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>find_project_root <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">start =</span> <span class="fu">getwd</span>()) {</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  path <span class="ot">&lt;-</span> <span class="fu">normalizePath</span>(start, <span class="at">winslash =</span> <span class="st">&quot;/&quot;</span>, <span class="at">mustWork =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="cf">repeat</span> {</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="fu">file.path</span>(path, <span class="st">&quot;_workflowr.yml&quot;</span>))) {</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>      <span class="fu">return</span>(path)</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>    }</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>    parent <span class="ot">&lt;-</span> <span class="fu">dirname</span>(path)</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">identical</span>(parent, path)) {</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="st">&quot;Could not locate workflowr project root.&quot;</span>)</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>    }</span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>    path <span class="ot">&lt;-</span> parent</span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>  }</span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>}</span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>PROJECT_ROOT <span class="ot">&lt;-</span> <span class="fu">find_project_root</span>()</span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a>project_path <span class="ot">&lt;-</span> <span class="cf">function</span>(...) {</span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a>  <span class="fu">file.path</span>(PROJECT_ROOT, ...)</span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a>}</span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20260821</span><span class="dt">L</span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a>N_ITERS_SOMMER <span class="ot">&lt;-</span> <span class="dv">20</span><span class="dt">L</span></span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a>RUN_GBLUP <span class="ot">&lt;-</span> <span class="fu">identical</span>(<span class="fu">Sys.getenv</span>(<span class="st">&quot;RUN_GBLUP&quot;</span>, <span class="st">&quot;0&quot;</span>), <span class="st">&quot;1&quot;</span>)</span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a>DATA_FILE <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;audit&quot;</span>, <span class="st">&quot;preprocessed_simulated_common.rds&quot;</span>)</span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a>CV_FILE <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;validation&quot;</span>, <span class="st">&quot;simulated_cv_design.rds&quot;</span>)</span>
+<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a>DATA_AUDIT_FILE <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;audit&quot;</span>, <span class="st">&quot;simulated_audit_summary.csv&quot;</span>)</span>
+<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a>CV_AUDIT_FILE <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;validation&quot;</span>, <span class="st">&quot;simulated_cv_design_audit.csv&quot;</span>)</span>
 <span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a></span>
-<span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a>safe_bias <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
-<span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
-<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">any</span>(ok)) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
-<span id="cb2-47"><a href="#cb2-47" tabindex="-1"></a>  <span class="fu">mean</span>(pred[ok] <span class="sc">-</span> obs[ok])</span>
-<span id="cb2-48"><a href="#cb2-48" tabindex="-1"></a>}</span>
-<span id="cb2-49"><a href="#cb2-49" tabindex="-1"></a></span>
-<span id="cb2-50"><a href="#cb2-50" tabindex="-1"></a>safe_slope <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
-<span id="cb2-51"><a href="#cb2-51" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
-<span id="cb2-52"><a href="#cb2-52" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">sum</span>(ok) <span class="sc">&lt;</span> <span class="dv">3</span><span class="dt">L</span> <span class="sc">||</span> <span class="fu">sd</span>(pred[ok]) <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
-<span id="cb2-53"><a href="#cb2-53" tabindex="-1"></a>  <span class="fu">as.numeric</span>(<span class="fu">coef</span>(<span class="fu">lm</span>(obs[ok] <span class="sc">~</span> pred[ok]))[<span class="dv">2</span>])</span>
-<span id="cb2-54"><a href="#cb2-54" tabindex="-1"></a>}</span>
-<span id="cb2-55"><a href="#cb2-55" tabindex="-1"></a></span>
-<span id="cb2-56"><a href="#cb2-56" tabindex="-1"></a>safe_r2 <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
-<span id="cb2-57"><a href="#cb2-57" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
-<span id="cb2-58"><a href="#cb2-58" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">sum</span>(ok) <span class="sc">&lt;</span> <span class="dv">2</span><span class="dt">L</span>) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
-<span id="cb2-59"><a href="#cb2-59" tabindex="-1"></a>  den <span class="ot">&lt;-</span> <span class="fu">sum</span>((obs[ok] <span class="sc">-</span> <span class="fu">mean</span>(obs[ok]))<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb2-60"><a href="#cb2-60" tabindex="-1"></a>  <span class="cf">if</span> (den <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
-<span id="cb2-61"><a href="#cb2-61" tabindex="-1"></a>  <span class="dv">1</span> <span class="sc">-</span> <span class="fu">sum</span>((obs[ok] <span class="sc">-</span> pred[ok])<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> den</span>
-<span id="cb2-62"><a href="#cb2-62" tabindex="-1"></a>}</span>
-<span id="cb2-63"><a href="#cb2-63" tabindex="-1"></a></span>
-<span id="cb2-64"><a href="#cb2-64" tabindex="-1"></a>metrics <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs, prefix) {</span>
-<span id="cb2-65"><a href="#cb2-65" tabindex="-1"></a>  z <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb2-66"><a href="#cb2-66" tabindex="-1"></a>    <span class="fu">safe_cor</span>(pred, obs),</span>
-<span id="cb2-67"><a href="#cb2-67" tabindex="-1"></a>    <span class="fu">safe_rmse</span>(pred, obs),</span>
-<span id="cb2-68"><a href="#cb2-68" tabindex="-1"></a>    <span class="fu">safe_mae</span>(pred, obs),</span>
-<span id="cb2-69"><a href="#cb2-69" tabindex="-1"></a>    <span class="fu">safe_bias</span>(pred, obs),</span>
-<span id="cb2-70"><a href="#cb2-70" tabindex="-1"></a>    <span class="fu">safe_slope</span>(pred, obs),</span>
-<span id="cb2-71"><a href="#cb2-71" tabindex="-1"></a>    <span class="fu">safe_r2</span>(pred, obs)</span>
-<span id="cb2-72"><a href="#cb2-72" tabindex="-1"></a>  )</span>
-<span id="cb2-73"><a href="#cb2-73" tabindex="-1"></a>  <span class="fu">names</span>(z) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(</span>
-<span id="cb2-74"><a href="#cb2-74" tabindex="-1"></a>    prefix,</span>
-<span id="cb2-75"><a href="#cb2-75" tabindex="-1"></a>    <span class="fu">c</span>(<span class="st">&quot;_Correlation&quot;</span>, <span class="st">&quot;_RMSE&quot;</span>, <span class="st">&quot;_MAE&quot;</span>, <span class="st">&quot;_Bias&quot;</span>, <span class="st">&quot;_Slope&quot;</span>, <span class="st">&quot;_R2&quot;</span>)</span>
-<span id="cb2-76"><a href="#cb2-76" tabindex="-1"></a>  )</span>
-<span id="cb2-77"><a href="#cb2-77" tabindex="-1"></a>  z</span>
-<span id="cb2-78"><a href="#cb2-78" tabindex="-1"></a>}</span>
-<span id="cb2-79"><a href="#cb2-79" tabindex="-1"></a></span>
-<span id="cb2-80"><a href="#cb2-80" tabindex="-1"></a>extract_u <span class="ot">&lt;-</span> <span class="cf">function</span>(fit, dat, factor_name, exact_name) {</span>
-<span id="cb2-81"><a href="#cb2-81" tabindex="-1"></a>  unames <span class="ot">&lt;-</span> <span class="fu">names</span>(fit<span class="sc">$</span>uList)</span>
-<span id="cb2-82"><a href="#cb2-82" tabindex="-1"></a>  <span class="cf">if</span> (exact_name <span class="sc">%in%</span> unames) {</span>
-<span id="cb2-83"><a href="#cb2-83" tabindex="-1"></a>    nm <span class="ot">&lt;-</span> exact_name</span>
-<span id="cb2-84"><a href="#cb2-84" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb2-85"><a href="#cb2-85" tabindex="-1"></a>    token <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;ism(&quot;</span>, factor_name, <span class="st">&quot;)&quot;</span>)</span>
-<span id="cb2-86"><a href="#cb2-86" tabindex="-1"></a>    hit <span class="ot">&lt;-</span> <span class="fu">grep</span>(token, unames, <span class="at">fixed =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb2-87"><a href="#cb2-87" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">length</span>(hit) <span class="sc">!=</span> <span class="dv">1</span><span class="dt">L</span>) {</span>
-<span id="cb2-88"><a href="#cb2-88" tabindex="-1"></a>      <span class="fu">stop</span>(</span>
-<span id="cb2-89"><a href="#cb2-89" tabindex="-1"></a>        <span class="fu">paste</span>(</span>
-<span id="cb2-90"><a href="#cb2-90" tabindex="-1"></a>          <span class="st">&quot;Could not identify random component for&quot;</span>, factor_name,</span>
-<span id="cb2-91"><a href="#cb2-91" tabindex="-1"></a>          <span class="st">&quot;. Available:&quot;</span>, <span class="fu">paste</span>(unames, <span class="at">collapse =</span> <span class="st">&quot; | &quot;</span>)</span>
-<span id="cb2-92"><a href="#cb2-92" tabindex="-1"></a>        )</span>
-<span id="cb2-93"><a href="#cb2-93" tabindex="-1"></a>      )</span>
-<span id="cb2-94"><a href="#cb2-94" tabindex="-1"></a>    }</span>
-<span id="cb2-95"><a href="#cb2-95" tabindex="-1"></a>    nm <span class="ot">&lt;-</span> unames[hit]</span>
-<span id="cb2-96"><a href="#cb2-96" tabindex="-1"></a>  }</span>
-<span id="cb2-97"><a href="#cb2-97" tabindex="-1"></a></span>
-<span id="cb2-98"><a href="#cb2-98" tabindex="-1"></a>  u <span class="ot">&lt;-</span> fit<span class="sc">$</span>uList[[nm]]</span>
-<span id="cb2-99"><a href="#cb2-99" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.data.frame</span>(u)) u <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(u)</span>
-<span id="cb2-100"><a href="#cb2-100" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.vector</span>(u)) u <span class="ot">&lt;-</span> <span class="fu">matrix</span>(u, <span class="at">ncol =</span> <span class="dv">1</span><span class="dt">L</span>)</span>
-<span id="cb2-101"><a href="#cb2-101" tabindex="-1"></a></span>
-<span id="cb2-102"><a href="#cb2-102" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
-<span id="cb2-103"><a href="#cb2-103" tabindex="-1"></a>    <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">&quot;~&quot;</span>, factor_name, <span class="st">&quot; - 1&quot;</span>)),</span>
-<span id="cb2-104"><a href="#cb2-104" tabindex="-1"></a>    <span class="at">data =</span> dat</span>
-<span id="cb2-105"><a href="#cb2-105" tabindex="-1"></a>  )</span>
-<span id="cb2-106"><a href="#cb2-106" tabindex="-1"></a></span>
-<span id="cb2-107"><a href="#cb2-107" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">ncol</span>(X) <span class="sc">!=</span> <span class="fu">nrow</span>(u)) {</span>
-<span id="cb2-108"><a href="#cb2-108" tabindex="-1"></a>    <span class="fu">stop</span>(</span>
-<span id="cb2-109"><a href="#cb2-109" tabindex="-1"></a>      <span class="fu">paste</span>(</span>
-<span id="cb2-110"><a href="#cb2-110" tabindex="-1"></a>        <span class="st">&quot;Random-effect dimension mismatch for&quot;</span>, factor_name,</span>
-<span id="cb2-111"><a href="#cb2-111" tabindex="-1"></a>        <span class="st">&quot;:&quot;</span>, <span class="fu">ncol</span>(X), <span class="st">&quot;vs&quot;</span>, <span class="fu">nrow</span>(u)</span>
-<span id="cb2-112"><a href="#cb2-112" tabindex="-1"></a>      )</span>
-<span id="cb2-113"><a href="#cb2-113" tabindex="-1"></a>    )</span>
-<span id="cb2-114"><a href="#cb2-114" tabindex="-1"></a>  }</span>
-<span id="cb2-115"><a href="#cb2-115" tabindex="-1"></a></span>
-<span id="cb2-116"><a href="#cb2-116" tabindex="-1"></a>  <span class="fu">as.numeric</span>(X <span class="sc">%*%</span> u[, <span class="dv">1</span><span class="dt">L</span>, <span class="at">drop =</span> <span class="cn">FALSE</span>])</span>
-<span id="cb2-117"><a href="#cb2-117" tabindex="-1"></a>}</span></code></pre></div>
+<span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a>RESULTS_RDS <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;gblup&quot;</span>, <span class="st">&quot;simulated_gblup_ade_results.rds&quot;</span>)</span>
+<span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a>PREDICTIONS_RDS <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;gblup&quot;</span>, <span class="st">&quot;simulated_gblup_ade_predictions.rds&quot;</span>)</span>
+<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a>RESULTS_CSV <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;gblup&quot;</span>, <span class="st">&quot;simulated_gblup_ade_results.csv&quot;</span>)</span>
+<span id="cb2-47"><a href="#cb2-47" tabindex="-1"></a>PREDICTIONS_CSV <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;gblup&quot;</span>, <span class="st">&quot;simulated_gblup_ade_predictions.csv&quot;</span>)</span>
+<span id="cb2-48"><a href="#cb2-48" tabindex="-1"></a>KERNEL_CSV <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;gblup&quot;</span>, <span class="st">&quot;simulated_gblup_ade_kernel_summary.csv&quot;</span>)</span>
+<span id="cb2-49"><a href="#cb2-49" tabindex="-1"></a>RUN_RDS <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;gblup&quot;</span>, <span class="st">&quot;simulated_gblup_ade_run_metadata.rds&quot;</span>)</span>
+<span id="cb2-50"><a href="#cb2-50" tabindex="-1"></a></span>
+<span id="cb2-51"><a href="#cb2-51" tabindex="-1"></a>safe_cor <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
+<span id="cb2-52"><a href="#cb2-52" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
+<span id="cb2-53"><a href="#cb2-53" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">sum</span>(ok) <span class="sc">&lt;</span> <span class="dv">3</span><span class="dt">L</span> <span class="sc">||</span> <span class="fu">sd</span>(pred[ok]) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">||</span> <span class="fu">sd</span>(obs[ok]) <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
+<span id="cb2-54"><a href="#cb2-54" tabindex="-1"></a>  <span class="fu">cor</span>(pred[ok], obs[ok])</span>
+<span id="cb2-55"><a href="#cb2-55" tabindex="-1"></a>}</span>
+<span id="cb2-56"><a href="#cb2-56" tabindex="-1"></a></span>
+<span id="cb2-57"><a href="#cb2-57" tabindex="-1"></a>safe_rmse <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
+<span id="cb2-58"><a href="#cb2-58" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
+<span id="cb2-59"><a href="#cb2-59" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">any</span>(ok)) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
+<span id="cb2-60"><a href="#cb2-60" tabindex="-1"></a>  <span class="fu">sqrt</span>(<span class="fu">mean</span>((pred[ok] <span class="sc">-</span> obs[ok])<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb2-61"><a href="#cb2-61" tabindex="-1"></a>}</span>
+<span id="cb2-62"><a href="#cb2-62" tabindex="-1"></a></span>
+<span id="cb2-63"><a href="#cb2-63" tabindex="-1"></a>safe_mae <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
+<span id="cb2-64"><a href="#cb2-64" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
+<span id="cb2-65"><a href="#cb2-65" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">any</span>(ok)) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
+<span id="cb2-66"><a href="#cb2-66" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">abs</span>(pred[ok] <span class="sc">-</span> obs[ok]))</span>
+<span id="cb2-67"><a href="#cb2-67" tabindex="-1"></a>}</span>
+<span id="cb2-68"><a href="#cb2-68" tabindex="-1"></a></span>
+<span id="cb2-69"><a href="#cb2-69" tabindex="-1"></a>safe_bias <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
+<span id="cb2-70"><a href="#cb2-70" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
+<span id="cb2-71"><a href="#cb2-71" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">any</span>(ok)) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
+<span id="cb2-72"><a href="#cb2-72" tabindex="-1"></a>  <span class="fu">mean</span>(pred[ok] <span class="sc">-</span> obs[ok])</span>
+<span id="cb2-73"><a href="#cb2-73" tabindex="-1"></a>}</span>
+<span id="cb2-74"><a href="#cb2-74" tabindex="-1"></a></span>
+<span id="cb2-75"><a href="#cb2-75" tabindex="-1"></a>safe_slope <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
+<span id="cb2-76"><a href="#cb2-76" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
+<span id="cb2-77"><a href="#cb2-77" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">sum</span>(ok) <span class="sc">&lt;</span> <span class="dv">3</span><span class="dt">L</span> <span class="sc">||</span> <span class="fu">sd</span>(pred[ok]) <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
+<span id="cb2-78"><a href="#cb2-78" tabindex="-1"></a>  <span class="fu">as.numeric</span>(<span class="fu">coef</span>(<span class="fu">lm</span>(obs[ok] <span class="sc">~</span> pred[ok]))[<span class="dv">2</span>])</span>
+<span id="cb2-79"><a href="#cb2-79" tabindex="-1"></a>}</span>
+<span id="cb2-80"><a href="#cb2-80" tabindex="-1"></a></span>
+<span id="cb2-81"><a href="#cb2-81" tabindex="-1"></a>safe_r2 <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs) {</span>
+<span id="cb2-82"><a href="#cb2-82" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(pred) <span class="sc">&amp;</span> <span class="fu">is.finite</span>(obs)</span>
+<span id="cb2-83"><a href="#cb2-83" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">sum</span>(ok) <span class="sc">&lt;</span> <span class="dv">2</span><span class="dt">L</span>) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
+<span id="cb2-84"><a href="#cb2-84" tabindex="-1"></a>  den <span class="ot">&lt;-</span> <span class="fu">sum</span>((obs[ok] <span class="sc">-</span> <span class="fu">mean</span>(obs[ok]))<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb2-85"><a href="#cb2-85" tabindex="-1"></a>  <span class="cf">if</span> (den <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
+<span id="cb2-86"><a href="#cb2-86" tabindex="-1"></a>  <span class="dv">1</span> <span class="sc">-</span> <span class="fu">sum</span>((obs[ok] <span class="sc">-</span> pred[ok])<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> den</span>
+<span id="cb2-87"><a href="#cb2-87" tabindex="-1"></a>}</span>
+<span id="cb2-88"><a href="#cb2-88" tabindex="-1"></a></span>
+<span id="cb2-89"><a href="#cb2-89" tabindex="-1"></a>metrics <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs, prefix) {</span>
+<span id="cb2-90"><a href="#cb2-90" tabindex="-1"></a>  z <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-91"><a href="#cb2-91" tabindex="-1"></a>    <span class="fu">safe_cor</span>(pred, obs),</span>
+<span id="cb2-92"><a href="#cb2-92" tabindex="-1"></a>    <span class="fu">safe_rmse</span>(pred, obs),</span>
+<span id="cb2-93"><a href="#cb2-93" tabindex="-1"></a>    <span class="fu">safe_mae</span>(pred, obs),</span>
+<span id="cb2-94"><a href="#cb2-94" tabindex="-1"></a>    <span class="fu">safe_bias</span>(pred, obs),</span>
+<span id="cb2-95"><a href="#cb2-95" tabindex="-1"></a>    <span class="fu">safe_slope</span>(pred, obs),</span>
+<span id="cb2-96"><a href="#cb2-96" tabindex="-1"></a>    <span class="fu">safe_r2</span>(pred, obs)</span>
+<span id="cb2-97"><a href="#cb2-97" tabindex="-1"></a>  )</span>
+<span id="cb2-98"><a href="#cb2-98" tabindex="-1"></a>  <span class="fu">names</span>(z) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(</span>
+<span id="cb2-99"><a href="#cb2-99" tabindex="-1"></a>    prefix,</span>
+<span id="cb2-100"><a href="#cb2-100" tabindex="-1"></a>    <span class="fu">c</span>(<span class="st">&quot;_Correlation&quot;</span>, <span class="st">&quot;_RMSE&quot;</span>, <span class="st">&quot;_MAE&quot;</span>, <span class="st">&quot;_Bias&quot;</span>, <span class="st">&quot;_Slope&quot;</span>, <span class="st">&quot;_R2&quot;</span>)</span>
+<span id="cb2-101"><a href="#cb2-101" tabindex="-1"></a>  )</span>
+<span id="cb2-102"><a href="#cb2-102" tabindex="-1"></a>  z</span>
+<span id="cb2-103"><a href="#cb2-103" tabindex="-1"></a>}</span>
+<span id="cb2-104"><a href="#cb2-104" tabindex="-1"></a></span>
+<span id="cb2-105"><a href="#cb2-105" tabindex="-1"></a>extract_u <span class="ot">&lt;-</span> <span class="cf">function</span>(fit, dat, factor_name, exact_name) {</span>
+<span id="cb2-106"><a href="#cb2-106" tabindex="-1"></a>  unames <span class="ot">&lt;-</span> <span class="fu">names</span>(fit<span class="sc">$</span>uList)</span>
+<span id="cb2-107"><a href="#cb2-107" tabindex="-1"></a>  <span class="cf">if</span> (exact_name <span class="sc">%in%</span> unames) {</span>
+<span id="cb2-108"><a href="#cb2-108" tabindex="-1"></a>    nm <span class="ot">&lt;-</span> exact_name</span>
+<span id="cb2-109"><a href="#cb2-109" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb2-110"><a href="#cb2-110" tabindex="-1"></a>    token <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;ism(&quot;</span>, factor_name, <span class="st">&quot;)&quot;</span>)</span>
+<span id="cb2-111"><a href="#cb2-111" tabindex="-1"></a>    hit <span class="ot">&lt;-</span> <span class="fu">grep</span>(token, unames, <span class="at">fixed =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-112"><a href="#cb2-112" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">length</span>(hit) <span class="sc">!=</span> <span class="dv">1</span><span class="dt">L</span>) {</span>
+<span id="cb2-113"><a href="#cb2-113" tabindex="-1"></a>      <span class="fu">stop</span>(</span>
+<span id="cb2-114"><a href="#cb2-114" tabindex="-1"></a>        <span class="fu">paste</span>(</span>
+<span id="cb2-115"><a href="#cb2-115" tabindex="-1"></a>          <span class="st">&quot;Could not identify random component for&quot;</span>, factor_name,</span>
+<span id="cb2-116"><a href="#cb2-116" tabindex="-1"></a>          <span class="st">&quot;. Available:&quot;</span>, <span class="fu">paste</span>(unames, <span class="at">collapse =</span> <span class="st">&quot; | &quot;</span>)</span>
+<span id="cb2-117"><a href="#cb2-117" tabindex="-1"></a>        )</span>
+<span id="cb2-118"><a href="#cb2-118" tabindex="-1"></a>      )</span>
+<span id="cb2-119"><a href="#cb2-119" tabindex="-1"></a>    }</span>
+<span id="cb2-120"><a href="#cb2-120" tabindex="-1"></a>    nm <span class="ot">&lt;-</span> unames[hit]</span>
+<span id="cb2-121"><a href="#cb2-121" tabindex="-1"></a>  }</span>
+<span id="cb2-122"><a href="#cb2-122" tabindex="-1"></a></span>
+<span id="cb2-123"><a href="#cb2-123" tabindex="-1"></a>  u <span class="ot">&lt;-</span> fit<span class="sc">$</span>uList[[nm]]</span>
+<span id="cb2-124"><a href="#cb2-124" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.data.frame</span>(u)) u <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(u)</span>
+<span id="cb2-125"><a href="#cb2-125" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.vector</span>(u)) u <span class="ot">&lt;-</span> <span class="fu">matrix</span>(u, <span class="at">ncol =</span> <span class="dv">1</span><span class="dt">L</span>)</span>
+<span id="cb2-126"><a href="#cb2-126" tabindex="-1"></a></span>
+<span id="cb2-127"><a href="#cb2-127" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
+<span id="cb2-128"><a href="#cb2-128" tabindex="-1"></a>    <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">&quot;~&quot;</span>, factor_name, <span class="st">&quot; - 1&quot;</span>)),</span>
+<span id="cb2-129"><a href="#cb2-129" tabindex="-1"></a>    <span class="at">data =</span> dat</span>
+<span id="cb2-130"><a href="#cb2-130" tabindex="-1"></a>  )</span>
+<span id="cb2-131"><a href="#cb2-131" tabindex="-1"></a></span>
+<span id="cb2-132"><a href="#cb2-132" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">ncol</span>(X) <span class="sc">!=</span> <span class="fu">nrow</span>(u)) {</span>
+<span id="cb2-133"><a href="#cb2-133" tabindex="-1"></a>    <span class="fu">stop</span>(</span>
+<span id="cb2-134"><a href="#cb2-134" tabindex="-1"></a>      <span class="fu">paste</span>(</span>
+<span id="cb2-135"><a href="#cb2-135" tabindex="-1"></a>        <span class="st">&quot;Random-effect dimension mismatch for&quot;</span>, factor_name,</span>
+<span id="cb2-136"><a href="#cb2-136" tabindex="-1"></a>        <span class="st">&quot;:&quot;</span>, <span class="fu">ncol</span>(X), <span class="st">&quot;vs&quot;</span>, <span class="fu">nrow</span>(u)</span>
+<span id="cb2-137"><a href="#cb2-137" tabindex="-1"></a>      )</span>
+<span id="cb2-138"><a href="#cb2-138" tabindex="-1"></a>    )</span>
+<span id="cb2-139"><a href="#cb2-139" tabindex="-1"></a>  }</span>
+<span id="cb2-140"><a href="#cb2-140" tabindex="-1"></a></span>
+<span id="cb2-141"><a href="#cb2-141" tabindex="-1"></a>  <span class="fu">as.numeric</span>(X <span class="sc">%*%</span> u[, <span class="dv">1</span><span class="dt">L</span>, <span class="at">drop =</span> <span class="cn">FALSE</span>])</span>
+<span id="cb2-142"><a href="#cb2-142" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="packages-and-canonical-inputs" class="section level1">
 <h1>Packages and canonical inputs</h1>
@@ -2081,6 +2138,10 @@ splits</caption>
 <span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a></span>
 <span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(output_table)</span></code></pre></div>
 <table>
+<colgroup>
+<col width="95%" />
+<col width="4%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th align="left">File</th>
@@ -2089,27 +2150,33 @@ splits</caption>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">output/simulated_gblup_ade_results.rds</td>
+<td
+align="left">C:/Users/Weverton/OneDrive/GitHub/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/output/simulated/gblup/simulated_gblup_ade_results.rds</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="even">
-<td align="left">output/simulated_gblup_ade_predictions.rds</td>
+<td
+align="left">C:/Users/Weverton/OneDrive/GitHub/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/output/simulated/gblup/simulated_gblup_ade_predictions.rds</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="odd">
-<td align="left">output/simulated_gblup_ade_results.csv</td>
+<td
+align="left">C:/Users/Weverton/OneDrive/GitHub/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/output/simulated/gblup/simulated_gblup_ade_results.csv</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="even">
-<td align="left">output/simulated_gblup_ade_predictions.csv</td>
+<td
+align="left">C:/Users/Weverton/OneDrive/GitHub/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/output/simulated/gblup/simulated_gblup_ade_predictions.csv</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="odd">
-<td align="left">output/simulated_gblup_ade_kernel_summary.csv</td>
+<td
+align="left">C:/Users/Weverton/OneDrive/GitHub/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/output/simulated/gblup/simulated_gblup_ade_kernel_summary.csv</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="even">
-<td align="left">output/simulated_gblup_ade_run_metadata.rds</td>
+<td
+align="left">C:/Users/Weverton/OneDrive/GitHub/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/output/simulated/gblup/simulated_gblup_ade_run_metadata.rds</td>
 <td align="left">TRUE</td>
 </tr>
 </tbody>
