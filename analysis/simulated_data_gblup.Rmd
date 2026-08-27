@@ -1,0 +1,832 @@
+---
+title: "GBLUP-ADE for simulated genomic data"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_float: true
+editor_options:
+  chunk_output_type: console
+---
+
+# Purpose
+
+This module fits the canonical GBLUP-ADE benchmark to all six simulated
+scenarios using the 25 frozen outer validation splits. Phenotypes are used for
+model fitting. True simulated genetic values are used only after prediction
+for primary evaluation of genetic-value recovery.
+
+The heavy fitting chunk is disabled during an ordinary website build. Run the
+complete analysis from the project root with:
+
+```text
+RUN_GBLUP=1 Rscript -e 'workflowr::wflow_build("analysis/simulated_data_gblup.Rmd")'
+```
+
+```{r setup}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  cache = FALSE
+)
+
+options(stringsAsFactors = FALSE)
+
+SEED_GLOBAL <- 20260821L
+N_ITERS_SOMMER <- 20L
+RUN_GBLUP <- identical(Sys.getenv("RUN_GBLUP", "0"), "1")
+
+DATA_FILE <- "output/preprocessed_simulated_common.rds"
+CV_FILE <- "output/simulated_cv_design.rds"
+DATA_AUDIT_FILE <- "output/simulated_audit_summary.csv"
+CV_AUDIT_FILE <- "output/simulated_cv_design_audit.csv"
+
+RESULTS_RDS <- "output/simulated_gblup_ade_results.rds"
+PREDICTIONS_RDS <- "output/simulated_gblup_ade_predictions.rds"
+RESULTS_CSV <- "output/simulated_gblup_ade_results.csv"
+PREDICTIONS_CSV <- "output/simulated_gblup_ade_predictions.csv"
+KERNEL_CSV <- "output/simulated_gblup_ade_kernel_summary.csv"
+RUN_RDS <- "output/simulated_gblup_ade_run_metadata.rds"
+
+safe_cor <- function(pred, obs) {
+  ok <- is.finite(pred) & is.finite(obs)
+  if (sum(ok) < 3L || sd(pred[ok]) == 0 || sd(obs[ok]) == 0) return(NA_real_)
+  cor(pred[ok], obs[ok])
+}
+
+safe_rmse <- function(pred, obs) {
+  ok <- is.finite(pred) & is.finite(obs)
+  if (!any(ok)) return(NA_real_)
+  sqrt(mean((pred[ok] - obs[ok])^2))
+}
+
+safe_mae <- function(pred, obs) {
+  ok <- is.finite(pred) & is.finite(obs)
+  if (!any(ok)) return(NA_real_)
+  mean(abs(pred[ok] - obs[ok]))
+}
+
+safe_bias <- function(pred, obs) {
+  ok <- is.finite(pred) & is.finite(obs)
+  if (!any(ok)) return(NA_real_)
+  mean(pred[ok] - obs[ok])
+}
+
+safe_slope <- function(pred, obs) {
+  ok <- is.finite(pred) & is.finite(obs)
+  if (sum(ok) < 3L || sd(pred[ok]) == 0) return(NA_real_)
+  as.numeric(coef(lm(obs[ok] ~ pred[ok]))[2])
+}
+
+safe_r2 <- function(pred, obs) {
+  ok <- is.finite(pred) & is.finite(obs)
+  if (sum(ok) < 2L) return(NA_real_)
+  den <- sum((obs[ok] - mean(obs[ok]))^2)
+  if (den == 0) return(NA_real_)
+  1 - sum((obs[ok] - pred[ok])^2) / den
+}
+
+metrics <- function(pred, obs, prefix) {
+  z <- c(
+    safe_cor(pred, obs),
+    safe_rmse(pred, obs),
+    safe_mae(pred, obs),
+    safe_bias(pred, obs),
+    safe_slope(pred, obs),
+    safe_r2(pred, obs)
+  )
+  names(z) <- paste0(
+    prefix,
+    c("_Correlation", "_RMSE", "_MAE", "_Bias", "_Slope", "_R2")
+  )
+  z
+}
+
+extract_u <- function(fit, dat, factor_name, exact_name) {
+  unames <- names(fit$uList)
+  if (exact_name %in% unames) {
+    nm <- exact_name
+  } else {
+    token <- paste0("ism(", factor_name, ")")
+    hit <- grep(token, unames, fixed = TRUE)
+    if (length(hit) != 1L) {
+      stop(
+        paste(
+          "Could not identify random component for", factor_name,
+          ". Available:", paste(unames, collapse = " | ")
+        )
+      )
+    }
+    nm <- unames[hit]
+  }
+
+  u <- fit$uList[[nm]]
+  if (is.data.frame(u)) u <- as.matrix(u)
+  if (is.vector(u)) u <- matrix(u, ncol = 1L)
+
+  X <- model.matrix(
+    as.formula(paste0("~", factor_name, " - 1")),
+    data = dat
+  )
+
+  if (ncol(X) != nrow(u)) {
+    stop(
+      paste(
+        "Random-effect dimension mismatch for", factor_name,
+        ":", ncol(X), "vs", nrow(u)
+      )
+    )
+  }
+
+  as.numeric(X %*% u[, 1L, drop = FALSE])
+}
+```
+
+# Packages and canonical inputs
+
+```{r inputs}
+if (!requireNamespace("sommer", quietly = TRUE)) {
+  stop("Package 'sommer' is required.")
+}
+
+# sommer::mmes() evaluates the random-effects formula using helper
+# functions vsm() and ism(). Attach sommer explicitly so these helpers
+# are available in the fresh R session created by workflowr/callr.
+suppressPackageStartupMessages(
+  library(sommer)
+)
+
+if (
+  !exists("vsm", mode = "function") ||
+  !exists("ism", mode = "function")
+) {
+  stop(
+    paste(
+      "sommer was attached, but vsm() and/or ism() are unavailable.",
+      "Installed sommer version:",
+      as.character(packageVersion("sommer"))
+    )
+  )
+}
+
+required_files <- c(
+  DATA_FILE,
+  CV_FILE,
+  DATA_AUDIT_FILE,
+  CV_AUDIT_FILE
+)
+
+if (!all(file.exists(required_files))) {
+  stop(
+    paste(
+      "Missing canonical file(s):",
+      paste(required_files[!file.exists(required_files)], collapse = ", ")
+    )
+  )
+}
+
+data_audit <- read.csv(DATA_AUDIT_FILE, stringsAsFactors = FALSE)
+cv_audit <- read.csv(CV_AUDIT_FILE, stringsAsFactors = FALSE)
+
+if (any(data_audit$Status == "BLOCKED")) {
+  stop("Simulated-data audit contains blocking checks.")
+}
+
+if (any(cv_audit$Status == "BLOCKED")) {
+  stop("Validation-design audit contains blocking checks.")
+}
+
+common <- readRDS(DATA_FILE)
+cv <- readRDS(CV_FILE)
+
+phenotype <- common$phenotype
+true_g <- common$true_genetic_value
+geno <- common$genotype_m101
+control <- common$scenario_control
+ids <- as.integer(common$metadata$row_identifier)
+
+if (is.null(ids) || length(ids) == 0L) {
+  ids <- seq_len(nrow(geno))
+}
+
+id_labels <- sprintf("ID%04d", ids)
+rownames(geno) <- id_labels
+
+scenario_names <- colnames(phenotype)
+if (is.null(scenario_names)) scenario_names <- paste0("C", 1:6)
+
+input_summary <- data.frame(
+  Item = c("Individuals", "Markers", "Scenarios", "Outer splits"),
+  Value = c(nrow(geno), ncol(geno), ncol(phenotype), length(cv$outer_splits))
+)
+
+knitr::kable(input_summary)
+```
+
+# Pre-fit integrity
+
+```{r prefit}
+sommer_helpers <- data.frame(
+  Helper = c("vsm", "ism"),
+  Available = c(
+    exists("vsm", mode = "function"),
+    exists("ism", mode = "function")
+  ),
+  Sommer_version = as.character(packageVersion("sommer")),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(
+  sommer_helpers,
+  caption = "sommer helper functions required by the random-effects formula"
+)
+
+checks <- data.frame(
+  Check = c(
+    "Phenotype dimensions",
+    "True-G dimensions",
+    "Genotype dimensions",
+    "Genotype coding",
+    "Outer split count",
+    "Scenario names"
+  ),
+  PASS = c(
+    identical(dim(phenotype), c(1000L, 6L)),
+    identical(dim(true_g), c(1000L, 6L)),
+    identical(dim(geno), c(1000L, 4010L)),
+    identical(sort(unique(as.vector(geno))), -1:1),
+    length(cv$outer_splits) == 25L,
+    identical(scenario_names, paste0("C", 1:6))
+  ),
+  stringsAsFactors = FALSE
+)
+
+checks$Status <- ifelse(checks$PASS, "PASS", "BLOCKED")
+
+knitr::kable(checks[, c("Check", "Status")])
+
+if (any(!checks$PASS)) {
+  stop("Blocking GBLUP-ADE pre-fit check detected.")
+}
+
+outer_ok <- all(
+  vapply(
+    cv$outer_splits,
+    function(s) {
+      length(s$analysis_ids) == 800L &&
+        length(s$assessment_ids) == 200L &&
+        length(intersect(s$analysis_ids, s$assessment_ids)) == 0L
+    },
+    logical(1)
+  )
+)
+
+if (!outer_ok) stop("Frozen outer splits failed integrity check.")
+```
+
+# Analysis tasks
+
+```{r task-table}
+outer_meta <- unique(
+  cv$outer_assignments[, c("Repetition", "OuterFold", "SplitID")]
+)
+
+outer_meta <- outer_meta[
+  order(outer_meta$Repetition, outer_meta$OuterFold),
+]
+
+task_table <- merge(
+  data.frame(Scenario = scenario_names, stringsAsFactors = FALSE),
+  outer_meta,
+  by = NULL
+)
+
+task_table <- task_table[
+  order(
+    match(task_table$Scenario, scenario_names),
+    task_table$Repetition,
+    task_table$OuterFold
+  ),
+]
+
+task_table$TaskID <- paste(
+  task_table$Scenario,
+  task_table$SplitID,
+  sep = "_"
+)
+
+rownames(task_table) <- NULL
+
+cat("Expected GBLUP-ADE tasks:", nrow(task_table), "\n")
+knitr::kable(head(task_table, 15))
+
+if (nrow(task_table) != 150L) {
+  stop("Expected 150 scenario-by-split tasks.")
+}
+```
+
+# Fit GBLUP-ADE
+
+The A, D, and E relationship matrices are built once from the complete
+genotype matrix and reused across tasks. Assessment phenotypes are set to
+`NA` before every fit. Genotypes of assessment individuals are allowed in the
+relationship matrices; their phenotypes and true genetic values are not used
+for fitting.
+
+```{r fit-gblup-ade, eval=RUN_GBLUP}
+set.seed(SEED_GLOBAL)
+
+run_start <- proc.time()[["elapsed"]]
+
+kernel_start <- proc.time()[["elapsed"]]
+
+A_matrix <- sommer::A.mat(geno)
+D_matrix <- sommer::D.mat(geno)
+E_matrix <- sommer::E.mat(geno)
+
+kernel_seconds <- proc.time()[["elapsed"]] - kernel_start
+
+rownames(A_matrix) <- colnames(A_matrix) <- id_labels
+rownames(D_matrix) <- colnames(D_matrix) <- id_labels
+rownames(E_matrix) <- colnames(E_matrix) <- id_labels
+
+kernel_summary <- data.frame(
+  Kernel = c("Additive", "Dominance", "Epistatic"),
+  Rows = c(nrow(A_matrix), nrow(D_matrix), nrow(E_matrix)),
+  Columns = c(ncol(A_matrix), ncol(D_matrix), ncol(E_matrix)),
+  Symmetric = c(
+    isTRUE(all.equal(A_matrix, t(A_matrix), tolerance = 1e-8)),
+    isTRUE(all.equal(D_matrix, t(D_matrix), tolerance = 1e-8)),
+    isTRUE(all.equal(E_matrix, t(E_matrix), tolerance = 1e-8))
+  ),
+  Finite = c(
+    all(is.finite(A_matrix)),
+    all(is.finite(D_matrix)),
+    all(is.finite(E_matrix))
+  ),
+  Mean_diagonal = c(
+    mean(diag(A_matrix)),
+    mean(diag(D_matrix)),
+    mean(diag(E_matrix))
+  ),
+  Kernel_build_seconds = rep(kernel_seconds, 3L)
+)
+
+if (any(!kernel_summary$Symmetric) || any(!kernel_summary$Finite)) {
+  stop("A, D, or E kernel failed integrity checks.")
+}
+
+write.csv(kernel_summary, KERNEL_CSV, row.names = FALSE)
+
+result_list <- vector("list", nrow(task_table))
+prediction_list <- vector("list", nrow(task_table))
+
+for (i in seq_len(nrow(task_table))) {
+  task <- task_table[i, ]
+  scenario <- task$Scenario
+  split_id <- task$SplitID
+  j <- match(scenario, scenario_names)
+
+  split <- cv$outer_splits[[split_id]]
+
+  tr_idx <- match(split$analysis_ids, ids)
+  te_idx <- match(split$assessment_ids, ids)
+
+  if (anyNA(tr_idx) || anyNA(te_idx)) {
+    stop(paste("ID alignment failed for", task$TaskID))
+  }
+
+  y <- phenotype[, j]
+  g <- true_g[, j]
+
+  id_factor <- factor(id_labels, levels = id_labels)
+
+  dat <- data.frame(
+    y = y,
+    id = id_factor,
+    idd = id_factor,
+    ide = id_factor
+  )
+
+  dat$y[te_idx] <- NA_real_
+
+  fit_status <- "ok"
+  pred_status <- "not_run"
+  error_message <- NA_character_
+
+  y_pred <- gebv <- u_add <- u_dom <- u_epi <-
+    rep(NA_real_, nrow(dat))
+
+  fit_start <- proc.time()[["elapsed"]]
+
+  fit <- tryCatch(
+    sommer::mmes(
+      y ~ 1,
+      random = ~
+        vsm(ism(id), Gu = A_matrix) +
+        vsm(ism(idd), Gu = D_matrix) +
+        vsm(ism(ide), Gu = E_matrix),
+      rcov = ~ units,
+      nIters = N_ITERS_SOMMER,
+      data = dat,
+      verbose = FALSE,
+      dateWarning = FALSE
+    ),
+    error = function(e) {
+      fit_status <<- "fit_error"
+      error_message <<- conditionMessage(e)
+      NULL
+    }
+  )
+
+  fit_seconds <- proc.time()[["elapsed"]] - fit_start
+  predict_seconds <- 0
+
+  if (!is.null(fit)) {
+    pred_status <- "ok"
+    predict_start <- proc.time()[["elapsed"]]
+
+    pc <- tryCatch(
+      {
+        a <- extract_u(
+          fit, dat, "id",
+          "vsm(ism(id), Gu = A_matrix)"
+        )
+        d <- extract_u(
+          fit, dat, "idd",
+          "vsm(ism(idd), Gu = D_matrix)"
+        )
+        e <- extract_u(
+          fit, dat, "ide",
+          "vsm(ism(ide), Gu = E_matrix)"
+        )
+
+        gv <- a + d + e
+        beta0 <- as.numeric(fit$b)[1L]
+
+        list(
+          additive = a,
+          dominance = d,
+          epistatic = e,
+          gebv = gv,
+          prediction = beta0 + gv
+        )
+      },
+      error = function(e) {
+        pred_status <<- "pred_error"
+        error_message <<- conditionMessage(e)
+        NULL
+      }
+    )
+
+    predict_seconds <- proc.time()[["elapsed"]] - predict_start
+
+    if (!is.null(pc)) {
+      u_add <- pc$additive
+      u_dom <- pc$dominance
+      u_epi <- pc$epistatic
+      gebv <- pc$gebv
+      y_pred <- pc$prediction
+    }
+  }
+
+  obs_test <- y[te_idx]
+  g_test <- g[te_idx]
+  pred_test <- y_pred[te_idx]
+  gebv_test <- gebv[te_idx]
+
+  mg <- metrics(pred_test, g_test, "Genetic")
+  mp <- metrics(pred_test, obs_test, "Phenotype")
+
+  n_finite <- sum(is.finite(pred_test))
+
+  status <- if (
+    fit_status == "ok" &&
+      pred_status == "ok" &&
+      n_finite == 200L
+  ) {
+    "ok"
+  } else {
+    paste(fit_status, pred_status, sep = ";")
+  }
+
+  meta <- control[control$Scenario == scenario, , drop = FALSE]
+
+  result_list[[i]] <- data.frame(
+    Dataset = "simulated",
+    Scenario = scenario,
+    QTL_N = meta$QTL_N,
+    H2_nominal = meta$H2_nominal,
+    Repetition = task$Repetition,
+    Fold = task$OuterFold,
+    SplitID = split_id,
+    TaskID = task$TaskID,
+    Model = "GBLUP_ADE",
+    N_train = length(tr_idx),
+    N_test = length(te_idx),
+    N_pred_finite = n_finite,
+    Genetic_Correlation = mg["Genetic_Correlation"],
+    Genetic_RMSE = mg["Genetic_RMSE"],
+    Genetic_MAE = mg["Genetic_MAE"],
+    Genetic_Bias = mg["Genetic_Bias"],
+    Genetic_Slope = mg["Genetic_Slope"],
+    Genetic_R2 = mg["Genetic_R2"],
+    GEBV_TrueG_Correlation = safe_cor(gebv_test, g_test),
+    Phenotype_Correlation = mp["Phenotype_Correlation"],
+    Phenotype_RMSE = mp["Phenotype_RMSE"],
+    Phenotype_MAE = mp["Phenotype_MAE"],
+    Phenotype_Bias = mp["Phenotype_Bias"],
+    Phenotype_Slope = mp["Phenotype_Slope"],
+    Phenotype_R2 = mp["Phenotype_R2"],
+    Kernel_build_seconds = kernel_seconds,
+    Fit_seconds = fit_seconds,
+    Predict_seconds = predict_seconds,
+    Status = status,
+    Error = error_message,
+    stringsAsFactors = FALSE
+  )
+
+  prediction_list[[i]] <- data.frame(
+    Dataset = "simulated",
+    Scenario = scenario,
+    QTL_N = meta$QTL_N,
+    H2_nominal = meta$H2_nominal,
+    Repetition = task$Repetition,
+    Fold = task$OuterFold,
+    SplitID = split_id,
+    TaskID = task$TaskID,
+    Model = "GBLUP_ADE",
+    ID = ids[te_idx],
+    Observed_Phenotype = obs_test,
+    True_Genetic_Value = g_test,
+    Predicted_Value = pred_test,
+    GEBV = gebv_test,
+    Additive_Prediction = u_add[te_idx],
+    Dominance_Prediction = u_dom[te_idx],
+    Epistatic_Prediction = u_epi[te_idx],
+    Status = status,
+    stringsAsFactors = FALSE
+  )
+
+  cat(
+    sprintf(
+      "[%03d/%03d] %s | %s | rG=%.4f | RMSE_G=%.4f | fit=%.2fs\n",
+      i,
+      nrow(task_table),
+      task$TaskID,
+      status,
+      result_list[[i]]$Genetic_Correlation,
+      result_list[[i]]$Genetic_RMSE,
+      fit_seconds
+    )
+  )
+}
+
+results <- do.call(rbind, result_list)
+predictions <- do.call(rbind, prediction_list)
+
+rownames(results) <- NULL
+rownames(predictions) <- NULL
+
+run_seconds <- proc.time()[["elapsed"]] - run_start
+
+run_metadata <- list(
+  dataset = "simulated",
+  model = "GBLUP_ADE",
+  seed_global = SEED_GLOBAL,
+  sommer_version = as.character(packageVersion("sommer")),
+  nIters_sommer = N_ITERS_SOMMER,
+  tasks = nrow(results),
+  prediction_rows = nrow(predictions),
+  kernel_build_seconds = kernel_seconds,
+  total_run_seconds = run_seconds,
+  timestamp = as.character(Sys.time())
+)
+
+saveRDS(results, RESULTS_RDS, compress = "gzip")
+saveRDS(predictions, PREDICTIONS_RDS, compress = "gzip")
+write.csv(results, RESULTS_CSV, row.names = FALSE)
+write.csv(predictions, PREDICTIONS_CSV, row.names = FALSE)
+saveRDS(run_metadata, RUN_RDS, compress = "gzip")
+
+cat(
+  "\nGBLUP-ADE completed:",
+  nrow(results), "tasks;",
+  nrow(predictions), "held-out predictions;",
+  round(run_seconds, 2), "seconds.\n"
+)
+```
+
+# Kernel diagnostics
+
+```{r kernel-diagnostics}
+if (file.exists(KERNEL_CSV)) {
+  kernel_summary <- read.csv(KERNEL_CSV)
+  knitr::kable(
+    kernel_summary,
+    digits = 5,
+    caption = "A, D, and E kernel diagnostics"
+  )
+} else {
+  cat("Kernel diagnostics not available yet. Run with RUN_GBLUP=1.\n")
+}
+```
+
+# Saved-result audit
+
+```{r result-audit}
+results_available <-
+  file.exists(RESULTS_RDS) &&
+  file.exists(PREDICTIONS_RDS) &&
+  file.exists(RUN_RDS)
+
+if (!results_available) {
+  cat(
+    "Fitted results are not available yet.\n",
+    "Run:\n",
+    "RUN_GBLUP=1 Rscript -e ",
+    "'workflowr::wflow_build(\"analysis/simulated_data_gblup.Rmd\")'\n",
+    sep = ""
+  )
+} else {
+  results <- readRDS(RESULTS_RDS)
+  predictions <- readRDS(PREDICTIONS_RDS)
+  run_metadata <- readRDS(RUN_RDS)
+
+  result_audit <- data.frame(
+    Check = c(
+      "Task rows",
+      "Prediction rows",
+      "Unique tasks",
+      "Predictions per task",
+      "Successful tasks",
+      "Finite predictions",
+      "Frozen split IDs"
+    ),
+    Status = c(
+      if (nrow(results) == 150L) "PASS" else "BLOCKED",
+      if (nrow(predictions) == 30000L) "PASS" else "BLOCKED",
+      if (length(unique(results$TaskID)) == 150L) "PASS" else "BLOCKED",
+      if (all(table(predictions$TaskID) == 200L)) "PASS" else "BLOCKED",
+      if (all(results$Status == "ok")) "PASS" else "WARNING",
+      if (all(is.finite(predictions$Predicted_Value))) "PASS" else "WARNING",
+      if (
+        setequal(unique(results$SplitID), names(cv$outer_splits))
+      ) "PASS" else "BLOCKED"
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  knitr::kable(result_audit)
+
+  if (any(result_audit$Status == "BLOCKED")) {
+    stop("Saved GBLUP-ADE results failed a blocking audit check.")
+  }
+}
+```
+
+# Predictive performance
+
+The primary metrics compare the held-out final prediction
+(intercept + additive + dominance + epistatic components) with the known true
+genetic value. Phenotype metrics are secondary.
+
+```{r performance}
+if (results_available) {
+  ok_results <- results[results$Status == "ok", , drop = FALSE]
+
+  if (nrow(ok_results) == 0L) {
+    cat(
+      "No successful GBLUP-ADE tasks are available for performance aggregation.\n",
+      "Inspect the saved-result audit and Error column before rerunning.\n"
+    )
+  } else {
+
+  scenario_performance <- aggregate(
+    cbind(
+      Genetic_Correlation,
+      Genetic_RMSE,
+      Genetic_MAE,
+      Genetic_Bias,
+      Genetic_Slope,
+      Genetic_R2,
+      Phenotype_Correlation,
+      Phenotype_RMSE,
+      Phenotype_MAE,
+      Phenotype_Bias,
+      Phenotype_Slope,
+      Phenotype_R2
+    ) ~ Scenario + QTL_N + H2_nominal,
+    data = ok_results,
+    FUN = mean,
+    na.rm = TRUE
+  )
+
+  scenario_performance <- scenario_performance[
+    order(match(scenario_performance$Scenario, scenario_names)),
+  ]
+
+  knitr::kable(
+    scenario_performance,
+    digits = 4,
+    caption = "Mean predictive performance across the 25 outer splits"
+  )
+  }
+}
+```
+
+# Split-level variability
+
+```{r split-summary}
+if (results_available && exists("ok_results") && nrow(ok_results) > 0L) {
+  split_summary <- do.call(
+    rbind,
+    lapply(
+      split(ok_results, ok_results$Scenario),
+      function(x) {
+        data.frame(
+          Scenario = unique(x$Scenario),
+          N = nrow(x),
+          Cor_mean = mean(x$Genetic_Correlation, na.rm = TRUE),
+          Cor_sd = sd(x$Genetic_Correlation, na.rm = TRUE),
+          Cor_min = min(x$Genetic_Correlation, na.rm = TRUE),
+          Cor_max = max(x$Genetic_Correlation, na.rm = TRUE),
+          RMSE_mean = mean(x$Genetic_RMSE, na.rm = TRUE),
+          RMSE_sd = sd(x$Genetic_RMSE, na.rm = TRUE),
+          MAE_mean = mean(x$Genetic_MAE, na.rm = TRUE),
+          R2_mean = mean(x$Genetic_R2, na.rm = TRUE)
+        )
+      }
+    )
+  )
+
+  rownames(split_summary) <- NULL
+  split_summary <- split_summary[
+    order(match(split_summary$Scenario, scenario_names)),
+  ]
+
+  knitr::kable(
+    split_summary,
+    digits = 4,
+    caption = "Genetic-value prediction variability across outer splits"
+  )
+}
+```
+
+# Computational time
+
+```{r time-summary}
+if (results_available) {
+  time_summary <- aggregate(
+    cbind(Fit_seconds, Predict_seconds) ~ Scenario,
+    data = results,
+    FUN = mean,
+    na.rm = TRUE
+  )
+
+  time_summary$Kernel_build_seconds <- run_metadata$kernel_build_seconds
+
+  knitr::kable(
+    time_summary,
+    digits = 3,
+    caption = "GBLUP-ADE computational time"
+  )
+
+  cat(
+    "Total run time:",
+    round(run_metadata$total_run_seconds, 2),
+    "seconds.\n"
+  )
+}
+```
+
+# Output contract
+
+```{r output-contract}
+output_files <- c(
+  RESULTS_RDS,
+  PREDICTIONS_RDS,
+  RESULTS_CSV,
+  PREDICTIONS_CSV,
+  KERNEL_CSV,
+  RUN_RDS
+)
+
+output_table <- data.frame(
+  File = output_files,
+  Exists = file.exists(output_files),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(output_table)
+```
+
+# Reproducibility information
+
+```{r session-info}
+sessionInfo()
+```

@@ -1,27 +1,118 @@
-# Predição Genômica utilizando Redes Neurais Artificiais Regularizadas no Melhoramento Genético do Cafeeiro
+# Genomic Prediction using Regularized Artificial Neural Networks
 
-Este repositório contém o código-fonte e os recursos relacionados ao projeto de predição genômica utilizando redes neurais artificiais regularizadas no melhoramento genético do cafeeiro da EMBRAPA coordenado pela Dra Eveline Teixeira Caixeta em parceria com o Laboratório de Inteligência Computacional e Aprendizado Estatístico (LICAE) do departamento de estatística da UFV. O objetivo deste projeto é identificar regiões específicas do genoma do cafeeiro associadas a características desejáveis para aprimorar a planta.
+This repository contains a reproducible study of genomic prediction using
+artificial neural networks with L1 and L2 regularization, compared with a
+GBLUP-ADE genomic mixed model.
 
-## Sobre o Projeto
+The primary objective is to evaluate whether weight regularization improves
+predictive performance and generalization in high-dimensional genomic
+prediction problems.
 
-O projeto visa aplicar técnicas avançadas de predição genômica, utilizando redes neurais artificiais regularizadas, para analisar dados genéticos do cafeeiro. Além disso, o projeto também explora o uso dessas técnicas em dados simulados. Através desse estudo, buscamos compreender as relações entre a diversidade genética do cafeeiro e as características fenotípicas, com o objetivo final de contribuir para o melhoramento genético da planta.
+## Models
 
-### Fluxo de Trabalho
+Five models are compared under the same validation design:
 
-O projeto é composto pelas seguintes etapas principais:
+- **GBLUP-ADE** — additive, dominance, and epistatic genomic effects;
+- **ANN-0** — artificial neural network without L1/L2 weight penalties;
+- **ANN-L1** — ANN with L1 weight regularization;
+- **ANN-L2** — ANN with L2 weight regularization;
+- **ANN-L1+L2** — ANN with simultaneous L1 and L2 weight penalties.
 
-1. **Coleta de Dados**: Coleta de dados genéticos do cafeeiro a partir de fontes relevantes, incluindo informações sobre características fenotípicas e genotípicas de diferentes variedades de café.
+## Data
 
-2. **Análise Exploratória**: Realização de uma análise exploratória dos dados para compreender a diversidade genética do cafeeiro e identificar possíveis relações entre os marcadores genéticos e as características fenotípicas de interesse.
+The project includes:
 
-3. **Treinamento do Modelo**: Utilização de redes neurais artificiais regularizadas para desenvolver um modelo de predição genômica. Esse modelo busca relacionar os marcadores genéticos com as características fenotípicas, permitindo a identificação de regiões do genoma do cafeeiro associadas às características de interesse.
+- simulated genomic data with known true genetic values and different genetic
+  architectures;
+- real *Coffea arabica* genomic and phenotypic data.
 
-4. **Validação e Avaliação**: Validação e avaliação do modelo de predição genômica utilizando técnicas estatísticas adequadas, como validação cruzada. Serão avaliadas a acurácia e a eficiência do modelo na previsão das características fenotípicas.
+The current canonical public workflow focuses on the simulated-data branch.
+The real-data branch will follow the same validation principles.
 
-5. **Aplicação em Dados Simulados**: Além da aplicação em dados reais do cafeeiro, o modelo será testado e avaliado em dados simulados para verificar a sua robustez e capacidade de generalização em diferentes cenários.
+## Canonical simulated-data workflow
 
-6. **Interpretação dos Resultados**: Análise e interpretação dos resultados obtidos, fornecendo insights sobre as relações genômicas e fenotípicas do cafeeiro. Serão discutidas implicações biológicas e agronômicas dessas associações, bem como possíveis aplicações práticas para o melhoramento genético do cafeeiro.
+The public workflow is:
 
-### Tecnologias Utilizadas
+```text
+simulated_data_audit.Rmd
+        |
+        v
+simulated_data_validation.Rmd
+        |
+        +-------------------+
+        |                   |
+        v                   v
+simulated_data_gblup.Rmd   simulated_data_ann.Rmd
+```
 
-O projeto será desenvolvido utilizando a linguagem de programação R, aproveitando suas poderosas bibliotecas estatísticas e de aprendizado de máquina. Além disso, serão utilizadas ferramentas como Git e GitHub para controle de versão e colaboração.
+The modules have the following roles:
+
+1. `simulated_data_audit.Rmd` — data integrity, provenance, genotype and
+   phenotype structure, simulation metadata, QTL information, and scenario
+   properties;
+2. `simulated_data_validation.Rmd` — frozen outer/inner cross-validation design
+   shared by all competing methods;
+3. `simulated_data_gblup.Rmd` — canonical GBLUP-ADE modeling branch;
+4. `simulated_data_ann.Rmd` — canonical ANN branch, including hyperparameter
+   tuning and final fitting.
+
+Development sensitivity, boundary, convergence, and earlier final-model pages
+were used to establish the canonical ANN protocol and are not part of the
+public workflow.
+
+## Validation contract
+
+The simulated-data comparison uses the same frozen outer partitions for all
+models.
+
+- ANN hyperparameter tuning is restricted to the outer-analysis sample.
+- Outer-assessment individuals are excluded from ANN hyperparameter and epoch
+  selection.
+- Preprocessing parameters are estimated from training data only.
+- True simulated genetic values are excluded from fitting and selection and
+  are used only for final evaluation.
+- GBLUP-ADE and all ANN variants are evaluated on the same held-out individuals
+  within each task.
+- Correlation, RMSE, MAE, bias, slope, and R-squared are computed under the same
+  held-out design.
+
+## ANN execution contract
+
+Routine website rendering uses saved outputs only and does not automatically
+repeat expensive ANN fitting.
+
+- Normal build: render from saved canonical outputs.
+- `RUN_ANN_TUNING=1`: run canonical ANN hyperparameter tuning.
+- `RUN_ANN=1`: run canonical final ANN fitting using the saved tuning
+  selections.
+- Both flags: execute the complete ANN workflow.
+
+The canonical ANN tuning ceiling is 2000 epochs. Final epoch selection inside
+the outer-analysis sample uses a separate 3000-epoch safety ceiling with
+patience-based early stopping. The final network is then reinitialized and
+refit on all outer-analysis individuals for exactly the selected `Best_epoch`.
+
+## Canonical simulated-data result
+
+Within the prespecified canonical model and architecture search space,
+GBLUP-ADE showed the strongest overall predictive performance in the validated
+simulated-data comparison. ANN-L1 and ANN-L1+L2 were the best-performing
+neural-network variants, whereas L2 alone produced little improvement over the
+unregularized ANN.
+
+Detailed results are generated by the canonical analysis pages and stored under
+`output/`.
+
+## Reproducibility
+
+The project is implemented in R using R Markdown and `workflowr`.
+
+- `analysis/` — source analysis pages;
+- `data/` — input data;
+- `output/` — reproducible derived objects and canonical results;
+- `docs/` — generated workflowr website.
+
+The canonical output contract is documented in `output/README.md`.
+
+Legacy analyses and outputs from earlier development versions are not used as
+reported results in the canonical analysis.

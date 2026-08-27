@@ -1,17 +1,33 @@
 name: "Genomic-Prediction-using-Regularized-Artificial-Neural-Networks"
 output_dir: ../docs
+
 navbar:
-  title: "Genomic-Prediction-using-Regularized-Artificial-Neural-Networks"
+  title: "Regularized ANN Genomic Prediction"
   left:
-  - text: Home
-    href: index.html
-  - text: About
-    href: about.html
-  - text: License
-    href: license.html
+    - text: "Home"
+      href: index.html
+    - text: "Simulated data"
+      menu:
+        - text: "Data audit"
+          href: simulated_data_audit.html
+        - text: "Validation design"
+          href: simulated_data_validation.html
+        - text: "GBLUP-ADE"
+          href: simulated_data_gblup.html
+        - text: "ANN"
+          href: simulated_data_ann.html
+    - text: "About"
+      href: about.html
+    - text: "License"
+      href: license.html
+  right:
+    - icon: fa-github
+      href: https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks
+
 output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
     theme: flatly
     highlight: haddock
+    code_folding: show

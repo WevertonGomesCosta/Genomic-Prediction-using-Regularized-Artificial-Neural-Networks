@@ -1,0 +1,930 @@
+---
+title: "Simulated data validation design"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_float: true
+editor_options:
+  chunk_output_type: console
+---
+
+# Purpose
+
+This analysis freezes the validation design used by all genomic prediction
+models fitted to the simulated dataset.
+
+The design is created **before model fitting** and is independent of phenotype,
+true genetic value, scenario, and model. Consequently, GBLUP-ADE and all ANN
+variants are evaluated on exactly the same outer assessment individuals.
+
+The canonical design uses:
+
+- 5 outer folds;
+- 5 outer repetitions;
+- 4 inner folds within each outer analysis set;
+- deterministic seeds derived from the project-wide seed;
+- the same outer and inner partitions for all six simulation scenarios.
+
+The outer assessment sets are reserved exclusively for final model evaluation.
+The inner folds are reserved for ANN hyperparameter tuning. True simulated
+genetic values are never used to generate partitions or tune models.
+
+```{r setup}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+options(stringsAsFactors = FALSE)
+
+SEED_GLOBAL <- 20260821L
+N_OUTER_FOLDS <- 5L
+N_OUTER_REPEATS <- 5L
+N_INNER_FOLDS <- 4L
+
+input_file <- "output/preprocessed_simulated_common.rds"
+audit_file <- "output/simulated_audit_summary.csv"
+output_dir <- "output"
+
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+
+validation_log <- data.frame(
+  Check = character(),
+  Status = character(),
+  Details = character(),
+  stringsAsFactors = FALSE
+)
+
+add_check <- function(check, status, details) {
+  stopifnot(status %in% c("PASS", "WARNING", "BLOCKED"))
+
+  validation_log <<- rbind(
+    validation_log,
+    data.frame(
+      Check = check,
+      Status = status,
+      Details = as.character(details),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  invisible(NULL)
+}
+
+balanced_fold_assignment <- function(ids, k, seed) {
+  stopifnot(
+    length(ids) >= k,
+    !anyDuplicated(ids),
+    k >= 2L
+  )
+
+  set.seed(seed)
+
+  shuffled_ids <- sample(
+    ids,
+    size = length(ids),
+    replace = FALSE
+  )
+
+  assigned_folds <- rep(
+    seq_len(k),
+    length.out = length(ids)
+  )
+
+  out <- data.frame(
+    ID = shuffled_ids,
+    Fold = assigned_folds,
+    stringsAsFactors = FALSE
+  )
+
+  out <- out[
+    order(out$ID),
+    ,
+    drop = FALSE
+  ]
+
+  rownames(out) <- NULL
+  out
+}
+```
+
+# Canonical data prerequisite
+
+The validation design is built only after the simulated-data audit has
+completed without any blocking check.
+
+```{r prerequisites}
+required_files <- c(
+  input_file,
+  audit_file
+)
+
+files_exist <- file.exists(required_files)
+
+add_check(
+  "Canonical input files",
+  if (all(files_exist)) "PASS" else "BLOCKED",
+  if (all(files_exist)) {
+    "Canonical simulated object and audit summary are present."
+  } else {
+    paste(
+      "Missing:",
+      paste(required_files[!files_exist], collapse = ", ")
+    )
+  }
+)
+
+if (!all(files_exist)) {
+  stop("Canonical simulated-data inputs are missing.")
+}
+
+audit_summary <- read.csv(
+  audit_file,
+  stringsAsFactors = FALSE
+)
+
+n_blocked_audit <- sum(
+  audit_summary$Status == "BLOCKED",
+  na.rm = TRUE
+)
+
+add_check(
+  "Simulated-data audit prerequisite",
+  if (n_blocked_audit == 0L) "PASS" else "BLOCKED",
+  paste(
+    n_blocked_audit,
+    "blocking check(s) in simulated-data audit."
+  )
+)
+
+if (n_blocked_audit > 0L) {
+  stop("Simulated-data audit contains blocking checks.")
+}
+
+simulated_common <- readRDS(input_file)
+
+required_components <- c(
+  "metadata",
+  "phenotype",
+  "true_genetic_value",
+  "genotype_m101"
+)
+
+components_ok <- all(
+  required_components %in% names(simulated_common)
+)
+
+add_check(
+  "Canonical object components",
+  if (components_ok) "PASS" else "BLOCKED",
+  if (components_ok) {
+    paste(
+      "Required components present:",
+      paste(required_components, collapse = ", ")
+    )
+  } else {
+    paste(
+      "Missing components:",
+      paste(
+        setdiff(required_components, names(simulated_common)),
+        collapse = ", "
+      )
+    )
+  }
+)
+
+if (!components_ok) {
+  stop("Canonical simulated object is incomplete.")
+}
+```
+
+# Individual universe
+
+Partitions are generated from the canonical row identifiers only. No phenotype
+or true genetic value is used in this step.
+
+```{r individual-universe}
+ids <- simulated_common$metadata$row_identifier
+
+if (is.null(ids)) {
+  ids <- seq_len(
+    simulated_common$metadata$n_individuals
+  )
+}
+
+ids <- as.integer(ids)
+
+individual_universe_ok <-
+  length(ids) == 1000L &&
+  !anyDuplicated(ids) &&
+  identical(sort(ids), seq_len(1000L)) &&
+  nrow(simulated_common$phenotype) == length(ids) &&
+  nrow(simulated_common$true_genetic_value) == length(ids) &&
+  nrow(simulated_common$genotype_m101) == length(ids)
+
+add_check(
+  "Individual universe",
+  if (individual_universe_ok) "PASS" else "BLOCKED",
+  paste(
+    "Expected 1000 unique row identifiers aligned with phenotype,",
+    "true genetic value, and genotype matrices."
+  )
+)
+
+if (!individual_universe_ok) {
+  stop("Canonical individual universe is inconsistent.")
+}
+```
+
+# Outer repeated cross-validation
+
+Each repetition independently shuffles the same 1,000 canonical IDs and assigns
+them to five balanced folds. Since 1,000 is divisible by five, every outer
+assessment set contains exactly 200 individuals and every outer analysis set
+contains exactly 800 individuals.
+
+```{r outer-folds}
+outer_assignments <- do.call(
+  rbind,
+  lapply(
+    seq_len(N_OUTER_REPEATS),
+    function(rep_id) {
+      assignment <- balanced_fold_assignment(
+        ids = ids,
+        k = N_OUTER_FOLDS,
+        seed = SEED_GLOBAL + rep_id
+      )
+
+      data.frame(
+        Repetition = rep_id,
+        ID = assignment$ID,
+        OuterFold = assignment$Fold,
+        stringsAsFactors = FALSE
+      )
+    }
+  )
+)
+
+rownames(outer_assignments) <- NULL
+
+outer_assignments$SplitID <- sprintf(
+  "R%02d_F%02d",
+  outer_assignments$Repetition,
+  outer_assignments$OuterFold
+)
+
+outer_sizes <- aggregate(
+  ID ~ Repetition + OuterFold + SplitID,
+  data = outer_assignments,
+  FUN = length
+)
+
+names(outer_sizes)[names(outer_sizes) == "ID"] <- "Assessment_N"
+outer_sizes$Analysis_N <- length(ids) - outer_sizes$Assessment_N
+
+knitr::kable(
+  outer_sizes,
+  caption = "Outer repeated cross-validation split sizes"
+)
+
+outer_row_count_ok <-
+  nrow(outer_assignments) ==
+    length(ids) * N_OUTER_REPEATS
+
+add_check(
+  "Outer assignment row count",
+  if (outer_row_count_ok) "PASS" else "BLOCKED",
+  paste(
+    "Observed rows:",
+    nrow(outer_assignments),
+    "; expected:",
+    length(ids) * N_OUTER_REPEATS
+  )
+)
+
+outer_once_per_repeat <- all(
+  table(
+    outer_assignments$Repetition,
+    outer_assignments$ID
+  ) == 1L
+)
+
+add_check(
+  "One outer assignment per ID and repetition",
+  if (outer_once_per_repeat) "PASS" else "BLOCKED",
+  "Each individual must occur exactly once in every repetition."
+)
+
+outer_balanced <- all(
+  outer_sizes$Assessment_N == 200L &
+    outer_sizes$Analysis_N == 800L
+)
+
+add_check(
+  "Balanced outer folds",
+  if (outer_balanced) "PASS" else "BLOCKED",
+  "Every outer split must contain 800 analysis and 200 assessment individuals."
+)
+
+outer_patterns <- do.call(
+  rbind,
+  lapply(
+    seq_len(N_OUTER_REPEATS),
+    function(rep_id) {
+      x <- outer_assignments[
+        outer_assignments$Repetition == rep_id,
+        c("ID", "OuterFold")
+      ]
+
+      x <- x[order(x$ID), ]
+      x$OuterFold
+    }
+  )
+)
+
+unique_repetition_patterns <-
+  !anyDuplicated(as.data.frame(outer_patterns))
+
+add_check(
+  "Distinct outer repetitions",
+  if (unique_repetition_patterns) "PASS" else "WARNING",
+  paste(
+    "All",
+    N_OUTER_REPEATS,
+    "repetitions should use distinct fold assignments."
+  )
+)
+
+assessment_frequency <- table(
+  outer_assignments$ID
+)
+
+assessment_frequency_ok <- all(
+  assessment_frequency == N_OUTER_REPEATS
+)
+
+add_check(
+  "Outer assessment frequency",
+  if (assessment_frequency_ok) "PASS" else "BLOCKED",
+  paste(
+    "Every individual is assigned to one assessment fold per repetition",
+    "and therefore appears in exactly",
+    N_OUTER_REPEATS,
+    "outer assessment sets."
+  )
+)
+```
+
+# Explicit outer split objects
+
+```{r outer-split-objects}
+outer_split_ids <- unique(
+  outer_assignments$SplitID
+)
+
+outer_split_ids <- outer_split_ids[
+  order(outer_split_ids)
+]
+
+outer_splits <- setNames(
+  vector("list", length(outer_split_ids)),
+  outer_split_ids
+)
+
+for (split_id in outer_split_ids) {
+  assessment_ids <- outer_assignments$ID[
+    outer_assignments$SplitID == split_id
+  ]
+
+  analysis_ids <- setdiff(
+    ids,
+    assessment_ids
+  )
+
+  outer_splits[[split_id]] <- list(
+    split_id = split_id,
+    analysis_ids = sort(analysis_ids),
+    assessment_ids = sort(assessment_ids)
+  )
+}
+
+outer_split_integrity <- all(
+  vapply(
+    outer_splits,
+    function(x) {
+      length(x$analysis_ids) == 800L &&
+        length(x$assessment_ids) == 200L &&
+        length(intersect(
+          x$analysis_ids,
+          x$assessment_ids
+        )) == 0L &&
+        identical(
+          sort(c(
+            x$analysis_ids,
+            x$assessment_ids
+          )),
+          sort(ids)
+        )
+    },
+    logical(1)
+  )
+)
+
+add_check(
+  "Outer split integrity",
+  if (outer_split_integrity) "PASS" else "BLOCKED",
+  paste(
+    length(outer_splits),
+    "outer split objects checked for size, disjointness, and complete coverage."
+  )
+)
+```
+
+# Nested inner folds
+
+Inner folds are generated separately inside each outer analysis set. They are
+used only for ANN hyperparameter tuning.
+
+Because every outer analysis set contains 800 individuals and four inner folds
+are used, each inner assessment set contains exactly 200 individuals and each
+inner analysis set contains 600 individuals.
+
+```{r inner-folds}
+inner_assignments_list <- vector(
+  "list",
+  length(outer_splits)
+)
+
+names(inner_assignments_list) <- names(outer_splits)
+
+inner_splits <- setNames(
+  vector("list", length(outer_splits)),
+  names(outer_splits)
+)
+
+for (split_id in names(outer_splits)) {
+  outer_split <- outer_splits[[split_id]]
+
+  split_tokens <- strsplit(
+    sub("^R", "", split_id),
+    "_F"
+  )[[1]]
+
+  rep_id <- as.integer(split_tokens[1])
+  outer_fold <- as.integer(split_tokens[2])
+
+  inner_seed <-
+    SEED_GLOBAL +
+    100000L +
+    rep_id * 100L +
+    outer_fold
+
+  assignment <- balanced_fold_assignment(
+    ids = outer_split$analysis_ids,
+    k = N_INNER_FOLDS,
+    seed = inner_seed
+  )
+
+  inner_assignments_list[[split_id]] <- data.frame(
+    SplitID = split_id,
+    Repetition = rep_id,
+    OuterFold = outer_fold,
+    ID = assignment$ID,
+    InnerFold = assignment$Fold,
+    stringsAsFactors = FALSE
+  )
+
+  current_inner_splits <- setNames(
+    vector("list", N_INNER_FOLDS),
+    paste0("I", seq_len(N_INNER_FOLDS))
+  )
+
+  for (inner_fold in seq_len(N_INNER_FOLDS)) {
+    inner_assessment_ids <- assignment$ID[
+      assignment$Fold == inner_fold
+    ]
+
+    inner_analysis_ids <- setdiff(
+      outer_split$analysis_ids,
+      inner_assessment_ids
+    )
+
+    current_inner_splits[[paste0("I", inner_fold)]] <- list(
+      split_id = split_id,
+      inner_fold = inner_fold,
+      analysis_ids = sort(inner_analysis_ids),
+      assessment_ids = sort(inner_assessment_ids)
+    )
+  }
+
+  inner_splits[[split_id]] <- current_inner_splits
+}
+
+inner_assignments <- do.call(
+  rbind,
+  inner_assignments_list
+)
+
+rownames(inner_assignments) <- NULL
+
+inner_sizes <- aggregate(
+  ID ~ SplitID + Repetition + OuterFold + InnerFold,
+  data = inner_assignments,
+  FUN = length
+)
+
+names(inner_sizes)[names(inner_sizes) == "ID"] <- "Assessment_N"
+inner_sizes$Analysis_N <- 800L - inner_sizes$Assessment_N
+
+knitr::kable(
+  head(inner_sizes, 20),
+  caption = "First 20 nested inner split sizes"
+)
+
+inner_row_count_ok <-
+  nrow(inner_assignments) ==
+    length(outer_splits) * 800L
+
+add_check(
+  "Inner assignment row count",
+  if (inner_row_count_ok) "PASS" else "BLOCKED",
+  paste(
+    "Observed rows:",
+    nrow(inner_assignments),
+    "; expected:",
+    length(outer_splits) * 800L
+  )
+)
+
+inner_balanced <- all(
+  inner_sizes$Assessment_N == 200L &
+    inner_sizes$Analysis_N == 600L
+)
+
+add_check(
+  "Balanced inner folds",
+  if (inner_balanced) "PASS" else "BLOCKED",
+  "Every inner split must contain 600 analysis and 200 assessment individuals."
+)
+
+inner_assignment_integrity <- all(
+  vapply(
+    names(outer_splits),
+    function(split_id) {
+      x <- inner_assignments[
+        inner_assignments$SplitID == split_id,
+      ]
+
+      outer_analysis_ids <-
+        outer_splits[[split_id]]$analysis_ids
+
+      nrow(x) == 800L &&
+        !anyDuplicated(x$ID) &&
+        identical(
+          sort(x$ID),
+          sort(outer_analysis_ids)
+        ) &&
+        all(sort(unique(x$InnerFold)) ==
+              seq_len(N_INNER_FOLDS))
+    },
+    logical(1)
+  )
+)
+
+add_check(
+  "Inner assignment integrity",
+  if (inner_assignment_integrity) "PASS" else "BLOCKED",
+  "Inner assignments are restricted to the corresponding outer analysis set."
+)
+
+inner_split_integrity <- all(
+  vapply(
+    names(inner_splits),
+    function(split_id) {
+      outer_analysis_ids <-
+        outer_splits[[split_id]]$analysis_ids
+
+      all(
+        vapply(
+          inner_splits[[split_id]],
+          function(x) {
+            length(x$analysis_ids) == 600L &&
+              length(x$assessment_ids) == 200L &&
+              length(intersect(
+                x$analysis_ids,
+                x$assessment_ids
+              )) == 0L &&
+              identical(
+                sort(c(
+                  x$analysis_ids,
+                  x$assessment_ids
+                )),
+                sort(outer_analysis_ids)
+              )
+          },
+          logical(1)
+        )
+      )
+    },
+    logical(1)
+  )
+)
+
+add_check(
+  "Inner split integrity",
+  if (inner_split_integrity) "PASS" else "BLOCKED",
+  paste(
+    length(outer_splits) * N_INNER_FOLDS,
+    "inner splits checked for size, disjointness, and complete outer-analysis coverage."
+  )
+)
+```
+
+# Scenario and model independence
+
+The split object contains no scenario, phenotype, true genetic value, or model
+information. The same partitions are therefore reused for C1-C6 and for every
+prediction method.
+
+```{r independence-contract}
+split_variables <- unique(
+  c(
+    names(outer_assignments),
+    names(inner_assignments)
+  )
+)
+
+forbidden_split_fields <- c(
+  "Scenario",
+  "Phenotype",
+  "Observed",
+  "TrueGeneticValue",
+  "Model"
+)
+
+split_independence_ok <- !any(
+  forbidden_split_fields %in% split_variables
+)
+
+add_check(
+  "Scenario-independent partitions",
+  if (split_independence_ok) "PASS" else "BLOCKED",
+  paste(
+    "Partitions are generated from canonical individual IDs and deterministic",
+    "seeds only; the same folds are reused for C1-C6 and all models."
+  )
+)
+
+add_check(
+  "True genetic value excluded from partitioning",
+  "PASS",
+  paste(
+    "True simulated genetic values are stored in the canonical data object",
+    "for final evaluation only and are not referenced when generating folds."
+  )
+)
+
+add_check(
+  "Phenotype excluded from partitioning",
+  "PASS",
+  paste(
+    "Phenotypes are not used to construct folds. They may be used later",
+    "inside training data and inner-CV tuning, never to redefine partitions."
+  )
+)
+```
+
+# Validation contract
+
+The frozen validation protocol is:
+
+1. For each of the 5 repetitions, every individual belongs to exactly one of
+   the 5 outer assessment folds.
+2. The same 25 outer splits are used for C1-C6 and for GBLUP-ADE, ANN-0,
+   ANN-L1, ANN-L2, and ANN-L1+L2.
+3. Outer assessment phenotypes and true genetic values are not used for model
+   fitting or hyperparameter tuning.
+4. ANN hyperparameters are selected using the 4 inner folds defined within the
+   corresponding outer analysis set.
+5. Early stopping, if used during inner ANN fitting, must use data drawn only
+   from the current inner analysis set. The inner assessment set must remain
+   reserved for candidate evaluation.
+6. After ANN hyperparameters are selected, the final outer model must be fitted
+   using only the outer analysis individuals. The outer assessment individuals
+   remain untouched until final prediction.
+7. Simulated true genetic values are never used to tune ANN architecture,
+   learning rate, L1, L2, epoch count, or any other model choice.
+8. Primary simulated-data evaluation compares final predictions with the true
+   genetic value only after the model for that outer split has been frozen.
+9. Secondary phenotype-prediction metrics may be computed on the same outer
+   assessment individuals, but cannot feed back into model selection.
+
+# Design summary
+
+```{r design-summary}
+design_summary <- data.frame(
+  Item = c(
+    "Individuals",
+    "Scenarios",
+    "Outer repetitions",
+    "Outer folds per repetition",
+    "Total outer splits",
+    "Outer analysis N",
+    "Outer assessment N",
+    "Inner folds per outer split",
+    "Total inner splits",
+    "Inner analysis N",
+    "Inner assessment N",
+    "Global seed"
+  ),
+  Value = c(
+    length(ids),
+    simulated_common$metadata$n_scenarios,
+    N_OUTER_REPEATS,
+    N_OUTER_FOLDS,
+    N_OUTER_REPEATS * N_OUTER_FOLDS,
+    800,
+    200,
+    N_INNER_FOLDS,
+    N_OUTER_REPEATS * N_OUTER_FOLDS * N_INNER_FOLDS,
+    600,
+    200,
+    SEED_GLOBAL
+  )
+)
+
+knitr::kable(
+  design_summary,
+  caption = "Frozen simulated-data validation design"
+)
+```
+
+# Final validation-design audit
+
+```{r final-validation-audit}
+status_order <- c(
+  "BLOCKED",
+  "WARNING",
+  "PASS"
+)
+
+validation_log$Status <- factor(
+  validation_log$Status,
+  levels = status_order
+)
+
+validation_log <- validation_log[
+  order(validation_log$Status),
+  ,
+  drop = FALSE
+]
+
+rownames(validation_log) <- NULL
+
+knitr::kable(
+  validation_log,
+  caption = "Validation-design integrity checks"
+)
+
+validation_counts <- as.data.frame(
+  table(validation_log$Status)
+)
+
+names(validation_counts) <- c(
+  "Status",
+  "Checks"
+)
+
+knitr::kable(
+  validation_counts,
+  caption = "Validation-design status counts"
+)
+
+blocked_checks <- sum(
+  validation_log$Status == "BLOCKED"
+)
+
+warning_checks <- sum(
+  validation_log$Status == "WARNING"
+)
+
+final_classification <- if (blocked_checks > 0L) {
+  "BLOCKED"
+} else if (warning_checks > 0L) {
+  "PASS WITH WARNINGS"
+} else {
+  "PASS"
+}
+
+cat(
+  "\nFinal validation-design classification:",
+  final_classification,
+  "\n"
+)
+```
+
+# Save frozen validation design
+
+The design object is written only if no blocking integrity check is present.
+
+```{r save-validation-design}
+write.csv(
+  validation_log,
+  file.path(
+    output_dir,
+    "simulated_cv_design_audit.csv"
+  ),
+  row.names = FALSE
+)
+
+write.csv(
+  outer_assignments,
+  file.path(
+    output_dir,
+    "simulated_cv_outer_assignments.csv"
+  ),
+  row.names = FALSE
+)
+
+write.csv(
+  inner_assignments,
+  file.path(
+    output_dir,
+    "simulated_cv_inner_assignments.csv"
+  ),
+  row.names = FALSE
+)
+
+write.csv(
+  design_summary,
+  file.path(
+    output_dir,
+    "simulated_cv_design_summary.csv"
+  ),
+  row.names = FALSE
+)
+
+if (blocked_checks > 0L) {
+  stop(
+    paste(
+      blocked_checks,
+      "blocking validation-design check(s) detected.",
+      "The canonical CV object was not created."
+    )
+  )
+}
+
+cv_design <- list(
+  metadata = list(
+    dataset = "simulated",
+    seed_global = SEED_GLOBAL,
+    n_individuals = length(ids),
+    n_scenarios = simulated_common$metadata$n_scenarios,
+    outer_repetitions = N_OUTER_REPEATS,
+    outer_folds = N_OUTER_FOLDS,
+    inner_folds = N_INNER_FOLDS,
+    outer_analysis_n = 800L,
+    outer_assessment_n = 200L,
+    inner_analysis_n = 600L,
+    inner_assessment_n = 200L,
+    scenario_independent = TRUE,
+    model_independent = TRUE,
+    phenotype_used_for_partitioning = FALSE,
+    true_genetic_value_used_for_partitioning = FALSE
+  ),
+  outer_assignments = outer_assignments,
+  outer_splits = outer_splits,
+  inner_assignments = inner_assignments,
+  inner_splits = inner_splits,
+  audit = validation_log
+)
+
+saveRDS(
+  cv_design,
+  file.path(
+    output_dir,
+    "simulated_cv_design.rds"
+  ),
+  compress = "gzip"
+)
+
+cat(
+  "Frozen validation design written to:",
+  file.path(
+    output_dir,
+    "simulated_cv_design.rds"
+  ),
+  "\n"
+)
+```
+
+# Reproducibility information
+
+```{r session-info}
+sessionInfo()
+```

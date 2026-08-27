@@ -1,0 +1,1598 @@
+---
+title: "Simulated data audit"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_float: true
+editor_options:
+  chunk_output_type: console
+---
+
+# Purpose
+
+This analysis performs the canonical audit and preprocessing of the simulated
+genomic dataset before any genomic prediction model is fitted.
+
+The audit evaluates file integrity, dimensional consistency, genotype coding,
+genetic map structure, simulation scenarios, quantitative trait loci (QTL),
+phenotypic and true genetic values, realized heritability, parental genotypes,
+marker frequencies, duplicate observations, and linkage disequilibrium.
+
+No genomic prediction model is fitted in this document.
+
+This final audit version explicitly distinguishes the row-order contract
+from independently verified sample identity and records long-distance LD
+behavior separately from short-to-medium distance LD decay.
+
+```{r setup}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+options(stringsAsFactors = FALSE)
+
+SEED_GLOBAL <- 20260821L
+set.seed(SEED_GLOBAL)
+
+data_dir <- "data/dados_simulados"
+output_dir <- "output"
+
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+
+audit_log <- data.frame(
+  Check = character(),
+  Status = character(),
+  Details = character(),
+  stringsAsFactors = FALSE
+)
+
+add_audit <- function(check, status, details) {
+  stopifnot(status %in% c("PASS", "WARNING", "BLOCKED"))
+
+  audit_log <<- rbind(
+    audit_log,
+    data.frame(
+      Check = check,
+      Status = status,
+      Details = as.character(details),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  invisible(NULL)
+}
+
+fmt_dim <- function(x) {
+  paste(dim(x), collapse = " x ")
+}
+```
+
+# Expected files
+
+```{r expected-files}
+expected_files <- c(
+  "controlegenetico#1.dat",
+  "DG#gen_F2_Vfen.txt",
+  "DG#gen_F2_Vgen.dat",
+  "genoma.txt",
+  "genoma_mapa.txt",
+  "genoma_mapa_tr.txt",
+  "genoma_pais.txt",
+  "map.rds"
+)
+
+file_paths <- file.path(data_dir, expected_files)
+
+file_table <- data.frame(
+  File = expected_files,
+  Exists = file.exists(file_paths),
+  Size_MB = round(file.info(file_paths)$size / 1024^2, 3),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(file_table)
+
+if (all(file_table$Exists)) {
+  add_audit(
+    "Expected files",
+    "PASS",
+    sprintf("All %d expected files are present.", length(expected_files))
+  )
+} else {
+  missing_files <- paste(
+    file_table$File[!file_table$Exists],
+    collapse = ", "
+  )
+
+  add_audit(
+    "Expected files",
+    "BLOCKED",
+    paste("Missing files:", missing_files)
+  )
+
+  write.csv(
+    audit_log,
+    file.path(output_dir, "simulated_audit_summary.csv"),
+    row.names = FALSE
+  )
+
+  stop("Critical simulated-data files are missing.")
+}
+```
+
+# Read primary matrices
+
+```{r read-primary-data}
+phenotype <- as.matrix(
+  read.table(
+    file.path(data_dir, "DG#gen_F2_Vfen.txt"),
+    header = FALSE
+  )
+)
+
+true_genetic_value <- as.matrix(
+  read.table(
+    file.path(data_dir, "DG#gen_F2_Vgen.dat"),
+    header = FALSE
+  )
+)
+
+geno_raw_012 <- as.matrix(
+  read.table(
+    file.path(data_dir, "genoma_mapa.txt"),
+    header = FALSE
+  )
+)
+
+geno_012 <- t(geno_raw_012)
+storage.mode(geno_012) <- "integer"
+
+rm(geno_raw_012)
+invisible(gc())
+
+geno_1122 <- as.matrix(
+  read.table(
+    file.path(data_dir, "genoma_mapa_tr.txt"),
+    header = FALSE
+  )
+)
+
+storage.mode(geno_1122) <- "integer"
+```
+
+# Core dimensions
+
+```{r core-dimensions}
+core_dimensions <- data.frame(
+  Object = c(
+    "Phenotypic values",
+    "True genetic values",
+    "Genotype matrix (0/1/2)",
+    "Genotype matrix (11/12/22)"
+  ),
+  Rows = c(
+    nrow(phenotype),
+    nrow(true_genetic_value),
+    nrow(geno_012),
+    nrow(geno_1122)
+  ),
+  Columns = c(
+    ncol(phenotype),
+    ncol(true_genetic_value),
+    ncol(geno_012),
+    ncol(geno_1122)
+  )
+)
+
+knitr::kable(core_dimensions)
+
+dim_ok <-
+  identical(dim(phenotype), c(1000L, 6L)) &&
+  identical(dim(true_genetic_value), c(1000L, 6L)) &&
+  identical(dim(geno_012), c(1000L, 4010L)) &&
+  identical(dim(geno_1122), c(1000L, 4010L))
+
+add_audit(
+  "Core dimensions",
+  if (dim_ok) "PASS" else "BLOCKED",
+  paste(
+    "Expected phenotype and genetic-value matrices: 1000 x 6;",
+    "expected genotype matrices: 1000 x 4010."
+  )
+)
+
+finite_ok <-
+  all(is.finite(phenotype)) &&
+  all(is.finite(true_genetic_value))
+
+add_audit(
+  "Finite phenotype and genetic values",
+  if (finite_ok) "PASS" else "BLOCKED",
+  if (finite_ok) {
+    "All phenotypic and true genetic values are finite."
+  } else {
+    "Non-finite values were detected."
+  }
+)
+
+if (!dim_ok || !finite_ok) {
+  write.csv(
+    audit_log,
+    file.path(output_dir, "simulated_audit_summary.csv"),
+    row.names = FALSE
+  )
+
+  stop("Critical dimensional or numeric integrity check failed.")
+}
+```
+
+# Genotype coding
+
+The simulator provides the genotype matrix in two representations. The
+canonical representation used in subsequent analyses is constructed from
+`genoma_mapa.txt`, transposed to individuals by markers.
+
+```{r genotype-coding}
+codes_012 <- sort(unique(as.vector(geno_012)))
+codes_1122 <- sort(unique(as.vector(geno_1122)))
+
+geno_code_table <- data.frame(
+  Matrix = c("genoma_mapa.txt", "genoma_mapa_tr.txt"),
+  Codes = c(
+    paste(codes_012, collapse = ", "),
+    paste(codes_1122, collapse = ", ")
+  )
+)
+
+knitr::kable(geno_code_table)
+
+code_012_ok <- identical(codes_012, 0:2)
+code_1122_ok <- identical(codes_1122, c(11L, 12L, 22L))
+
+add_audit(
+  "Genotype codes 0/1/2",
+  if (code_012_ok) "PASS" else "BLOCKED",
+  paste("Observed codes:", paste(codes_012, collapse = ", "))
+)
+
+add_audit(
+  "Genotype codes 11/12/22",
+  if (code_1122_ok) "PASS" else "BLOCKED",
+  paste("Observed codes:", paste(codes_1122, collapse = ", "))
+)
+
+geno_1122_to_012 <- matrix(
+  NA_integer_,
+  nrow = nrow(geno_1122),
+  ncol = ncol(geno_1122)
+)
+
+geno_1122_to_012[geno_1122 == 11L] <- 2L
+geno_1122_to_012[geno_1122 == 12L] <- 1L
+geno_1122_to_012[geno_1122 == 22L] <- 0L
+
+equivalent_genotype_files <-
+  identical(dim(geno_012), dim(geno_1122_to_012)) &&
+  all(geno_012 == geno_1122_to_012)
+
+add_audit(
+  "Equivalence of genotype files",
+  if (equivalent_genotype_files) "PASS" else "BLOCKED",
+  paste(
+    "Checked mapping 11 -> 2, 12 -> 1, and 22 -> 0",
+    "after orienting both matrices as individuals x markers."
+  )
+)
+
+rm(geno_1122, geno_1122_to_012)
+invisible(gc())
+
+geno_m101 <- geno_012 - 1L
+
+add_audit(
+  "Canonical -1/0/1 coding",
+  if (identical(sort(unique(as.vector(geno_m101))), -1:1)) {
+    "PASS"
+  } else {
+    "BLOCKED"
+  },
+  "Canonical coding is genotype_012 - 1."
+)
+```
+
+# Genetic map
+
+```{r genetic-map}
+map_lines <- readLines(
+  file.path(data_dir, "genoma.txt"),
+  warn = FALSE,
+  encoding = "latin1"
+)
+
+map_parts <- strsplit(map_lines, ",", fixed = TRUE)
+map_parts <- lapply(map_parts, trimws)
+
+is_marker_line <- vapply(
+  map_parts,
+  function(z) {
+    length(z) == 5L &&
+      toupper(z[3]) == "C"
+  },
+  logical(1)
+)
+
+marker_matrix <- do.call(
+  rbind,
+  map_parts[is_marker_line]
+)
+
+if (is.null(marker_matrix) || nrow(marker_matrix) == 0L) {
+  add_audit(
+    "Genetic map parsing",
+    "BLOCKED",
+    "No marker records could be parsed from genoma.txt."
+  )
+  stop("Could not parse genetic map from genoma.txt.")
+}
+
+genetic_map <- data.frame(
+  LG = as.integer(marker_matrix[, 1]),
+  Marker_within_LG = as.integer(marker_matrix[, 2]),
+  Type = marker_matrix[, 3],
+  Marker = marker_matrix[, 4],
+  Position_cM = as.numeric(marker_matrix[, 5]),
+  stringsAsFactors = FALSE
+)
+
+genetic_map$Global_marker <- seq_len(nrow(genetic_map))
+
+map_summary <- do.call(
+  rbind,
+  lapply(
+    split(genetic_map, genetic_map$LG),
+    function(x) {
+      pos <- sort(x$Position_cM)
+
+      data.frame(
+        LG = unique(x$LG),
+        Markers = nrow(x),
+        Min_cM = min(pos),
+        Max_cM = max(pos),
+        Spacing_cM = if (length(pos) > 1L) {
+          median(diff(pos))
+        } else {
+          NA_real_
+        }
+      )
+    }
+  )
+)
+
+rownames(map_summary) <- NULL
+
+knitr::kable(map_summary)
+
+map_ok <-
+  nrow(genetic_map) == 4010L &&
+  identical(sort(unique(genetic_map$LG)), 1:10) &&
+  all(map_summary$Markers == 401L) &&
+  all(abs(map_summary$Min_cM - 0) < 1e-12) &&
+  all(abs(map_summary$Max_cM - 200) < 1e-12) &&
+  all(abs(map_summary$Spacing_cM - 0.5) < 1e-12)
+
+add_audit(
+  "Genetic map structure",
+  if (map_ok) "PASS" else "BLOCKED",
+  paste(
+    "Expected 10 linkage groups, 401 markers per group,",
+    "200 cM per group, and 0.5 cM marker spacing."
+  )
+)
+
+n_duplicate_marker_names <- sum(duplicated(genetic_map$Marker))
+
+add_audit(
+  "Unique map marker names",
+  if (n_duplicate_marker_names == 0L) "PASS" else "BLOCKED",
+  sprintf("%d duplicated marker names detected.", n_duplicate_marker_names)
+)
+```
+
+# Simulation control file
+
+```{r simulation-control}
+control_raw <- readLines(
+  file.path(data_dir, "controlegenetico#1.dat"),
+  warn = FALSE
+)
+
+control_ascii <- iconv(
+  control_raw,
+  from = "latin1",
+  to = "ASCII//TRANSLIT",
+  sub = ""
+)
+
+# The original control file contains an internal tab in the C1 key
+# "Escal\ta". Normalize whitespace inside keys only; numeric values are
+# retained exactly as stored in the source file.
+normalize_control_key <- function(x) {
+  key <- sub(",.*$", "", x)
+  key <- trimws(key)
+  key <- gsub("[[:space:]]+", "", key)
+  tolower(key)
+}
+
+control_keys <- vapply(
+  control_ascii,
+  normalize_control_key,
+  character(1)
+)
+
+scenario_start <- which(control_keys == "variavel")
+
+if (length(scenario_start) != 6L) {
+  add_audit(
+    "Simulation control blocks",
+    "BLOCKED",
+    paste("Expected 6 scenario blocks; found", length(scenario_start))
+  )
+  stop("Unexpected number of scenario blocks in control file.")
+}
+
+scenario_end <- c(
+  scenario_start[-1L] - 1L,
+  length(control_ascii)
+)
+
+scale_source_lines <- grep(
+  "^\\s*Escal",
+  control_ascii,
+  value = TRUE,
+  ignore.case = TRUE
+)
+
+scale_source_keys <- trimws(
+  sub(",.*$", "", scale_source_lines)
+)
+
+scale_key_has_internal_whitespace <- any(
+  grepl("[[:space:]]", scale_source_keys)
+)
+
+add_audit(
+  "Simulation-control key formatting",
+  if (scale_key_has_internal_whitespace) "WARNING" else "PASS",
+  if (scale_key_has_internal_whitespace) {
+    paste(
+      "The source control file contains internal whitespace in the C1",
+      "Scale key (Escal<tab>a). Key whitespace was normalized for parsing;",
+      "the stored numeric value was not altered."
+    )
+  } else {
+    "Control-file keys required no internal-whitespace normalization."
+  }
+)
+
+extract_control_value <- function(block, key) {
+  block_keys <- vapply(
+    block,
+    normalize_control_key,
+    character(1)
+  )
+
+  target_key <- normalize_control_key(
+    paste0(key, ",")
+  )
+
+  hit <- which(block_keys == target_key)
+
+  if (length(hit) == 0L) {
+    return(NA_real_)
+  }
+
+  value_text <- trimws(
+    sub("^[^,]*,", "", block[hit[1L]])
+  )
+
+  suppressWarnings(
+    as.numeric(value_text)
+  )
+}
+
+control_rows <- vector("list", length(scenario_start))
+qtl_lists <- vector("list", length(scenario_start))
+
+for (i in seq_along(scenario_start)) {
+  block <- control_ascii[
+    scenario_start[i]:scenario_end[i]
+  ]
+
+  block_keys <- vapply(
+    block,
+    normalize_control_key,
+    character(1)
+  )
+
+  selected_line <- which(
+    block_keys == "locos_selecionados"
+  )
+
+  if (length(selected_line) == 0L ||
+      selected_line[1L] >= length(block)) {
+    add_audit(
+      paste("QTL list scenario", i),
+      "BLOCKED",
+      "Could not locate QTL list after Locos_selecionados."
+    )
+    stop("Could not parse QTL list from simulation control file.")
+  }
+
+  qtl_line <- block[selected_line[1L] + 1L]
+
+  qtl_lists[[i]] <- as.integer(
+    scan(
+      text = qtl_line,
+      what = numeric(),
+      quiet = TRUE
+    )
+  )
+
+  control_rows[[i]] <- data.frame(
+    Scenario = paste0("C", i),
+    Variable = extract_control_value(block, "Variavel"),
+    Total_loci = extract_control_value(block, "Locos_total"),
+    QTL_N = extract_control_value(block, "Locos_selecionados"),
+    gmd = extract_control_value(block, "gmd"),
+    Model = extract_control_value(block, "Modelo"),
+    H2_nominal = extract_control_value(block, "Herdabilidade"),
+    Constant = extract_control_value(block, "Constante"),
+    Scale = extract_control_value(block, "Escala"),
+    CV_metadata = extract_control_value(block, "CV")
+  )
+}
+
+control_table <- do.call(rbind, control_rows)
+
+expected_control <- data.frame(
+  Scenario = paste0("C", 1:6),
+  Variable = 1:6,
+  Total_loci = rep(4010, 6),
+  QTL_N = c(8, 40, 80, 120, 240, 480),
+  gmd = rep(0.5, 6),
+  Model = rep(2, 6),
+  H2_nominal = c(0.7, 0.7, 0.5, 0.5, 0.3, 0.3),
+  Constant = rep(100, 6),
+  Scale = rep(1, 6),
+  CV_metadata = rep(12, 6)
+)
+
+knitr::kable(control_table, digits = 4)
+
+control_ok <- isTRUE(
+  all(
+    control_table$Variable == expected_control$Variable,
+    control_table$Total_loci == expected_control$Total_loci,
+    control_table$QTL_N == expected_control$QTL_N,
+    abs(control_table$gmd - expected_control$gmd) < 1e-12,
+    control_table$Model == expected_control$Model,
+    abs(control_table$H2_nominal - expected_control$H2_nominal) < 1e-12,
+    control_table$Constant == expected_control$Constant,
+    control_table$Scale == expected_control$Scale,
+    control_table$CV_metadata == expected_control$CV_metadata
+  )
+)
+
+add_audit(
+  "Simulation scenario metadata",
+  if (control_ok) "PASS" else "BLOCKED",
+  paste(
+    "Six scenarios expected with QTL counts",
+    "8, 40, 80, 120, 240, and 480 and nominal",
+    "heritabilities 0.7, 0.7, 0.5, 0.5, 0.3, and 0.3."
+  )
+)
+
+qtl_count_matches <- all(
+  vapply(qtl_lists, length, integer(1)) ==
+    control_table$QTL_N
+)
+
+add_audit(
+  "QTL-list lengths",
+  if (qtl_count_matches) "PASS" else "BLOCKED",
+  paste(
+    "Observed QTL-list lengths:",
+    paste(vapply(qtl_lists, length, integer(1)), collapse = ", ")
+  )
+)
+```
+
+# QTL positions
+
+```{r qtl-audit}
+qtl_rows <- do.call(
+  rbind,
+  lapply(
+    seq_along(qtl_lists),
+    function(i) {
+      qtl <- qtl_lists[[i]]
+
+      data.frame(
+        Scenario = paste0("C", i),
+        QTL_index = qtl,
+        LG = genetic_map$LG[qtl],
+        Position_cM = genetic_map$Position_cM[qtl]
+      )
+    }
+  )
+)
+
+qtl_in_range <- all(
+  qtl_rows$QTL_index >= 1L &
+    qtl_rows$QTL_index <= nrow(genetic_map)
+)
+
+qtl_unique_within_scenario <- all(
+  vapply(
+    qtl_lists,
+    function(x) length(unique(x)) == length(x),
+    logical(1)
+  )
+)
+
+add_audit(
+  "QTL indices within map",
+  if (qtl_in_range) "PASS" else "BLOCKED",
+  "All QTL indices must lie between 1 and 4010."
+)
+
+add_audit(
+  "Unique QTL within scenario",
+  if (qtl_unique_within_scenario) "PASS" else "BLOCKED",
+  "No duplicated QTL index is expected within a simulation scenario."
+)
+
+qtl_table_matrix <- table(
+  factor(qtl_rows$Scenario, levels = paste0("C", 1:6)),
+  factor(qtl_rows$LG, levels = 1:10)
+)
+
+qtl_by_lg <- data.frame(
+  Scenario = rownames(qtl_table_matrix),
+  unclass(qtl_table_matrix),
+  check.names = FALSE,
+  row.names = NULL
+)
+
+names(qtl_by_lg)[-1] <- paste0("LG", 1:10)
+
+knitr::kable(qtl_by_lg)
+
+qtl_balance_ok <- all(
+  vapply(
+    seq_len(nrow(control_table)),
+    function(i) {
+      expected_per_lg <- control_table$QTL_N[i] / 8
+      observed <- as.numeric(qtl_table_matrix[i, ])
+
+      all(observed[1:8] == expected_per_lg) &&
+        all(observed[9:10] == 0)
+    },
+    logical(1)
+  )
+)
+
+add_audit(
+  "QTL distribution across linkage groups",
+  if (qtl_balance_ok) "PASS" else "WARNING",
+  paste(
+    "The simulation design places QTL evenly across LG1-LG8;",
+    "LG9 and LG10 contain no selected QTL."
+  )
+)
+
+qtl_overlap <- outer(
+  seq_along(qtl_lists),
+  seq_along(qtl_lists),
+  Vectorize(
+    function(i, j) {
+      length(intersect(qtl_lists[[i]], qtl_lists[[j]]))
+    }
+  )
+)
+
+dimnames(qtl_overlap) <- list(
+  paste0("C", 1:6),
+  paste0("C", 1:6)
+)
+
+knitr::kable(
+  qtl_overlap,
+  caption = "Number of shared QTL indices between simulation scenarios"
+)
+```
+
+QTL overlap between scenarios is reported as a property of the simulation
+design. Overlap is not treated as evidence of data corruption.
+
+# Phenotypic and true genetic values
+
+Row order is the canonical individual identifier because the simulation files
+do not contain an explicit individual-ID column. All phenotype, true genetic
+value, and genotype matrices therefore must contain exactly the same 1,000
+rows.
+
+```{r phenotypic-genetic-summary}
+scenario_names <- paste0("C", 1:6)
+
+colnames(phenotype) <- scenario_names
+colnames(true_genetic_value) <- scenario_names
+
+residual_value <- phenotype - true_genetic_value
+
+scenario_summary <- data.frame(
+  Scenario = scenario_names,
+  QTL_N = control_table$QTL_N,
+  H2_nominal = control_table$H2_nominal,
+  Phenotype_mean = colMeans(phenotype),
+  Phenotype_sd = apply(phenotype, 2, sd),
+  Genetic_mean = colMeans(true_genetic_value),
+  Genetic_sd = apply(true_genetic_value, 2, sd),
+  Residual_mean = colMeans(residual_value),
+  Residual_sd = apply(residual_value, 2, sd),
+  Cor_P_G = vapply(
+    seq_len(ncol(phenotype)),
+    function(j) {
+      cor(phenotype[, j], true_genetic_value[, j])
+    },
+    numeric(1)
+  ),
+  Cor_G_E = vapply(
+    seq_len(ncol(phenotype)),
+    function(j) {
+      cor(true_genetic_value[, j], residual_value[, j])
+    },
+    numeric(1)
+  ),
+  H2_realized = vapply(
+    seq_len(ncol(phenotype)),
+    function(j) {
+      vg <- var(true_genetic_value[, j])
+      ve <- var(residual_value[, j])
+      vg / (vg + ve)
+    },
+    numeric(1)
+  ),
+  VarG_over_VarP = vapply(
+    seq_len(ncol(phenotype)),
+    function(j) {
+      var(true_genetic_value[, j]) / var(phenotype[, j])
+    },
+    numeric(1)
+  ),
+  CV_empirical_pct = 100 *
+    apply(phenotype, 2, sd) /
+    colMeans(phenotype),
+  CV_metadata = control_table$CV_metadata
+)
+
+knitr::kable(
+  scenario_summary,
+  digits = 4
+)
+
+row_order_contract_ok <-
+  nrow(phenotype) == nrow(true_genetic_value) &&
+  nrow(phenotype) == nrow(geno_012)
+
+add_audit(
+  "Row-order contract",
+  if (row_order_contract_ok) "PASS" else "BLOCKED",
+  paste(
+    "Phenotype, true genetic-value, and genotype matrices contain the same",
+    "1000 rows. Because the simulation files do not provide explicit",
+    "individual IDs, row position is adopted as the canonical individual",
+    "identifier; independent identity verification is not available."
+  )
+)
+
+phenotype_genetic_signal_ok <- all(
+  scenario_summary$Cor_P_G > 0.5
+)
+
+add_audit(
+  "Phenotype-genetic signal",
+  if (phenotype_genetic_signal_ok) "PASS" else "WARNING",
+  paste(
+    "Phenotype-true genetic correlations:",
+    paste(
+      round(scenario_summary$Cor_P_G, 4),
+      collapse = ", "
+    )
+  )
+)
+
+h2_difference <- abs(
+  scenario_summary$H2_realized -
+    scenario_summary$H2_nominal
+)
+
+h2_status <- if (any(h2_difference > 0.03)) {
+  "WARNING"
+} else {
+  "PASS"
+}
+
+add_audit(
+  "Nominal versus realized heritability",
+  h2_status,
+  paste(
+    "Absolute differences:",
+    paste(round(h2_difference, 4), collapse = ", "),
+    ". Differences are documented rather than used to redefine the scenarios."
+  )
+)
+
+cv_difference <- abs(
+  scenario_summary$CV_empirical_pct -
+    scenario_summary$CV_metadata
+)
+
+add_audit(
+  "CV metadata versus empirical phenotype CV",
+  if (any(cv_difference > 1)) "WARNING" else "PASS",
+  paste(
+    "The simulator reports CV metadata = 12 for all scenarios;",
+    "empirical phenotype CV values are reported separately.",
+    "The metadata field is therefore not interpreted automatically",
+    "as the empirical coefficient of variation."
+  )
+)
+```
+
+# Genotype quality control
+
+```{r genotype-qc}
+missing_genotypes <- sum(is.na(geno_012))
+
+duplicate_individuals <- sum(
+  duplicated(geno_012, MARGIN = 1)
+)
+
+duplicate_markers <- sum(
+  duplicated(geno_012, MARGIN = 2)
+)
+
+allele_frequency <- colMeans(geno_012) / 2
+maf <- pmin(allele_frequency, 1 - allele_frequency)
+heterozygosity <- colMeans(geno_012 == 1L)
+marker_variance <- apply(geno_012, 2, var)
+monomorphic_markers <- sum(marker_variance == 0)
+
+geno_frequency <- prop.table(
+  table(
+    factor(
+      as.vector(geno_012),
+      levels = 0:2
+    )
+  )
+)
+
+geno_frequency_table <- data.frame(
+  Genotype_code = 0:2,
+  Proportion = as.numeric(geno_frequency),
+  F2_expectation = c(0.25, 0.50, 0.25)
+)
+
+knitr::kable(
+  geno_frequency_table,
+  digits = 6
+)
+
+marker_qc_summary <- data.frame(
+  Statistic = c(
+    "Missing genotype cells",
+    "Duplicate individuals",
+    "Duplicate markers",
+    "Monomorphic markers",
+    "Minimum MAF",
+    "Median MAF",
+    "Maximum MAF",
+    "Minimum heterozygosity",
+    "Median heterozygosity",
+    "Maximum heterozygosity"
+  ),
+  Value = c(
+    missing_genotypes,
+    duplicate_individuals,
+    duplicate_markers,
+    monomorphic_markers,
+    min(maf),
+    median(maf),
+    max(maf),
+    min(heterozygosity),
+    median(heterozygosity),
+    max(heterozygosity)
+  )
+)
+
+knitr::kable(
+  marker_qc_summary,
+  digits = 6
+)
+
+add_audit(
+  "Missing genotypes",
+  if (missing_genotypes == 0L) "PASS" else "BLOCKED",
+  sprintf("%d missing genotype cells.", missing_genotypes)
+)
+
+add_audit(
+  "Duplicate individuals",
+  if (duplicate_individuals == 0L) "PASS" else "BLOCKED",
+  sprintf("%d duplicate genotype profiles.", duplicate_individuals)
+)
+
+add_audit(
+  "Duplicate markers",
+  if (duplicate_markers == 0L) "PASS" else "WARNING",
+  sprintf("%d duplicate marker profiles.", duplicate_markers)
+)
+
+add_audit(
+  "Monomorphic markers",
+  if (monomorphic_markers == 0L) "PASS" else "WARNING",
+  sprintf("%d monomorphic markers.", monomorphic_markers)
+)
+
+f2_frequency_ok <- max(
+  abs(
+    as.numeric(geno_frequency) -
+      c(0.25, 0.50, 0.25)
+  )
+) < 0.02
+
+add_audit(
+  "Overall F2 genotype frequencies",
+  if (f2_frequency_ok) "PASS" else "WARNING",
+  paste(
+    "Observed proportions:",
+    paste(
+      round(as.numeric(geno_frequency), 5),
+      collapse = ", "
+    )
+  )
+)
+
+add_audit(
+  "Minor allele frequency",
+  if (min(maf) > 0.40) "PASS" else "WARNING",
+  sprintf(
+    "MAF range: %.4f to %.4f; median %.4f.",
+    min(maf),
+    max(maf),
+    median(maf)
+  )
+)
+```
+
+# Parental genotypes
+
+```{r parents}
+parents <- as.matrix(
+  read.table(
+    file.path(data_dir, "genoma_pais.txt"),
+    header = FALSE
+  )
+)
+
+parent_structure_ok <-
+  nrow(parents) == 20L &&
+  ncol(parents) == 405L
+
+add_audit(
+  "Parental file dimensions",
+  if (parent_structure_ok) "PASS" else "BLOCKED",
+  paste(
+    "Expected 20 rows: two parents x 10 linkage groups,",
+    "with 401 marker states per linkage group."
+  )
+)
+
+if (parent_structure_ok) {
+  parent_id <- parents[, 1]
+  parent_lg <- parents[, 2]
+  parent_nmarkers <- parents[, 3]
+  parent_genotypes <- parents[, 5:405, drop = FALSE]
+
+  parent1_ok <- all(
+    parent_genotypes[parent_id == 1, ] == 1
+  )
+
+  parent2_ok <- all(
+    parent_genotypes[parent_id == 2, ] == 0
+  )
+
+  lg_parent_ok <-
+    identical(sort(unique(parent_lg)), 1:10) &&
+    all(table(parent_lg) == 2L) &&
+    all(parent_nmarkers == 401)
+
+  add_audit(
+    "Parental genotype contrast",
+    if (parent1_ok && parent2_ok) "PASS" else "BLOCKED",
+    paste(
+      "Parent 1 is fixed for state 1 and parent 2",
+      "is fixed for state 0 across all markers."
+    )
+  )
+
+  add_audit(
+    "Parental linkage-group structure",
+    if (lg_parent_ok) "PASS" else "BLOCKED",
+    "Each of the 10 linkage groups is represented for both parents."
+  )
+}
+```
+
+# `map.rds`
+
+The serialized map object is retained as part of the original simulation
+dataset. It is inspected independently from the text map to avoid assuming its
+internal structure.
+
+```{r map-rds}
+map_rds <- readRDS(
+  file.path(data_dir, "map.rds")
+)
+
+map_rds_info <- data.frame(
+  Property = c("Class", "Dimensions", "Names"),
+  Value = c(
+    paste(class(map_rds), collapse = ", "),
+    if (is.null(dim(map_rds))) {
+      "No dimensions"
+    } else {
+      paste(dim(map_rds), collapse = " x ")
+    },
+    if (is.null(names(map_rds))) {
+      "No names"
+    } else {
+      paste(head(names(map_rds), 20), collapse = ", ")
+    }
+  )
+)
+
+knitr::kable(map_rds_info)
+
+add_audit(
+  "map.rds readability",
+  "PASS",
+  paste(
+    "Object successfully read; class:",
+    paste(class(map_rds), collapse = ", ")
+  )
+)
+
+if (!is.null(dim(map_rds))) {
+  map_rds_nrow <- nrow(map_rds)
+
+  add_audit(
+    "map.rds row count",
+    if (map_rds_nrow == 4010L) "PASS" else "WARNING",
+    paste(
+      "Observed rows:",
+      map_rds_nrow,
+      "; text-map markers:",
+      nrow(genetic_map)
+    )
+  )
+}
+```
+
+# Linkage disequilibrium
+
+LD is evaluated using the canonical individual-by-marker `0/1/2` matrix.
+Within-linkage-group marker pairs are evaluated at fixed map distances.
+A random sample of pairs from different linkage groups provides an
+interchromosomal reference.
+
+```{r linkage-disequilibrium}
+if (monomorphic_markers == 0L) {
+  geno_scaled <- scale(
+    geno_012,
+    center = TRUE,
+    scale = TRUE
+  )
+
+  pair_r2 <- function(i, j, z, block_size = 500L) {
+    stopifnot(length(i) == length(j))
+
+    result <- numeric(length(i))
+
+    if (length(i) == 0L) {
+      return(result)
+    }
+
+    block_start <- seq(
+      1L,
+      length(i),
+      by = block_size
+    )
+
+    for (start in block_start) {
+      end <- min(
+        start + block_size - 1L,
+        length(i)
+      )
+
+      b <- start:end
+
+      r <- colSums(
+        z[, i[b], drop = FALSE] *
+          z[, j[b], drop = FALSE]
+      ) / (nrow(z) - 1)
+
+      result[b] <- r^2
+    }
+
+    result
+  }
+
+  ld_distances <- c(
+    0.5,
+    1,
+    2.5,
+    5,
+    10,
+    25,
+    50,
+    100,
+    200
+  )
+
+  ld_rows <- vector(
+    "list",
+    length(ld_distances)
+  )
+
+  for (d in seq_along(ld_distances)) {
+    distance <- ld_distances[d]
+    r2_all <- numeric()
+
+    for (lg in sort(unique(genetic_map$LG))) {
+      idx <- which(genetic_map$LG == lg)
+
+      idx <- idx[
+        order(genetic_map$Position_cM[idx])
+      ]
+
+      pos <- genetic_map$Position_cM[idx]
+
+      target <- match(
+        pos + distance,
+        pos
+      )
+
+      keep <- !is.na(target)
+
+      if (any(keep)) {
+        i <- idx[keep]
+        j <- idx[target[keep]]
+
+        r2_all <- c(
+          r2_all,
+          pair_r2(
+            i,
+            j,
+            geno_scaled
+          )
+        )
+      }
+    }
+
+    ld_rows[[d]] <- data.frame(
+      Distance_cM = distance,
+      Pairs = length(r2_all),
+      Mean_r2 = mean(r2_all),
+      Median_r2 = median(r2_all)
+    )
+  }
+
+  ld_summary <- do.call(
+    rbind,
+    ld_rows
+  )
+
+  set.seed(SEED_GLOBAL + 101L)
+
+  n_inter_pairs <- 5000L
+
+  inter_i <- sample(
+    seq_len(ncol(geno_012)),
+    n_inter_pairs,
+    replace = TRUE
+  )
+
+  inter_j <- sample(
+    seq_len(ncol(geno_012)),
+    n_inter_pairs,
+    replace = TRUE
+  )
+
+  same_lg <- genetic_map$LG[inter_i] ==
+    genetic_map$LG[inter_j]
+
+  while (any(same_lg)) {
+    inter_j[same_lg] <- sample(
+      seq_len(ncol(geno_012)),
+      sum(same_lg),
+      replace = TRUE
+    )
+
+    same_lg <- genetic_map$LG[inter_i] ==
+      genetic_map$LG[inter_j]
+  }
+
+  inter_r2 <- pair_r2(
+    inter_i,
+    inter_j,
+    geno_scaled
+  )
+
+  interchromosomal_ld <- data.frame(
+    Distance_cM = NA_real_,
+    Pairs = length(inter_r2),
+    Mean_r2 = mean(inter_r2),
+    Median_r2 = median(inter_r2)
+  )
+
+  knitr::kable(
+    ld_summary,
+    digits = 5,
+    caption = "Within-linkage-group LD decay"
+  )
+
+  knitr::kable(
+    interchromosomal_ld,
+    digits = 5,
+    caption = "Interchromosomal LD reference"
+  )
+
+  plot(
+    ld_summary$Distance_cM,
+    ld_summary$Mean_r2,
+    type = "b",
+    xlab = "Map distance (cM)",
+    ylab = expression(mean(r^2)),
+    main = "Linkage disequilibrium decay"
+  )
+
+  abline(
+    h = interchromosomal_ld$Mean_r2,
+    lty = 2
+  )
+
+  short_ld <- ld_summary$Mean_r2[
+    ld_summary$Distance_cM == 0.5
+  ]
+
+  medium_ld <- ld_summary$Mean_r2[
+    ld_summary$Distance_cM == 10
+  ]
+
+  ld_50 <- ld_summary$Mean_r2[
+    ld_summary$Distance_cM == 50
+  ]
+
+  ld_100 <- ld_summary$Mean_r2[
+    ld_summary$Distance_cM == 100
+  ]
+
+  ld_200 <- ld_summary$Mean_r2[
+    ld_summary$Distance_cM == 200
+  ]
+
+  ld_decay_ok <-
+    short_ld > medium_ld &&
+    medium_ld > ld_50 &&
+    ld_50 > interchromosomal_ld$Mean_r2 &&
+    interchromosomal_ld$Mean_r2 < 0.02
+
+  add_audit(
+    "Short-to-medium distance LD decay",
+    if (ld_decay_ok) "PASS" else "WARNING",
+    paste(
+      "Mean r2 at 0.5, 10, and 50 cM:",
+      paste(
+        round(c(short_ld, medium_ld, ld_50), 4),
+        collapse = ", "
+      ),
+      "; interchromosomal mean r2:",
+      round(interchromosomal_ld$Mean_r2, 5)
+    )
+  )
+
+  long_distance_plateau <-
+    is.finite(ld_100) &&
+    is.finite(ld_200) &&
+    ld_100 > 0.05 &&
+    ld_200 > 0.05 &&
+    ld_100 > 10 * interchromosomal_ld$Mean_r2 &&
+    ld_200 > 10 * interchromosomal_ld$Mean_r2
+
+  add_audit(
+    "Long-distance LD behavior",
+    if (long_distance_plateau) "WARNING" else "PASS",
+    paste(
+      "Mean r2 at 50, 100, and 200 cM:",
+      paste(
+        round(c(ld_50, ld_100, ld_200), 4),
+        collapse = ", "
+      ),
+      "; interchromosomal mean r2:",
+      round(interchromosomal_ld$Mean_r2, 5),
+      if (long_distance_plateau) {
+        paste(
+          ". LD declines strongly up to 50 cM but remains elevated at",
+          "100-200 cM relative to the interchromosomal reference.",
+          "This is documented as a property requiring interpretation of",
+          "the simulator's long-distance recombination behavior, not as",
+          "evidence of data corruption."
+        )
+      } else {
+        ". No marked long-distance LD plateau was detected."
+      }
+    )
+  )
+
+  rm(geno_scaled)
+  invisible(gc())
+} else {
+  ld_summary <- data.frame()
+  interchromosomal_ld <- data.frame()
+
+  add_audit(
+    "Short-to-medium distance LD decay",
+    "BLOCKED",
+    "LD calculation was blocked because monomorphic markers were detected."
+  )
+
+  add_audit(
+    "Long-distance LD behavior",
+    "BLOCKED",
+    "LD calculation was blocked because monomorphic markers were detected."
+  )
+}
+```
+
+The LD audit distinguishes the expected short-to-medium distance decay from
+the behavior observed at the longest intrachromosomal distances. If LD remains
+substantially elevated at 100-200 cM relative to the interchromosomal
+reference, this is recorded as a `WARNING`. The warning does not alter or
+filter the genotype matrix; it documents a feature that should be considered
+when interpreting the simulator's recombination process.
+
+# Interpretation of the simulation scenarios
+
+The six scenarios constitute a **complexity gradient**, rather than a complete
+factorial experiment between QTL number and heritability.
+
+The nominal scenarios are:
+
+```{r scenario-design}
+scenario_design <- control_table[
+  ,
+  c(
+    "Scenario",
+    "QTL_N",
+    "H2_nominal",
+    "gmd",
+    "Model",
+    "Constant"
+  )
+]
+
+knitr::kable(
+  scenario_design,
+  digits = 3
+)
+```
+
+Direct comparisons of QTL-number complexity while nominal heritability is held
+constant are therefore naturally defined within the following pairs:
+
+- C1 versus C2 at nominal \(H^2 = 0.7\);
+- C3 versus C4 at nominal \(H^2 = 0.5\);
+- C5 versus C6 at nominal \(H^2 = 0.3\).
+
+Across all six scenarios simultaneously, QTL number increases while nominal
+heritability decreases. Consequently, a global trend across C1-C6 must not be
+interpreted as an isolated causal effect of QTL number or heritability.
+
+The simulator specifies `Model = 2` for all scenarios. This simulation
+architecture is retained as part of the data-generating contract and motivates
+the use of additive, dominance, and epistatic genomic components in the
+GBLUP-ADE benchmark.
+
+# Final audit status
+
+```{r final-audit}
+status_order <- c(
+  "BLOCKED",
+  "WARNING",
+  "PASS"
+)
+
+audit_log$Status <- factor(
+  audit_log$Status,
+  levels = status_order
+)
+
+audit_log <- audit_log[
+  order(audit_log$Status),
+]
+
+rownames(audit_log) <- NULL
+
+knitr::kable(
+  audit_log,
+  caption = "Canonical simulated-data audit"
+)
+
+audit_counts <- as.data.frame(
+  table(audit_log$Status)
+)
+
+names(audit_counts) <- c(
+  "Status",
+  "Checks"
+)
+
+knitr::kable(
+  audit_counts,
+  caption = "Audit status counts"
+)
+
+blocked_checks <- sum(
+  audit_log$Status == "BLOCKED"
+)
+
+warning_checks <- sum(
+  audit_log$Status == "WARNING"
+)
+
+final_classification <- if (blocked_checks > 0L) {
+  "BLOCKED"
+} else if (warning_checks > 0L) {
+  "PASS WITH WARNINGS"
+} else {
+  "PASS"
+}
+
+cat(
+  "\nFinal audit classification:",
+  final_classification,
+  "\n"
+)
+```
+
+Warnings document characteristics of the simulation that require explicit
+interpretation. They do not invalidate the dataset unless a corresponding
+check is classified as `BLOCKED`.
+
+# Canonical preprocessed object
+
+The canonical modeling object is generated only when no blocking audit failure
+is present.
+
+```{r save-canonical-object}
+write.csv(
+  audit_log,
+  file.path(
+    output_dir,
+    "simulated_audit_summary.csv"
+  ),
+  row.names = FALSE
+)
+
+write.csv(
+  scenario_summary,
+  file.path(
+    output_dir,
+    "simulated_scenario_summary.csv"
+  ),
+  row.names = FALSE
+)
+
+write.csv(
+  qtl_rows,
+  file.path(
+    output_dir,
+    "simulated_qtl_map.csv"
+  ),
+  row.names = FALSE
+)
+
+if (nrow(ld_summary) > 0L) {
+  write.csv(
+    ld_summary,
+    file.path(
+      output_dir,
+      "simulated_ld_summary.csv"
+    ),
+    row.names = FALSE
+  )
+}
+
+if (blocked_checks > 0L) {
+  stop(
+    paste(
+      blocked_checks,
+      "blocking audit check(s) detected.",
+      "Canonical simulated object was not created."
+    )
+  )
+}
+
+simulated_common <- list(
+  metadata = list(
+    dataset = "simulated",
+    seed = SEED_GLOBAL,
+    n_individuals = nrow(geno_012),
+    n_markers = ncol(geno_012),
+    n_scenarios = ncol(phenotype),
+    row_identifier = seq_len(nrow(geno_012)),
+    row_alignment = "row position",
+    canonical_genotype_coding = "-1/0/1"
+  ),
+  phenotype = phenotype,
+  true_genetic_value = true_genetic_value,
+  residual_value = residual_value,
+  genotype_012 = geno_012,
+  genotype_m101 = geno_m101,
+  genetic_map = genetic_map,
+  scenario_control = control_table,
+  qtl_lists = qtl_lists,
+  qtl_map = qtl_rows,
+  scenario_summary = scenario_summary,
+  marker_qc = list(
+    allele_frequency = allele_frequency,
+    maf = maf,
+    heterozygosity = heterozygosity
+  ),
+  ld_summary = ld_summary,
+  interchromosomal_ld = interchromosomal_ld
+)
+
+saveRDS(
+  simulated_common,
+  file.path(
+    output_dir,
+    "preprocessed_simulated_common.rds"
+  ),
+  compress = "gzip"
+)
+
+cat(
+  "Canonical object written to:",
+  file.path(
+    output_dir,
+    "preprocessed_simulated_common.rds"
+  ),
+  "\n"
+)
+```
+
+# Reproducibility information
+
+```{r session-info}
+sessionInfo()
+```
