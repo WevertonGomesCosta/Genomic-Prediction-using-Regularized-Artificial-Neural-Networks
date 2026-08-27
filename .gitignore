@@ -12,10 +12,9 @@
 *.rar
 *.7z
 
-# Temporary model artifacts
-output/tmp/
-output/cache/
-output/checkpoints/
+# Machine-local runtime artifacts
+# Logs, checkpoints, pilot results, diagnostics, and temporary execution files
+.local/
 
-# Local audit and development logs
-logs/
+# Defensive guard against accidental interactive R Markdown output
+analysis/output/

@@ -42,14 +42,39 @@ knitr::opts_chunk$set(
 
 options(stringsAsFactors = FALSE)
 
+find_project_root <- function(start = getwd()) {
+  path <- normalizePath(start, winslash = "/", mustWork = TRUE)
+
+  repeat {
+    if (file.exists(file.path(path, "_workflowr.yml"))) {
+      return(path)
+    }
+
+    parent <- dirname(path)
+
+    if (identical(parent, path)) {
+      stop("Could not locate workflowr project root.")
+    }
+
+    path <- parent
+  }
+}
+
+PROJECT_ROOT <- find_project_root()
+
+project_path <- function(...) {
+  file.path(PROJECT_ROOT, ...)
+}
+
+
 SEED_GLOBAL <- 20260821L
 N_OUTER_FOLDS <- 5L
 N_OUTER_REPEATS <- 5L
 N_INNER_FOLDS <- 4L
 
-input_file <- "output/preprocessed_simulated_common.rds"
-audit_file <- "output/simulated_audit_summary.csv"
-output_dir <- "output"
+input_file <- project_path("output", "simulated", "audit", "preprocessed_simulated_common.rds")
+audit_file <- project_path("output", "simulated", "audit", "simulated_audit_summary.csv")
+output_dir <- project_path("output", "simulated", "validation")
 
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
