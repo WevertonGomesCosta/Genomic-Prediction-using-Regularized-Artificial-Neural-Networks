@@ -649,15 +649,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef9c736e2dee90241607b4ec489aabaebad7ee9a3targetblankf9c736ea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree0ec25daeacc78b484efd7fccaf38ea35898aef49targetblank0ec25daa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f9c736e2dee90241607b4ec489aabaebad7ee9a3" target="_blank">f9c736e</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/0ec25daeacc78b484efd7fccaf38ea35898aef49" target="_blank">0ec25da</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef9c736e2dee90241607b4ec489aabaebad7ee9a3targetblankf9c736ea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree0ec25daeacc78b484efd7fccaf38ea35898aef49targetblank0ec25daa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -667,7 +667,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f9c736e2dee90241607b4ec489aabaebad7ee9a3" target="_blank">f9c736e</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/0ec25daeacc78b484efd7fccaf38ea35898aef49" target="_blank">0ec25da</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -684,7 +684,7 @@ were generated:
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
-    Ignored:    analysis/output/
+    Ignored:    .local/
     Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica (1).xlsx
     Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica.xlsx
     Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012
@@ -701,8 +701,6 @@ Ignored files:
     Ignored:    data/dados_reais/pheno_real.rds
     Ignored:    data/dados_reais/plants-13-01876-v2.pdf
     Ignored:    data/dados_reais/pos_geno_real.rds
-    Ignored:    logs/
-    Ignored:    output/checkpoints/
 
 </code></pre>
 <p>
@@ -747,6 +745,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/0ec25daeacc78b484efd7fccaf38ea35898aef49/analysis/simulated_data_audit.Rmd" target="_blank">0ec25da</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-27
+</td>
+<td>
+refactor: organize canonical outputs and local runtime artifacts
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/e48bb5733e9fb96c645e18009d23d90dff7c897b/docs/simulated_data_audit.html" target="_blank">e48bb57</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-27
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -811,40 +843,65 @@ decay.</p>
 <span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">options</span>(<span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20260821</span><span class="dt">L</span></span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">set.seed</span>(SEED_GLOBAL)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>find_project_root <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">start =</span> <span class="fu">getwd</span>()) {</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  path <span class="ot">&lt;-</span> <span class="fu">normalizePath</span>(start, <span class="at">winslash =</span> <span class="st">&quot;/&quot;</span>, <span class="at">mustWork =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>data_dir <span class="ot">&lt;-</span> <span class="st">&quot;data/dados_simulados&quot;</span></span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>output_dir <span class="ot">&lt;-</span> <span class="st">&quot;output&quot;</span></span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="fu">dir.create</span>(output_dir, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>  <span class="cf">repeat</span> {</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="fu">file.path</span>(path, <span class="st">&quot;_workflowr.yml&quot;</span>))) {</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>      <span class="fu">return</span>(path)</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>    }</span>
 <span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>audit_log <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>  <span class="at">Check =</span> <span class="fu">character</span>(),</span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>  <span class="at">Status =</span> <span class="fu">character</span>(),</span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>  <span class="at">Details =</span> <span class="fu">character</span>(),</span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a>)</span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a>add_audit <span class="ot">&lt;-</span> <span class="cf">function</span>(check, status, details) {</span>
-<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a>  <span class="fu">stopifnot</span>(status <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;PASS&quot;</span>, <span class="st">&quot;WARNING&quot;</span>, <span class="st">&quot;BLOCKED&quot;</span>))</span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>    parent <span class="ot">&lt;-</span> <span class="fu">dirname</span>(path)</span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">identical</span>(parent, path)) {</span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="st">&quot;Could not locate workflowr project root.&quot;</span>)</span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>    }</span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>    path <span class="ot">&lt;-</span> parent</span>
+<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a>  }</span>
+<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a>}</span>
 <span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a>  audit_log <span class="ot">&lt;&lt;-</span> <span class="fu">rbind</span>(</span>
-<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a>    audit_log,</span>
-<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
-<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a>      <span class="at">Check =</span> check,</span>
-<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a>      <span class="at">Status =</span> status,</span>
-<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a>      <span class="at">Details =</span> <span class="fu">as.character</span>(details),</span>
-<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a>    )</span>
-<span id="cb1-35"><a href="#cb1-35" tabindex="-1"></a>  )</span>
+<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a>PROJECT_ROOT <span class="ot">&lt;-</span> <span class="fu">find_project_root</span>()</span>
+<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a>project_path <span class="ot">&lt;-</span> <span class="cf">function</span>(...) {</span>
+<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a>  <span class="fu">file.path</span>(PROJECT_ROOT, ...)</span>
+<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a>}</span>
+<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20260821</span><span class="dt">L</span></span>
+<span id="cb1-35"><a href="#cb1-35" tabindex="-1"></a><span class="fu">set.seed</span>(SEED_GLOBAL)</span>
 <span id="cb1-36"><a href="#cb1-36" tabindex="-1"></a></span>
-<span id="cb1-37"><a href="#cb1-37" tabindex="-1"></a>  <span class="fu">invisible</span>(<span class="cn">NULL</span>)</span>
-<span id="cb1-38"><a href="#cb1-38" tabindex="-1"></a>}</span>
+<span id="cb1-37"><a href="#cb1-37" tabindex="-1"></a>data_dir <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;data&quot;</span>, <span class="st">&quot;dados_simulados&quot;</span>)</span>
+<span id="cb1-38"><a href="#cb1-38" tabindex="-1"></a>output_dir <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;audit&quot;</span>)</span>
 <span id="cb1-39"><a href="#cb1-39" tabindex="-1"></a></span>
-<span id="cb1-40"><a href="#cb1-40" tabindex="-1"></a>fmt_dim <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb1-41"><a href="#cb1-41" tabindex="-1"></a>  <span class="fu">paste</span>(<span class="fu">dim</span>(x), <span class="at">collapse =</span> <span class="st">&quot; x &quot;</span>)</span>
-<span id="cb1-42"><a href="#cb1-42" tabindex="-1"></a>}</span></code></pre></div>
+<span id="cb1-40"><a href="#cb1-40" tabindex="-1"></a><span class="fu">dir.create</span>(output_dir, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-41"><a href="#cb1-41" tabindex="-1"></a></span>
+<span id="cb1-42"><a href="#cb1-42" tabindex="-1"></a>audit_log <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb1-43"><a href="#cb1-43" tabindex="-1"></a>  <span class="at">Check =</span> <span class="fu">character</span>(),</span>
+<span id="cb1-44"><a href="#cb1-44" tabindex="-1"></a>  <span class="at">Status =</span> <span class="fu">character</span>(),</span>
+<span id="cb1-45"><a href="#cb1-45" tabindex="-1"></a>  <span class="at">Details =</span> <span class="fu">character</span>(),</span>
+<span id="cb1-46"><a href="#cb1-46" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb1-47"><a href="#cb1-47" tabindex="-1"></a>)</span>
+<span id="cb1-48"><a href="#cb1-48" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" tabindex="-1"></a>add_audit <span class="ot">&lt;-</span> <span class="cf">function</span>(check, status, details) {</span>
+<span id="cb1-50"><a href="#cb1-50" tabindex="-1"></a>  <span class="fu">stopifnot</span>(status <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;PASS&quot;</span>, <span class="st">&quot;WARNING&quot;</span>, <span class="st">&quot;BLOCKED&quot;</span>))</span>
+<span id="cb1-51"><a href="#cb1-51" tabindex="-1"></a></span>
+<span id="cb1-52"><a href="#cb1-52" tabindex="-1"></a>  audit_log <span class="ot">&lt;&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb1-53"><a href="#cb1-53" tabindex="-1"></a>    audit_log,</span>
+<span id="cb1-54"><a href="#cb1-54" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb1-55"><a href="#cb1-55" tabindex="-1"></a>      <span class="at">Check =</span> check,</span>
+<span id="cb1-56"><a href="#cb1-56" tabindex="-1"></a>      <span class="at">Status =</span> status,</span>
+<span id="cb1-57"><a href="#cb1-57" tabindex="-1"></a>      <span class="at">Details =</span> <span class="fu">as.character</span>(details),</span>
+<span id="cb1-58"><a href="#cb1-58" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb1-59"><a href="#cb1-59" tabindex="-1"></a>    )</span>
+<span id="cb1-60"><a href="#cb1-60" tabindex="-1"></a>  )</span>
+<span id="cb1-61"><a href="#cb1-61" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" tabindex="-1"></a>  <span class="fu">invisible</span>(<span class="cn">NULL</span>)</span>
+<span id="cb1-63"><a href="#cb1-63" tabindex="-1"></a>}</span>
+<span id="cb1-64"><a href="#cb1-64" tabindex="-1"></a></span>
+<span id="cb1-65"><a href="#cb1-65" tabindex="-1"></a>fmt_dim <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb1-66"><a href="#cb1-66" tabindex="-1"></a>  <span class="fu">paste</span>(<span class="fu">dim</span>(x), <span class="at">collapse =</span> <span class="st">&quot; x &quot;</span>)</span>
+<span id="cb1-67"><a href="#cb1-67" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="expected-files" class="section level1">
 <h1>Expected files</h1>
@@ -3351,7 +3408,7 @@ audit failure is present.</p>
 <span id="cb29-93"><a href="#cb29-93" tabindex="-1"></a>  ),</span>
 <span id="cb29-94"><a href="#cb29-94" tabindex="-1"></a>  <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
 <span id="cb29-95"><a href="#cb29-95" tabindex="-1"></a>)</span></code></pre></div>
-<pre><code>Canonical object written to: output/preprocessed_simulated_common.rds </code></pre>
+<pre><code>Canonical object written to: C:/Users/Weverton/OneDrive/GitHub/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/output/simulated/audit/preprocessed_simulated_common.rds </code></pre>
 </div>
 <div id="reproducibility-information" class="section level1">
 <h1>Reproducibility information</h1>

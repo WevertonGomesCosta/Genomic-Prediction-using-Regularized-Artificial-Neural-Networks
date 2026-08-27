@@ -90,6 +90,31 @@ knitr::opts_chunk$set(
 )
 options(stringsAsFactors = FALSE)
 
+find_project_root <- function(start = getwd()) {
+  path <- normalizePath(start, winslash = "/", mustWork = TRUE)
+
+  repeat {
+    if (file.exists(file.path(path, "_workflowr.yml"))) {
+      return(path)
+    }
+
+    parent <- dirname(path)
+
+    if (identical(parent, path)) {
+      stop("Could not locate workflowr project root.")
+    }
+
+    path <- parent
+  }
+}
+
+PROJECT_ROOT <- find_project_root()
+
+project_path <- function(...) {
+  file.path(PROJECT_ROOT, ...)
+}
+
+
 SEED_GLOBAL <- 20260821L
 
 RUN_ANN_TUNING <- identical(
@@ -169,17 +194,17 @@ MODEL_LEVELS <- c(
   "ANN_L1_L2"
 )
 
-DATA_FILE <- "output/preprocessed_simulated_common.rds"
-CV_FILE <- "output/simulated_cv_design.rds"
-DATA_AUDIT_FILE <- "output/simulated_audit_summary.csv"
-CV_AUDIT_FILE <- "output/simulated_cv_design_audit.csv"
+DATA_FILE <- project_path("output", "simulated", "audit", "preprocessed_simulated_common.rds")
+CV_FILE <- project_path("output", "simulated", "validation", "simulated_cv_design.rds")
+DATA_AUDIT_FILE <- project_path("output", "simulated", "audit", "simulated_audit_summary.csv")
+CV_AUDIT_FILE <- project_path("output", "simulated", "validation", "simulated_cv_design_audit.csv")
 
-CHECKPOINT_DIR <- "output/checkpoints/simulated_ann_tuning"
+CHECKPOINT_DIR <- project_path(".local", "checkpoints", "canonical", "ann_tuning")
 
 OUTPUT_STEM <- if (ANN_TUNING_PILOT) {
-  "output/simulated_ann_tuning_pilot"
+  project_path(".local", "pilot", "ann", "tuning", "simulated_ann_tuning_pilot")
 } else {
-  "output/simulated_ann_tuning"
+  project_path("output", "simulated", "ann", "tuning", "simulated_ann_tuning")
 }
 
 CANDIDATE_RDS <- paste0(OUTPUT_STEM, "_candidate_summary.rds")
@@ -207,11 +232,18 @@ ANN_TUNING_CONFIG_ID <- paste(
   sep = "__"
 )
 
-dir.create(
-  CHECKPOINT_DIR,
-  recursive = TRUE,
-  showWarnings = FALSE
-)
+if (RUN_ANN_TUNING) {
+  dir.create(
+    CHECKPOINT_DIR,
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+  dir.create(
+    dirname(CANDIDATE_RDS),
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+}
 ```
 
 # Packages and computational backend
@@ -2576,7 +2608,7 @@ Rscript -e 'workflowr::wflow_build("analysis/simulated_data_ann.Rmd")'
 ```
 
 Completed tasks are checkpointed in
-`output/checkpoints/simulated_ann_tuning/`. Use `ANN_TUNING_FORCE=1` only when
+`.local/checkpoints/canonical/ann_tuning/`. Use `ANN_TUNING_FORCE=1` only when
 an intentional full recomputation is required.
 
 # Final ANN fitting
@@ -2610,12 +2642,12 @@ ANN_PILOT_TASK <- Sys.getenv("ANN_PILOT_TASK", "C1_R01_F01")
 # Best_epoch = 2019, under a diagnostic ceiling of 3000.
 FINAL_EPOCH_MAX_EPOCHS <- 3000L
 
-FINAL_CHECKPOINT_DIR <- "output/checkpoints/simulated_ann_final_canonical"
+FINAL_CHECKPOINT_DIR <- project_path(".local", "checkpoints", "canonical", "ann_final")
 
 FINAL_OUTPUT_STEM <- if (ANN_PILOT) {
-  "output/simulated_ann_pilot"
+  project_path(".local", "pilot", "ann", "final", "simulated_ann_pilot")
 } else {
-  "output/simulated_ann"
+  project_path("output", "simulated", "ann", "final", "simulated_ann")
 }
 
 FINAL_RESULTS_RDS <- paste0(FINAL_OUTPUT_STEM, "_results.rds")
@@ -2627,7 +2659,18 @@ FINAL_RESULTS_CSV <- paste0(FINAL_OUTPUT_STEM, "_results.csv")
 FINAL_PREDICTIONS_CSV <- paste0(FINAL_OUTPUT_STEM, "_predictions.csv")
 FINAL_EPOCH_CSV <- paste0(FINAL_OUTPUT_STEM, "_epoch_selection.csv")
 
-dir.create(FINAL_CHECKPOINT_DIR, recursive=TRUE, showWarnings=FALSE)
+if (RUN_ANN) {
+  dir.create(
+    FINAL_CHECKPOINT_DIR,
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+  dir.create(
+    dirname(FINAL_RESULTS_RDS),
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+}
 
 FINAL_CONFIG_ID <- paste0(
   "ANN_FINAL_CANONICAL_V2__FROM__",
@@ -2691,7 +2734,7 @@ knitr::kable(head(final_task_table,15),caption=if(ANN_PILOT)"Canonical ANN final
 # Final fitting and outer prediction
 
 ```{r run-final-ann, eval=RUN_ANN}
-req<-c("output/simulated_ann_tuning_selected_configurations.rds","output/simulated_ann_tuning_run_metadata.rds","output/simulated_ann_tuning_manifest.rds");if(!all(file.exists(req)))stop("Canonical tuning outputs are missing. Run RUN_ANN_TUNING=1 first. Missing: ",paste(req[!file.exists(req)],collapse=", "))
+req<-c(project_path("output","simulated","ann","tuning","simulated_ann_tuning_selected_configurations.rds"),project_path("output","simulated","ann","tuning","simulated_ann_tuning_run_metadata.rds"),project_path("output","simulated","ann","tuning","simulated_ann_tuning_manifest.rds"));if(!all(file.exists(req)))stop("Canonical tuning outputs are missing. Run RUN_ANN_TUNING=1 first. Missing: ",paste(req[!file.exists(req)],collapse=", "))
 sel<-readRDS(req[1]);tm<-readRDS(req[2]);if(!identical(tm$config_id,ANN_TUNING_CONFIG_ID))stop("Saved tuning config_id is incompatible with canonical ANN page.");if(!identical(tm$outer_assessment_used,FALSE)||!identical(tm$true_genetic_value_used,FALSE))stop("Saved tuning provenance failed.");if(nrow(sel)!=600L)stop("Expected 600 canonical selected configurations.")
 true_g<-common$true_genetic_value;control<-common$scenario_control;if(!identical(dim(true_g),c(1000L,6L)))stop("True G must be 1000 x 6.")
 run_start<-proc.time()[["elapsed"]];outs<-vector("list",nrow(final_task_table))
