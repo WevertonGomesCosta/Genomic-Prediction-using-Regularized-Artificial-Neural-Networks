@@ -1,32 +1,99 @@
 ---
-title: "About"
-author: 
-  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, wevertonufv@gmail.com]
+title: "About the project"
+author:
+  - Weverton Gomes da Costa
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
-    toc: false
+    toc: true
+    toc_float: true
 editor_options:
   chunk_output_type: console
 ---
 
-# Predição Genômica utilizando Redes Neurais Artificiais Regularizadas no Melhoramento Genético do Cafeeiro e em Dados Simulados
+# Objective
 
-Este projeto tem como objetivo aplicar técnicas de predição genômica utilizando redes neurais artificiais regularizadas para melhoramento genético do cafeeiro, além de explorar a utilização dessas técnicas em dados simulados. O objetivo principal é identificar regiões específicas do genoma do cafeeiro que estejam associadas a características desejáveis para o melhoramento da planta.
+This project investigates **genomic prediction using regularized artificial
+neural networks**, with emphasis on whether L1 and L2 weight penalties improve
+predictive performance relative to an unregularized ANN and to a conventional
+genomic mixed model.
 
-O fluxo de trabalho adotado para alcançar esse objetivo é composto pelas seguintes etapas principais:
+The study contains two complementary branches:
 
-1. Coleta de dados: Serão coletados dados genéticos do cafeeiro, obtidos a partir de fontes relevantes para o estudo. Esses dados incluirão informações sobre características fenotípicas e genotípicas de diferentes variedades de café.
+1. controlled simulated genomic scenarios, in which the true genetic value is
+   known and can be used for independent predictive assessment;
+2. a real *Coffea arabica* dataset, used to evaluate the models under an
+   applied breeding context.
 
-2. Análise exploratória: Será realizada uma análise exploratória dos dados para compreender as características da diversidade genética do cafeeiro e identificar possíveis relações entre os marcadores genéticos e as características fenotípicas de interesse.
+# Model comparison
 
-3. Treinamento do modelo: Serão utilizadas redes neurais artificiais regularizadas para desenvolver um modelo de predição genômica. Esse modelo buscará relacionar os marcadores genéticos com as características fenotípicas, permitindo a identificação de regiões do genoma do cafeeiro associadas às características de interesse.
+The canonical model set is:
 
-4. Validação e avaliação do modelo: O modelo de predição genômica será validado utilizando técnicas estatísticas adequadas, como a validação cruzada. Serão avaliadas a acurácia e a eficiência do modelo na previsão das características fenotípicas.
+- `GBLUP_ADE`;
+- `ANN_0`;
+- `ANN_L1`;
+- `ANN_L2`;
+- `ANN_L1_L2`, displayed as **ANN-L1+L2**.
 
-5. Aplicação em dados simulados: Além da aplicação em dados reais do cafeeiro, o modelo também será testado e avaliado em dados simulados, permitindo a verificação da robustez e generalização do modelo em diferentes cenários.
+All ANN variants use the same multilayer-perceptron implementation. They differ
+only in the coefficients applied to the L1 and L2 penalties on network weights.
+Bias terms are not penalized.
 
-6. Interpretação dos resultados: Os resultados obtidos serão analisados e interpretados, fornecendo insights sobre as relações genômicas e fenotípicas do cafeeiro. Serão discutidas implicações biológicas e agronômicas dessas associações, bem como possíveis aplicações práticas para o melhoramento genético do cafeeiro.
+The ANN objective function is
 
-A utilização da linguagem de programação R será adotada para a implementação das análises e desenvolvimento do modelo de predição genômica.
+\[
+\mathrm{MSE}
++\lambda_1\sum_j |w_j|
++\frac{\lambda_2}{2}\sum_j w_j^2.
+\]
+
+The combined L1+L2 model is therefore described explicitly as simultaneous L1
+and L2 neural-network weight regularization.
+
+# Simulated genomic data
+
+The simulated branch contains six scenarios that form a **genetic-complexity
+gradient**. The scenarios differ in genetic architecture and nominal
+heritability. Because the design is not a complete factorial combination of
+number of QTL and heritability, global changes across all six scenarios are not
+interpreted as the isolated causal effect of either factor.
+
+Within equal-heritability pairs, comparisons can be made more directly between
+different levels of genetic complexity.
+
+# Real coffee data
+
+The real-data branch uses coffee genotype and phenotype information. Genotype
+quality control and phenotype adjustment are treated as separate analytical
+steps. The provenance of the adjusted phenotypes is audited against the
+available raw multi-year phenotypic records before genomic prediction.
+
+# Validation and tuning
+
+All models are evaluated using common held-out partitions. ANN
+hyperparameters are selected only within the outer-analysis data. The
+outer-assessment sample is reserved for predictive evaluation.
+
+The public simulated-data workflow contains a **single canonical ANN
+analysis**. Hyperparameter tuning is an internal stage of that workflow rather
+than a separate public analysis page. Development sensitivity, boundary, and
+convergence diagnostics were used to establish and validate the final ANN
+protocol; their methodological conclusions are incorporated into the canonical
+analysis and those development modules are not part of the public workflow.
+
+Training epochs are treated as a fixed optimization protocol rather than a
+scientific tuning dimension. The canonical protocol distinguishes between:
+
+- hyperparameters selected by inner cross-validation;
+- fixed optimization controls such as maximum training epochs and patience;
+- final model refitting on the full outer-analysis sample.
+
+# Reproducible research
+
+The project is implemented in R with **workflowr**. Source analysis pages are
+stored under `analysis/`, rendered website files under `docs/`, and reusable
+analysis objects under `output/`.
+
+The workflow is designed so that routine rendering of the website does not
+automatically rerun computationally expensive model fitting.
