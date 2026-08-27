@@ -420,7 +420,7 @@ $(document).ready(function () {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -431,8 +431,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -445,9 +445,9 @@ aria-hidden="true"></span> </a>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -471,21 +471,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of
-the R Markdown file created these results, you’ll want to first commit
-it to the Git repo. If you’re still working on the analysis, you can
-ignore this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -576,15 +573,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree75f19b00cb1140ccc40f261a71994425ee2450a1targetblank75f19b0a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef9c736e2dee90241607b4ec489aabaebad7ee9a3targetblankf9c736ea">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/75f19b00cb1140ccc40f261a71994425ee2450a1" target="_blank">75f19b0</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f9c736e2dee90241607b4ec489aabaebad7ee9a3" target="_blank">f9c736e</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree75f19b00cb1140ccc40f261a71994425ee2450a1targetblank75f19b0a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef9c736e2dee90241607b4ec489aabaebad7ee9a3targetblankf9c736ea"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -594,7 +591,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/75f19b00cb1140ccc40f261a71994425ee2450a1" target="_blank">75f19b0</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f9c736e2dee90241607b4ec489aabaebad7ee9a3" target="_blank">f9c736e</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -612,66 +609,24 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    analysis/output/
+    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica (1).xlsx
+    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica.xlsx
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.indv
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.pos
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.indv.txt
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.pos.txt
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.txt
+    Ignored:    data/dados_reais/Rótulos C. arabica_Proj_Piloto.xlsx
+    Ignored:    data/dados_reais/Rótulos Novos SNPs.xls
+    Ignored:    data/dados_reais/dados_cafe.xlsx
+    Ignored:    data/dados_reais/fpls-09-01934.pdf
+    Ignored:    data/dados_reais/geno_real.rds
+    Ignored:    data/dados_reais/pheno_real.rds
+    Ignored:    data/dados_reais/plants-13-01876-v2.pdf
+    Ignored:    data/dados_reais/pos_geno_real.rds
+    Ignored:    logs/
     Ignored:    output/checkpoints/
-
-Untracked files:
-    Untracked:  analysis/simulated_data_ann.Rmd
-    Untracked:  analysis/simulated_data_audit.Rmd
-    Untracked:  analysis/simulated_data_gblup.Rmd
-    Untracked:  analysis/simulated_data_validation.Rmd
-    Untracked:  consolidate_canonical_documentation_stage4.py
-    Untracked:  data/dados_reais/
-    Untracked:  data/dados_simulados/
-    Untracked:  logs/
-    Untracked:  output/comparison/
-    Untracked:  output/preprocessed_simulated_common.rds
-    Untracked:  output/simulated_ann_epoch_selection.csv
-    Untracked:  output/simulated_ann_epoch_selection.rds
-    Untracked:  output/simulated_ann_predictions.csv
-    Untracked:  output/simulated_ann_predictions.rds
-    Untracked:  output/simulated_ann_results.csv
-    Untracked:  output/simulated_ann_results.rds
-    Untracked:  output/simulated_ann_run_metadata.rds
-    Untracked:  output/simulated_ann_tuning_candidate_summary.csv
-    Untracked:  output/simulated_ann_tuning_candidate_summary.rds
-    Untracked:  output/simulated_ann_tuning_fold_results.csv
-    Untracked:  output/simulated_ann_tuning_fold_results.rds
-    Untracked:  output/simulated_ann_tuning_manifest.csv
-    Untracked:  output/simulated_ann_tuning_manifest.rds
-    Untracked:  output/simulated_ann_tuning_run_metadata.rds
-    Untracked:  output/simulated_ann_tuning_selected_configurations.csv
-    Untracked:  output/simulated_ann_tuning_selected_configurations.rds
-    Untracked:  output/simulated_audit_summary.csv
-    Untracked:  output/simulated_cv_design.rds
-    Untracked:  output/simulated_cv_design_audit.csv
-    Untracked:  output/simulated_cv_design_summary.csv
-    Untracked:  output/simulated_cv_inner_assignments.csv
-    Untracked:  output/simulated_cv_outer_assignments.csv
-    Untracked:  output/simulated_gblup_ade_kernel_summary.csv
-    Untracked:  output/simulated_gblup_ade_predictions.csv
-    Untracked:  output/simulated_gblup_ade_predictions.rds
-    Untracked:  output/simulated_gblup_ade_results.csv
-    Untracked:  output/simulated_gblup_ade_results.rds
-    Untracked:  output/simulated_gblup_ade_run_metadata.rds
-    Untracked:  output/simulated_ld_summary.csv
-    Untracked:  output/simulated_qtl_map.csv
-    Untracked:  output/simulated_scenario_summary.csv
-
-Unstaged changes:
-    Modified:   .gitignore
-    Modified:   README.md
-    Modified:   _workflowr.yml
-    Modified:   analysis/_site.yml
-    Modified:   analysis/about.Rmd
-    Modified:   analysis/index.Rmd
-    Modified:   analysis/license.Rmd
-    Deleted:    data/Dados completos.xlsx
-    Deleted:    data/simulated_data/control_genetic.txt
-    Deleted:    data/simulated_data/genome_-1_0_1.txt
-    Deleted:    data/simulated_data/genome_11_12_22.txt
-    Deleted:    data/simulated_data/genotypic values.txt
-    Deleted:    data/simulated_data/phenotype.txt
-    Modified:   output/README.md
 
 </code></pre>
 <p>
@@ -716,6 +671,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/f9c736e2dee90241607b4ec489aabaebad7ee9a3/analysis/license.Rmd" target="_blank">f9c736e</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-27
+</td>
+<td>
+refactor: establish canonical simulated genomic prediction workflow
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/f9c736e2dee90241607b4ec489aabaebad7ee9a3/docs/license.html" target="_blank">f9c736e</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-27
+</td>
+<td>
+refactor: establish canonical simulated genomic prediction workflow
+</td>
+</tr>
 <tr>
 <td>
 Rmd
