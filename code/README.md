@@ -1,12 +1,9 @@
 # Code
 
-Command-line scripts and shared source code supporting the reproducible
-workflow are stored here.
+Shared functions and command-line utilities that support multiple analysis
+modules may be stored here when they are genuinely reusable.
 
-## Canonical simulated-data comparison
-
-`simulated_model_comparison.R` generates the four canonical descriptive
-GBLUP-ADE vs ANN comparison tables under `output/simulated/comparison/`.
-
-It consumes already validated canonical model-result objects and does not refit
-GBLUP-ADE or ANN models.
+Scientific stages that generate or interpret reported results belong in the
+corresponding workflowr source page under `analysis/`. The canonical simulated
+GBLUP-ADE versus ANN comparison is therefore implemented in
+`analysis/simulated_data_comparison.Rmd`, not as a standalone script.

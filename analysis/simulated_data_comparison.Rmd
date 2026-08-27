@@ -1,0 +1,732 @@
+---
+title: "Canonical comparison of GBLUP-ADE and regularized ANN models"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_float: true
+    code_folding: show
+editor_options:
+  chunk_output_type: console
+---
+
+# Purpose
+
+This module is the **terminal comparison stage** of the canonical simulated-data
+workflow. It compares the saved GBLUP-ADE results with the four saved ANN
+variants after both modeling branches have been completed.
+
+The page does **not** fit or tune any model. It consumes the canonical outputs
+from `simulated_data_gblup.Rmd` and `simulated_data_ann.Rmd`, verifies that the
+methods are directly comparable under the frozen validation design, computes
+the descriptive comparison tables, and checks them against the versioned
+canonical comparison outputs.
+
+The primary outcome is prediction of the **true simulated genetic value**.
+Phenotype prediction is retained as a secondary outcome.
+
+All conclusions concerning ANN performance are restricted to the
+**prespecified canonical ANN architecture and hyperparameter search space**.
+
+# Comparison contract
+
+A direct comparison is allowed only when the following invariants hold:
+
+1. GBLUP-ADE contains exactly 150 outer-CV tasks.
+2. Each ANN variant contains exactly the same 150 `TaskID`/`SplitID`
+   combinations.
+3. Scenario, repetition, fold, and split identifiers agree across methods.
+4. All model fits used in the comparison have status `ok`.
+5. Every reported comparison metric is finite.
+6. No ANN tuning or model fitting is executed by this page.
+7. Paired summaries are descriptive; repeated CV folds are not treated as
+   statistically independent observations for naive significance testing.
+
+```{r setup}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE
+)
+
+options(stringsAsFactors = FALSE)
+
+find_project_root <- function(start = getwd()) {
+  path <- normalizePath(start, winslash = "/", mustWork = TRUE)
+
+  repeat {
+    if (file.exists(file.path(path, "_workflowr.yml"))) {
+      return(path)
+    }
+
+    parent <- dirname(path)
+
+    if (identical(parent, path)) {
+      stop("Could not locate workflowr project root.")
+    }
+
+    path <- parent
+  }
+}
+
+PROJECT_ROOT <- find_project_root()
+
+project_path <- function(...) {
+  file.path(PROJECT_ROOT, ...)
+}
+
+GBLUP_RESULTS_RDS <- project_path(
+  "output", "simulated", "gblup", "simulated_gblup_ade_results.rds"
+)
+ANN_RESULTS_RDS <- project_path(
+  "output", "simulated", "ann", "final", "simulated_ann_results.rds"
+)
+
+COMPARISON_DIR <- project_path("output", "simulated", "comparison")
+
+OVERALL_CSV <- file.path(
+  COMPARISON_DIR, "simulated_model_overall_summary.csv"
+)
+SCENARIO_CSV <- file.path(
+  COMPARISON_DIR, "simulated_model_scenario_summary.csv"
+)
+PAIRED_CSV <- file.path(
+  COMPARISON_DIR, "simulated_ann_vs_gblup_paired_summary.csv"
+)
+PAIRED_SCENARIO_CSV <- file.path(
+  COMPARISON_DIR, "simulated_ann_vs_gblup_paired_by_scenario.csv"
+)
+
+WRITE_COMPARISON_OUTPUTS <- identical(
+  Sys.getenv("WRITE_COMPARISON_OUTPUTS", "0"),
+  "1"
+)
+
+metrics <- c(
+  "Genetic_Correlation",
+  "Genetic_RMSE",
+  "Genetic_MAE",
+  "Genetic_Bias",
+  "Genetic_Slope",
+  "Genetic_R2",
+  "Phenotype_Correlation",
+  "Phenotype_RMSE",
+  "Phenotype_MAE",
+  "Phenotype_Bias",
+  "Phenotype_Slope",
+  "Phenotype_R2"
+)
+
+higher_better <- c(
+  "Genetic_Correlation",
+  "Genetic_R2",
+  "Phenotype_Correlation",
+  "Phenotype_R2"
+)
+
+lower_better <- c(
+  "Genetic_RMSE",
+  "Genetic_MAE",
+  "Phenotype_RMSE",
+  "Phenotype_MAE"
+)
+
+zero_target <- c("Genetic_Bias", "Phenotype_Bias")
+one_target <- c("Genetic_Slope", "Phenotype_Slope")
+
+expected_ann_models <- c(
+  "ANN_0",
+  "ANN_L1",
+  "ANN_L2",
+  "ANN_L1_L2"
+)
+```
+
+# Canonical inputs
+
+```{r load-canonical-results}
+required_files <- c(GBLUP_RESULTS_RDS, ANN_RESULTS_RDS)
+
+if (!all(file.exists(required_files))) {
+  stop(
+    "Canonical model results are missing: ",
+    paste(required_files[!file.exists(required_files)], collapse = ", ")
+  )
+}
+
+gr <- readRDS(GBLUP_RESULTS_RDS)
+ar <- readRDS(ANN_RESULTS_RDS)
+
+cat("GBLUP rows:", nrow(gr), "\n")
+cat("ANN rows:", nrow(ar), "\n")
+cat("ANN models:", paste(sort(unique(ar$Model)), collapse = ", "), "\n")
+```
+
+# Compatibility audit
+
+```{r compatibility-audit}
+required_cols <- c(
+  "Scenario",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "TaskID",
+  "Model",
+  "Status",
+  metrics
+)
+
+missing_gr <- setdiff(required_cols, names(gr))
+missing_ar <- setdiff(required_cols, names(ar))
+
+if (length(missing_gr)) {
+  stop("Missing GBLUP columns: ", paste(missing_gr, collapse = ", "))
+}
+
+if (length(missing_ar)) {
+  stop("Missing ANN columns: ", paste(missing_ar, collapse = ", "))
+}
+
+key_signature <- function(x) {
+  paste(
+    x$Scenario,
+    x$Repetition,
+    x$Fold,
+    x$SplitID,
+    x$TaskID,
+    sep = "|"
+  )
+}
+
+g_keys <- sort(key_signature(gr))
+ann_key_match <- vapply(
+  expected_ann_models,
+  function(model) {
+    z <- ar[ar$Model == model, , drop = FALSE]
+    nrow(z) == 150L &&
+      !anyDuplicated(z$TaskID) &&
+      identical(sort(key_signature(z)), g_keys)
+  },
+  logical(1)
+)
+
+compatibility_checks <- data.frame(
+  Check = c(
+    "GBLUP has 150 tasks",
+    "ANN has 600 model-task rows",
+    "expected ANN models are present",
+    "GBLUP TaskID values are unique",
+    "each ANN model has identical Scenario/Repetition/Fold/SplitID/TaskID keys",
+    "all GBLUP statuses are ok",
+    "all ANN statuses are ok",
+    "all GBLUP comparison metrics are finite",
+    "all ANN comparison metrics are finite"
+  ),
+  PASS = c(
+    nrow(gr) == 150L,
+    nrow(ar) == 600L,
+    identical(sort(unique(ar$Model)), sort(expected_ann_models)),
+    !anyDuplicated(gr$TaskID),
+    all(ann_key_match),
+    all(gr$Status == "ok"),
+    all(ar$Status == "ok"),
+    all(vapply(
+      gr[, metrics, drop = FALSE],
+      function(x) all(is.finite(x)),
+      logical(1)
+    )),
+    all(vapply(
+      ar[, metrics, drop = FALSE],
+      function(x) all(is.finite(x)),
+      logical(1)
+    ))
+  ),
+  stringsAsFactors = FALSE
+)
+
+compatibility_checks$Status <- ifelse(
+  compatibility_checks$PASS,
+  "PASS",
+  "BLOCKED"
+)
+
+knitr::kable(
+  compatibility_checks[, c("Check", "Status")],
+  caption = "Compatibility audit for the canonical model comparison."
+)
+
+if (any(!compatibility_checks$PASS)) {
+  stop("Canonical model-comparison compatibility audit failed.")
+}
+```
+
+# Overall model performance
+
+```{r overall-comparison}
+analysis_cols <- c(
+  "Scenario",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "TaskID",
+  "Model",
+  metrics
+)
+
+all_results <- rbind(
+  gr[, analysis_cols],
+  ar[, analysis_cols]
+)
+
+overall <- aggregate(
+  all_results[, metrics],
+  by = list(Model = all_results$Model),
+  FUN = mean
+)
+
+overall_display <- overall[, c(
+  "Model",
+  "Genetic_Correlation",
+  "Genetic_RMSE",
+  "Genetic_MAE",
+  "Genetic_R2",
+  "Phenotype_Correlation",
+  "Phenotype_RMSE",
+  "Phenotype_MAE",
+  "Phenotype_R2"
+)]
+
+overall_display[-1] <- lapply(
+  overall_display[-1],
+  function(x) round(x, 4)
+)
+
+knitr::kable(
+  overall_display,
+  caption = paste(
+    "Overall held-out predictive performance.",
+    "Genetic-value prediction is the primary outcome."
+  )
+)
+```
+
+# Performance by simulation scenario
+
+```{r scenario-comparison}
+scenario_summary <- aggregate(
+  all_results[, metrics],
+  by = list(
+    Scenario = all_results$Scenario,
+    Model = all_results$Model
+  ),
+  FUN = mean
+)
+
+scenario_display <- scenario_summary[, c(
+  "Scenario",
+  "Model",
+  "Genetic_Correlation",
+  "Genetic_RMSE",
+  "Genetic_R2"
+)]
+
+scenario_display[, -(1:2)] <- lapply(
+  scenario_display[, -(1:2), drop = FALSE],
+  function(x) round(x, 4)
+)
+
+knitr::kable(
+  scenario_display,
+  caption = "Primary genetic-value prediction metrics by scenario."
+)
+```
+
+# Paired ANN versus GBLUP-ADE comparison
+
+A positive `performance_advantage` always means that the ANN variant performed
+better than GBLUP-ADE for the metric under consideration. For correlations and
+\(R^2\), larger values are better; for RMSE and MAE, smaller values are better;
+bias is evaluated by distance from zero; and slope is evaluated by distance
+from one.
+
+```{r paired-comparison}
+performance_advantage <- function(metric, ann_value, gblup_value) {
+  if (metric %in% higher_better) {
+    return(ann_value - gblup_value)
+  }
+
+  if (metric %in% lower_better) {
+    return(gblup_value - ann_value)
+  }
+
+  if (metric %in% zero_target) {
+    return(abs(gblup_value) - abs(ann_value))
+  }
+
+  if (metric %in% one_target) {
+    return(abs(gblup_value - 1) - abs(ann_value - 1))
+  }
+
+  stop("Unclassified metric: ", metric)
+}
+
+g <- gr[, c("TaskID", "SplitID", metrics)]
+names(g)[-(1:2)] <- paste0(names(g)[-(1:2)], "_GBLUP")
+
+paired_list <- list()
+
+for (model in sort(unique(ar$Model))) {
+  a <- ar[
+    ar$Model == model,
+    c("TaskID", "SplitID", "Scenario", metrics)
+  ]
+
+  z <- merge(
+    a,
+    g,
+    by = c("TaskID", "SplitID"),
+    all = FALSE
+  )
+
+  if (nrow(z) != 150L) {
+    stop(model, ": expected 150 paired tasks, got ", nrow(z))
+  }
+
+  for (metric in metrics) {
+    ann_value <- z[[metric]]
+    gblup_value <- z[[paste0(metric, "_GBLUP")]]
+
+    raw_difference <- ann_value - gblup_value
+    advantage <- performance_advantage(
+      metric,
+      ann_value,
+      gblup_value
+    )
+
+    paired_list[[length(paired_list) + 1L]] <- data.frame(
+      Model = model,
+      Metric = metric,
+      N = length(raw_difference),
+      Mean_ANN = mean(ann_value),
+      Mean_GBLUP = mean(gblup_value),
+      Mean_raw_difference = mean(raw_difference),
+      Median_raw_difference = median(raw_difference),
+      Mean_performance_advantage = mean(advantage),
+      Median_performance_advantage = median(advantage),
+      ANN_better = sum(advantage > 0),
+      Equal = sum(advantage == 0),
+      GBLUP_better = sum(advantage < 0),
+      stringsAsFactors = FALSE
+    )
+  }
+}
+
+paired <- do.call(rbind, paired_list)
+rownames(paired) <- NULL
+
+paired_primary <- paired[
+  paired$Metric %in% c(
+    "Genetic_Correlation",
+    "Genetic_RMSE",
+    "Genetic_R2"
+  ),
+  c(
+    "Model",
+    "Metric",
+    "Mean_ANN",
+    "Mean_GBLUP",
+    "Mean_performance_advantage",
+    "ANN_better",
+    "Equal",
+    "GBLUP_better"
+  )
+]
+
+paired_primary[, 3:5] <- lapply(
+  paired_primary[, 3:5, drop = FALSE],
+  function(x) round(x, 4)
+)
+
+knitr::kable(
+  paired_primary,
+  caption = paste(
+    "Paired ANN versus GBLUP-ADE comparison for the primary",
+    "genetic-value metrics."
+  )
+)
+```
+
+# Paired comparison by scenario
+
+```{r paired-by-scenario}
+paired_scenario_list <- list()
+
+for (model in sort(unique(ar$Model))) {
+  a <- ar[
+    ar$Model == model,
+    c("TaskID", "SplitID", "Scenario", metrics)
+  ]
+
+  z <- merge(
+    a,
+    g,
+    by = c("TaskID", "SplitID"),
+    all = FALSE
+  )
+
+  for (scenario in sort(unique(z$Scenario))) {
+    zs <- z[z$Scenario == scenario, , drop = FALSE]
+
+    if (nrow(zs) != 25L) {
+      stop(
+        model,
+        " / ",
+        scenario,
+        ": expected 25 paired tasks, got ",
+        nrow(zs)
+      )
+    }
+
+    for (metric in metrics) {
+      ann_value <- zs[[metric]]
+      gblup_value <- zs[[paste0(metric, "_GBLUP")]]
+
+      advantage <- performance_advantage(
+        metric,
+        ann_value,
+        gblup_value
+      )
+
+      paired_scenario_list[[
+        length(paired_scenario_list) + 1L
+      ]] <- data.frame(
+        Scenario = scenario,
+        Model = model,
+        Metric = metric,
+        N = nrow(zs),
+        Mean_advantage = mean(advantage),
+        Median_advantage = median(advantage),
+        ANN_better = sum(advantage > 0),
+        Equal = sum(advantage == 0),
+        GBLUP_better = sum(advantage < 0),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+}
+
+paired_scenario <- do.call(rbind, paired_scenario_list)
+rownames(paired_scenario) <- NULL
+
+paired_scenario_primary <- paired_scenario[
+  paired_scenario$Metric == "Genetic_Correlation",
+  c(
+    "Scenario",
+    "Model",
+    "Mean_advantage",
+    "ANN_better",
+    "Equal",
+    "GBLUP_better"
+  )
+]
+
+paired_scenario_primary$Mean_advantage <- round(
+  paired_scenario_primary$Mean_advantage,
+  4
+)
+
+knitr::kable(
+  paired_scenario_primary,
+  caption = paste(
+    "Paired genetic-correlation advantage by scenario.",
+    "Positive values favor ANN."
+  )
+)
+```
+
+# Canonical comparison-output audit
+
+The four versioned CSV files are treated as the canonical exported summaries.
+Normal rendering recomputes the comparison in memory and verifies that those
+exports remain consistent. Set `WRITE_COMPARISON_OUTPUTS=1` only when an
+intentional refresh of the exported comparison tables is required.
+
+```{r write-comparison-outputs, eval=WRITE_COMPARISON_OUTPUTS}
+dir.create(
+  COMPARISON_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+write.csv(overall, OVERALL_CSV, row.names = FALSE)
+write.csv(scenario_summary, SCENARIO_CSV, row.names = FALSE)
+write.csv(paired, PAIRED_CSV, row.names = FALSE)
+write.csv(paired_scenario, PAIRED_SCENARIO_CSV, row.names = FALSE)
+```
+
+```{r verify-comparison-outputs}
+canonical_files <- c(
+  OVERALL_CSV,
+  SCENARIO_CSV,
+  PAIRED_CSV,
+  PAIRED_SCENARIO_CSV
+)
+
+if (!all(file.exists(canonical_files))) {
+  stop(
+    "Canonical comparison CSV files are missing: ",
+    paste(canonical_files[!file.exists(canonical_files)], collapse = ", ")
+  )
+}
+
+frames_equal <- function(saved, computed, tolerance = 1e-12) {
+  if (!identical(names(saved), names(computed))) {
+    return(FALSE)
+  }
+
+  if (nrow(saved) != nrow(computed)) {
+    return(FALSE)
+  }
+
+  for (name in names(saved)) {
+    x <- saved[[name]]
+    y <- computed[[name]]
+
+    if (is.numeric(x) && is.numeric(y)) {
+      if (!all(is.finite(x)) || !all(is.finite(y))) {
+        return(FALSE)
+      }
+
+      if (!all(abs(x - y) <= tolerance)) {
+        return(FALSE)
+      }
+    } else {
+      if (!identical(as.character(x), as.character(y))) {
+        return(FALSE)
+      }
+    }
+  }
+
+  TRUE
+}
+
+saved_overall <- read.csv(
+  OVERALL_CSV,
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
+saved_scenario <- read.csv(
+  SCENARIO_CSV,
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
+saved_paired <- read.csv(
+  PAIRED_CSV,
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
+saved_paired_scenario <- read.csv(
+  PAIRED_SCENARIO_CSV,
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
+
+output_checks <- data.frame(
+  Output = basename(canonical_files),
+  Status = ifelse(
+    c(
+      frames_equal(saved_overall, overall),
+      frames_equal(saved_scenario, scenario_summary),
+      frames_equal(saved_paired, paired),
+      frames_equal(saved_paired_scenario, paired_scenario)
+    ),
+    "PASS",
+    "BLOCKED"
+  ),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(
+  output_checks,
+  caption = "Agreement between recomputed and versioned comparison tables."
+)
+
+if (any(output_checks$Status != "PASS")) {
+  stop(
+    "Canonical comparison exports do not match the recomputed results. ",
+    "Review model outputs before using WRITE_COMPARISON_OUTPUTS=1."
+  )
+}
+```
+
+# Main findings
+
+```{r main-findings, echo=FALSE}
+best_model_corr <- overall$Model[
+  which.max(overall$Genetic_Correlation)
+]
+
+ann_overall <- overall[overall$Model != "GBLUP_ADE", , drop = FALSE]
+best_ann_corr <- ann_overall$Model[
+  which.max(ann_overall$Genetic_Correlation)
+]
+
+scenarios <- sort(unique(scenario_summary$Scenario))
+
+gblup_corr_wins <- sum(vapply(
+  scenarios,
+  function(scenario) {
+    z <- scenario_summary[
+      scenario_summary$Scenario == scenario,
+      ,
+      drop = FALSE
+    ]
+    z$Model[which.max(z$Genetic_Correlation)] == "GBLUP_ADE"
+  },
+  logical(1)
+))
+
+gblup_rmse_wins <- sum(vapply(
+  scenarios,
+  function(scenario) {
+    z <- scenario_summary[
+      scenario_summary$Scenario == scenario,
+      ,
+      drop = FALSE
+    ]
+    z$Model[which.min(z$Genetic_RMSE)] == "GBLUP_ADE"
+  },
+  logical(1)
+))
+```
+
+Within the prespecified canonical model and ANN architecture search space,
+**`r best_model_corr`** has the highest overall mean genetic correlation.
+
+Among the neural-network variants, **`r best_ann_corr`** has the highest overall
+mean genetic correlation. The comparison of ANN variants should be interpreted
+together with the regularization pattern rather than from a single metric in
+isolation.
+
+GBLUP-ADE has the highest mean genetic correlation in
+**`r gblup_corr_wins` of `r length(scenarios)` scenarios** and the lowest mean
+genetic RMSE in **`r gblup_rmse_wins` of `r length(scenarios)` scenarios**.
+
+These results do not establish a universal ordering between genomic mixed
+models and all possible neural-network architectures. They describe performance
+under the frozen outer-CV design and the prespecified canonical ANN search
+space used in this project.
+
+# Reproducibility
+
+This page is intentionally lightweight relative to the model-fitting modules.
+A normal render reads the saved ANN and GBLUP-ADE result objects, recomputes the
+comparison summaries, audits comparability, and verifies the four canonical CSV
+exports. It does not run ANN tuning, final ANN fitting, or GBLUP-ADE fitting.
+
+The canonical exported comparison tables are stored under
+`output/simulated/comparison/`.

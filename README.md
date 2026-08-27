@@ -43,6 +43,11 @@ simulated_data_validation.Rmd
         |                   |
         v                   v
 simulated_data_gblup.Rmd   simulated_data_ann.Rmd
+        |                   |
+        +---------+---------+
+                  |
+                  v
+      simulated_data_comparison.Rmd
 ```
 
 The modules have the following roles:
@@ -54,11 +59,14 @@ The modules have the following roles:
    shared by all competing methods;
 3. `simulated_data_gblup.Rmd` — canonical GBLUP-ADE modeling branch;
 4. `simulated_data_ann.Rmd` — canonical ANN branch, including hyperparameter
-   tuning and final fitting.
+   tuning and final fitting;
+5. `simulated_data_comparison.Rmd` — terminal comparison of the saved
+   GBLUP-ADE and ANN results under the shared frozen validation design.
 
-Development sensitivity, boundary, convergence, and earlier final-model pages
-were used to establish the canonical ANN protocol and are not part of the
-public workflow.
+ANN hyperparameter tuning remains an internal stage of the ANN workflow rather
+than a separate public analysis page. Development sensitivity, boundary,
+convergence, and earlier final-model pages were used to establish the canonical
+ANN protocol and are not part of the public workflow.
 
 ## Validation contract
 

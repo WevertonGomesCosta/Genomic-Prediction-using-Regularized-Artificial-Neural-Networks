@@ -54,7 +54,7 @@ The analysis follows a common validation contract:
 
 ## Simulated-data workflow
 
-The canonical simulated-data analysis is organized into four public modules:
+The canonical simulated-data analysis is organized into five public modules:
 
 1. [Data audit](simulated_data_audit.html) — verifies data integrity,
    provenance, genotype and phenotype structure, simulation metadata, QTL
@@ -64,6 +64,9 @@ The canonical simulated-data analysis is organized into four public modules:
 3. Parallel modeling branches:
    - [GBLUP-ADE](simulated_data_gblup.html)
    - [Regularized ANN](simulated_data_ann.html)
+4. [Model comparison](simulated_data_comparison.html) — verifies direct
+   comparability and summarizes GBLUP-ADE versus ANN performance after both
+   modeling branches are complete.
 
 ANN hyperparameter tuning is an internal stage of the ANN workflow rather than
 a separate public analysis page. Development sensitivity, boundary, and
