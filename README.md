@@ -141,9 +141,11 @@ a requirement for rendering the website or for the scientific definition of
 the ANN workflow. Device selection remains controlled by `ANN_DEVICE`.
 
 Each scientific analysis page retains `sessionInfo()` output to document the R
-session used for that render. A project-level `renv` lockfile has not yet been
-initialized; dependency locking is intentionally being handled separately from
-the runtime refactor.
+session used for that render. Project-level dependency versions are recorded in
+`renv.lock` using `renv` 1.1.8 and R 4.5.1. Routine saved-output CI restores
+only the lightweight rendering dependencies; `sommer` and `torch` remain
+locked for reproducible model-fitting environments but are not required by the
+saved-output smoke test.
 
 The canonical output contract is documented in `output/README.md`.
 
