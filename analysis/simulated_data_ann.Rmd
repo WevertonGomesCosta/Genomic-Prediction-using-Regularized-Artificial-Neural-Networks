@@ -121,6 +121,12 @@ RUN_ANN_TUNING <- identical(
   Sys.getenv("RUN_ANN_TUNING", "0"),
   "1"
 )
+RUN_ANN <- identical(
+  Sys.getenv("RUN_ANN", "0"),
+  "1"
+)
+ANN_RUNTIME_REQUIRED <- RUN_ANN_TUNING || RUN_ANN
+
 ANN_TUNING_FORCE <- identical(
   Sys.getenv("ANN_TUNING_FORCE", "0"),
   "1"
@@ -249,78 +255,118 @@ if (RUN_ANN_TUNING) {
 # Packages and computational backend
 
 ```{r packages}
-if (!requireNamespace("torch", quietly = TRUE)) {
-  stop("Package 'torch' is required.")
-}
-
-suppressPackageStartupMessages(
-  library(torch)
-)
-
-backend_ok <- tryCatch({
-  z <- torch::torch_tensor(
-    c(1, 2),
-    dtype = torch::torch_float()
-  )
-  all(as.numeric(z) == c(1, 2))
-}, error = function(e) FALSE)
-
-if (!backend_ok) {
-  stop(
-    "torch is installed but the libtorch backend is unavailable."
-  )
-}
-
-cuda_available <- isTRUE(
-  tryCatch(
-    torch::cuda_is_available(),
-    error = function(e) FALSE
-  )
-)
-
-requested_device <- tolower(
-  Sys.getenv("ANN_DEVICE", "auto")
-)
-
-if (!requested_device %in% c("auto", "cpu", "cuda")) {
-  stop("ANN_DEVICE must be auto, cpu, or cuda.")
-}
-
-if (requested_device == "cuda" && !cuda_available) {
-  stop(
-    "ANN_DEVICE=cuda requested but CUDA is unavailable."
-  )
-}
-
-ANN_DEVICE_LABEL <- if (
-  requested_device == "cuda" ||
-  (requested_device == "auto" && cuda_available)
-) {
-  "cuda"
-} else {
-  "cpu"
-}
-
-ANN_DEVICE <- torch::torch_device(
-  ANN_DEVICE_LABEL
-)
-
-sync_device <- function() {
-  if (ANN_DEVICE_LABEL == "cuda") {
-    try(
-      torch::cuda_synchronize(),
-      silent = TRUE
+if (ANN_RUNTIME_REQUIRED) {
+  if (!requireNamespace("torch", quietly = TRUE)) {
+    stop(
+      paste(
+        "Package 'torch' is required when",
+        "RUN_ANN_TUNING=1 or RUN_ANN=1."
+      )
     )
   }
-  invisible(NULL)
-}
 
-set_ann_seed <- function(seed) {
-  set.seed(as.integer(seed))
-  torch::torch_manual_seed(
-    as.integer(seed)
+  suppressPackageStartupMessages(
+    library(torch)
   )
-  invisible(NULL)
+
+  backend_ok <- tryCatch({
+    z <- torch::torch_tensor(
+      c(1, 2),
+      dtype = torch::torch_float()
+    )
+    all(as.numeric(z) == c(1, 2))
+  }, error = function(e) FALSE)
+
+  if (!backend_ok) {
+    stop(
+      "torch is installed but the libtorch backend is unavailable."
+    )
+  }
+
+  cuda_available <- isTRUE(
+    tryCatch(
+      torch::cuda_is_available(),
+      error = function(e) FALSE
+    )
+  )
+
+  requested_device <- tolower(
+    Sys.getenv("ANN_DEVICE", "auto")
+  )
+
+  if (!requested_device %in% c("auto", "cpu", "cuda")) {
+    stop("ANN_DEVICE must be auto, cpu, or cuda.")
+  }
+
+  if (requested_device == "cuda" && !cuda_available) {
+    stop(
+      "ANN_DEVICE=cuda requested but CUDA is unavailable."
+    )
+  }
+
+  ANN_DEVICE_LABEL <- if (
+    requested_device == "cuda" ||
+    (requested_device == "auto" && cuda_available)
+  ) {
+    "cuda"
+  } else {
+    "cpu"
+  }
+
+  ANN_DEVICE <- torch::torch_device(
+    ANN_DEVICE_LABEL
+  )
+
+  sync_device <- function() {
+    if (ANN_DEVICE_LABEL == "cuda") {
+      try(
+        torch::cuda_synchronize(),
+        silent = TRUE
+      )
+    }
+    invisible(NULL)
+  }
+
+  set_ann_seed <- function(seed) {
+    set.seed(as.integer(seed))
+    torch::torch_manual_seed(
+      as.integer(seed)
+    )
+    invisible(NULL)
+  }
+
+  torch_version_display <-
+    as.character(packageVersion("torch"))
+  backend_display <- backend_ok
+  cuda_display <- cuda_available
+  device_display <- ANN_DEVICE_LABEL
+} else {
+  backend_ok <- NA
+  cuda_available <- NA
+  ANN_DEVICE_LABEL <-
+    "not initialized (saved-output render)"
+  ANN_DEVICE <- NULL
+
+  sync_device <- function() {
+    invisible(NULL)
+  }
+
+  set_ann_seed <- function(seed) {
+    stop(
+      paste(
+        "ANN runtime is not initialized.",
+        "Set RUN_ANN_TUNING=1 or RUN_ANN=1."
+      )
+    )
+  }
+
+  torch_version_display <-
+    "not initialized (saved-output render)"
+  backend_display <-
+    "not initialized (saved-output render)"
+  cuda_display <-
+    "not initialized (saved-output render)"
+  device_display <- ANN_DEVICE_LABEL
 }
 
 environment_table <- data.frame(
@@ -337,10 +383,10 @@ environment_table <- data.frame(
     "dropout"
   ),
   Value = c(
-    as.character(packageVersion("torch")),
-    backend_ok,
-    cuda_available,
-    ANN_DEVICE_LABEL,
+    torch_version_display,
+    backend_display,
+    cuda_display,
+    device_display,
     MAX_EPOCHS,
     TUNING_V1_COMPATIBILITY_TOKEN,
     PATIENCE,
@@ -724,7 +770,7 @@ unscale_y <- function(y, scaler) {
 
 # Shared ANN implementation
 
-```{r model-definition}
+```{r model-definition, eval=ANN_RUNTIME_REQUIRED}
 TorchGenomicMLP <- torch::nn_module(
   "TorchGenomicMLP_CanonicalTuning",
 
@@ -2630,7 +2676,6 @@ then reinitialized, refit on all 800 for exactly `Best_epoch`, and only then
 applied to the untouched 200 outer-assessment individuals.
 
 ```{r final-ann-contract}
-RUN_ANN <- identical(Sys.getenv("RUN_ANN", "0"), "1")
 ANN_FORCE <- identical(Sys.getenv("ANN_FORCE", "0"), "1")
 ANN_PILOT <- identical(Sys.getenv("ANN_PILOT", "0"), "1")
 ANN_PILOT_TASK <- Sys.getenv("ANN_PILOT_TASK", "C1_R01_F01")

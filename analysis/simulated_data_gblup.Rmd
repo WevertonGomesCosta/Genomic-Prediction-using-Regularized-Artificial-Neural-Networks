@@ -174,28 +174,30 @@ extract_u <- function(fit, dat, factor_name, exact_name) {
 # Packages and canonical inputs
 
 ```{r inputs}
-if (!requireNamespace("sommer", quietly = TRUE)) {
-  stop("Package 'sommer' is required.")
-}
+if (RUN_GBLUP) {
+  if (!requireNamespace("sommer", quietly = TRUE)) {
+    stop("Package 'sommer' is required when RUN_GBLUP=1.")
+  }
 
-# sommer::mmes() evaluates the random-effects formula using helper
-# functions vsm() and ism(). Attach sommer explicitly so these helpers
-# are available in the fresh R session created by workflowr/callr.
-suppressPackageStartupMessages(
-  library(sommer)
-)
-
-if (
-  !exists("vsm", mode = "function") ||
-  !exists("ism", mode = "function")
-) {
-  stop(
-    paste(
-      "sommer was attached, but vsm() and/or ism() are unavailable.",
-      "Installed sommer version:",
-      as.character(packageVersion("sommer"))
-    )
+  # sommer::mmes() evaluates the random-effects formula using helper
+  # functions vsm() and ism(). Attach sommer explicitly so these helpers
+  # are available in the fresh R session created by workflowr/callr.
+  suppressPackageStartupMessages(
+    library(sommer)
   )
+
+  if (
+    !exists("vsm", mode = "function") ||
+    !exists("ism", mode = "function")
+  ) {
+    stop(
+      paste(
+        "sommer was attached, but vsm() and/or ism() are unavailable.",
+        "Installed sommer version:",
+        as.character(packageVersion("sommer"))
+      )
+    )
+  }
 }
 
 required_files <- c(
@@ -257,11 +259,19 @@ knitr::kable(input_summary)
 ```{r prefit}
 sommer_helpers <- data.frame(
   Helper = c("vsm", "ism"),
-  Available = c(
-    exists("vsm", mode = "function"),
-    exists("ism", mode = "function")
-  ),
-  Sommer_version = as.character(packageVersion("sommer")),
+  Available = if (RUN_GBLUP) {
+    c(
+      exists("vsm", mode = "function"),
+      exists("ism", mode = "function")
+    )
+  } else {
+    c(NA, NA)
+  },
+  Sommer_version = if (RUN_GBLUP) {
+    as.character(packageVersion("sommer"))
+  } else {
+    "not initialized (saved-output render)"
+  },
   stringsAsFactors = FALSE
 )
 

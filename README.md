@@ -120,6 +120,31 @@ The project is implemented in R using R Markdown and `workflowr`.
 - `output/` — reproducible derived objects and canonical results;
 - `docs/` — generated workflowr website.
 
+The currently validated local environment for repository maintenance and
+saved-output rendering uses R 4.5.1, workflowr 1.7.2, rmarkdown 2.30, knitr
+1.50, and Pandoc 3.8.3.
+
+Routine website builds consume the saved canonical outputs and do not rerun
+the computationally intensive model-fitting stages. In this saved-output
+render mode, neither the ANN backend nor the GBLUP fitting package needs to be
+initialized.
+
+Additional model-fitting dependencies are required only when the corresponding
+execution flags are enabled:
+
+- `sommer` 4.4.4 for `RUN_GBLUP=1`;
+- `torch` 0.16.3 and its LibTorch backend for `RUN_ANN_TUNING=1` or
+  `RUN_ANN=1`.
+
+CUDA is available in the currently validated local ANN runtime, but CUDA is not
+a requirement for rendering the website or for the scientific definition of
+the ANN workflow. Device selection remains controlled by `ANN_DEVICE`.
+
+Each scientific analysis page retains `sessionInfo()` output to document the R
+session used for that render. A project-level `renv` lockfile has not yet been
+initialized; dependency locking is intentionally being handled separately from
+the runtime refactor.
+
 The canonical output contract is documented in `output/README.md`.
 
 Legacy analyses and outputs from earlier development versions are not used as
