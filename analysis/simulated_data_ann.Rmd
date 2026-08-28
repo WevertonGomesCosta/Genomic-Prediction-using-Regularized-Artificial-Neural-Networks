@@ -42,6 +42,36 @@ The following are **fixed optimization controls**, not tuned quantities:
 - minimum validation improvement: \(10^{-6}\);
 - early-validation fraction: 0.15.
 
+## Optimization concepts used in this workflow
+
+These controls describe **how each candidate network is optimized**; they are
+distinct from the scientific comparison among ANN variants.
+
+- **Adam** is the gradient-based optimizer used to update the network weights.
+  It adapts the magnitude of parameter updates from the recent history of the
+  gradients. In this workflow Adam is fixed as the optimizer; it is not compared
+  with alternative optimization algorithms.
+- The **learning rate** controls the size of the optimization steps taken by
+  Adam. It is a tuned quantity and is selected together with network
+  architecture using `ANN_0` within each outer task.
+- An **epoch** is one complete pass through the fitting observations used in a
+  particular network fit. The number of epochs completed is therefore an
+  optimization quantity, not a new cross-validation replicate.
+- **Early stopping** monitors loss on the separate early-validation subset
+  during optimization and stops training when additional epochs no longer
+  produce sufficient improvement. The frozen inner-assessment and outer-
+  assessment observations are not used for this stopping decision.
+- **Patience = 25** means that optimization stops after 25 consecutive epochs
+  without a qualifying improvement in early-validation loss.
+- **Minimum improvement (`min_delta`) = \(10^{-6}\)** defines the decrease in
+  early-validation loss required to count as an improvement and reset the
+  patience counter. Changes smaller than this threshold do not reset patience.
+
+Thus, early stopping determines how long an individual optimization run is
+allowed to continue, whereas nested cross-validation determines which
+prespecified architecture, learning rate, and penalty configuration is
+selected.
+
 The 2000-epoch value is a **convergence ceiling**, not a fixed final training
 length. Epoch diagnostics are excluded from hyperparameter ranking. After
 hyperparameters are selected, a separate early-stopping fit uses only the
