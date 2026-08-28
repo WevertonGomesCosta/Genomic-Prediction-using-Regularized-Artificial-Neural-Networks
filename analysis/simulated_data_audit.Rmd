@@ -1628,8 +1628,34 @@ check is classified as `BLOCKED`.
 
 # Canonical preprocessed object
 
-The canonical modeling object is generated only when no blocking audit failure
-is present.
+The canonical preprocessed object is generated only when no blocking audit
+failure is present. The saved `preprocessed_simulated_common.rds` acts as the
+shared data contract for the downstream validation and modeling modules, so
+those modules consume the same audited representation instead of independently
+re-reading and re-interpreting the raw simulator files.
+
+Its components have distinct scientific roles:
+
+- `phenotype` contains the observed response values available for model fitting
+  within the appropriate analysis subsets;
+- `genotype_m101` is the canonical -1/0/1 genotype representation used by the
+  downstream genomic prediction workflows, while `genotype_012` is retained as
+  the validated source representation;
+- `metadata$row_identifier` preserves the row-position identity contract used
+  to align individuals across phenotypes, genotypes, validation splits, and
+  predictions;
+- `true_genetic_value` is retained for held-out predictive evaluation only. It
+  is not used to generate validation folds, tune ANN hyperparameters, select
+  training duration, or fit the predictive models;
+- map, scenario, QTL, marker-QC, and LD components preserve the audited
+  simulation structure and provenance for downstream checks and interpretation.
+  Their presence in the common object does not make them additional response
+  variables or automatic model predictors.
+
+The next module uses this audited object to construct the frozen nested
+cross-validation design. The GBLUP-ADE and ANN branches then consume that common
+data contract together with the same frozen validation design, preserving
+individual and task alignment across the parallel modeling workflows.
 
 ```{r save-canonical-object}
 write.csv(
