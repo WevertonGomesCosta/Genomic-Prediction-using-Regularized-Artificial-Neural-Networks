@@ -1488,10 +1488,12 @@ Across all six scenarios simultaneously, QTL number increases while nominal
 heritability decreases. Consequently, a global trend across C1-C6 must not be
 interpreted as an isolated causal effect of QTL number or heritability.
 
-The simulator specifies `Model = 2` for all scenarios. This simulation
-architecture is retained as part of the data-generating contract and motivates
-the use of additive, dominance, and epistatic genomic components in the
-GBLUP-ADE benchmark.
+The simulator control file records `Model = 2` for all six scenarios. This
+numeric field is retained here as part of the data provenance, but its
+biological meaning is not inferred from the code value alone in this audit.
+The downstream GBLUP-ADE benchmark is a separate prespecified modeling choice:
+its additive, dominance, and epistatic components are defined and justified in
+the GBLUP module rather than being established solely by `Model = 2`.
 
 # Final audit status
 
@@ -1549,9 +1551,11 @@ final_classification <- if (blocked_checks > 0L) {
 }
 
 cat(
-  "\nFinal audit classification:",
+  "\
+Final audit classification:",
   final_classification,
-  "\n"
+  "\
+"
 )
 ```
 
@@ -1658,7 +1662,8 @@ cat(
     output_dir,
     "preprocessed_simulated_common.rds"
   ),
-  "\n"
+  "\
+"
 )
 ```
 
