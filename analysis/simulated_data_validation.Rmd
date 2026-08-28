@@ -33,7 +33,7 @@ The outer assessment sets are reserved exclusively for final model evaluation.
 The inner folds are reserved for ANN hyperparameter tuning. True simulated
 genetic values are never used to generate partitions or tune models.
 
-```{r setup}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE,
@@ -137,6 +137,14 @@ balanced_fold_assignment <- function(ids, k, seed) {
   out
 }
 ```
+
+## How to read the validation design
+
+The validation scheme separates model development from final predictive
+evaluation. An **analysis set** contains the individuals available for fitting
+or tuning, whereas the corresponding **assessment set** remains held out for
+evaluation at that level of cross-validation. Outer assessment individuals are
+therefore never used to choose ANN hyperparameters or training duration.
 
 # Canonical data prerequisite
 
@@ -268,10 +276,14 @@ if (!individual_universe_ok) {
 
 # Outer repeated cross-validation
 
-Each repetition independently shuffles the same 1,000 canonical IDs and assigns
-them to five balanced folds. Since 1,000 is divisible by five, every outer
-assessment set contains exactly 200 individuals and every outer analysis set
-contains exactly 800 individuals.
+For each repetition, `sample()` randomly permutes the 1,000 canonical individual
+IDs using a deterministic seed. `rep()` then assigns the shuffled IDs across
+five fold labels as evenly as possible. Because 1,000 is exactly divisible by
+five, every outer assessment fold contains 200 individuals and the remaining
+800 form its outer analysis set.
+
+The same procedure is repeated five times with different deterministic seeds,
+producing 25 outer train--test comparisons while preserving exact reproducibility.
 
 ```{r outer-folds}
 outer_assignments <- do.call(
@@ -472,12 +484,15 @@ add_check(
 
 # Nested inner folds
 
-Inner folds are generated separately inside each outer analysis set. They are
-used only for ANN hyperparameter tuning.
+Each outer analysis set is partitioned again for ANN hyperparameter selection.
+Within a given outer split, one inner fold acts as the assessment subset and the
+remaining inner individuals form the analysis subset. The operation `setdiff()`
+constructs the analysis IDs by removing the current assessment IDs, which makes
+the two sets disjoint by construction.
 
-Because every outer analysis set contains 800 individuals and four inner folds
-are used, each inner assessment set contains exactly 200 individuals and each
-inner analysis set contains 600 individuals.
+With 800 individuals in each outer analysis set and four inner folds, every
+inner assessment set contains 200 individuals and every inner analysis set
+contains 600.
 
 ```{r inner-folds}
 inner_assignments_list <- vector(
@@ -947,6 +962,10 @@ cat(
   "\n"
 )
 ```
+
+# Navigation
+
+[Previous: Data audit](simulated_data_audit.html) | [GBLUP-ADE](simulated_data_gblup.html) | [Regularized ANN](simulated_data_ann.html)
 
 # Reproducibility information
 

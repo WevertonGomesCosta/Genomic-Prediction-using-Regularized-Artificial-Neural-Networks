@@ -23,17 +23,6 @@ The four variants are `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2`
 (displayed as **ANN-L1+L2**). They use the same multilayer perceptron and differ
 only in L1/L2 weight penalties.
 
-The page has two independent execution modes:
-
-- `RUN_ANN_TUNING=1`: run or refresh nested inner-CV tuning only;
-- `RUN_ANN=1`: consume the saved canonical tuning selections, select
-  `Best_epoch` using only the 800 outer-analysis individuals, refit from
-  scratch on all 800 for that epoch count, and only then predict the untouched
-  200 outer-assessment individuals.
-
-Using both flags intentionally runs the full ANN workflow. Ordinary builds run
-neither expensive stage and only render saved outputs.
-
 # Tuning contract
 
 Only four quantities are treated as hyperparameters:
@@ -54,34 +43,25 @@ The following are **fixed optimization controls**, not tuned quantities:
 - early-validation fraction: 0.15.
 
 The 2000-epoch value is a **convergence ceiling**, not a fixed final training
-length. The saved `ANN_TUNING_CANONICAL_V1` metadata still contains the
-historical field `final_train_epochs = 2000` because that value belongs to the
-completed tuning run's immutable provenance/configuration identifier; the
-canonical final-fitting stage does **not** use that field as a refit rule. Epoch diagnostics are excluded from hyperparameter ranking. After
-hyperparameters are selected, a new early-stopping fit uses only the
-outer-analysis sample to select `Best_epoch`; the final network is then refit
-from scratch on all 800 outer-analysis individuals for exactly `Best_epoch`.
+length. Epoch diagnostics are excluded from hyperparameter ranking. After
+hyperparameters are selected, a separate early-stopping fit uses only the
+outer-analysis sample to select `Best_epoch`; the final network is then
+reinitialized and refit on all 800 outer-analysis individuals for exactly
+`Best_epoch`.
 
 # Architecture range
 
-The canonical architecture catalog deliberately defines a **bounded
-small-to-moderate neural-network search space**, ranging from two hidden neurons
-to `64-32`.
+The canonical architecture catalog defines a bounded small-to-moderate
+feed-forward network search space. The candidate hidden-layer structures are
+`2`, `4`, `8`, `16`, `32`, `8-4`, `16-8`, `32-16`, and `64-32`.
 
-Earlier development experiments explored larger networks, including
-architectures up to `256-128`, and showed that increased capacity could improve
-inner-validation performance in some tasks. Those larger architectures were
-not carried forward into the canonical grid. Instead, `64-32` was retained as
-a prespecified computational and methodological upper bound for the final
-comparison.
+The `64-32` architecture is the prespecified upper bound of the canonical
+search space. Consequently, all ANN results and the subsequent comparison with
+GBLUP-ADE are interpreted **within the prespecified canonical model/architecture
+search space**, rather than as a comparison against every possible neural-network
+architecture.
 
-This restriction is therefore part of the estimand of the canonical analysis:
-the reported comparison evaluates GBLUP-ADE against regularized and
-unregularized ANN models **within this bounded architecture class**. It should
-not be interpreted as demonstrating that GBLUP-ADE outperforms every possible
-higher-capacity neural-network architecture.
-
-```{r setup}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
@@ -252,9 +232,7 @@ if (RUN_ANN_TUNING) {
 }
 ```
 
-# Packages and computational backend
-
-```{r packages}
+```{r packages, include=FALSE}
 if (ANN_RUNTIME_REQUIRED) {
   if (!requireNamespace("torch", quietly = TRUE)) {
     stop(
@@ -404,9 +382,9 @@ knitr::kable(
 
 # Canonical inputs
 
-This module depends only on the frozen common preprocessing object and frozen
-nested validation design. It does not depend on V2, V3, V4, V4C, or their
-outer-assessment results.
+This module uses the audited common preprocessing object and the frozen nested
+validation design established in the preceding modules. These fixed inputs keep
+model tuning and outer-CV evaluation aligned across all four ANN variants.
 
 ```{r inputs}
 required_files <- c(
@@ -608,9 +586,22 @@ cat(
 )
 ```
 
-# Support functions
+The grid contains 70 candidate configurations per outer task. With four frozen inner folds, this corresponds to 280 candidate-fold fits per task and 42,000 fits across the 150 scenario-by-split tasks. Architecture and learning rate are selected using `ANN_0` and then held common across the four ANN variants within each task, so their subsequent contrast isolates the L1/L2 penalty choice.
 
-```{r support-functions}
+# Within-fold preprocessing
+
+For every inner fit, marker means and standard deviations are estimated only
+from the fitting subset. Those same parameters are then applied to the
+corresponding early-validation and inner-assessment individuals. Phenotypes are
+standardized from the fitting subset in the same way, and predictions are
+returned to the original phenotype scale before calculating performance
+metrics. Markers with effectively zero fitting-set variance receive unit scale
+to avoid numerical division by zero.
+
+This ordering prevents validation or assessment observations from influencing
+the preprocessing parameters used to fit the network.
+
+```{r support-functions, include=FALSE}
 safe_cor <- function(p, o) {
   z <- is.finite(p) & is.finite(o)
 
@@ -769,6 +760,36 @@ unscale_y <- function(y, scaler) {
 ```
 
 # Shared ANN implementation
+
+For standardized marker vector \(\mathbf{x}\), hidden layers apply affine
+transformations followed by ReLU activation,
+
+\[
+\mathbf{h}^{(0)}=\mathbf{x}, \qquad
+\mathbf{h}^{(\ell)}=\operatorname{ReLU}(\mathbf{W}_{\ell}\mathbf{h}^{(\ell-1)}+\mathbf{b}_{\ell}),
+\]
+
+with a linear output layer
+
+\[
+\hat{y}=\mathbf{w}_{o}^{\mathsf{T}}\mathbf{h}^{(L)}+b_o.
+\]
+
+Training minimizes
+
+\[
+\mathcal{L}=
+\operatorname{MSE}(y,\hat{y})+
+\lambda_1\sum_j |w_j|+
+\frac{\lambda_2}{2}\sum_j w_j^2.
+\]
+
+`ANN_0` sets both penalty coefficients to zero, `ANN_L1` uses a selected
+positive \(\lambda_1\) with \(\lambda_2=0\), `ANN_L2` uses a selected
+positive \(\lambda_2\) with \(\lambda_1=0\), and `ANN_L1_L2` uses selected
+positive values of both coefficients. Penalties are applied to network weights but not biases. Adam uses
+`weight_decay = 0`, so the L2 contribution enters only through the explicit
+`weight_penalty()` term shown below.
 
 ```{r model-definition, eval=ANN_RUNTIME_REQUIRED}
 TorchGenomicMLP <- torch::nn_module(
@@ -1397,7 +1418,7 @@ choose_candidate <- function(x) {
 The six scenarios share the same 25 frozen outer splits, producing 150
 `Scenario × outer split` tuning tasks.
 
-```{r tasks}
+```{r tasks, echo=FALSE}
 outer_map <- unique(
   cv$outer_assignments[
     ,
@@ -1557,7 +1578,7 @@ knitr::kable(
 This section evaluates only inner-CV candidates. It never predicts the outer
 assessment set.
 
-```{r run-tuning, eval=RUN_ANN_TUNING}
+```{r run-tuning, eval=RUN_ANN_TUNING, echo=FALSE}
 run_start <-
   proc.time()[["elapsed"]]
 
@@ -2185,7 +2206,7 @@ write.csv(
 
 # Saved-result integrity
 
-```{r saved-integrity}
+```{r saved-integrity, echo=FALSE}
 available <- all(
   file.exists(
     c(
@@ -2199,8 +2220,7 @@ available <- all(
 
 if (!available) {
   cat(
-    "Canonical ANN tuning outputs are not available yet. ",
-    "Run with RUN_ANN_TUNING=1.\n"
+    "Canonical ANN tuning outputs are unavailable; tuning summaries cannot be displayed.\n"
   )
 } else {
   selected_configurations <-
@@ -2351,7 +2371,7 @@ if (!available) {
 
 # Selected configurations
 
-```{r selected-summary}
+```{r selected-summary, echo=FALSE}
 if (available) {
   cat(
     "Selected architecture frequencies:\n"
@@ -2431,12 +2451,14 @@ if (available) {
 }
 ```
 
+The selection frequencies summarize how often each architecture, learning rate, and penalty coefficient is preferred across the frozen outer tasks. Because architecture and learning rate are shared by the four ANN variants within each task, differences among `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2` are not produced by giving the regularized variants a different structural search space.
+
 # Optimization diagnostics
 
 These diagnostics describe the fixed optimization protocol. They do not change
 the tuning grid.
 
-```{r optimization-diagnostics}
+```{r optimization-diagnostics, echo=FALSE}
 if (available) {
   cat(
     "EarlyStop_epoch summary:\n"
@@ -2527,7 +2549,7 @@ Consequently, boundary occupancy is treated as a limitation of the prespecified
 canonical comparison rather than as justification for extending the search
 space after observing the results.
 
-```{r boundary-description}
+```{r boundary-description, echo=FALSE}
 if (available) {
   task_level <- unique(
     selected_configurations[
@@ -2618,73 +2640,34 @@ if (available) {
 }
 ```
 
-# Reproducibility outputs
+# From tuning to final fitting
 
-The canonical tuning module produces:
-
-- candidate-level inner-CV summaries;
-- fold-level candidate results;
-- selected configuration for each `Scenario × outer split × ANN variant`;
-- a tuning manifest documenting every prespecified grid and fixed training
-  control.
-
-The final-fitting stage below consumes the selected configuration artifact and
-the tuning manifest. It does not repeat hyperparameter tuning.
-
-# Execution
-
-Routine website build without model fitting:
-
-```text
-Rscript -e 'workflowr::wflow_build("analysis/simulated_data_ann.Rmd")'
-```
-
-One-task pilot:
-
-```text
-ANN_TUNING_PILOT=1 RUN_ANN_TUNING=1 \
-Rscript -e 'workflowr::wflow_build("analysis/simulated_data_ann.Rmd")'
-```
-
-Complete canonical tuning:
-
-```text
-RUN_ANN_TUNING=1 \
-Rscript -e 'workflowr::wflow_build("analysis/simulated_data_ann.Rmd")'
-```
-
-Completed tasks are checkpointed in
-`.local/checkpoints/canonical/ann_tuning/`. Use `ANN_TUNING_FORCE=1` only when
-an intentional full recomputation is required.
+Nested tuning produces one selected architecture, learning rate, and applicable penalty coefficient(s) for each `Scenario × outer split × ANN variant`. The final stage consumes those selections directly under the same frozen validation design; hyperparameter selection is not repeated.
 
 # Final ANN fitting
 
-The canonical tuning stage retains `MAX_EPOCHS = 2000`. The final epoch-selection
-stage uses the separate `FINAL_EPOCH_MAX_EPOCHS = 3000` safety ceiling. This
-extension was introduced after an internal, outer-assessment-free convergence
-diagnostic reproduced the single 2000-epoch ceiling case and reached natural
-patience stopping at epoch 2044 (`Best_epoch = 2019`). The value 3000 is a
-safety ceiling only; final networks are still refit for their selected
-`Best_epoch`.
+The tuning stage uses a 2000-epoch convergence ceiling. Final epoch selection
+uses a separate 3000-epoch safety ceiling so that patience-based stopping can
+operate within the outer-analysis sample without imposing a fixed training
+length. The 3000-epoch value is only an upper bound: each final network is
+reinitialized and refit on all 800 outer-analysis individuals for exactly its
+selected `Best_epoch`.
 
-This stage consumes the saved `ANN_TUNING_CANONICAL_V1` selections. It never
-repeats hyperparameter tuning when only `RUN_ANN=1` is set.
+The final stage consumes the selected hyperparameters from nested tuning; it
+does not repeat model selection.
 
 For each `Scenario × outer split × ANN variant`, `Best_epoch` is selected with
 early stopping using only the 800 outer-analysis individuals. The network is
 then reinitialized, refit on all 800 for exactly `Best_epoch`, and only then
 applied to the untouched 200 outer-assessment individuals.
 
-```{r final-ann-contract}
+```{r final-ann-contract, include=FALSE}
 ANN_FORCE <- identical(Sys.getenv("ANN_FORCE", "0"), "1")
 ANN_PILOT <- identical(Sys.getenv("ANN_PILOT", "0"), "1")
 ANN_PILOT_TASK <- Sys.getenv("ANN_PILOT_TASK", "C1_R01_F01")
 
-# The tuning ceiling remains MAX_EPOCHS = 2000. This separate ceiling applies
-# only to Best_epoch selection inside the outer-analysis sample. A targeted
-# residual-convergence diagnostic reproduced the unique 2000-epoch ceiling
-# case exactly and reached natural patience stopping at epoch 2044, with
-# Best_epoch = 2019, under a diagnostic ceiling of 3000.
+# Separate safety ceiling used only for Best_epoch selection within the
+# outer-analysis sample; final networks are refit for exactly Best_epoch.
 FINAL_EPOCH_MAX_EPOCHS <- 3000L
 
 FINAL_CHECKPOINT_DIR <- project_path(".local", "checkpoints", "canonical", "ann_final")
@@ -2733,7 +2716,7 @@ knitr::kable(data.frame(
 
 # Final-fit helper functions
 
-```{r final-ann-functions}
+```{r final-ann-functions, include=FALSE}
 final_safe_bias <- function(p,o){z<-is.finite(p)&is.finite(o);if(!any(z))return(NA_real_);mean(p[z]-o[z])}
 final_safe_slope <- function(p,o){z<-is.finite(p)&is.finite(o);if(sum(z)<3L||sd(p[z])==0)return(NA_real_);as.numeric(coef(lm(o[z]~p[z]))[2])}
 final_safe_r2 <- function(p,o){z<-is.finite(p)&is.finite(o);if(sum(z)<2L)return(NA_real_);d<-sum((o[z]-mean(o[z]))^2);if(d==0)return(NA_real_);1-sum((o[z]-p[z])^2)/d}
@@ -2768,7 +2751,7 @@ train_final_fixed <- function(train_ids,assessment_ids,scenario_index,architectu
 
 # Final outer-CV tasks
 
-```{r final-ann-tasks}
+```{r final-ann-tasks, include=FALSE}
 om<-unique(cv$outer_assignments[,c("Repetition","OuterFold","SplitID")]);om<-om[order(om$Repetition,om$OuterFold),]
 final_task_table<-merge(data.frame(Scenario=scenario_names),om,by=NULL);final_task_table<-final_task_table[order(match(final_task_table$Scenario,scenario_names),final_task_table$Repetition,final_task_table$OuterFold),];final_task_table$Fold<-final_task_table$OuterFold;final_task_table$TaskID<-paste(final_task_table$Scenario,final_task_table$SplitID,sep="_");rownames(final_task_table)<-NULL
 if(nrow(final_task_table)!=150L)stop("Expected 150 canonical ANN outer tasks.")
@@ -2778,7 +2761,7 @@ knitr::kable(head(final_task_table,15),caption=if(ANN_PILOT)"Canonical ANN final
 
 # Final fitting and outer prediction
 
-```{r run-final-ann, eval=RUN_ANN}
+```{r run-final-ann, eval=RUN_ANN, echo=FALSE}
 req<-c(project_path("output","simulated","ann","tuning","simulated_ann_tuning_selected_configurations.rds"),project_path("output","simulated","ann","tuning","simulated_ann_tuning_run_metadata.rds"),project_path("output","simulated","ann","tuning","simulated_ann_tuning_manifest.rds"));if(!all(file.exists(req)))stop("Canonical tuning outputs are missing. Run RUN_ANN_TUNING=1 first. Missing: ",paste(req[!file.exists(req)],collapse=", "))
 sel<-readRDS(req[1]);tm<-readRDS(req[2]);if(!identical(tm$config_id,ANN_TUNING_CONFIG_ID))stop("Saved tuning config_id is incompatible with canonical ANN page.");if(!identical(tm$outer_assessment_used,FALSE)||!identical(tm$true_genetic_value_used,FALSE))stop("Saved tuning provenance failed.");if(nrow(sel)!=600L)stop("Expected 600 canonical selected configurations.")
 true_g<-common$true_genetic_value;control<-common$scenario_control;if(!identical(dim(true_g),c(1000L,6L)))stop("True G must be 1000 x 6.")
@@ -2805,20 +2788,54 @@ saveRDS(results,FINAL_RESULTS_RDS,compress="gzip");saveRDS(predictions,FINAL_PRE
 
 # Saved final-result integrity
 
-```{r final-ann-integrity}
+```{r final-ann-integrity, echo=FALSE}
 final_available<-all(file.exists(c(FINAL_RESULTS_RDS,FINAL_PREDICTIONS_RDS,FINAL_EPOCH_RDS,FINAL_RUN_RDS)))
-if(!final_available){cat("Canonical final ANN outputs are not available yet. Run with RUN_ANN=1 after tuning is available.\n")}else{
+if(!final_available){cat("Canonical final ANN outputs are unavailable; final summaries cannot be displayed.\n")}else{
   results<-readRDS(FINAL_RESULTS_RDS);predictions<-readRDS(FINAL_PREDICTIONS_RDS);epoch_selection<-readRDS(FINAL_EPOCH_RDS);final_meta<-readRDS(FINAL_RUN_RDS);nt<-if(identical(final_meta$mode,"pilot"))1L else 150L;nr<-nt*4L;np<-nr*200L
   audit<-data.frame(Check=c("Final config ID","Tuning config ID","Model-task rows","Prediction rows","Epoch-selection rows","4 models/task","200 predictions/model-task","All model tasks ok","All predictions finite","Best_epoch in range","Outer excluded from tuning","Outer excluded from epoch selection","True G excluded from selection"),Status=c(if(identical(final_meta$config_id,FINAL_CONFIG_ID))"PASS"else"BLOCKED",if(identical(final_meta$tuning_config_id,ANN_TUNING_CONFIG_ID))"PASS"else"BLOCKED",if(nrow(results)==nr)"PASS"else"BLOCKED",if(nrow(predictions)==np)"PASS"else"BLOCKED",if(nrow(epoch_selection)==nr)"PASS"else"BLOCKED",if(all(table(results$TaskID)==4L))"PASS"else"BLOCKED",if(all(table(interaction(predictions$TaskID,predictions$Model,drop=TRUE))==200L))"PASS"else"BLOCKED",if(all(results$Status=="ok"))"PASS"else"BLOCKED",if(all(is.finite(predictions$Predicted_Value)))"PASS"else"BLOCKED",if(all(epoch_selection$Best_epoch>=1L&epoch_selection$Best_epoch<=FINAL_EPOCH_MAX_EPOCHS))"PASS"else"BLOCKED",if(identical(final_meta$outer_assessment_used_in_tuning,FALSE))"PASS"else"BLOCKED",if(identical(final_meta$outer_assessment_used_in_epoch_selection,FALSE))"PASS"else"BLOCKED",if(identical(final_meta$true_genetic_value_used_in_selection,FALSE))"PASS"else"BLOCKED"))
   knitr::kable(audit,caption="Canonical final ANN saved-result integrity");if(any(audit$Status=="BLOCKED"))stop("Canonical final ANN failed integrity audit.");cat("\nFinal Best_epoch summary:\n");print(summary(epoch_selection$Best_epoch));cat("\nFinal epoch-selection fits hitting",FINAL_EPOCH_MAX_EPOCHS,"ceiling:",sum(epoch_selection$Hit_epoch_ceiling,na.rm=TRUE),"/",nrow(epoch_selection),"\n")
 }
 ```
 
+```{r final-epoch-interpretation, echo=FALSE, results="asis"}
+if (final_available) {
+  cat(sprintf(
+    "Across the %d final epoch-selection fits, %d stopped by patience and %d reached the %d-epoch ceiling without a patience stop. Thus, the final ceiling acts as a safety bound rather than a fixed training length; each network is subsequently refit for its selected `Best_epoch`.\n",
+    nrow(epoch_selection),
+    sum(epoch_selection$Stopped_by_patience, na.rm = TRUE),
+    sum(epoch_selection$Hit_epoch_ceiling, na.rm = TRUE),
+    FINAL_EPOCH_MAX_EPOCHS
+  ))
+}
+```
+
 # Final ANN predictive performance
 
-```{r final-ann-performance}
+```{r final-ann-performance, echo=FALSE}
 if(final_available){ok<-results[results$Status=="ok",,drop=FALSE];perf<-aggregate(cbind(Genetic_Correlation,Genetic_RMSE,Genetic_MAE,Genetic_Bias,Genetic_Slope,Genetic_R2,Phenotype_Correlation,Phenotype_RMSE,Phenotype_MAE,Phenotype_Bias,Phenotype_Slope,Phenotype_R2)~Scenario+Model+QTL_N+H2_nominal,data=ok,FUN=mean,na.rm=TRUE);perf<-perf[order(match(perf$Scenario,scenario_names),match(perf$Model,MODEL_LEVELS)),];knitr::kable(perf,digits=4,caption="Mean outer-CV ANN predictive performance")}
 ```
+
+```{r final-performance-interpretation, echo=FALSE, results="asis"}
+if (final_available) {
+  overall_ann <- aggregate(
+    cbind(Genetic_Correlation, Genetic_RMSE, Genetic_R2) ~ Model,
+    data = results[results$Status == "ok", , drop = FALSE],
+    FUN = mean,
+    na.rm = TRUE
+  )
+  z <- overall_ann[match(c("ANN_0", "ANN_L1", "ANN_L2", "ANN_L1_L2"), overall_ann$Model), ]
+  cat(sprintf(
+    "Across all outer-CV tasks, ANN-L1+L2 has the highest mean genetic correlation (%.4f) and lowest mean genetic RMSE (%.4f) among the four ANN variants. ANN-L1 is effectively tied (correlation %.4f; RMSE %.4f), whereas ANN-L2 remains close to the unregularized ANN (correlations %.4f and %.4f, respectively). Thus, within the prespecified canonical model/architecture search space, the observable regularization gain is driven mainly by the L1 component. The formal comparison with GBLUP-ADE is presented in the next module.\n",
+    z$Genetic_Correlation[4], z$Genetic_RMSE[4],
+    z$Genetic_Correlation[2], z$Genetic_RMSE[2],
+    z$Genetic_Correlation[3], z$Genetic_Correlation[1]
+  ))
+}
+```
+
+# Navigation
+
+[Previous: Validation design](simulated_data_validation.html) | [Parallel branch: GBLUP-ADE](simulated_data_gblup.html) | [Next: Model comparison](simulated_data_comparison.html)
 
 # Reproducibility information
 

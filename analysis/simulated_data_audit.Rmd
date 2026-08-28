@@ -24,11 +24,7 @@ marker frequencies, duplicate observations, and linkage disequilibrium.
 
 No genomic prediction model is fitted in this document.
 
-This final audit version explicitly distinguishes the row-order contract
-from independently verified sample identity and records long-distance LD
-behavior separately from short-to-medium distance LD decay.
-
-```{r setup}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE,
@@ -98,6 +94,13 @@ fmt_dim <- function(x) {
 }
 ```
 
+## How to read this audit
+
+Each section evaluates one property required before genomic prediction. A
+`PASS` confirms that the observed data satisfy the prespecified requirement, a
+`WARNING` records a feature that needs interpretation but does not invalidate
+the dataset, and `BLOCKED` prevents creation of the canonical modeling object.
+
 # Expected files
 
 ```{r expected-files}
@@ -150,6 +153,10 @@ if (all(file_table$Exists)) {
   stop("Critical simulated-data files are missing.")
 }
 ```
+
+The eight expected simulation inputs are present. File size is recorded here as
+part of file-level provenance; biological and numerical consistency are tested
+explicitly in the sections that follow rather than inferred from file size.
 
 # Read primary matrices
 
@@ -257,6 +264,12 @@ if (!dim_ok || !finite_ok) {
 }
 ```
 
+The four core matrices have the dimensions required by the simulation design:
+1,000 individuals by 6 scenarios for phenotypic and true genetic values, and
+1,000 individuals by 4,010 markers for both genotype representations. All
+phenotypic and genetic values are finite, so the dataset can proceed to the
+genotype-level integrity checks.
+
 # Genotype coding
 
 The simulator provides the genotype matrix in two representations. The
@@ -330,6 +343,11 @@ add_audit(
   "Canonical coding is genotype_012 - 1."
 )
 ```
+
+The equivalence check compares the two genotype representations after mapping
+11/12/22 to 2/1/0. When this mapping agrees across all cells, subtracting one
+from the validated 0/1/2 representation produces the canonical -1/0/1 coding
+used by the genomic prediction models.
 
 # Genetic map
 
@@ -428,6 +446,11 @@ add_audit(
   sprintf("%d duplicated marker names detected.", n_duplicate_marker_names)
 )
 ```
+
+The map audit tests the expected structure of 4,010 markers distributed across
+10 linkage groups, with 401 markers per group, positions from 0 to 200 cM, and
+0.5 cM spacing. It also checks marker-name uniqueness before the map is used as
+the positional reference for QTL and linkage-disequilibrium analyses.
 
 # Simulation control file
 
@@ -882,6 +905,15 @@ add_audit(
 )
 ```
 
+Across the six scenarios, the observed phenotype--true-genetic-value
+correlations range from `r sprintf("%.3f", min(scenario_summary$Cor_P_G))` to
+`r sprintf("%.3f", max(scenario_summary$Cor_P_G))`. The largest absolute
+difference between nominal and realized heritability is
+`r sprintf("%.3f", max(abs(scenario_summary$H2_realized - scenario_summary$H2_nominal)))`.
+These quantities document the realized signal in each simulated scenario;
+because QTL number and nominal heritability change together across the complete
+C1--C6 gradient, they are not interpreted as isolated causal effects.
+
 # Genotype quality control
 
 ```{r genotype-qc}
@@ -1008,6 +1040,15 @@ add_audit(
 )
 ```
 
+The genotype matrix contains `r missing_genotypes` missing cells,
+`r duplicate_individuals` duplicate individual profiles,
+`r duplicate_markers` duplicate marker profiles, and
+`r monomorphic_markers` monomorphic markers. Minor-allele frequency ranges from
+`r sprintf("%.3f", min(maf))` to `r sprintf("%.3f", max(maf))`, with median
+`r sprintf("%.3f", median(maf))`. These statistics document the marker-quality
+profile used downstream; any non-blocking feature remains explicit in the audit
+rather than being silently removed.
+
 # Parental genotypes
 
 ```{r parents}
@@ -1066,6 +1107,11 @@ if (parent_structure_ok) {
   )
 }
 ```
+
+The parental file is evaluated separately from the progeny matrix to verify the
+cross underlying the simulated population. The audit checks the expected
+contrasting parental states across all 10 linkage groups before relating the
+parental configuration to the F2 segregation pattern observed in the progeny.
 
 # `map.rds`
 
@@ -1615,6 +1661,10 @@ cat(
   "\n"
 )
 ```
+
+# Navigation
+
+[Home](index.html) | [Next: Validation design](simulated_data_validation.html)
 
 # Reproducibility information
 
