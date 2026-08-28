@@ -87,8 +87,8 @@ models.
 
 Within the prespecified canonical model and ANN architecture search space,
 **GBLUP-ADE provides the strongest overall predictive performance**. It has the
-best mean genetic correlation, RMSE, and R-squared in all six simulated
-scenarios.
+highest mean genetic correlation and R-squared, and the lowest mean genetic
+RMSE, in all six simulated scenarios.
 
 Among the neural networks, **ANN-L1+L2 has the best overall averages by a very
 small margin over ANN-L1**. ANN-L2 remains close to the unregularized ANN,
