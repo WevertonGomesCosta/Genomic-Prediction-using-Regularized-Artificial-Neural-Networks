@@ -1240,7 +1240,7 @@ simulator's long-distance recombination behavior. It is not interpreted by
 itself as evidence of corrupted data, and it does not cause markers to be
 removed from the canonical genotype matrix.
 
-```{r linkage-disequilibrium}
+```{r linkage-disequilibrium, fig.cap="Linkage disequilibrium decay across fixed within-linkage-group map distances. Points and the connecting line show mean within-linkage-group r-squared; the dashed horizontal line shows the mean interchromosomal r-squared estimated from 5,000 randomly sampled marker pairs from different linkage groups."}
 if (monomorphic_markers == 0L) {
   geno_scaled <- scale(
     geno_012,
