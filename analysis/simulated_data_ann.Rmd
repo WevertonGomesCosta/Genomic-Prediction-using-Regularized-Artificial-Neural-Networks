@@ -814,6 +814,19 @@ Training minimizes
 \frac{\lambda_2}{2}\sum_j w_j^2.
 \]
 
+In this objective, \(y\) is the observed phenotype on the standardized scale
+defined from the current fitting subset, and \(\hat{y}\) is the corresponding
+network prediction on that same scale during optimization. The terms \(w_j\)
+denote the penalized network weights, while \(\lambda_1\) and \(\lambda_2\)
+control the strengths of the L1 and L2 penalties, respectively. Bias parameters
+are excluded from both penalty sums.
+
+Standardization is used only to fit the network on a common numerical scale.
+Before inner-assessment or outer-assessment performance is calculated,
+predictions are transformed back with the fitting-set phenotype mean and
+standard deviation, so the reported prediction errors are expressed on the
+original phenotype scale.
+
 `ANN_0` sets both penalty coefficients to zero, `ANN_L1` uses a selected
 positive \(\lambda_1\) with \(\lambda_2=0\), `ANN_L2` uses a selected
 positive \(\lambda_2\) with \(\lambda_1=0\), and `ANN_L1_L2` uses selected
