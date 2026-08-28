@@ -2757,7 +2757,7 @@ knitr::kable(data.frame(
 ), caption="Canonical final ANN contract")
 ```
 
-# Final-fit helper functions
+<!-- Source section: final-fit helper functions -->
 
 ```{r final-ann-functions, include=FALSE}
 final_safe_bias <- function(p,o){z<-is.finite(p)&is.finite(o);if(!any(z))return(NA_real_);mean(p[z]-o[z])}
@@ -2792,7 +2792,7 @@ train_final_fixed <- function(train_ids,assessment_ids,scenario_index,architectu
 }
 ```
 
-# Final outer-CV tasks
+<!-- Source section: final outer-CV tasks -->
 
 ```{r final-ann-tasks, include=FALSE}
 om<-unique(cv$outer_assignments[,c("Repetition","OuterFold","SplitID")]);om<-om[order(om$Repetition,om$OuterFold),]
@@ -2802,7 +2802,7 @@ if(ANN_PILOT){if(!ANN_PILOT_TASK%in%final_task_table$TaskID)stop("Unknown ANN_PI
 knitr::kable(head(final_task_table,15),caption=if(ANN_PILOT)"Canonical ANN final pilot task"else"First 15 canonical ANN final tasks")
 ```
 
-# Final fitting and outer prediction
+<!-- Source section: final fitting and outer prediction -->
 
 ```{r run-final-ann, eval=RUN_ANN, echo=FALSE}
 req<-c(project_path("output","simulated","ann","tuning","simulated_ann_tuning_selected_configurations.rds"),project_path("output","simulated","ann","tuning","simulated_ann_tuning_run_metadata.rds"),project_path("output","simulated","ann","tuning","simulated_ann_tuning_manifest.rds"));if(!all(file.exists(req)))stop("Canonical tuning outputs are missing. Run RUN_ANN_TUNING=1 first. Missing: ",paste(req[!file.exists(req)],collapse=", "))
