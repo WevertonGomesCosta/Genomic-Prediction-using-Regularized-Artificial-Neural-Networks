@@ -2855,7 +2855,24 @@ if (final_available) {
 # Final ANN predictive performance
 
 ```{r final-ann-performance, echo=FALSE}
-if(final_available){ok<-results[results$Status=="ok",,drop=FALSE];perf<-aggregate(cbind(Genetic_Correlation,Genetic_RMSE,Genetic_MAE,Genetic_Bias,Genetic_Slope,Genetic_R2,Phenotype_Correlation,Phenotype_RMSE,Phenotype_MAE,Phenotype_Bias,Phenotype_Slope,Phenotype_R2)~Scenario+Model+QTL_N+H2_nominal,data=ok,FUN=mean,na.rm=TRUE);perf<-perf[order(match(perf$Scenario,scenario_names),match(perf$Model,MODEL_LEVELS)),];knitr::kable(perf,digits=4,caption="Mean outer-CV ANN predictive performance")}
+if(final_available){ok<-results[results$Status=="ok",,drop=FALSE];perf<-aggregate(cbind(Genetic_Correlation,Genetic_RMSE,Genetic_MAE,Genetic_Bias,Genetic_Slope,Genetic_R2,Phenotype_Correlation,Phenotype_RMSE,Phenotype_MAE,Phenotype_Bias,Phenotype_Slope,Phenotype_R2)~Scenario+Model+QTL_N+H2_nominal,data=ok,FUN=mean,na.rm=TRUE);perf<-perf[order(match(perf$Scenario,scenario_names),match(perf$Model,MODEL_LEVELS)),];print(knitr::kable(
+  perf[, c(
+    "Scenario", "Model", "QTL_N", "H2_nominal",
+    "Genetic_Correlation", "Genetic_RMSE", "Genetic_MAE",
+    "Genetic_Bias", "Genetic_Slope", "Genetic_R2"
+  )],
+  digits=4,
+  caption="Mean outer-CV ANN performance against true genetic value"
+));
+print(knitr::kable(
+  perf[, c(
+    "Scenario", "Model", "QTL_N", "H2_nominal",
+    "Phenotype_Correlation", "Phenotype_RMSE", "Phenotype_MAE",
+    "Phenotype_Bias", "Phenotype_Slope", "Phenotype_R2"
+  )],
+  digits=4,
+  caption="Mean outer-CV ANN performance against observed phenotype"
+))}
 ```
 
 ```{r final-performance-interpretation, echo=FALSE, results="asis"}
