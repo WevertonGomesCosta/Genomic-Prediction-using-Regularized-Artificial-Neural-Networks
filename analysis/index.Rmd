@@ -13,85 +13,84 @@ editor_options:
 
 # Project overview
 
-This reproducible research project evaluates **regularized artificial neural
-networks for genomic prediction**, using simulated genomic data and a real
-*Coffea arabica* dataset.
+This reproducible research project evaluates genomic prediction with a
+GBLUP-ADE genomic mixed model and artificial neural networks with no
+regularization, L1 regularization, L2 regularization, or simultaneous L1+L2
+regularization.
 
-The central comparison is between a genomic mixed model and four neural-network
-variants fitted under the same validation design:
+The validated public analysis currently focuses on simulated genomic data,
+where true genetic values are known and can be used for independent predictive
+assessment.
 
-- **GBLUP-ADE**: additive, dominance, and epistatic genomic effects;
-- **ANN-0**: neural network without L1/L2 weight penalties;
-- **ANN-L1**: neural network with L1 weight regularization;
-- **ANN-L2**: neural network with L2 weight regularization;
-- **ANN-L1+L2**: neural network with simultaneous L1 and L2 weight penalties.
+## Scientific question
 
-The project is organized with **workflowr**, so the analysis pages, source code,
-results, and generated website remain linked to a reproducible computational
-workflow.
+The simulated-data branch asks whether neural-network weight regularization
+improves predictive performance and generalization across a gradient of genetic
+architectures when all competing methods are evaluated under the same frozen
+cross-validation design.
 
-## Scientific questions
-
-The simulated-data branch evaluates how predictive performance changes across
-a gradient of genetic architectures. The real-data branch will apply the same
-model-comparison logic to coffee production and fruit-quality phenotypes after
-auditing genotype and phenotype provenance.
-
-The primary simulated-data outcome is prediction of the **true simulated
-genetic value**. Phenotype prediction is retained as a secondary outcome.
+Prediction of the **true simulated genetic value** is the primary outcome.
+Phenotype prediction is retained as a secondary outcome.
 
 ## Validation principles
 
-The analysis follows a common validation contract:
+The public analysis follows a common validation contract:
 
 1. the same outer partitions are used by all competing models;
-2. ANN hyperparameter tuning is restricted to the outer-analysis sample;
-3. outer-assessment individuals are not used for hyperparameter selection;
+2. ANN hyperparameter selection is restricted to the outer-analysis sample;
+3. outer-assessment individuals are excluded from hyperparameter and epoch
+   selection;
 4. preprocessing parameters are estimated from training data only;
-5. true simulated genetic values are excluded from model fitting and tuning;
-6. predictive correlation, RMSE, MAE, bias, slope, and \(R^2\) are reported
+5. true simulated genetic values are excluded from fitting and selection and
+   used only for final evaluation;
+6. predictive correlation, RMSE, MAE, bias, slope, and \(R^2\) are computed
    under the same held-out design.
 
-## Simulated-data workflow
+## Public analysis workflow
 
-The canonical simulated-data analysis is organized into five public modules:
+The simulated-data workflow is organized into five modules:
 
 1. [Data audit](simulated_data_audit.html) — verifies data integrity,
-   provenance, genotype and phenotype structure, simulation metadata, QTL
-   information, and scenario properties.
-2. [Validation design](simulated_data_validation.html) — freezes the common
-   outer and inner cross-validation design used by all competing models.
+   provenance, genotype and phenotype structure, QTL information, and scenario
+   properties.
+2. [Validation design](simulated_data_validation.html) — defines the frozen
+   outer and inner cross-validation design shared by all competing methods.
 3. Parallel modeling branches:
    - [GBLUP-ADE](simulated_data_gblup.html)
    - [Regularized ANN](simulated_data_ann.html)
-4. [Model comparison](simulated_data_comparison.html) — verifies direct
-   comparability and summarizes GBLUP-ADE versus ANN performance after both
-   modeling branches are complete.
+4. [Model comparison](simulated_data_comparison.html) — performs the terminal,
+   task-matched comparison after both modeling branches are complete.
 
-ANN hyperparameter tuning is an internal stage of the ANN workflow rather than
-a separate public analysis page. Development sensitivity, boundary, and
-convergence diagnostics were used to establish and validate the final ANN
-protocol; their methodological conclusions are incorporated into the canonical
-ANN analysis and they are no longer part of the public workflow.
+ANN hyperparameter tuning is part of the ANN analysis rather than a separate
+public module.
 
-Within the prespecified canonical model and architecture search space,
-**GBLUP-ADE showed the strongest overall predictive performance** in the
-canonical simulated-data analysis, while **ANN-L1 and ANN-L1+L2 were the
-best-performing neural-network variants**.
+## Key result
 
-## Real-data workflow
+Within the prespecified canonical model and ANN architecture search space,
+**GBLUP-ADE provides the strongest overall predictive performance** and has the
+highest mean genetic correlation and \(R^2\), and the lowest mean genetic RMSE,
+in all six simulated scenarios.
 
-The real coffee-data branch will use the same separation between data audit,
-validation, model fitting, and comparison. Phenotype correction and genotype
-provenance will be audited before predictive modelling.
+Among the neural networks, **ANN-L1+L2 has the best overall averages by a very
+small margin over ANN-L1**. ANN-L2 remains close to the unregularized ANN,
+indicating that the observed regularization gain is driven mainly by the L1
+component.
+
+These results describe the frozen validation design and bounded model search
+evaluated here; they do not establish a universal ranking between genomic mixed
+models and all possible neural-network architectures.
+
+## Planned real-data extension
+
+A real *Coffea arabica* extension is planned under the same separation between
+data audit, validation, model fitting, and terminal comparison. Genotype
+provenance and phenotype preparation will be audited before genomic prediction.
+
+This real-data branch is not yet part of the validated public workflow.
 
 ## Reproducibility
 
-The repository contains the workflowr source pages under `analysis/`, generated
-site pages under `docs/`, input data under `data/`, and reproducible derived
-objects and results under `output/`.
-
-Computationally intensive ANN fitting is separated from routine site rendering.
-A normal website build reads saved canonical outputs and does not repeat the
-expensive tuning or final ANN fits. The execution contract is documented in the
-repository README and in the canonical ANN analysis.
+The project is organized with `workflowr`, with source analyses under
+`analysis/` and the generated website under `docs/`. Project-level package
+versions are recorded in `renv.lock`, and each scientific analysis page retains
+`sessionInfo()` for the R session used to render it.

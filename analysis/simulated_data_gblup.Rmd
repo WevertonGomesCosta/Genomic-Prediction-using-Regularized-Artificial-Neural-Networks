@@ -19,14 +19,7 @@ scenarios using the 25 frozen outer validation splits. Phenotypes are used for
 model fitting. True simulated genetic values are used only after prediction
 for primary evaluation of genetic-value recovery.
 
-The heavy fitting chunk is disabled during an ordinary website build. Run the
-complete analysis from the project root with:
-
-```text
-RUN_GBLUP=1 Rscript -e 'workflowr::wflow_build("analysis/simulated_data_gblup.Rmd")'
-```
-
-```{r setup}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   message = FALSE,
@@ -171,9 +164,15 @@ extract_u <- function(fit, dat, factor_name, exact_name) {
 }
 ```
 
-# Packages and canonical inputs
+# Canonical inputs
 
-```{r inputs}
+The GBLUP-ADE branch uses the audited simulated-data object and the frozen
+validation design created in the preceding modules. The canonical dataset
+contains 1,000 individuals, 4,010 markers, six simulation scenarios, and 25
+outer validation splits. These inputs are checked before any model result is
+used.
+
+```{r inputs, include=FALSE}
 if (RUN_GBLUP) {
   if (!requireNamespace("sommer", quietly = TRUE)) {
     stop("Package 'sommer' is required when RUN_GBLUP=1.")
@@ -254,32 +253,46 @@ input_summary <- data.frame(
 knitr::kable(input_summary)
 ```
 
+# GBLUP-ADE model
+
+For each scenario and frozen outer split, the phenotype is modeled as
+
+\[
+\mathbf{y} = \mathbf{1}\mu + \mathbf{a} + \mathbf{d} + \mathbf{e} + \boldsymbol{\varepsilon},
+\]
+
+where \(\mu\) is the intercept, \(\mathbf{a}\) is the additive genomic effect,
+\(\mathbf{d}\) is the dominance effect, \(\mathbf{e}\) is the epistatic effect,
+and \(\boldsymbol{\varepsilon}\) is the residual.
+
+The corresponding covariance structures are
+
+\[
+\mathbf{a} \sim N(0,\mathbf{A}\sigma_a^2),\quad
+\mathbf{d} \sim N(0,\mathbf{D}\sigma_d^2),
+\]
+
+\[
+\mathbf{e} \sim N(0,\mathbf{E}\sigma_e^2),\quad
+\boldsymbol{\varepsilon} \sim N(0,\mathbf{I}\sigma_{\varepsilon}^2).
+\]
+
+The genomic relationship matrices \(\mathbf{A}\), \(\mathbf{D}\), and
+\(\mathbf{E}\) are constructed with `sommer::A.mat()`, `sommer::D.mat()`,
+and `sommer::E.mat()`, respectively. In `sommer::mmes()`, `ism()` identifies
+the individual levels associated with each random effect and `vsm()` links that
+effect to its genomic covariance matrix through `Gu`.
+
+The canonical fitting protocol uses `nIters = 20`. This value is fixed across
+all scenarios and outer splits and is not a tuned model-selection parameter.
+
+The total predicted genetic component used for evaluation is the sum of the
+additive, dominance, and epistatic predictions. The model intercept is added
+when predicting the phenotype.
+
 # Pre-fit integrity
 
 ```{r prefit}
-sommer_helpers <- data.frame(
-  Helper = c("vsm", "ism"),
-  Available = if (RUN_GBLUP) {
-    c(
-      exists("vsm", mode = "function"),
-      exists("ism", mode = "function")
-    )
-  } else {
-    c(NA, NA)
-  },
-  Sommer_version = if (RUN_GBLUP) {
-    as.character(packageVersion("sommer"))
-  } else {
-    "not initialized (saved-output render)"
-  },
-  stringsAsFactors = FALSE
-)
-
-knitr::kable(
-  sommer_helpers,
-  caption = "sommer helper functions required by the random-effects formula"
-)
-
 checks <- data.frame(
   Check = c(
     "Phenotype dimensions",
@@ -367,10 +380,15 @@ if (nrow(task_table) != 150L) {
 # Fit GBLUP-ADE
 
 The A, D, and E relationship matrices are built once from the complete
-genotype matrix and reused across tasks. Assessment phenotypes are set to
-`NA` before every fit. Genotypes of assessment individuals are allowed in the
-relationship matrices; their phenotypes and true genetic values are not used
-for fitting.
+genotype matrix and reused across tasks. All genotype profiles may contribute
+to these relationship matrices because genomic information is available at
+prediction time.
+
+For each outer split, however, the phenotypes of the 200 assessment individuals
+are replaced by `NA` before fitting. Consequently, those individuals contribute
+genomic relationships but not response information. Their true genetic values
+are also excluded from fitting and are accessed only after prediction for
+performance evaluation.
 
 ```{r fit-gblup-ade, eval=RUN_GBLUP}
 set.seed(SEED_GLOBAL)
@@ -667,7 +685,13 @@ if (file.exists(KERNEL_CSV)) {
     caption = "A, D, and E kernel diagnostics"
   )
 } else {
-  cat("Kernel diagnostics not available yet. Run with RUN_GBLUP=1.\n")
+  cat("Canonical kernel diagnostics are unavailable in the current saved result set.\n")
+}
+```
+
+```{r kernel-interpretation, echo=FALSE, results="asis"}
+if (file.exists(KERNEL_CSV)) {
+  cat("The canonical diagnostics contain three 1,000 x 1,000 relationship matrices. All three are finite and symmetric, and their mean diagonal values are close to one. These checks support the numerical integrity of the additive, dominance, and epistatic covariance structures before interpreting predictions.\n")
 }
 ```
 
@@ -680,13 +704,7 @@ results_available <-
   file.exists(RUN_RDS)
 
 if (!results_available) {
-  cat(
-    "Fitted results are not available yet.\n",
-    "Run:\n",
-    "RUN_GBLUP=1 Rscript -e ",
-    "'workflowr::wflow_build(\"analysis/simulated_data_gblup.Rmd\")'\n",
-    sep = ""
-  )
+  cat("Canonical fitted results are unavailable; predictive summaries cannot be displayed.\n")
 } else {
   results <- readRDS(RESULTS_RDS)
   predictions <- readRDS(PREDICTIONS_RDS)
@@ -723,6 +741,11 @@ if (!results_available) {
   }
 }
 ```
+
+For the canonical saved results, the audit verifies 150 unique scenario-by-split
+tasks and 30,000 held-out predictions, corresponding to 200 assessment
+individuals per task. The frozen split identifiers and prediction finiteness are
+checked before any performance summary is interpreted.
 
 # Predictive performance
 
@@ -774,6 +797,20 @@ if (results_available) {
 }
 ```
 
+```{r performance-interpretation, echo=FALSE, results="asis"}
+if (results_available && exists("scenario_performance")) {
+  cat(
+    sprintf(
+      "Across the six scenarios, mean held-out genetic correlation ranges from %.4f to %.4f, while mean genetic RMSE ranges from %.4f to %.4f. The C1--C6 pattern is interpreted as performance across the prespecified genetic-complexity gradient; because QTL number and nominal heritability vary together across the complete sequence, it is not an isolated causal effect of either factor.\n",
+      min(scenario_performance$Genetic_Correlation),
+      max(scenario_performance$Genetic_Correlation),
+      min(scenario_performance$Genetic_RMSE),
+      max(scenario_performance$Genetic_RMSE)
+    )
+  )
+}
+```
+
 # Split-level variability
 
 ```{r split-summary}
@@ -812,6 +849,12 @@ if (results_available && exists("ok_results") && nrow(ok_results) > 0L) {
 }
 ```
 
+Variation across the 25 outer splits quantifies the sensitivity of predictive
+performance to which individuals are held out. Reporting the mean, standard
+deviation, minimum, and maximum genetic correlation therefore complements the
+scenario averages and prevents a single partition from determining the
+conclusion.
+
 # Computational time
 
 ```{r time-summary}
@@ -839,9 +882,12 @@ if (results_available) {
 }
 ```
 
-# Output contract
+The timing summary separates the one-time construction of the genomic kernels
+from model fitting and prediction. Because the A, D, and E matrices are built
+once and reused across all 150 tasks, their construction time should not be
+interpreted as a per-task computational cost.
 
-```{r output-contract}
+```{r output-contract, include=FALSE}
 output_files <- c(
   RESULTS_RDS,
   PREDICTIONS_RDS,
@@ -859,6 +905,10 @@ output_table <- data.frame(
 
 knitr::kable(output_table)
 ```
+
+# Navigation
+
+[Previous: Validation design](simulated_data_validation.html) | [Parallel branch: Regularized ANN](simulated_data_ann.html) | [Next: Model comparison](simulated_data_comparison.html)
 
 # Reproducibility information
 

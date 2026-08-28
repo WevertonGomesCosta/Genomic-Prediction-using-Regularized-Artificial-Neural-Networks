@@ -12,88 +12,68 @@ editor_options:
   chunk_output_type: console
 ---
 
-# Objective
+# Research objective
 
-This project investigates **genomic prediction using regularized artificial
-neural networks**, with emphasis on whether L1 and L2 weight penalties improve
-predictive performance relative to an unregularized ANN and to a conventional
-genomic mixed model.
+This project investigates genomic prediction using regularized artificial
+neural networks, with emphasis on whether L1 and L2 weight penalties improve
+predictive generalization relative to an unregularized neural network and a
+GBLUP-ADE genomic mixed model.
 
-The study contains two complementary branches:
+The scientific design combines controlled simulation with a planned applied
+extension to real *Coffea arabica* genomic and phenotypic data.
 
-1. controlled simulated genomic scenarios, in which the true genetic value is
-   known and can be used for independent predictive assessment;
-2. a real *Coffea arabica* dataset, used to evaluate the models under an
-   applied breeding context.
+# Scientific scope
 
-# Model comparison
+The validated public analysis currently covers the simulated-data branch. This
+branch provides controlled genetic architectures and known true genetic values,
+allowing predictive performance to be evaluated independently of the phenotype
+used for model fitting.
 
-The canonical model set is:
+The study compares GBLUP-ADE with unregularized, L1-, L2-, and L1+L2-regularized
+artificial neural networks under the same frozen validation design.
 
-- `GBLUP_ADE`;
-- `ANN_0`;
-- `ANN_L1`;
-- `ANN_L2`;
-- `ANN_L1_L2`, displayed as **ANN-L1+L2**.
+# Why simulated genomic data
 
-All ANN variants use the same multilayer-perceptron implementation. They differ
-only in the coefficients applied to the L1 and L2 penalties on network weights.
-Bias terms are not penalized.
+The simulated branch contains six scenarios spanning a gradient of genetic
+complexity and nominal heritability. Because the scenarios do not form a
+complete factorial combination of QTL number and heritability, changes across
+the full C1--C6 sequence are not interpreted as the isolated causal effect of
+either factor.
 
-The ANN objective function is
+The known true genetic value provides a primary evaluation target that is
+separate from the observed phenotype. Phenotype prediction is retained as a
+secondary outcome.
 
-\[
-\mathrm{MSE}
-+\lambda_1\sum_j |w_j|
-+\frac{\lambda_2}{2}\sum_j w_j^2.
-\]
+# Methodological principles
 
-The combined L1+L2 model is therefore described explicitly as simultaneous L1
-and L2 neural-network weight regularization.
+The project follows a common comparison framework across competing methods:
 
-# Simulated genomic data
+- the same frozen outer-assessment partitions are used for all models;
+- model selection and preprocessing are restricted to training or
+  outer-analysis data;
+- outer-assessment individuals are excluded from ANN hyperparameter and epoch
+  selection;
+- true simulated genetic values are excluded from model fitting and selection;
+- final method comparisons use directly matched held-out individuals.
 
-The simulated branch contains six scenarios that form a **genetic-complexity
-gradient**. The scenarios differ in genetic architecture and nominal
-heritability. Because the design is not a complete factorial combination of
-number of QTL and heritability, global changes across all six scenarios are not
-interpreted as the isolated causal effect of either factor.
+These principles are designed to preserve separation between model selection
+and final predictive assessment.
 
-Within equal-heritability pairs, comparisons can be made more directly between
-different levels of genetic complexity.
+# Planned Coffea arabica extension
 
-# Real coffee data
+A real-data extension will apply the same separation between data audit,
+validation, model fitting, and terminal comparison to *Coffea arabica* genomic
+and phenotypic data.
 
-The real-data branch uses coffee genotype and phenotype information. Genotype
-quality control and phenotype adjustment are treated as separate analytical
-steps. The provenance of the adjusted phenotypes is audited against the
-available raw multi-year phenotypic records before genomic prediction.
-
-# Validation and tuning
-
-All models are evaluated using common held-out partitions. ANN
-hyperparameters are selected only within the outer-analysis data. The
-outer-assessment sample is reserved for predictive evaluation.
-
-The public simulated-data workflow contains a **single canonical ANN
-analysis**. Hyperparameter tuning is an internal stage of that workflow rather
-than a separate public analysis page. Development sensitivity, boundary, and
-convergence diagnostics were used to establish and validate the final ANN
-protocol; their methodological conclusions are incorporated into the canonical
-analysis and those development modules are not part of the public workflow.
-
-Training epochs are treated as a fixed optimization protocol rather than a
-scientific tuning dimension. The canonical protocol distinguishes between:
-
-- hyperparameters selected by inner cross-validation;
-- fixed optimization controls such as maximum training epochs and patience;
-- final model refitting on the full outer-analysis sample.
+Genotype provenance, genotype quality control, phenotype provenance, and
+phenotype preparation will be audited before genomic prediction. This
+real-data branch is not yet part of the validated public workflow.
 
 # Reproducible research
 
-The project is implemented in R with **workflowr**. Source analysis pages are
-stored under `analysis/`, rendered website files under `docs/`, and reusable
-analysis objects under `output/`.
+The project is implemented in R using `workflowr` and `renv`. Source analyses,
+rendered pages, dependency information, and reproducibility metadata are kept
+within the same version-controlled research workflow.
 
-The workflow is designed so that routine rendering of the website does not
-automatically rerun computationally expensive model fitting.
+The detailed scientific methods and results are presented in the public
+analysis modules linked from the project home page.

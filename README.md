@@ -1,33 +1,31 @@
 # Genomic Prediction using Regularized Artificial Neural Networks
 
-This repository contains a reproducible study of genomic prediction using
-artificial neural networks with L1 and L2 regularization, compared with a
-GBLUP-ADE genomic mixed model.
+This repository contains a reproducible genomic-prediction study comparing
+L1/L2-regularized artificial neural networks with a GBLUP-ADE genomic mixed
+model under a common frozen cross-validation design.
 
-The primary objective is to evaluate whether weight regularization improves
-predictive performance and generalization in high-dimensional genomic
-prediction problems.
+The primary objective is to evaluate whether neural-network weight
+regularization improves predictive performance and generalization in
+high-dimensional genomic prediction problems.
+
+## Scientific scope
+
+The validated public workflow currently covers the **simulated-data branch**,
+where true genetic values are known and can be used for independent predictive
+assessment.
+
+A real *Coffea arabica* extension is planned under the same validation
+principles, but it is not yet part of the canonical public analysis.
 
 ## Models
 
-Five models are compared under the same validation design:
+Five models are compared under the same outer validation design:
 
 - **GBLUP-ADE** — additive, dominance, and epistatic genomic effects;
 - **ANN-0** — artificial neural network without L1/L2 weight penalties;
 - **ANN-L1** — ANN with L1 weight regularization;
 - **ANN-L2** — ANN with L2 weight regularization;
 - **ANN-L1+L2** — ANN with simultaneous L1 and L2 weight penalties.
-
-## Data
-
-The project includes:
-
-- simulated genomic data with known true genetic values and different genetic
-  architectures;
-- real *Coffea arabica* genomic and phenotypic data.
-
-The current canonical public workflow focuses on the simulated-data branch.
-The real-data branch will follow the same validation principles.
 
 ## Canonical simulated-data workflow
 
@@ -50,108 +48,83 @@ simulated_data_gblup.Rmd   simulated_data_ann.Rmd
       simulated_data_comparison.Rmd
 ```
 
-The modules have the following roles:
+The modules have distinct roles:
 
-1. `simulated_data_audit.Rmd` — data integrity, provenance, genotype and
-   phenotype structure, simulation metadata, QTL information, and scenario
-   properties;
-2. `simulated_data_validation.Rmd` — frozen outer/inner cross-validation design
-   shared by all competing methods;
-3. `simulated_data_gblup.Rmd` — canonical GBLUP-ADE modeling branch;
-4. `simulated_data_ann.Rmd` — canonical ANN branch, including hyperparameter
-   tuning and final fitting;
-5. `simulated_data_comparison.Rmd` — terminal comparison of the saved
-   GBLUP-ADE and ANN results under the shared frozen validation design.
+1. `simulated_data_audit.Rmd` — audits data integrity, provenance, genotype and
+   phenotype structure, QTL information, and simulation-scenario properties;
+2. `simulated_data_validation.Rmd` — defines the frozen outer and inner
+   cross-validation design shared by all competing methods;
+3. `simulated_data_gblup.Rmd` — fits and evaluates the GBLUP-ADE branch;
+4. `simulated_data_ann.Rmd` — defines the regularized ANN branch, including
+   nested hyperparameter selection, epoch selection, final refitting, and
+   held-out prediction;
+5. `simulated_data_comparison.Rmd` — performs the terminal, task-matched
+   comparison of GBLUP-ADE and ANN results under the shared frozen validation
+   design.
 
-ANN hyperparameter tuning remains an internal stage of the ANN workflow rather
-than a separate public analysis page. Development sensitivity, boundary,
-convergence, and earlier final-model pages were used to establish the canonical
-ANN protocol and are not part of the public workflow.
+ANN hyperparameter tuning is part of the ANN analysis itself rather than a
+separate public module.
 
-## Validation contract
+## Validation design
 
 The simulated-data comparison uses the same frozen outer partitions for all
 models.
 
-- ANN hyperparameter tuning is restricted to the outer-analysis sample.
+- ANN hyperparameter selection is restricted to the outer-analysis sample.
 - Outer-assessment individuals are excluded from ANN hyperparameter and epoch
   selection.
 - Preprocessing parameters are estimated from training data only.
-- True simulated genetic values are excluded from fitting and selection and
-  are used only for final evaluation.
+- True simulated genetic values are excluded from fitting and selection and are
+  used only for final evaluation.
 - GBLUP-ADE and all ANN variants are evaluated on the same held-out individuals
   within each task.
+- Genetic-value prediction is the primary outcome; phenotype prediction is
+  retained as a secondary outcome.
 - Correlation, RMSE, MAE, bias, slope, and R-squared are computed under the same
   held-out design.
 
-## ANN execution contract
+## Main findings
 
-Routine website rendering uses saved outputs only and does not automatically
-repeat expensive ANN fitting.
+Within the prespecified canonical model and ANN architecture search space,
+**GBLUP-ADE provides the strongest overall predictive performance**. It has the
+highest mean genetic correlation and R-squared, and the lowest mean genetic
+RMSE, in all six simulated scenarios.
 
-- Normal build: render from saved canonical outputs.
-- `RUN_ANN_TUNING=1`: run canonical ANN hyperparameter tuning.
-- `RUN_ANN=1`: run canonical final ANN fitting using the saved tuning
-  selections.
-- Both flags: execute the complete ANN workflow.
+Among the neural networks, **ANN-L1+L2 has the best overall averages by a very
+small margin over ANN-L1**. ANN-L2 remains close to the unregularized ANN,
+indicating that the observed regularization gain is driven mainly by the L1
+component.
 
-The canonical ANN tuning ceiling is 2000 epochs. Final epoch selection inside
-the outer-analysis sample uses a separate 3000-epoch safety ceiling with
-patience-based early stopping. The final network is then reinitialized and
-refit on all outer-analysis individuals for exactly the selected `Best_epoch`.
+These results describe the frozen validation design and bounded model search
+evaluated in this project; they do not establish a universal ranking between
+genomic mixed models and all possible neural-network architectures.
 
-## Canonical simulated-data result
+## Repository structure
 
-Within the prespecified canonical model and architecture search space,
-GBLUP-ADE showed the strongest overall predictive performance in the validated
-simulated-data comparison. ANN-L1 and ANN-L1+L2 were the best-performing
-neural-network variants, whereas L2 alone produced little improvement over the
-unregularized ANN.
+- `analysis/` — workflowr source pages for the public analysis;
+- `data/` — input-data area and data documentation;
+- `code/` — reusable helper code;
+- `output/` — validated derived objects and canonical analysis results;
+- `docs/` — generated workflowr website;
+- `renv.lock` — project dependency lockfile.
 
-Detailed results are generated by the canonical analysis pages and stored under
-`output/`.
+More detailed contracts are documented in:
+
+- [`data/README.md`](data/README.md);
+- [`code/README.md`](code/README.md);
+- [`output/README.md`](output/README.md).
 
 ## Reproducibility
 
-The project is implemented in R using R Markdown and `workflowr`.
+The project is implemented in R using R Markdown, `workflowr`, and `renv`.
 
-- `analysis/` — source analysis pages;
-- `data/` — input data;
-- `output/` — reproducible derived objects and canonical results;
-- `docs/` — generated workflowr website.
+Routine site rendering uses the validated saved analysis outputs rather than
+repeating computationally intensive model fitting. Scientific analysis pages
+retain `sessionInfo()` so that the R session used for each render remains
+documented, while project-level package versions are recorded in `renv.lock`.
 
-The currently validated local environment for repository maintenance and
-saved-output rendering uses R 4.5.1, workflowr 1.7.2, rmarkdown 2.30, knitr
-1.50, and Pandoc 3.8.3.
-
-Routine website builds consume the saved canonical outputs and do not rerun
-the computationally intensive model-fitting stages. In this saved-output
-render mode, neither the ANN backend nor the GBLUP fitting package needs to be
-initialized.
-
-Additional model-fitting dependencies are required only when the corresponding
-execution flags are enabled:
-
-- `sommer` 4.4.4 for `RUN_GBLUP=1`;
-- `torch` 0.16.3 and its LibTorch backend for `RUN_ANN_TUNING=1` or
-  `RUN_ANN=1`.
-
-CUDA is available in the currently validated local ANN runtime, but CUDA is not
-a requirement for rendering the website or for the scientific definition of
-the ANN workflow. Device selection remains controlled by `ANN_DEVICE`.
-
-Each scientific analysis page retains `sessionInfo()` output to document the R
-session used for that render. Project-level dependency versions are recorded in
-`renv.lock` using `renv` 1.1.8 and R 4.5.1. Routine saved-output rendering uses
-the saved canonical results and does not initialize the heavy model-fitting
-runtime. `sommer` and `torch` remain locked for reproducible model-fitting
-environments and are required only when their corresponding execution flags are
-enabled.
-
-The canonical output contract is documented in `output/README.md`.
-
-Legacy analyses and outputs from earlier development versions are not used as
-reported results in the canonical analysis.
+The generated website is stored under `docs/`, and the corresponding source
+analyses remain under `analysis/`.
 
 ## Citation
 
