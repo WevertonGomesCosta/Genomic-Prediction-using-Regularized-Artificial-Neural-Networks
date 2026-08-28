@@ -103,6 +103,24 @@ the dataset, and `BLOCKED` prevents creation of the canonical modeling object.
 
 # Expected files
 
+Before checking file availability, the table below maps each simulator input to
+its scientific role in the audit. This separates file names from the biological
+or analytical quantity that each file contributes to the workflow.
+
+| File | Scientific role in this workflow |
+|---|---|
+| `controlegenetico#1.dat` | Simulation-control metadata, including scenario parameters and the QTL lists used to define C1-C6. |
+| `DG#gen_F2_Vfen.txt` | Phenotypic values for the 1,000 individuals across the six simulated scenarios. |
+| `DG#gen_F2_Vgen.dat` | True simulated genetic values for the same individuals and scenarios; retained for downstream evaluation, not model fitting. |
+| `genoma.txt` | Text representation of the genetic map used to recover linkage groups, marker identities, and map positions. |
+| `genoma_mapa.txt` | Genotype matrix in 0/1/2 coding; after orientation and validation, it is the source of the canonical genotype representation used downstream. |
+| `genoma_mapa_tr.txt` | Alternative 11/12/22 genotype representation used to verify cell-by-cell equivalence with `genoma_mapa.txt`. |
+| `genoma_pais.txt` | Parental genotype information used to audit the parental contrast underlying the simulated F2 population. |
+| `map.rds` | Serialized map object supplied with the simulation data and inspected independently from the text map rather than assumed to be canonical. |
+
+The audit first verifies that all eight inputs are present and then evaluates
+their internal consistency in the sections that follow.
+
 ```{r expected-files}
 expected_files <- c(
   "controlegenetico#1.dat",
