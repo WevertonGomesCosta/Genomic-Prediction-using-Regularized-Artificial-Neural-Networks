@@ -1215,10 +1215,30 @@ if (!is.null(dim(map_rds))) {
 
 # Linkage disequilibrium
 
-LD is evaluated using the canonical individual-by-marker `0/1/2` matrix.
-Within-linkage-group marker pairs are evaluated at fixed map distances.
-A random sample of pairs from different linkage groups provides an
-interchromosomal reference.
+Linkage disequilibrium (LD) is used here to describe how strongly marker
+genotypes remain associated as genetic-map distance increases. For each marker
+pair, the audit uses \(r^2\), the squared correlation between their standardized
+0/1/2 genotype codings. Larger values indicate stronger marker association,
+whereas values closer to zero indicate weaker association.
+
+The analysis separates two complementary comparisons:
+
+- **within-linkage-group LD** is evaluated for marker pairs separated by fixed
+  map distances from 0.5 to 200 cM. In a recombining population, linked markers
+  are generally expected to show stronger association at short distances and
+  weaker association as map distance increases;
+- an **interchromosomal reference** is obtained from 5,000 randomly sampled
+  marker pairs belonging to different linkage groups. Because these pairs are
+  not linked on the same chromosome, their mean \(r^2\) provides a background
+  reference for interpreting residual association among widely separated
+  markers within a linkage group.
+
+The purpose is descriptive and diagnostic rather than a marker-filtering step.
+In particular, persistence of elevated within-linkage-group LD at 100-200 cM
+relative to the interchromosomal reference is recorded as a `WARNING` about the
+simulator's long-distance recombination behavior. It is not interpreted by
+itself as evidence of corrupted data, and it does not cause markers to be
+removed from the canonical genotype matrix.
 
 ```{r linkage-disequilibrium}
 if (monomorphic_markers == 0L) {
