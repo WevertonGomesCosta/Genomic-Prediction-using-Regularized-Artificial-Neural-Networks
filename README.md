@@ -152,3 +152,17 @@ The canonical output contract is documented in `output/README.md`.
 
 Legacy analyses and outputs from earlier development versions are not used as
 reported results in the canonical analysis.
+
+## Citation
+
+If you use this repository, please cite it using the metadata provided in
+[`CITATION.cff`](CITATION.cff).
+
+## License
+
+Except where otherwise indicated, the original analytical materials in this
+repository are licensed under the Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International license
+(CC BY-NC-SA 4.0). See [`LICENSE.md`](LICENSE.md) for the repository-level
+license statement. Source data and third-party materials remain subject to
+their own provenance, authorization, and licensing conditions.
