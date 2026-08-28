@@ -934,6 +934,33 @@ C1--C6 gradient, they are not interpreted as isolated causal effects.
 
 # Genotype quality control
 
+This section checks whether the simulated genotype matrix has the structural
+properties required for the downstream genomic analyses. The diagnostics have
+different roles:
+
+- **missing genotypes** identify unavailable marker calls; missing cells are
+  blocking here because the canonical simulated dataset is expected to be
+  complete;
+- **duplicate individuals** identify identical complete genotype profiles among
+  progeny and are treated as blocking because they would violate the expected
+  individual-level structure of this simulated population;
+- **duplicate markers** identify marker columns with identical genotype profiles
+  across all individuals;
+- **monomorphic markers** identify loci with no observed genotype variation and
+  therefore no information for distinguishing individuals;
+- **minor allele frequency (MAF)** summarizes the frequency of the less common
+  allele at each marker and provides a marker-level description of segregation;
+- **heterozygosity** records the proportion of heterozygous individuals at each
+  marker;
+- the overall **0/1/2 genotype proportions** are compared with the expected
+  F2 segregation pattern of approximately 1:2:1.
+
+These checks audit the known simulated population rather than impose a generic
+quality-control pipeline for empirical genomic data. The numerical criteria
+below are therefore part of this simulation audit. Non-blocking departures are
+reported as `WARNING` and retained explicitly instead of being filtered
+silently from the canonical genotype matrix.
+
 ```{r genotype-qc}
 missing_genotypes <- sum(is.na(geno_012))
 
