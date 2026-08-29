@@ -117,6 +117,18 @@ expected_ann_models <- c("ANN_0", "ANN_L1", "ANN_L2", "ANN_L1_L2")
 
 # Canonical inputs
 
+This terminal comparison consumes the finalized outputs from the two parallel
+modeling branches. From the GBLUP-ADE module it reads the 150 task-level result
+rows and 30,000 held-out predictions; from the ANN module it reads the 600
+task-by-model result rows and 120,000 held-out predictions for the four ANN
+variants.
+
+These inputs are compared under the same frozen outer-CV design established
+upstream. This module does not fit predictive models, tune hyperparameters,
+select training duration, or modify the held-out predictions. Its role is to
+verify cross-method compatibility and then summarize performance on matched
+tasks and matched outer-assessment individuals.
+
 ```{r load-canonical-inputs, include=FALSE}
 required_files <- c(
   GBLUP_RESULTS_RDS,
