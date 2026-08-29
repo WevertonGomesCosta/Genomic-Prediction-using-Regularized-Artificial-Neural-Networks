@@ -277,6 +277,23 @@ The corresponding covariance structures are
 \boldsymbol{\varepsilon} \sim N(0,\mathbf{I}\sigma_{\varepsilon}^2).
 \]
 
+At the scientific level, \(\mathbf{A}\), \(\mathbf{D}\), and \(\mathbf{E}\)
+are three genomic relationship structures built from the marker data. They
+specify how covariance is shared among individuals for each random genetic
+component of the same phenotype:
+
+- \(\mathbf{A}\) represents additive genomic relationship and structures the
+  covariance of the additive effects \(\mathbf{a}\);
+- \(\mathbf{D}\) represents dominance genomic relationship and structures the
+  covariance of the dominance effects \(\mathbf{d}\);
+- \(\mathbf{E}\) represents the epistatic genomic relationship used by this
+  benchmark and structures the covariance of the epistatic effects
+  \(\mathbf{e}\).
+
+These matrices are covariance structures, not additional response variables.
+The model combines the three predicted genetic components to represent the
+total predicted genetic value for each individual.
+
 The genomic relationship matrices \(\mathbf{A}\), \(\mathbf{D}\), and
 \(\mathbf{E}\) are constructed with `sommer::A.mat()`, `sommer::D.mat()`,
 and `sommer::E.mat()`, respectively. In `sommer::mmes()`, `ism()` identifies

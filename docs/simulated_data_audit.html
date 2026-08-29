@@ -499,7 +499,7 @@ div.tocify {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -510,8 +510,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -524,9 +524,9 @@ aria-hidden="true"></span> </a>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -550,21 +550,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of
-the R Markdown file created these results, you’ll want to first commit
-it to the Git repo. If you’re still working on the analysis, you can
-ignore this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -655,15 +652,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree33df47eb2dd7cf899090ab72e709ed04873cd9e3targetblank33df47ea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree35ac1972ab1a26a456497dee841190cb931e9303targetblank35ac197a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/33df47eb2dd7cf899090ab72e709ed04873cd9e3" target="_blank">33df47e</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/35ac1972ab1a26a456497dee841190cb931e9303" target="_blank">35ac197</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree33df47eb2dd7cf899090ab72e709ed04873cd9e3targetblank33df47ea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree35ac1972ab1a26a456497dee841190cb931e9303targetblank35ac197a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -673,7 +670,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/33df47eb2dd7cf899090ab72e709ed04873cd9e3" target="_blank">33df47e</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/35ac1972ab1a26a456497dee841190cb931e9303" target="_blank">35ac197</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -710,9 +707,6 @@ Ignored files:
     Ignored:    data/dados_reais/plants-13-01876-v2.pdf
     Ignored:    data/dados_reais/pos_geno_real.rds
     Ignored:    renv/library/
-
-Unstaged changes:
-    Modified:   analysis/simulated_data_audit.Rmd
 
 </code></pre>
 <p>
@@ -757,6 +751,159 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/6e89cba5f98c4b75a3d7ff2c6aa093f555174674/analysis/simulated_data_audit.Rmd" target="_blank">6e89cba</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Clarify canonical simulated-data contract
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/3eee4069a047a68e5831d1ddc02e10031065704c/analysis/simulated_data_audit.Rmd" target="_blank">3eee406</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Add self-contained caption to LD figure
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/6015ee60d3885fbf6370e73b4a66c4f6bdcefdc1/analysis/simulated_data_audit.Rmd" target="_blank">6015ee6</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Explain linkage disequilibrium audit design
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/afb5bb06b63b20001e6083fc41af74ca70648cdc/analysis/simulated_data_audit.Rmd" target="_blank">afb5bb0</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Explain simulated genotype quality-control diagnostics
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/66fc37a3d870831bee37fc3576e90c623ca73559/analysis/simulated_data_audit.Rmd" target="_blank">66fc37a</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Map simulated input files to scientific roles
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/78bf34ce616e7de4e43100a485f811f87fcf2209/analysis/simulated_data_audit.Rmd" target="_blank">78bf34c</a>
+</td>
+<td>
+Weverton Gomes da Costa
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Restore unchanged audit output formatting
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/97f4141555521713fd5c4aab7c85991638387596/analysis/simulated_data_audit.Rmd" target="_blank">97f4141</a>
+</td>
+<td>
+Weverton Gomes da Costa
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Clarify Model=2 interpretation in simulated data audit
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/0b8a4f6cc17ae57a65b3d2142bf8ed0d28a6d2d7/analysis/simulated_data_audit.Rmd" target="_blank">0b8a4f6</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Revise canonical workflow documentation and scientific narrative
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/0b8a4f6cc17ae57a65b3d2142bf8ed0d28a6d2d7/docs/simulated_data_audit.html" target="_blank">0b8a4f6</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Revise canonical workflow documentation and scientific narrative
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -889,6 +1036,68 @@ object.</p>
 </div>
 <div id="expected-files" class="section level1">
 <h1>Expected files</h1>
+<p>Before checking file availability, the table below maps each
+simulator input to its scientific role in the audit. This separates file
+names from the biological or analytical quantity that each file
+contributes to the workflow.</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Scientific role in this workflow</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>controlegenetico#1.dat</code></td>
+<td>Simulation-control metadata, including scenario parameters and the
+QTL lists used to define C1-C6.</td>
+</tr>
+<tr class="even">
+<td><code>DG#gen_F2_Vfen.txt</code></td>
+<td>Phenotypic values for the 1,000 individuals across the six simulated
+scenarios.</td>
+</tr>
+<tr class="odd">
+<td><code>DG#gen_F2_Vgen.dat</code></td>
+<td>True simulated genetic values for the same individuals and
+scenarios; retained for downstream evaluation, not model fitting.</td>
+</tr>
+<tr class="even">
+<td><code>genoma.txt</code></td>
+<td>Text representation of the genetic map used to recover linkage
+groups, marker identities, and map positions.</td>
+</tr>
+<tr class="odd">
+<td><code>genoma_mapa.txt</code></td>
+<td>Genotype matrix in 0/1/2 coding; after orientation and validation,
+it is the source of the canonical genotype representation used
+downstream.</td>
+</tr>
+<tr class="even">
+<td><code>genoma_mapa_tr.txt</code></td>
+<td>Alternative 11/12/22 genotype representation used to verify
+cell-by-cell equivalence with <code>genoma_mapa.txt</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>genoma_pais.txt</code></td>
+<td>Parental genotype information used to audit the parental contrast
+underlying the simulated F2 population.</td>
+</tr>
+<tr class="even">
+<td><code>map.rds</code></td>
+<td>Serialized map object supplied with the simulation data and
+inspected independently from the text map rather than assumed to be
+canonical.</td>
+</tr>
+</tbody>
+</table>
+<p>The audit first verifies that all eight inputs are present and then
+evaluates their internal consistency in the sections that follow.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>expected_files <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="st">&quot;controlegenetico#1.dat&quot;</span>,</span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="st">&quot;DG#gen_F2_Vfen.txt&quot;</span>,</span>
@@ -2276,6 +2485,36 @@ C1–C6 gradient, they are not interpreted as isolated causal effects.</p>
 </div>
 <div id="genotype-quality-control" class="section level1">
 <h1>Genotype quality control</h1>
+<p>This section checks whether the simulated genotype matrix has the
+structural properties required for the downstream genomic analyses. The
+diagnostics have different roles:</p>
+<ul>
+<li><strong>missing genotypes</strong> identify unavailable marker
+calls; missing cells are blocking here because the canonical simulated
+dataset is expected to be complete;</li>
+<li><strong>duplicate individuals</strong> identify identical complete
+genotype profiles among progeny and are treated as blocking because they
+would violate the expected individual-level structure of this simulated
+population;</li>
+<li><strong>duplicate markers</strong> identify marker columns with
+identical genotype profiles across all individuals;</li>
+<li><strong>monomorphic markers</strong> identify loci with no observed
+genotype variation and therefore no information for distinguishing
+individuals;</li>
+<li><strong>minor allele frequency (MAF)</strong> summarizes the
+frequency of the less common allele at each marker and provides a
+marker-level description of segregation;</li>
+<li><strong>heterozygosity</strong> records the proportion of
+heterozygous individuals at each marker;</li>
+<li>the overall <strong>0/1/2 genotype proportions</strong> are compared
+with the expected F2 segregation pattern of approximately 1:2:1.</li>
+</ul>
+<p>These checks audit the known simulated population rather than impose
+a generic quality-control pipeline for empirical genomic data. The
+numerical criteria below are therefore part of this simulation audit.
+Non-blocking departures are reported as <code>WARNING</code> and
+retained explicitly instead of being filtered silently from the
+canonical genotype matrix.</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>missing_genotypes <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(geno_012))</span>
 <span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>duplicate_individuals <span class="ot">&lt;-</span> <span class="fu">sum</span>(</span>
@@ -2615,10 +2854,34 @@ avoid assuming its internal structure.</p>
 </div>
 <div id="linkage-disequilibrium" class="section level1">
 <h1>Linkage disequilibrium</h1>
-<p>LD is evaluated using the canonical individual-by-marker
-<code>0/1/2</code> matrix. Within-linkage-group marker pairs are
-evaluated at fixed map distances. A random sample of pairs from
-different linkage groups provides an interchromosomal reference.</p>
+<p>Linkage disequilibrium (LD) is used here to describe how strongly
+marker genotypes remain associated as genetic-map distance increases.
+For each marker pair, the audit uses <span
+class="math inline">\(r^2\)</span>, the squared correlation between
+their standardized 0/1/2 genotype codings. Larger values indicate
+stronger marker association, whereas values closer to zero indicate
+weaker association.</p>
+<p>The analysis separates two complementary comparisons:</p>
+<ul>
+<li><strong>within-linkage-group LD</strong> is evaluated for marker
+pairs separated by fixed map distances from 0.5 to 200 cM. In a
+recombining population, linked markers are generally expected to show
+stronger association at short distances and weaker association as map
+distance increases;</li>
+<li>an <strong>interchromosomal reference</strong> is obtained from
+5,000 randomly sampled marker pairs belonging to different linkage
+groups. Because these pairs are not linked on the same chromosome, their
+mean <span class="math inline">\(r^2\)</span> provides a background
+reference for interpreting residual association among widely separated
+markers within a linkage group.</li>
+</ul>
+<p>The purpose is descriptive and diagnostic rather than a
+marker-filtering step. In particular, persistence of elevated
+within-linkage-group LD at 100-200 cM relative to the interchromosomal
+reference is recorded as a <code>WARNING</code> about the simulator’s
+long-distance recombination behavior. It is not interpreted by itself as
+evidence of corrupted data, and it does not cause markers to be removed
+from the canonical genotype matrix.</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="cf">if</span> (monomorphic_markers <span class="sc">==</span> <span class="dv">0</span><span class="dt">L</span>) {</span>
 <span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a>  geno_scaled <span class="ot">&lt;-</span> <span class="fu">scale</span>(</span>
 <span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a>    geno_012,</span>
@@ -2885,7 +3148,16 @@ different linkage groups provides an interchromosomal reference.</p>
 <span id="cb22-264"><a href="#cb22-264" tabindex="-1"></a>    <span class="st">&quot;LD calculation was blocked because monomorphic markers were detected.&quot;</span></span>
 <span id="cb22-265"><a href="#cb22-265" tabindex="-1"></a>  )</span>
 <span id="cb22-266"><a href="#cb22-266" tabindex="-1"></a>}</span></code></pre></div>
-<p><img src="figure/simulated_data_audit.Rmd/linkage-disequilibrium-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="figure" style="text-align: center">
+<img src="figure/simulated_data_audit.Rmd/linkage-disequilibrium-1.png" alt="Linkage disequilibrium decay across fixed within-linkage-group map distances. Points and the connecting line show mean within-linkage-group r-squared; the dashed horizontal line shows the mean interchromosomal r-squared estimated from 5,000 randomly sampled marker pairs from different linkage groups." width="672" />
+<p class="caption">
+Linkage disequilibrium decay across fixed within-linkage-group map
+distances. Points and the connecting line show mean within-linkage-group
+r-squared; the dashed horizontal line shows the mean interchromosomal
+r-squared estimated from 5,000 randomly sampled marker pairs from
+different linkage groups.
+</p>
+</div>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-linkage-disequilibrium-1">
 Past versions of linkage-disequilibrium-1.png
@@ -3031,10 +3303,13 @@ following pairs:</p>
 nominal heritability decreases. Consequently, a global trend across
 C1-C6 must not be interpreted as an isolated causal effect of QTL number
 or heritability.</p>
-<p>The simulator specifies <code>Model = 2</code> for all scenarios.
-This simulation architecture is retained as part of the data-generating
-contract and motivates the use of additive, dominance, and epistatic
-genomic components in the GBLUP-ADE benchmark.</p>
+<p>The simulator control file records <code>Model = 2</code> for all six
+scenarios. This numeric field is retained here as part of the data
+provenance, but its biological meaning is not inferred from the code
+value alone in this audit. The downstream GBLUP-ADE benchmark is a
+separate prespecified modeling choice: its additive, dominance, and
+epistatic components are defined and justified in the GBLUP module
+rather than being established solely by <code>Model = 2</code>.</p>
 </div>
 <div id="final-audit-status" class="section level1">
 <h1>Final audit status</h1>
@@ -3330,8 +3605,38 @@ corresponding check is classified as <code>BLOCKED</code>.</p>
 </div>
 <div id="canonical-preprocessed-object" class="section level1">
 <h1>Canonical preprocessed object</h1>
-<p>The canonical modeling object is generated only when no blocking
-audit failure is present.</p>
+<p>The canonical preprocessed object is generated only when no blocking
+audit failure is present. The saved
+<code>preprocessed_simulated_common.rds</code> acts as the shared data
+contract for the downstream validation and modeling modules, so those
+modules consume the same audited representation instead of independently
+re-reading and re-interpreting the raw simulator files.</p>
+<p>Its components have distinct scientific roles:</p>
+<ul>
+<li><code>phenotype</code> contains the observed response values
+available for model fitting within the appropriate analysis
+subsets;</li>
+<li><code>genotype_m101</code> is the canonical -1/0/1 genotype
+representation used by the downstream genomic prediction workflows,
+while <code>genotype_012</code> is retained as the validated source
+representation;</li>
+<li><code>metadata$row_identifier</code> preserves the row-position
+identity contract used to align individuals across phenotypes,
+genotypes, validation splits, and predictions;</li>
+<li><code>true_genetic_value</code> is retained for held-out predictive
+evaluation only. It is not used to generate validation folds, tune ANN
+hyperparameters, select training duration, or fit the predictive
+models;</li>
+<li>map, scenario, QTL, marker-QC, and LD components preserve the
+audited simulation structure and provenance for downstream checks and
+interpretation. Their presence in the common object does not make them
+additional response variables or automatic model predictors.</li>
+</ul>
+<p>The next module uses this audited object to construct the frozen
+nested cross-validation design. The GBLUP-ADE and ANN branches then
+consume that common data contract together with the same frozen
+validation design, preserving individual and task alignment across the
+parallel modeling workflows.</p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="fu">write.csv</span>(</span>
 <span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a>  audit_log,</span>
 <span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a>  <span class="fu">file.path</span>(</span>

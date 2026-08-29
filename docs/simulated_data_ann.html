@@ -500,7 +500,7 @@ simulated genomic data</h1>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -511,8 +511,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -525,9 +525,9 @@ aria-hidden="true"></span> </a>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -551,21 +551,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of
-the R Markdown file created these results, you’ll want to first commit
-it to the Git repo. If you’re still working on the analysis, you can
-ignore this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -656,15 +653,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree33df47eb2dd7cf899090ab72e709ed04873cd9e3targetblank33df47ea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree35ac1972ab1a26a456497dee841190cb931e9303targetblank35ac197a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/33df47eb2dd7cf899090ab72e709ed04873cd9e3" target="_blank">33df47e</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/35ac1972ab1a26a456497dee841190cb931e9303" target="_blank">35ac197</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree33df47eb2dd7cf899090ab72e709ed04873cd9e3targetblank33df47ea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree35ac1972ab1a26a456497dee841190cb931e9303targetblank35ac197a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -674,7 +671,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/33df47eb2dd7cf899090ab72e709ed04873cd9e3" target="_blank">33df47e</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/35ac1972ab1a26a456497dee841190cb931e9303" target="_blank">35ac197</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -711,12 +708,6 @@ Ignored files:
     Ignored:    data/dados_reais/plants-13-01876-v2.pdf
     Ignored:    data/dados_reais/pos_geno_real.rds
     Ignored:    renv/library/
-
-Unstaged changes:
-    Modified:   analysis/simulated_data_ann.Rmd
-    Modified:   analysis/simulated_data_audit.Rmd
-    Modified:   analysis/simulated_data_gblup.Rmd
-    Modified:   analysis/simulated_data_validation.Rmd
 
 </code></pre>
 <p>
@@ -761,6 +752,125 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/90377f2c6f2b19014d1b7267c089be5f1364fc2c/analysis/simulated_data_ann.Rmd" target="_blank">90377f2</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Narrow ANN selected-configuration display
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/fc203a115123161d2d08af0fbbdc37aa2c102a9f/analysis/simulated_data_ann.Rmd" target="_blank">fc203a1</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Split ANN performance tables by evaluation target
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/ba3bc2b4d879efb21eb891df673dabf0653363d9/analysis/simulated_data_ann.Rmd" target="_blank">ba3bc2b</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Remove empty ANN implementation headings
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/1d3ce7cab10dc717eff53420a8004153aaa579ae/analysis/simulated_data_ann.Rmd" target="_blank">1d3ce7c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Define ANN objective symbols and prediction scale
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/35a1dbe7d019a2d676dadb3cec0dfed8e4d70a55/analysis/simulated_data_ann.Rmd" target="_blank">35a1dbe</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Explain ANN optimization controls for target readers
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/0b8a4f6cc17ae57a65b3d2142bf8ed0d28a6d2d7/analysis/simulated_data_ann.Rmd" target="_blank">0b8a4f6</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Revise canonical workflow documentation and scientific narrative
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/0b8a4f6cc17ae57a65b3d2142bf8ed0d28a6d2d7/docs/simulated_data_ann.html" target="_blank">0b8a4f6</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Revise canonical workflow documentation and scientific narrative
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -936,6 +1046,44 @@ tuned quantities:</p>
 class="math inline">\(10^{-6}\)</span>;</li>
 <li>early-validation fraction: 0.15.</li>
 </ul>
+<div id="optimization-concepts-used-in-this-workflow"
+class="section level2">
+<h2>Optimization concepts used in this workflow</h2>
+<p>These controls describe <strong>how each candidate network is
+optimized</strong>; they are distinct from the scientific comparison
+among ANN variants.</p>
+<ul>
+<li><strong>Adam</strong> is the gradient-based optimizer used to update
+the network weights. It adapts the magnitude of parameter updates from
+the recent history of the gradients. In this workflow Adam is fixed as
+the optimizer; it is not compared with alternative optimization
+algorithms.</li>
+<li>The <strong>learning rate</strong> controls the size of the
+optimization steps taken by Adam. It is a tuned quantity and is selected
+together with network architecture using <code>ANN_0</code> within each
+outer task.</li>
+<li>An <strong>epoch</strong> is one complete pass through the fitting
+observations used in a particular network fit. The number of epochs
+completed is therefore an optimization quantity, not a new
+cross-validation replicate.</li>
+<li><strong>Early stopping</strong> monitors loss on the separate
+early-validation subset during optimization and stops training when
+additional epochs no longer produce sufficient improvement. The frozen
+inner-assessment and outer- assessment observations are not used for
+this stopping decision.</li>
+<li><strong>Patience = 25</strong> means that optimization stops after
+25 consecutive epochs without a qualifying improvement in
+early-validation loss.</li>
+<li><strong>Minimum improvement (<code>min_delta</code>) = <span
+class="math inline">\(10^{-6}\)</span></strong> defines the decrease in
+early-validation loss required to count as an improvement and reset the
+patience counter. Changes smaller than this threshold do not reset
+patience.</li>
+</ul>
+<p>Thus, early stopping determines how long an individual optimization
+run is allowed to continue, whereas nested cross-validation determines
+which prespecified architecture, learning rate, and penalty
+configuration is selected.</p>
 <p>The 2000-epoch value is a <strong>convergence ceiling</strong>, not a
 fixed final training length. Epoch diagnostics are excluded from
 hyperparameter ranking. After hyperparameters are selected, a separate
@@ -943,6 +1091,7 @@ early-stopping fit uses only the outer-analysis sample to select
 <code>Best_epoch</code>; the final network is then reinitialized and
 refit on all 800 outer-analysis individuals for exactly
 <code>Best_epoch</code>.</p>
+</div>
 </div>
 <div id="architecture-range" class="section level1">
 <h1>Architecture range</h1>
@@ -1273,6 +1422,20 @@ transformations followed by ReLU activation,</p>
 \lambda_1\sum_j |w_j|+
 \frac{\lambda_2}{2}\sum_j w_j^2.
 \]</span></p>
+<p>In this objective, <span class="math inline">\(y\)</span> is the
+observed phenotype on the standardized scale defined from the current
+fitting subset, and <span class="math inline">\(\hat{y}\)</span> is the
+corresponding network prediction on that same scale during optimization.
+The terms <span class="math inline">\(w_j\)</span> denote the penalized
+network weights, while <span class="math inline">\(\lambda_1\)</span>
+and <span class="math inline">\(\lambda_2\)</span> control the strengths
+of the L1 and L2 penalties, respectively. Bias parameters are excluded
+from both penalty sums.</p>
+<p>Standardization is used only to fit the network on a common numerical
+scale. Before inner-assessment or outer-assessment performance is
+calculated, predictions are transformed back with the fitting-set
+phenotype mean and standard deviation, so the reported prediction errors
+are expressed on the original phenotype scale.</p>
 <p><code>ANN_0</code> sets both penalty coefficients to zero,
 <code>ANN_L1</code> uses a selected positive <span
 class="math inline">\(\lambda_1\)</span> with <span
@@ -2080,25 +2243,25 @@ Selected L2 values:
   ANN_L1    150     0     0     0    0
   ANN_L1_L2   0    27    34    31   58
   ANN_L2      0    20    27    31   72</code></pre>
-<table>
+<table style="width:100%;">
 <caption>First selected canonical ANN configurations</caption>
 <colgroup>
-<col width="7%" />
-<col width="9%" />
+<col width="8%" />
 <col width="10%" />
-<col width="3%" />
 <col width="4%" />
-<col width="8%" />
+<col width="9%" />
+<col width="12%" />
 <col width="13%" />
-<col width="7%" />
-<col width="6%" />
-<col width="8%" />
-<col width="3%" />
-<col width="6%" />
-<col width="8%" />
+<col width="4%" />
+<col width="5%" />
+<col width="10%" />
+<col width="17%" />
 </colgroup>
 <thead>
 <tr class="header">
+<th align="left">Scenario</th>
+<th align="right">Repetition</th>
+<th align="right">Fold</th>
 <th align="left">Model</th>
 <th align="left">Architecture</th>
 <th align="right">Learning_rate</th>
@@ -2106,16 +2269,13 @@ Selected L2 values:
 <th align="right">L2</th>
 <th align="right">Inner_RMSE</th>
 <th align="right">Inner_Correlation</th>
-<th align="right">Inner_MAE</th>
-<th align="left">Scenario</th>
-<th align="right">Repetition</th>
-<th align="right">Fold</th>
-<th align="left">SplitID</th>
-<th align="left">TaskID</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
+<td align="left">C1</td>
+<td align="right">1</td>
+<td align="right">1</td>
 <td align="left">ANN_0</td>
 <td align="left">64-32</td>
 <td align="right">0.000125</td>
@@ -2123,14 +2283,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">2.075251</td>
 <td align="right">0.422560</td>
-<td align="right">1.652896</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">1</td>
-<td align="left">R01_F01</td>
-<td align="left">C1_R01_F01</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1</td>
 <td align="left">64-32</td>
 <td align="right">0.000125</td>
@@ -2138,14 +2295,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">1.923971</td>
 <td align="right">0.525041</td>
-<td align="right">1.540627</td>
+</tr>
+<tr class="odd">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">1</td>
-<td align="left">R01_F01</td>
-<td align="left">C1_R01_F01</td>
-</tr>
-<tr class="odd">
 <td align="left">ANN_L2</td>
 <td align="left">64-32</td>
 <td align="right">0.000125</td>
@@ -2153,14 +2307,11 @@ Selected L2 values:
 <td align="right">1e-04</td>
 <td align="right">2.051435</td>
 <td align="right">0.446483</td>
-<td align="right">1.634625</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">1</td>
-<td align="left">R01_F01</td>
-<td align="left">C1_R01_F01</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1_L2</td>
 <td align="left">64-32</td>
 <td align="right">0.000125</td>
@@ -2168,14 +2319,11 @@ Selected L2 values:
 <td align="right">1e-05</td>
 <td align="right">1.924264</td>
 <td align="right">0.526053</td>
-<td align="right">1.541933</td>
-<td align="left">C1</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="left">R01_F01</td>
-<td align="left">C1_R01_F01</td>
 </tr>
 <tr class="odd">
+<td align="left">C1</td>
+<td align="right">1</td>
+<td align="right">2</td>
 <td align="left">ANN_0</td>
 <td align="left">32-16</td>
 <td align="right">0.000125</td>
@@ -2183,14 +2331,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">2.103107</td>
 <td align="right">0.439892</td>
-<td align="right">1.674851</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">2</td>
-<td align="left">R01_F02</td>
-<td align="left">C1_R01_F02</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1</td>
 <td align="left">32-16</td>
 <td align="right">0.000125</td>
@@ -2198,14 +2343,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">2.018976</td>
 <td align="right">0.526710</td>
-<td align="right">1.621654</td>
+</tr>
+<tr class="odd">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">2</td>
-<td align="left">R01_F02</td>
-<td align="left">C1_R01_F02</td>
-</tr>
-<tr class="odd">
 <td align="left">ANN_L2</td>
 <td align="left">32-16</td>
 <td align="right">0.000125</td>
@@ -2213,14 +2355,11 @@ Selected L2 values:
 <td align="right">1e-02</td>
 <td align="right">2.110172</td>
 <td align="right">0.428941</td>
-<td align="right">1.683305</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">2</td>
-<td align="left">R01_F02</td>
-<td align="left">C1_R01_F02</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1_L2</td>
 <td align="left">32-16</td>
 <td align="right">0.000125</td>
@@ -2228,14 +2367,11 @@ Selected L2 values:
 <td align="right">1e-03</td>
 <td align="right">2.020178</td>
 <td align="right">0.524474</td>
-<td align="right">1.623445</td>
-<td align="left">C1</td>
-<td align="right">1</td>
-<td align="right">2</td>
-<td align="left">R01_F02</td>
-<td align="left">C1_R01_F02</td>
 </tr>
 <tr class="odd">
+<td align="left">C1</td>
+<td align="right">1</td>
+<td align="right">3</td>
 <td align="left">ANN_0</td>
 <td align="left">64-32</td>
 <td align="right">0.000125</td>
@@ -2243,14 +2379,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">2.055060</td>
 <td align="right">0.447025</td>
-<td align="right">1.630781</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">3</td>
-<td align="left">R01_F03</td>
-<td align="left">C1_R01_F03</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1</td>
 <td align="left">64-32</td>
 <td align="right">0.000125</td>
@@ -2258,14 +2391,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">1.954573</td>
 <td align="right">0.514079</td>
-<td align="right">1.565745</td>
+</tr>
+<tr class="odd">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">3</td>
-<td align="left">R01_F03</td>
-<td align="left">C1_R01_F03</td>
-</tr>
-<tr class="odd">
 <td align="left">ANN_L2</td>
 <td align="left">64-32</td>
 <td align="right">0.000125</td>
@@ -2273,14 +2403,11 @@ Selected L2 values:
 <td align="right">1e-02</td>
 <td align="right">2.034041</td>
 <td align="right">0.453221</td>
-<td align="right">1.629033</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">3</td>
-<td align="left">R01_F03</td>
-<td align="left">C1_R01_F03</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1_L2</td>
 <td align="left">64-32</td>
 <td align="right">0.000125</td>
@@ -2288,14 +2415,11 @@ Selected L2 values:
 <td align="right">1e-03</td>
 <td align="right">1.953643</td>
 <td align="right">0.514536</td>
-<td align="right">1.566114</td>
-<td align="left">C1</td>
-<td align="right">1</td>
-<td align="right">3</td>
-<td align="left">R01_F03</td>
-<td align="left">C1_R01_F03</td>
 </tr>
 <tr class="odd">
+<td align="left">C1</td>
+<td align="right">1</td>
+<td align="right">4</td>
 <td align="left">ANN_0</td>
 <td align="left">64-32</td>
 <td align="right">0.000250</td>
@@ -2303,14 +2427,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">2.014473</td>
 <td align="right">0.496964</td>
-<td align="right">1.624854</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">4</td>
-<td align="left">R01_F04</td>
-<td align="left">C1_R01_F04</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1</td>
 <td align="left">64-32</td>
 <td align="right">0.000250</td>
@@ -2318,14 +2439,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">1.889526</td>
 <td align="right">0.579079</td>
-<td align="right">1.519410</td>
+</tr>
+<tr class="odd">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">4</td>
-<td align="left">R01_F04</td>
-<td align="left">C1_R01_F04</td>
-</tr>
-<tr class="odd">
 <td align="left">ANN_L2</td>
 <td align="left">64-32</td>
 <td align="right">0.000250</td>
@@ -2333,14 +2451,11 @@ Selected L2 values:
 <td align="right">1e-02</td>
 <td align="right">2.000088</td>
 <td align="right">0.503980</td>
-<td align="right">1.610794</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">4</td>
-<td align="left">R01_F04</td>
-<td align="left">C1_R01_F04</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1_L2</td>
 <td align="left">64-32</td>
 <td align="right">0.000250</td>
@@ -2348,14 +2463,11 @@ Selected L2 values:
 <td align="right">1e-03</td>
 <td align="right">1.889632</td>
 <td align="right">0.579252</td>
-<td align="right">1.519220</td>
-<td align="left">C1</td>
-<td align="right">1</td>
-<td align="right">4</td>
-<td align="left">R01_F04</td>
-<td align="left">C1_R01_F04</td>
 </tr>
 <tr class="odd">
+<td align="left">C1</td>
+<td align="right">1</td>
+<td align="right">5</td>
 <td align="left">ANN_0</td>
 <td align="left">16</td>
 <td align="right">0.000125</td>
@@ -2363,14 +2475,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">2.006996</td>
 <td align="right">0.497288</td>
-<td align="right">1.613393</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">5</td>
-<td align="left">R01_F05</td>
-<td align="left">C1_R01_F05</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1</td>
 <td align="left">16</td>
 <td align="right">0.000125</td>
@@ -2378,14 +2487,11 @@ Selected L2 values:
 <td align="right">0e+00</td>
 <td align="right">1.949571</td>
 <td align="right">0.534098</td>
-<td align="right">1.548556</td>
+</tr>
+<tr class="odd">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">5</td>
-<td align="left">R01_F05</td>
-<td align="left">C1_R01_F05</td>
-</tr>
-<tr class="odd">
 <td align="left">ANN_L2</td>
 <td align="left">16</td>
 <td align="right">0.000125</td>
@@ -2393,14 +2499,11 @@ Selected L2 values:
 <td align="right">1e-03</td>
 <td align="right">2.029443</td>
 <td align="right">0.489206</td>
-<td align="right">1.623360</td>
+</tr>
+<tr class="even">
 <td align="left">C1</td>
 <td align="right">1</td>
 <td align="right">5</td>
-<td align="left">R01_F05</td>
-<td align="left">C1_R01_F05</td>
-</tr>
-<tr class="even">
 <td align="left">ANN_L1_L2</td>
 <td align="left">16</td>
 <td align="right">0.000125</td>
@@ -2408,12 +2511,6 @@ Selected L2 values:
 <td align="right">1e-05</td>
 <td align="right">1.949154</td>
 <td align="right">0.534447</td>
-<td align="right">1.549223</td>
-<td align="left">C1</td>
-<td align="right">1</td>
-<td align="right">5</td>
-<td align="left">R01_F05</td>
-<td align="left">C1_R01_F05</td>
 </tr>
 </tbody>
 </table>
@@ -2526,15 +2623,9 @@ tuning; it does not repeat model selection.</p>
 800 outer-analysis individuals. The network is then reinitialized, refit
 on all 800 for exactly <code>Best_epoch</code>, and only then applied to
 the untouched 200 outer-assessment individuals.</p>
-</div>
-<div id="final-fit-helper-functions" class="section level1">
-<h1>Final-fit helper functions</h1>
-</div>
-<div id="final-outer-cv-tasks" class="section level1">
-<h1>Final outer-CV tasks</h1>
-</div>
-<div id="final-fitting-and-outer-prediction" class="section level1">
-<h1>Final fitting and outer prediction</h1>
+<!-- Source section: final-fit helper functions -->
+<!-- Source section: final outer-CV tasks -->
+<!-- Source section: final fitting and outer prediction -->
 </div>
 <div id="saved-final-result-integrity" class="section level1">
 <h1>Saved final-result integrity</h1>
@@ -2552,507 +2643,66 @@ length; each network is subsequently refit for its selected
 </div>
 <div id="final-ann-predictive-performance" class="section level1">
 <h1>Final ANN predictive performance</h1>
-<table>
-<caption>Mean outer-CV ANN predictive performance</caption>
-<colgroup>
-<col width="1%" />
-<col width="4%" />
-<col width="4%" />
-<col width="2%" />
-<col width="5%" />
-<col width="9%" />
-<col width="5%" />
-<col width="5%" />
-<col width="5%" />
-<col width="6%" />
-<col width="5%" />
-<col width="10%" />
-<col width="6%" />
-<col width="6%" />
-<col width="6%" />
-<col width="7%" />
-<col width="5%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th align="left"></th>
-<th align="left">Scenario</th>
-<th align="left">Model</th>
-<th align="right">QTL_N</th>
-<th align="right">H2_nominal</th>
-<th align="right">Genetic_Correlation</th>
-<th align="right">Genetic_RMSE</th>
-<th align="right">Genetic_MAE</th>
-<th align="right">Genetic_Bias</th>
-<th align="right">Genetic_Slope</th>
-<th align="right">Genetic_R2</th>
-<th align="right">Phenotype_Correlation</th>
-<th align="right">Phenotype_RMSE</th>
-<th align="right">Phenotype_MAE</th>
-<th align="right">Phenotype_Bias</th>
-<th align="right">Phenotype_Slope</th>
-<th align="right">Phenotype_R2</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">17</td>
-<td align="left">C1</td>
-<td align="left">ANN_0</td>
-<td align="right">8</td>
-<td align="right">0.7</td>
-<td align="right">0.5863</td>
-<td align="right">1.5974</td>
-<td align="right">1.2814</td>
-<td align="right">-0.0276</td>
-<td align="right">0.8516</td>
-<td align="right">0.3208</td>
-<td align="right">0.4834</td>
-<td align="right">2.0270</td>
-<td align="right">1.6230</td>
-<td align="right">-0.0276</td>
-<td align="right">0.8287</td>
-<td align="right">0.2108</td>
-</tr>
-<tr class="even">
-<td align="left">18</td>
-<td align="left">C1</td>
-<td align="left">ANN_L1</td>
-<td align="right">8</td>
-<td align="right">0.7</td>
-<td align="right">0.6861</td>
-<td align="right">1.4194</td>
-<td align="right">1.1454</td>
-<td align="right">-0.0402</td>
-<td align="right">1.0909</td>
-<td align="right">0.4604</td>
-<td align="right">0.5737</td>
-<td align="right">1.8836</td>
-<td align="right">1.5113</td>
-<td align="right">-0.0402</td>
-<td align="right">1.0787</td>
-<td align="right">0.3179</td>
-</tr>
-<tr class="odd">
-<td align="left">20</td>
-<td align="left">C1</td>
-<td align="left">ANN_L2</td>
-<td align="right">8</td>
-<td align="right">0.7</td>
-<td align="right">0.5869</td>
-<td align="right">1.5972</td>
-<td align="right">1.2806</td>
-<td align="right">-0.0303</td>
-<td align="right">0.8495</td>
-<td align="right">0.3210</td>
-<td align="right">0.4846</td>
-<td align="right">2.0255</td>
-<td align="right">1.6220</td>
-<td align="right">-0.0303</td>
-<td align="right">0.8276</td>
-<td align="right">0.2120</td>
-</tr>
-<tr class="even">
-<td align="left">19</td>
-<td align="left">C1</td>
-<td align="left">ANN_L1_L2</td>
-<td align="right">8</td>
-<td align="right">0.7</td>
-<td align="right">0.6868</td>
-<td align="right">1.4177</td>
-<td align="right">1.1441</td>
-<td align="right">-0.0424</td>
-<td align="right">1.0871</td>
-<td align="right">0.4617</td>
-<td align="right">0.5748</td>
-<td align="right">1.8816</td>
-<td align="right">1.5090</td>
-<td align="right">-0.0424</td>
-<td align="right">1.0758</td>
-<td align="right">0.3194</td>
-</tr>
-<tr class="odd">
-<td align="left">21</td>
-<td align="left">C2</td>
-<td align="left">ANN_0</td>
-<td align="right">40</td>
-<td align="right">0.7</td>
-<td align="right">0.7427</td>
-<td align="right">0.6589</td>
-<td align="right">0.5262</td>
-<td align="right">-0.0320</td>
-<td align="right">1.0311</td>
-<td align="right">0.5153</td>
-<td align="right">0.6419</td>
-<td align="right">0.8392</td>
-<td align="right">0.6639</td>
-<td align="right">-0.0320</td>
-<td align="right">1.0036</td>
-<td align="right">0.3800</td>
-</tr>
-<tr class="even">
-<td align="left">22</td>
-<td align="left">C2</td>
-<td align="left">ANN_L1</td>
-<td align="right">40</td>
-<td align="right">0.7</td>
-<td align="right">0.7432</td>
-<td align="right">0.6561</td>
-<td align="right">0.5256</td>
-<td align="right">-0.0276</td>
-<td align="right">1.0545</td>
-<td align="right">0.5197</td>
-<td align="right">0.6432</td>
-<td align="right">0.8353</td>
-<td align="right">0.6603</td>
-<td align="right">-0.0276</td>
-<td align="right">1.0273</td>
-<td align="right">0.3856</td>
-</tr>
-<tr class="odd">
-<td align="left">24</td>
-<td align="left">C2</td>
-<td align="left">ANN_L2</td>
-<td align="right">40</td>
-<td align="right">0.7</td>
-<td align="right">0.7431</td>
-<td align="right">0.6582</td>
-<td align="right">0.5257</td>
-<td align="right">-0.0340</td>
-<td align="right">1.0329</td>
-<td align="right">0.5163</td>
-<td align="right">0.6422</td>
-<td align="right">0.8386</td>
-<td align="right">0.6633</td>
-<td align="right">-0.0340</td>
-<td align="right">1.0053</td>
-<td align="right">0.3807</td>
-</tr>
-<tr class="even">
-<td align="left">23</td>
-<td align="left">C2</td>
-<td align="left">ANN_L1_L2</td>
-<td align="right">40</td>
-<td align="right">0.7</td>
-<td align="right">0.7431</td>
-<td align="right">0.6560</td>
-<td align="right">0.5255</td>
-<td align="right">-0.0279</td>
-<td align="right">1.0571</td>
-<td align="right">0.5198</td>
-<td align="right">0.6431</td>
-<td align="right">0.8351</td>
-<td align="right">0.6603</td>
-<td align="right">-0.0279</td>
-<td align="right">1.0298</td>
-<td align="right">0.3858</td>
-</tr>
-<tr class="odd">
-<td align="left">9</td>
-<td align="left">C3</td>
-<td align="left">ANN_0</td>
-<td align="right">80</td>
-<td align="right">0.5</td>
-<td align="right">0.7965</td>
-<td align="right">0.4431</td>
-<td align="right">0.3527</td>
-<td align="right">0.0028</td>
-<td align="right">0.9925</td>
-<td align="right">0.5875</td>
-<td align="right">0.5887</td>
-<td align="right">0.7712</td>
-<td align="right">0.6259</td>
-<td align="right">0.0028</td>
-<td align="right">0.9927</td>
-<td align="right">0.3052</td>
-</tr>
-<tr class="even">
-<td align="left">10</td>
-<td align="left">C3</td>
-<td align="left">ANN_L1</td>
-<td align="right">80</td>
-<td align="right">0.5</td>
-<td align="right">0.7956</td>
-<td align="right">0.4405</td>
-<td align="right">0.3508</td>
-<td align="right">0.0049</td>
-<td align="right">1.0315</td>
-<td align="right">0.5929</td>
-<td align="right">0.5878</td>
-<td align="right">0.7702</td>
-<td align="right">0.6245</td>
-<td align="right">0.0049</td>
-<td align="right">1.0334</td>
-<td align="right">0.3078</td>
-</tr>
-<tr class="odd">
-<td align="left">12</td>
-<td align="left">C3</td>
-<td align="left">ANN_L2</td>
-<td align="right">80</td>
-<td align="right">0.5</td>
-<td align="right">0.7967</td>
-<td align="right">0.4431</td>
-<td align="right">0.3527</td>
-<td align="right">0.0027</td>
-<td align="right">0.9923</td>
-<td align="right">0.5876</td>
-<td align="right">0.5889</td>
-<td align="right">0.7711</td>
-<td align="right">0.6258</td>
-<td align="right">0.0027</td>
-<td align="right">0.9930</td>
-<td align="right">0.3052</td>
-</tr>
-<tr class="even">
-<td align="left">11</td>
-<td align="left">C3</td>
-<td align="left">ANN_L1_L2</td>
-<td align="right">80</td>
-<td align="right">0.5</td>
-<td align="right">0.7960</td>
-<td align="right">0.4398</td>
-<td align="right">0.3503</td>
-<td align="right">0.0056</td>
-<td align="right">1.0330</td>
-<td align="right">0.5942</td>
-<td align="right">0.5879</td>
-<td align="right">0.7697</td>
-<td align="right">0.6243</td>
-<td align="right">0.0056</td>
-<td align="right">1.0342</td>
-<td align="right">0.3087</td>
-</tr>
-<tr class="odd">
-<td align="left">13</td>
-<td align="left">C4</td>
-<td align="left">ANN_0</td>
-<td align="right">120</td>
-<td align="right">0.5</td>
-<td align="right">0.8309</td>
-<td align="right">0.3505</td>
-<td align="right">0.2798</td>
-<td align="right">-0.0204</td>
-<td align="right">0.9888</td>
-<td align="right">0.6359</td>
-<td align="right">0.5802</td>
-<td align="right">0.7039</td>
-<td align="right">0.5723</td>
-<td align="right">-0.0204</td>
-<td align="right">1.0008</td>
-<td align="right">0.3074</td>
-</tr>
-<tr class="even">
-<td align="left">14</td>
-<td align="left">C4</td>
-<td align="left">ANN_L1</td>
-<td align="right">120</td>
-<td align="right">0.5</td>
-<td align="right">0.8310</td>
-<td align="right">0.3467</td>
-<td align="right">0.2769</td>
-<td align="right">-0.0224</td>
-<td align="right">1.0081</td>
-<td align="right">0.6438</td>
-<td align="right">0.5805</td>
-<td align="right">0.7018</td>
-<td align="right">0.5709</td>
-<td align="right">-0.0224</td>
-<td align="right">1.0212</td>
-<td align="right">0.3117</td>
-</tr>
-<tr class="odd">
-<td align="left">16</td>
-<td align="left">C4</td>
-<td align="left">ANN_L2</td>
-<td align="right">120</td>
-<td align="right">0.5</td>
-<td align="right">0.8306</td>
-<td align="right">0.3499</td>
-<td align="right">0.2791</td>
-<td align="right">-0.0208</td>
-<td align="right">0.9918</td>
-<td align="right">0.6373</td>
-<td align="right">0.5801</td>
-<td align="right">0.7036</td>
-<td align="right">0.5722</td>
-<td align="right">-0.0208</td>
-<td align="right">1.0041</td>
-<td align="right">0.3082</td>
-</tr>
-<tr class="even">
-<td align="left">15</td>
-<td align="left">C4</td>
-<td align="left">ANN_L1_L2</td>
-<td align="right">120</td>
-<td align="right">0.5</td>
-<td align="right">0.8298</td>
-<td align="right">0.3474</td>
-<td align="right">0.2772</td>
-<td align="right">-0.0180</td>
-<td align="right">1.0249</td>
-<td align="right">0.6425</td>
-<td align="right">0.5797</td>
-<td align="right">0.7025</td>
-<td align="right">0.5713</td>
-<td align="right">-0.0180</td>
-<td align="right">1.0379</td>
-<td align="right">0.3104</td>
-</tr>
-<tr class="odd">
-<td align="left">1</td>
-<td align="left">C5</td>
-<td align="left">ANN_0</td>
-<td align="right">240</td>
-<td align="right">0.3</td>
-<td align="right">0.8570</td>
-<td align="right">0.2635</td>
-<td align="right">0.2101</td>
-<td align="right">0.0112</td>
-<td align="right">0.8951</td>
-<td align="right">0.6779</td>
-<td align="right">0.4583</td>
-<td align="right">0.7597</td>
-<td align="right">0.6228</td>
-<td align="right">0.0112</td>
-<td align="right">0.8645</td>
-<td align="right">0.1829</td>
-</tr>
-<tr class="even">
-<td align="left">2</td>
-<td align="left">C5</td>
-<td align="left">ANN_L1</td>
-<td align="right">240</td>
-<td align="right">0.3</td>
-<td align="right">0.8512</td>
-<td align="right">0.2657</td>
-<td align="right">0.2128</td>
-<td align="right">0.0073</td>
-<td align="right">1.0238</td>
-<td align="right">0.6728</td>
-<td align="right">0.4547</td>
-<td align="right">0.7594</td>
-<td align="right">0.6209</td>
-<td align="right">0.0073</td>
-<td align="right">0.9817</td>
-<td align="right">0.1838</td>
-</tr>
-<tr class="odd">
-<td align="left">4</td>
-<td align="left">C5</td>
-<td align="left">ANN_L2</td>
-<td align="right">240</td>
-<td align="right">0.3</td>
-<td align="right">0.8574</td>
-<td align="right">0.2629</td>
-<td align="right">0.2096</td>
-<td align="right">0.0113</td>
-<td align="right">0.8934</td>
-<td align="right">0.6794</td>
-<td align="right">0.4585</td>
-<td align="right">0.7597</td>
-<td align="right">0.6228</td>
-<td align="right">0.0113</td>
-<td align="right">0.8631</td>
-<td align="right">0.1831</td>
-</tr>
-<tr class="even">
-<td align="left">3</td>
-<td align="left">C5</td>
-<td align="left">ANN_L1_L2</td>
-<td align="right">240</td>
-<td align="right">0.3</td>
-<td align="right">0.8517</td>
-<td align="right">0.2671</td>
-<td align="right">0.2137</td>
-<td align="right">0.0077</td>
-<td align="right">1.0211</td>
-<td align="right">0.6700</td>
-<td align="right">0.4541</td>
-<td align="right">0.7602</td>
-<td align="right">0.6217</td>
-<td align="right">0.0077</td>
-<td align="right">0.9772</td>
-<td align="right">0.1819</td>
-</tr>
-<tr class="odd">
-<td align="left">5</td>
-<td align="left">C6</td>
-<td align="left">ANN_0</td>
-<td align="right">480</td>
-<td align="right">0.3</td>
-<td align="right">0.8956</td>
-<td align="right">0.2023</td>
-<td align="right">0.1623</td>
-<td align="right">-0.0296</td>
-<td align="right">0.9441</td>
-<td align="right">0.7494</td>
-<td align="right">0.4718</td>
-<td align="right">0.6565</td>
-<td align="right">0.5340</td>
-<td align="right">-0.0296</td>
-<td align="right">0.9014</td>
-<td align="right">0.1945</td>
-</tr>
-<tr class="even">
-<td align="left">6</td>
-<td align="left">C6</td>
-<td align="left">ANN_L1</td>
-<td align="right">480</td>
-<td align="right">0.3</td>
-<td align="right">0.8992</td>
-<td align="right">0.1961</td>
-<td align="right">0.1572</td>
-<td align="right">-0.0292</td>
-<td align="right">1.0033</td>
-<td align="right">0.7655</td>
-<td align="right">0.4716</td>
-<td align="right">0.6541</td>
-<td align="right">0.5326</td>
-<td align="right">-0.0292</td>
-<td align="right">0.9499</td>
-<td align="right">0.2009</td>
-</tr>
-<tr class="odd">
-<td align="left">8</td>
-<td align="left">C6</td>
-<td align="left">ANN_L2</td>
-<td align="right">480</td>
-<td align="right">0.3</td>
-<td align="right">0.8959</td>
-<td align="right">0.2026</td>
-<td align="right">0.1624</td>
-<td align="right">-0.0287</td>
-<td align="right">0.9439</td>
-<td align="right">0.7487</td>
-<td align="right">0.4715</td>
-<td align="right">0.6569</td>
-<td align="right">0.5342</td>
-<td align="right">-0.0287</td>
-<td align="right">0.9007</td>
-<td align="right">0.1935</td>
-</tr>
-<tr class="even">
-<td align="left">7</td>
-<td align="left">C6</td>
-<td align="left">ANN_L1_L2</td>
-<td align="right">480</td>
-<td align="right">0.3</td>
-<td align="right">0.9002</td>
-<td align="right">0.1944</td>
-<td align="right">0.1557</td>
-<td align="right">-0.0300</td>
-<td align="right">1.0099</td>
-<td align="right">0.7698</td>
-<td align="right">0.4725</td>
-<td align="right">0.6533</td>
-<td align="right">0.5320</td>
-<td align="right">-0.0300</td>
-<td align="right">0.9569</td>
-<td align="right">0.2029</td>
-</tr>
-</tbody>
-</table>
+<pre><code>
+
+Table: Mean outer-CV ANN performance against true genetic value
+
+|   |Scenario |Model     | QTL_N| H2_nominal| Genetic_Correlation| Genetic_RMSE| Genetic_MAE| Genetic_Bias| Genetic_Slope| Genetic_R2|
+|:--|:--------|:---------|-----:|----------:|-------------------:|------------:|-----------:|------------:|-------------:|----------:|
+|17 |C1       |ANN_0     |     8|        0.7|              0.5863|       1.5974|      1.2814|      -0.0276|        0.8516|     0.3208|
+|18 |C1       |ANN_L1    |     8|        0.7|              0.6861|       1.4194|      1.1454|      -0.0402|        1.0909|     0.4604|
+|20 |C1       |ANN_L2    |     8|        0.7|              0.5869|       1.5972|      1.2806|      -0.0303|        0.8495|     0.3210|
+|19 |C1       |ANN_L1_L2 |     8|        0.7|              0.6868|       1.4177|      1.1441|      -0.0424|        1.0871|     0.4617|
+|21 |C2       |ANN_0     |    40|        0.7|              0.7427|       0.6589|      0.5262|      -0.0320|        1.0311|     0.5153|
+|22 |C2       |ANN_L1    |    40|        0.7|              0.7432|       0.6561|      0.5256|      -0.0276|        1.0545|     0.5197|
+|24 |C2       |ANN_L2    |    40|        0.7|              0.7431|       0.6582|      0.5257|      -0.0340|        1.0329|     0.5163|
+|23 |C2       |ANN_L1_L2 |    40|        0.7|              0.7431|       0.6560|      0.5255|      -0.0279|        1.0571|     0.5198|
+|9  |C3       |ANN_0     |    80|        0.5|              0.7965|       0.4431|      0.3527|       0.0028|        0.9925|     0.5875|
+|10 |C3       |ANN_L1    |    80|        0.5|              0.7956|       0.4405|      0.3508|       0.0049|        1.0315|     0.5929|
+|12 |C3       |ANN_L2    |    80|        0.5|              0.7967|       0.4431|      0.3527|       0.0027|        0.9923|     0.5876|
+|11 |C3       |ANN_L1_L2 |    80|        0.5|              0.7960|       0.4398|      0.3503|       0.0056|        1.0330|     0.5942|
+|13 |C4       |ANN_0     |   120|        0.5|              0.8309|       0.3505|      0.2798|      -0.0204|        0.9888|     0.6359|
+|14 |C4       |ANN_L1    |   120|        0.5|              0.8310|       0.3467|      0.2769|      -0.0224|        1.0081|     0.6438|
+|16 |C4       |ANN_L2    |   120|        0.5|              0.8306|       0.3499|      0.2791|      -0.0208|        0.9918|     0.6373|
+|15 |C4       |ANN_L1_L2 |   120|        0.5|              0.8298|       0.3474|      0.2772|      -0.0180|        1.0249|     0.6425|
+|1  |C5       |ANN_0     |   240|        0.3|              0.8570|       0.2635|      0.2101|       0.0112|        0.8951|     0.6779|
+|2  |C5       |ANN_L1    |   240|        0.3|              0.8512|       0.2657|      0.2128|       0.0073|        1.0238|     0.6728|
+|4  |C5       |ANN_L2    |   240|        0.3|              0.8574|       0.2629|      0.2096|       0.0113|        0.8934|     0.6794|
+|3  |C5       |ANN_L1_L2 |   240|        0.3|              0.8517|       0.2671|      0.2137|       0.0077|        1.0211|     0.6700|
+|5  |C6       |ANN_0     |   480|        0.3|              0.8956|       0.2023|      0.1623|      -0.0296|        0.9441|     0.7494|
+|6  |C6       |ANN_L1    |   480|        0.3|              0.8992|       0.1961|      0.1572|      -0.0292|        1.0033|     0.7655|
+|8  |C6       |ANN_L2    |   480|        0.3|              0.8959|       0.2026|      0.1624|      -0.0287|        0.9439|     0.7487|
+|7  |C6       |ANN_L1_L2 |   480|        0.3|              0.9002|       0.1944|      0.1557|      -0.0300|        1.0099|     0.7698|
+
+
+Table: Mean outer-CV ANN performance against observed phenotype
+
+|   |Scenario |Model     | QTL_N| H2_nominal| Phenotype_Correlation| Phenotype_RMSE| Phenotype_MAE| Phenotype_Bias| Phenotype_Slope| Phenotype_R2|
+|:--|:--------|:---------|-----:|----------:|---------------------:|--------------:|-------------:|--------------:|---------------:|------------:|
+|17 |C1       |ANN_0     |     8|        0.7|                0.4834|         2.0270|        1.6230|        -0.0276|          0.8287|       0.2108|
+|18 |C1       |ANN_L1    |     8|        0.7|                0.5737|         1.8836|        1.5113|        -0.0402|          1.0787|       0.3179|
+|20 |C1       |ANN_L2    |     8|        0.7|                0.4846|         2.0255|        1.6220|        -0.0303|          0.8276|       0.2120|
+|19 |C1       |ANN_L1_L2 |     8|        0.7|                0.5748|         1.8816|        1.5090|        -0.0424|          1.0758|       0.3194|
+|21 |C2       |ANN_0     |    40|        0.7|                0.6419|         0.8392|        0.6639|        -0.0320|          1.0036|       0.3800|
+|22 |C2       |ANN_L1    |    40|        0.7|                0.6432|         0.8353|        0.6603|        -0.0276|          1.0273|       0.3856|
+|24 |C2       |ANN_L2    |    40|        0.7|                0.6422|         0.8386|        0.6633|        -0.0340|          1.0053|       0.3807|
+|23 |C2       |ANN_L1_L2 |    40|        0.7|                0.6431|         0.8351|        0.6603|        -0.0279|          1.0298|       0.3858|
+|9  |C3       |ANN_0     |    80|        0.5|                0.5887|         0.7712|        0.6259|         0.0028|          0.9927|       0.3052|
+|10 |C3       |ANN_L1    |    80|        0.5|                0.5878|         0.7702|        0.6245|         0.0049|          1.0334|       0.3078|
+|12 |C3       |ANN_L2    |    80|        0.5|                0.5889|         0.7711|        0.6258|         0.0027|          0.9930|       0.3052|
+|11 |C3       |ANN_L1_L2 |    80|        0.5|                0.5879|         0.7697|        0.6243|         0.0056|          1.0342|       0.3087|
+|13 |C4       |ANN_0     |   120|        0.5|                0.5802|         0.7039|        0.5723|        -0.0204|          1.0008|       0.3074|
+|14 |C4       |ANN_L1    |   120|        0.5|                0.5805|         0.7018|        0.5709|        -0.0224|          1.0212|       0.3117|
+|16 |C4       |ANN_L2    |   120|        0.5|                0.5801|         0.7036|        0.5722|        -0.0208|          1.0041|       0.3082|
+|15 |C4       |ANN_L1_L2 |   120|        0.5|                0.5797|         0.7025|        0.5713|        -0.0180|          1.0379|       0.3104|
+|1  |C5       |ANN_0     |   240|        0.3|                0.4583|         0.7597|        0.6228|         0.0112|          0.8645|       0.1829|
+|2  |C5       |ANN_L1    |   240|        0.3|                0.4547|         0.7594|        0.6209|         0.0073|          0.9817|       0.1838|
+|4  |C5       |ANN_L2    |   240|        0.3|                0.4585|         0.7597|        0.6228|         0.0113|          0.8631|       0.1831|
+|3  |C5       |ANN_L1_L2 |   240|        0.3|                0.4541|         0.7602|        0.6217|         0.0077|          0.9772|       0.1819|
+|5  |C6       |ANN_0     |   480|        0.3|                0.4718|         0.6565|        0.5340|        -0.0296|          0.9014|       0.1945|
+|6  |C6       |ANN_L1    |   480|        0.3|                0.4716|         0.6541|        0.5326|        -0.0292|          0.9499|       0.2009|
+|8  |C6       |ANN_L2    |   480|        0.3|                0.4715|         0.6569|        0.5342|        -0.0287|          0.9007|       0.1935|
+|7  |C6       |ANN_L1_L2 |   480|        0.3|                0.4725|         0.6533|        0.5320|        -0.0300|          0.9569|       0.2029|</code></pre>
 <p>Across all outer-CV tasks, ANN-L1+L2 has the highest mean genetic
 correlation (0.8013) and lowest mean genetic RMSE (0.5537) among the
 four ANN variants. ANN-L1 is effectively tied (correlation 0.8011; RMSE
@@ -3071,7 +2721,7 @@ comparison</a></p>
 </div>
 <div id="reproducibility-information" class="section level1">
 <h1>Reproducibility information</h1>
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
@@ -3112,7 +2762,7 @@ Session information
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)

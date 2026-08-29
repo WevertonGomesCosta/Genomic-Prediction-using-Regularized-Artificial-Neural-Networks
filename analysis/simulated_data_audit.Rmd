@@ -103,6 +103,24 @@ the dataset, and `BLOCKED` prevents creation of the canonical modeling object.
 
 # Expected files
 
+Before checking file availability, the table below maps each simulator input to
+its scientific role in the audit. This separates file names from the biological
+or analytical quantity that each file contributes to the workflow.
+
+| File | Scientific role in this workflow |
+|---|---|
+| `controlegenetico#1.dat` | Simulation-control metadata, including scenario parameters and the QTL lists used to define C1-C6. |
+| `DG#gen_F2_Vfen.txt` | Phenotypic values for the 1,000 individuals across the six simulated scenarios. |
+| `DG#gen_F2_Vgen.dat` | True simulated genetic values for the same individuals and scenarios; retained for downstream evaluation, not model fitting. |
+| `genoma.txt` | Text representation of the genetic map used to recover linkage groups, marker identities, and map positions. |
+| `genoma_mapa.txt` | Genotype matrix in 0/1/2 coding; after orientation and validation, it is the source of the canonical genotype representation used downstream. |
+| `genoma_mapa_tr.txt` | Alternative 11/12/22 genotype representation used to verify cell-by-cell equivalence with `genoma_mapa.txt`. |
+| `genoma_pais.txt` | Parental genotype information used to audit the parental contrast underlying the simulated F2 population. |
+| `map.rds` | Serialized map object supplied with the simulation data and inspected independently from the text map rather than assumed to be canonical. |
+
+The audit first verifies that all eight inputs are present and then evaluates
+their internal consistency in the sections that follow.
+
 ```{r expected-files}
 expected_files <- c(
   "controlegenetico#1.dat",
@@ -916,6 +934,33 @@ C1--C6 gradient, they are not interpreted as isolated causal effects.
 
 # Genotype quality control
 
+This section checks whether the simulated genotype matrix has the structural
+properties required for the downstream genomic analyses. The diagnostics have
+different roles:
+
+- **missing genotypes** identify unavailable marker calls; missing cells are
+  blocking here because the canonical simulated dataset is expected to be
+  complete;
+- **duplicate individuals** identify identical complete genotype profiles among
+  progeny and are treated as blocking because they would violate the expected
+  individual-level structure of this simulated population;
+- **duplicate markers** identify marker columns with identical genotype profiles
+  across all individuals;
+- **monomorphic markers** identify loci with no observed genotype variation and
+  therefore no information for distinguishing individuals;
+- **minor allele frequency (MAF)** summarizes the frequency of the less common
+  allele at each marker and provides a marker-level description of segregation;
+- **heterozygosity** records the proportion of heterozygous individuals at each
+  marker;
+- the overall **0/1/2 genotype proportions** are compared with the expected
+  F2 segregation pattern of approximately 1:2:1.
+
+These checks audit the known simulated population rather than impose a generic
+quality-control pipeline for empirical genomic data. The numerical criteria
+below are therefore part of this simulation audit. Non-blocking departures are
+reported as `WARNING` and retained explicitly instead of being filtered
+silently from the canonical genotype matrix.
+
 ```{r genotype-qc}
 missing_genotypes <- sum(is.na(geno_012))
 
@@ -1170,12 +1215,32 @@ if (!is.null(dim(map_rds))) {
 
 # Linkage disequilibrium
 
-LD is evaluated using the canonical individual-by-marker `0/1/2` matrix.
-Within-linkage-group marker pairs are evaluated at fixed map distances.
-A random sample of pairs from different linkage groups provides an
-interchromosomal reference.
+Linkage disequilibrium (LD) is used here to describe how strongly marker
+genotypes remain associated as genetic-map distance increases. For each marker
+pair, the audit uses \(r^2\), the squared correlation between their standardized
+0/1/2 genotype codings. Larger values indicate stronger marker association,
+whereas values closer to zero indicate weaker association.
 
-```{r linkage-disequilibrium}
+The analysis separates two complementary comparisons:
+
+- **within-linkage-group LD** is evaluated for marker pairs separated by fixed
+  map distances from 0.5 to 200 cM. In a recombining population, linked markers
+  are generally expected to show stronger association at short distances and
+  weaker association as map distance increases;
+- an **interchromosomal reference** is obtained from 5,000 randomly sampled
+  marker pairs belonging to different linkage groups. Because these pairs are
+  not linked on the same chromosome, their mean \(r^2\) provides a background
+  reference for interpreting residual association among widely separated
+  markers within a linkage group.
+
+The purpose is descriptive and diagnostic rather than a marker-filtering step.
+In particular, persistence of elevated within-linkage-group LD at 100-200 cM
+relative to the interchromosomal reference is recorded as a `WARNING` about the
+simulator's long-distance recombination behavior. It is not interpreted by
+itself as evidence of corrupted data, and it does not cause markers to be
+removed from the canonical genotype matrix.
+
+```{r linkage-disequilibrium, fig.cap="Linkage disequilibrium decay across fixed within-linkage-group map distances. Points and the connecting line show mean within-linkage-group r-squared; the dashed horizontal line shows the mean interchromosomal r-squared estimated from 5,000 randomly sampled marker pairs from different linkage groups."}
 if (monomorphic_markers == 0L) {
   geno_scaled <- scale(
     geno_012,
@@ -1488,10 +1553,12 @@ Across all six scenarios simultaneously, QTL number increases while nominal
 heritability decreases. Consequently, a global trend across C1-C6 must not be
 interpreted as an isolated causal effect of QTL number or heritability.
 
-The simulator specifies `Model = 2` for all scenarios. This simulation
-architecture is retained as part of the data-generating contract and motivates
-the use of additive, dominance, and epistatic genomic components in the
-GBLUP-ADE benchmark.
+The simulator control file records `Model = 2` for all six scenarios. This
+numeric field is retained here as part of the data provenance, but its
+biological meaning is not inferred from the code value alone in this audit.
+The downstream GBLUP-ADE benchmark is a separate prespecified modeling choice:
+its additive, dominance, and epistatic components are defined and justified in
+the GBLUP module rather than being established solely by `Model = 2`.
 
 # Final audit status
 
@@ -1561,8 +1628,34 @@ check is classified as `BLOCKED`.
 
 # Canonical preprocessed object
 
-The canonical modeling object is generated only when no blocking audit failure
-is present.
+The canonical preprocessed object is generated only when no blocking audit
+failure is present. The saved `preprocessed_simulated_common.rds` acts as the
+shared data contract for the downstream validation and modeling modules, so
+those modules consume the same audited representation instead of independently
+re-reading and re-interpreting the raw simulator files.
+
+Its components have distinct scientific roles:
+
+- `phenotype` contains the observed response values available for model fitting
+  within the appropriate analysis subsets;
+- `genotype_m101` is the canonical -1/0/1 genotype representation used by the
+  downstream genomic prediction workflows, while `genotype_012` is retained as
+  the validated source representation;
+- `metadata$row_identifier` preserves the row-position identity contract used
+  to align individuals across phenotypes, genotypes, validation splits, and
+  predictions;
+- `true_genetic_value` is retained for held-out predictive evaluation only. It
+  is not used to generate validation folds, tune ANN hyperparameters, select
+  training duration, or fit the predictive models;
+- map, scenario, QTL, marker-QC, and LD components preserve the audited
+  simulation structure and provenance for downstream checks and interpretation.
+  Their presence in the common object does not make them additional response
+  variables or automatic model predictors.
+
+The next module uses this audited object to construct the frozen nested
+cross-validation design. The GBLUP-ADE and ANN branches then consume that common
+data contract together with the same frozen validation design, preserving
+individual and task alignment across the parallel modeling workflows.
 
 ```{r save-canonical-object}
 write.csv(
