@@ -8,6 +8,7 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
+    code_folding: hide
 editor_options:
   chunk_output_type: console
 ---
@@ -146,12 +147,17 @@ or tuning, whereas the corresponding **assessment set** remains held out for
 evaluation at that level of cross-validation. Outer assessment individuals are
 therefore never used to choose ANN hyperparameters or training duration.
 
+Internal integrity checks still verify file availability, ID alignment,
+partition sizes, disjointness, and coverage. Those checks remain executable and
+are exported with the validation outputs, but the public page emphasizes the
+validation logic that determines how models are trained and evaluated.
+
 # Canonical data prerequisite
 
 The validation design is built only after the simulated-data audit has
 completed without any blocking check.
 
-```{r prerequisites}
+```{r prerequisites, include=FALSE}
 required_files <- c(
   input_file,
   audit_file
@@ -238,10 +244,12 @@ if (!components_ok) {
 
 # Individual universe
 
-Partitions are generated from the canonical row identifiers only. No phenotype
-or true genetic value is used in this step.
+Partitions are generated from the 1,000 canonical row identifiers only. No
+phenotype, true genetic value, scenario label, or model information is used to
+define the partitions. Alignment with the canonical phenotype, true-genetic-
+value, and genotype matrices is verified internally before the folds are built.
 
-```{r individual-universe}
+```{r individual-universe, include=FALSE}
 ids <- simulated_common$metadata$row_identifier
 
 if (is.null(ids)) {
@@ -418,6 +426,12 @@ add_check(
 ```
 
 # Explicit outer split objects
+
+The assignment table is then converted into explicit analysis and assessment
+ID sets for each outer split. For a given split, `setdiff()` removes the 200
+assessment IDs from the 1,000-individual universe, leaving the corresponding
+800-individual analysis set. This representation is the object consumed by the
+modeling modules.
 
 ```{r outer-split-objects}
 outer_split_ids <- unique(
@@ -689,9 +703,10 @@ add_check(
 
 The split object contains no scenario, phenotype, true genetic value, or model
 information. The same partitions are therefore reused for C1-C6 and for every
-prediction method.
+prediction method. This independence is verified internally from the fields
+stored in the frozen split objects.
 
-```{r independence-contract}
+```{r independence-contract, include=FALSE}
 split_variables <- unique(
   c(
     names(outer_assignments),
@@ -766,6 +781,10 @@ The frozen validation protocol is:
 
 # Design summary
 
+The complete nested design can now be summarized independently of any
+prediction model. These counts define the sample sizes and number of repeated
+comparisons used by both modeling branches.
+
 ```{r design-summary}
 design_summary <- data.frame(
   Item = c(
@@ -804,9 +823,13 @@ knitr::kable(
 )
 ```
 
-# Final validation-design audit
+# Internal validation status
 
-```{r final-validation-audit}
+The detailed integrity checklist is evaluated before the frozen design is
+written, but it is retained as a validation artifact rather than reproduced as
+a reader-facing table.
+
+```{r final-validation-audit, include=FALSE}
 status_order <- c(
   "BLOCKED",
   "WARNING",
@@ -868,11 +891,18 @@ cat(
 )
 ```
 
-# Save frozen validation design
+The internal checks classify the frozen validation design as
+**`r final_classification`**. A blocking condition would prevent creation of the
+canonical cross-validation object.
 
-The design object is written only if no blocking integrity check is present.
+# Frozen validation object
 
-```{r save-validation-design}
+The validated design is stored only after all blocking conditions have been
+excluded. The saved object contains the outer and inner assignments together
+with their explicit analysis/assessment ID sets and is the single validation
+contract consumed by GBLUP-ADE and ANN.
+
+```{r save-validation-design, include=FALSE}
 write.csv(
   validation_log,
   file.path(
@@ -962,6 +992,10 @@ cat(
   "\n"
 )
 ```
+
+The detailed assignment tables and validation audit remain available as
+versioned outputs for reproducibility and maintenance, while the modeling
+modules consume `simulated_cv_design.rds` directly.
 
 # Navigation
 
