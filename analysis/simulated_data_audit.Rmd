@@ -8,6 +8,7 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
+    code_folding: hide
 editor_options:
   chunk_output_type: console
 ---
@@ -32,6 +33,13 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
+
+WIDE_TABLE_ATTR <- paste(
+  'style="display:block;',
+  'overflow-x:auto;',
+  'white-space:nowrap;',
+  'width:100%;"'
+)
 
 find_project_root <- function(start = getwd()) {
   path <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -96,10 +104,13 @@ fmt_dim <- function(x) {
 
 ## How to read this audit
 
-Each section evaluates one property required before genomic prediction. A
-`PASS` confirms that the observed data satisfy the prespecified requirement, a
-`WARNING` records a feature that needs interpretation but does not invalidate
-the dataset, and `BLOCKED` prevents creation of the canonical modeling object.
+Each section explains a property required before genomic prediction and shows
+the data summaries that are useful for scientific interpretation. Internal
+integrity checks still classify conditions as `PASS`, `WARNING`, or `BLOCKED`,
+but the complete operational checklist is written to the audit output rather
+than repeated throughout the public page. A `BLOCKED` condition prevents
+creation of the canonical modeling object, while scientifically relevant
+warnings are discussed directly in the section where they arise.
 
 # Expected files
 
@@ -121,7 +132,7 @@ or analytical quantity that each file contributes to the workflow.
 The audit first verifies that all eight inputs are present and then evaluates
 their internal consistency in the sections that follow.
 
-```{r expected-files}
+```{r expected-files, include=FALSE}
 expected_files <- c(
   "controlegenetico#1.dat",
   "DG#gen_F2_Vfen.txt",
@@ -172,9 +183,10 @@ if (all(file_table$Exists)) {
 }
 ```
 
-The eight expected simulation inputs are present. File size is recorded here as
-part of file-level provenance; biological and numerical consistency are tested
-explicitly in the sections that follow rather than inferred from file size.
+All eight simulator inputs are required before preprocessing can proceed.
+Their availability and file-level provenance are checked internally; the table
+above is retained as the reader-facing description of what each file contributes
+scientifically to the workflow.
 
 # Read primary matrices
 
@@ -265,7 +277,8 @@ knitr::kable(
 
 knitr::kable(
   genotype_preview,
-  caption = "First six individuals and first ten markers in 0/1/2 coding"
+  caption = "First six individuals and first ten markers in 0/1/2 coding",
+  table.attr = WIDE_TABLE_ATTR
 )
 ```
 
@@ -441,7 +454,8 @@ names(canonical_genotype_preview)[-1] <- paste0("M", seq_len(10))
 
 knitr::kable(
   canonical_genotype_preview,
-  caption = "First six individuals and first ten markers in canonical -1/0/1 coding"
+  caption = "First six individuals and first ten markers in canonical -1/0/1 coding",
+  table.attr = WIDE_TABLE_ATTR
 )
 ```
 
@@ -727,7 +741,23 @@ expected_control <- data.frame(
   CV_metadata = rep(12, 6)
 )
 
-knitr::kable(control_table, digits = 4)
+control_display <- control_table[
+  ,
+  c(
+    "Scenario",
+    "QTL_N",
+    "H2_nominal",
+    "gmd",
+    "Model",
+    "Constant"
+  )
+]
+
+knitr::kable(
+  control_display,
+  digits = 4,
+  caption = "Simulation-scenario parameters used in the downstream workflow"
+)
 
 control_ok <- isTRUE(
   all(
@@ -832,7 +862,11 @@ qtl_by_lg <- data.frame(
 
 names(qtl_by_lg)[-1] <- paste0("LG", 1:10)
 
-knitr::kable(qtl_by_lg)
+knitr::kable(
+  qtl_by_lg,
+  caption = "Number of simulated QTL by linkage group and scenario",
+  table.attr = WIDE_TABLE_ATTR
+)
 
 qtl_balance_ok <- all(
   vapply(
@@ -888,6 +922,12 @@ do not contain an explicit individual-ID column. All phenotype, true genetic
 value, and genotype matrices therefore must contain exactly the same 1,000
 rows.
 
+The scenario summary is displayed in two complementary tables. The first
+emphasizes the simulated signal and realized heritability; the second reports
+dispersion, residual association, and coefficient-of-variation diagnostics.
+The complete `scenario_summary` object is still retained unchanged for the
+canonical output files and downstream analyses.
+
 ```{r phenotypic-genetic-summary}
 scenario_names <- paste0("C", 1:6)
 
@@ -942,9 +982,45 @@ scenario_summary <- data.frame(
   CV_metadata = control_table$CV_metadata
 )
 
+scenario_signal_display <- scenario_summary[
+  ,
+  c(
+    "Scenario",
+    "QTL_N",
+    "H2_nominal",
+    "Phenotype_mean",
+    "Genetic_mean",
+    "Cor_P_G",
+    "H2_realized"
+  )
+]
+
+scenario_diagnostics_display <- scenario_summary[
+  ,
+  c(
+    "Scenario",
+    "Phenotype_sd",
+    "Genetic_sd",
+    "Residual_mean",
+    "Residual_sd",
+    "Cor_G_E",
+    "VarG_over_VarP",
+    "CV_empirical_pct",
+    "CV_metadata"
+  )
+]
+
 knitr::kable(
-  scenario_summary,
-  digits = 4
+  scenario_signal_display,
+  digits = 4,
+  caption = "Phenotypic and true-genetic signal by simulation scenario"
+)
+
+knitr::kable(
+  scenario_diagnostics_display,
+  digits = 4,
+  caption = "Dispersion and residual diagnostics by simulation scenario",
+  table.attr = WIDE_TABLE_ATTR
 )
 
 row_order_contract_ok <-
@@ -1255,13 +1331,14 @@ cross underlying the simulated population. The audit checks the expected
 contrasting parental states across all 10 linkage groups before relating the
 parental configuration to the F2 segregation pattern observed in the progeny.
 
-# `map.rds`
+# Serialized map reference
 
-The serialized map object is retained as part of the original simulation
-dataset. It is inspected independently from the text map to avoid assuming its
-internal structure.
+The serialized `map.rds` object is retained as part of the original simulation
+dataset and is checked independently from the text map. Its readability and
+basic structure remain part of the internal integrity checks, but the object is
+not treated as an additional response variable or as a separate modeling branch.
 
-```{r map-rds}
+```{r map-rds, include=FALSE}
 map_rds <- readRDS(
   file.path(data_dir, "map.rds")
 )
@@ -1657,9 +1734,12 @@ The downstream GBLUP-ADE benchmark is a separate prespecified modeling choice:
 its additive, dominance, and epistatic components are defined and justified in
 the GBLUP module rather than being established solely by `Model = 2`.
 
-# Final audit status
+# Internal integrity status
 
-```{r final-audit}
+The detailed checklist is evaluated before the canonical object is created, but
+only its overall classification is needed in the reader-facing narrative.
+
+```{r final-audit, include=FALSE}
 status_order <- c(
   "BLOCKED",
   "WARNING",
@@ -1719,9 +1799,12 @@ cat(
 )
 ```
 
-Warnings document characteristics of the simulation that require explicit
-interpretation. They do not invalidate the dataset unless a corresponding
-check is classified as `BLOCKED`.
+The internal checks classify this preprocessing stage as
+**`r final_classification`**. The complete checklist is retained in
+`simulated_audit_summary.csv` rather than reproduced on this page.
+Scientifically relevant warnings, including the linkage-disequilibrium behavior
+discussed above, remain explicit in the narrative and do not invalidate the
+dataset unless a corresponding condition is classified as `BLOCKED`.
 
 # Canonical preprocessed object
 
@@ -1754,7 +1837,7 @@ cross-validation design. The GBLUP-ADE and ANN branches then consume that common
 data contract together with the same frozen validation design, preserving
 individual and task alignment across the parallel modeling workflows.
 
-```{r save-canonical-object}
+```{r save-canonical-object, include=FALSE}
 write.csv(
   audit_log,
   file.path(
@@ -1851,6 +1934,11 @@ cat(
   "\n"
 )
 ```
+
+The resulting `preprocessed_simulated_common.rds` is the shared preprocessed
+data contract passed to the validation module and, from there, to both parallel
+modeling branches. The detailed CSV audit files remain available for
+reproducibility and maintenance without occupying the main scientific narrative.
 
 # Navigation
 
