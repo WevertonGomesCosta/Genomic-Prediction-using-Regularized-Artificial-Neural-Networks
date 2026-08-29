@@ -8,6 +8,7 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
+    code_folding: hide
 editor_options:
   chunk_output_type: console
 ---
@@ -28,6 +29,13 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
+
+WIDE_TABLE_ATTR <- paste(
+  'style="display:block;',
+  'overflow-x:auto;',
+  'white-space:nowrap;',
+  'width:100%;"'
+)
 
 find_project_root <- function(start = getwd()) {
   path <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -309,7 +317,12 @@ when predicting the phenotype.
 
 # Pre-fit integrity
 
-```{r prefit}
+Before any saved result is summarized, the canonical phenotype, true-genetic-
+value, genotype, scenario, and frozen outer-split dimensions are checked
+internally. A blocking mismatch stops the module rather than allowing a result
+table to be interpreted against an inconsistent input contract.
+
+```{r prefit, include=FALSE}
 checks <- data.frame(
   Check = c(
     "Phenotype dimensions",
@@ -354,6 +367,10 @@ if (!outer_ok) stop("Frozen outer splits failed integrity check.")
 ```
 
 # Analysis tasks
+
+The six scenarios are crossed with the 25 frozen outer splits to define the
+complete GBLUP-ADE workload. Each row below therefore identifies one independent
+scenario-by-split prediction task; the full design contains 150 tasks.
 
 ```{r task-table}
 outer_meta <- unique(
@@ -693,7 +710,12 @@ cat(
 
 # Kernel diagnostics
 
-```{r kernel-diagnostics}
+Numerical integrity of the additive, dominance, and epistatic relationship
+matrices is checked before saved predictions are interpreted. The detailed
+kernel table is retained as an output artifact; the reader-facing page reports
+the scientifically relevant structural summary.
+
+```{r kernel-diagnostics, include=FALSE}
 if (file.exists(KERNEL_CSV)) {
   kernel_summary <- read.csv(KERNEL_CSV)
   knitr::kable(
@@ -712,9 +734,14 @@ if (file.exists(KERNEL_CSV)) {
 }
 ```
 
-# Saved-result audit
+# Saved-result integrity
 
-```{r result-audit}
+The saved canonical results are checked against the frozen validation contract
+before performance aggregation. Task count, prediction count, split IDs,
+successful status, and prediction finiteness remain blocking or warning checks,
+but the detailed PASS table is kept out of the main narrative.
+
+```{r result-audit, include=FALSE}
 results_available <-
   file.exists(RESULTS_RDS) &&
   file.exists(PREDICTIONS_RDS) &&
@@ -805,10 +832,48 @@ if (results_available) {
     order(match(scenario_performance$Scenario, scenario_names)),
   ]
 
+  genetic_performance_display <- scenario_performance[
+    ,
+    c(
+      "Scenario",
+      "QTL_N",
+      "H2_nominal",
+      "Genetic_Correlation",
+      "Genetic_RMSE",
+      "Genetic_MAE",
+      "Genetic_Bias",
+      "Genetic_Slope",
+      "Genetic_R2"
+    )
+  ]
+
+  phenotype_performance_display <- scenario_performance[
+    ,
+    c(
+      "Scenario",
+      "QTL_N",
+      "H2_nominal",
+      "Phenotype_Correlation",
+      "Phenotype_RMSE",
+      "Phenotype_MAE",
+      "Phenotype_Bias",
+      "Phenotype_Slope",
+      "Phenotype_R2"
+    )
+  ]
+
   knitr::kable(
-    scenario_performance,
+    genetic_performance_display,
     digits = 4,
-    caption = "Mean predictive performance across the 25 outer splits"
+    caption = "Primary evaluation: true genetic-value prediction across the 25 outer splits",
+    table.attr = WIDE_TABLE_ATTR
+  )
+
+  knitr::kable(
+    phenotype_performance_display,
+    digits = 4,
+    caption = "Secondary evaluation: phenotype prediction across the 25 outer splits",
+    table.attr = WIDE_TABLE_ATTR
   )
   }
 }
@@ -829,6 +894,10 @@ if (results_available && exists("scenario_performance")) {
 ```
 
 # Split-level variability
+
+Scenario means can conceal sensitivity to which individuals were held out. The
+next summary therefore describes the distribution of primary genetic-value
+performance across the 25 frozen outer splits within each scenario.
 
 ```{r split-summary}
 if (results_available && exists("ok_results") && nrow(ok_results) > 0L) {
@@ -861,7 +930,8 @@ if (results_available && exists("ok_results") && nrow(ok_results) > 0L) {
   knitr::kable(
     split_summary,
     digits = 4,
-    caption = "Genetic-value prediction variability across outer splits"
+    caption = "Genetic-value prediction variability across outer splits",
+    table.attr = WIDE_TABLE_ATTR
   )
 }
 ```
@@ -873,6 +943,11 @@ scenario averages and prevents a single partition from determining the
 conclusion.
 
 # Computational time
+
+The timing summary separates the one-time construction of the genomic
+relationship matrices from repeated model fitting and prediction across the 150
+tasks. This distinction prevents kernel construction from being interpreted as
+a cost paid independently for every split.
 
 ```{r time-summary}
 if (results_available) {
@@ -899,10 +974,9 @@ if (results_available) {
 }
 ```
 
-The timing summary separates the one-time construction of the genomic kernels
-from model fitting and prediction. Because the A, D, and E matrices are built
-once and reused across all 150 tasks, their construction time should not be
-interpreted as a per-task computational cost.
+Because the A, D, and E matrices are built once and reused across all 150
+tasks, their construction time is reported separately from the mean fitting and
+prediction times.
 
 ```{r output-contract, include=FALSE}
 output_files <- c(
