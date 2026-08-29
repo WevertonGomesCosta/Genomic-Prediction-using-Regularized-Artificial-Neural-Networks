@@ -336,6 +336,30 @@ if (any(!compatibility_checks$PASS)) {
 }
 ```
 
+# Interpretation of calibration metrics
+
+The same metric definitions are applied separately to prediction of the true
+simulated genetic value and to prediction of the observed phenotype.
+
+- **Bias** is the mean prediction error, calculated as
+  \(\operatorname{mean}(\text{prediction} - \text{target})\). A positive value
+  indicates average overprediction, a negative value indicates average
+  underprediction, and zero is the calibration target.
+- **Slope** is the coefficient of the prediction term in the regression
+  `lm(target ~ prediction)`. A value near one indicates appropriate
+  proportional scaling of predictions relative to the target. Slope alone is
+  not a complete calibration assessment because the regression intercept also
+  contributes to calibration.
+- **R-squared** is calculated as \(1 - SSE/SST\), using prediction errors
+  relative to the target mean. It is therefore not defined here as squared
+  correlation. For genuinely held-out predictions it can be negative when the
+  predictions perform worse, in squared-error terms, than using the target
+  mean as a reference.
+
+Correlation, RMSE, and MAE describe complementary aspects of predictive
+agreement, while Bias and Slope provide calibration diagnostics. No single
+metric is interpreted as establishing universal model superiority.
+
 # Overall model performance
 
 ```{r overall-comparison, echo=FALSE}
