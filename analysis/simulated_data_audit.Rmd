@@ -178,6 +178,11 @@ explicitly in the sections that follow rather than inferred from file size.
 
 # Read primary matrices
 
+The first computational step reads the phenotype, true simulated genetic
+value, and genotype matrices supplied by the simulator. The genotype file in
+0/1/2 coding is transposed so that all downstream matrices use the same
+orientation: **individuals in rows and variables or markers in columns**.
+
 ```{r read-primary-data}
 phenotype <- as.matrix(
   read.table(
@@ -216,7 +221,59 @@ geno_1122 <- as.matrix(
 storage.mode(geno_1122) <- "integer"
 ```
 
+Before checking dimensions and coding, the small previews below make that
+orientation explicit. Only the first six individuals and, for the genotype
+matrix, the first ten markers are displayed; the complete matrices are retained
+for all calculations.
+
+```{r primary-matrix-previews}
+phenotype_preview <- data.frame(
+  ID = seq_len(6),
+  phenotype[1:6, , drop = FALSE],
+  check.names = FALSE
+)
+names(phenotype_preview)[-1] <- paste0("C", seq_len(ncol(phenotype)))
+
+true_g_preview <- data.frame(
+  ID = seq_len(6),
+  true_genetic_value[1:6, , drop = FALSE],
+  check.names = FALSE
+)
+names(true_g_preview)[-1] <- paste0(
+  "C",
+  seq_len(ncol(true_genetic_value))
+)
+
+genotype_preview <- data.frame(
+  ID = seq_len(6),
+  geno_012[1:6, 1:10, drop = FALSE],
+  check.names = FALSE
+)
+names(genotype_preview)[-1] <- paste0("M", seq_len(10))
+
+knitr::kable(
+  phenotype_preview,
+  digits = 4,
+  caption = "First six rows of the phenotype matrix"
+)
+
+knitr::kable(
+  true_g_preview,
+  digits = 4,
+  caption = "First six rows of the true genetic-value matrix"
+)
+
+knitr::kable(
+  genotype_preview,
+  caption = "First six individuals and first ten markers in 0/1/2 coding"
+)
+```
+
 # Core dimensions
+
+The next check verifies that the objects just loaded match the dimensions
+defined by the simulation design. This is the point at which the reader can
+connect the matrix previews above with the full dataset used downstream.
 
 ```{r core-dimensions}
 core_dimensions <- data.frame(
@@ -294,6 +351,10 @@ The simulator provides the genotype matrix in two representations. The
 canonical representation used in subsequent analyses is constructed from
 `genoma_mapa.txt`, transposed to individuals by markers.
 
+The following code first confirms the valid codes in both source files,
+verifies their cell-by-cell equivalence after recoding 11/12/22 to 2/1/0, and
+then derives the -1/0/1 representation consumed by the prediction models.
+
 ```{r genotype-coding}
 codes_012 <- sort(unique(as.vector(geno_012)))
 codes_1122 <- sort(unique(as.vector(geno_1122)))
@@ -367,7 +428,29 @@ The equivalence check compares the two genotype representations after mapping
 from the validated 0/1/2 representation produces the canonical -1/0/1 coding
 used by the genomic prediction models.
 
+To make this transformation visible, the same first six individuals and ten
+markers shown above are displayed again in the canonical -1/0/1 coding.
+
+```{r canonical-genotype-preview}
+canonical_genotype_preview <- data.frame(
+  ID = seq_len(6),
+  geno_m101[1:6, 1:10, drop = FALSE],
+  check.names = FALSE
+)
+names(canonical_genotype_preview)[-1] <- paste0("M", seq_len(10))
+
+knitr::kable(
+  canonical_genotype_preview,
+  caption = "First six individuals and first ten markers in canonical -1/0/1 coding"
+)
+```
+
 # Genetic map
+
+The genetic-map file is parsed next to recover linkage-group membership,
+marker identity, and map position. The resulting summary is used to verify the
+expected chromosome structure before QTL positions or linkage disequilibrium
+are interpreted.
 
 ```{r genetic-map}
 map_lines <- readLines(
@@ -471,6 +554,11 @@ The map audit tests the expected structure of 4,010 markers distributed across
 the positional reference for QTL and linkage-disequilibrium analyses.
 
 # Simulation control file
+
+The control file defines the six simulated scenarios. The code below reads each
+scenario block, extracts the prespecified metadata and QTL list, and preserves
+the original numeric values while normalizing only the malformed whitespace in
+one source key required for parsing.
 
 ```{r simulation-control}
 control_raw <- readLines(
@@ -681,6 +769,11 @@ add_audit(
 ```
 
 # QTL positions
+
+The QTL indices recorded in the control file are now mapped back to linkage
+groups and genetic positions. This step checks whether all selected loci are
+valid map positions and summarizes how the QTL are distributed and shared
+across scenarios.
 
 ```{r qtl-audit}
 qtl_rows <- do.call(
@@ -1095,6 +1188,10 @@ profile used downstream; any non-blocking feature remains explicit in the audit
 rather than being silently removed.
 
 # Parental genotypes
+
+The parental file is read separately from the F2 progeny matrix. The objective
+is to confirm the expected parental contrast and linkage-group organization
+that underlie the simulated segregation pattern.
 
 ```{r parents}
 parents <- as.matrix(
