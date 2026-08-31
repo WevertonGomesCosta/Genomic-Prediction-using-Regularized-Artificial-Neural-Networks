@@ -50,9 +50,15 @@ jobs:
               'model$linears[[layer_index]]',
               text,
           )
-          if n_self < 1 or n_model < 1:
+          text, n_weights = re.subn(
+              r'weights\[\s*\[length\(weights\) \+ 1L\]\s*\]',
+              'weights[[length(weights) + 1L]]',
+              text,
+          )
+          if n_self < 1 or n_model < 1 or n_weights < 1:
               raise RuntimeError(
-                  f'Expected ANN double-index fixes not found: self={n_self}, model={n_model}'
+                  'Expected ANN double-index fixes not found: '
+                  f'self={n_self}, model={n_model}, weights={n_weights}'
               )
           ann.write_text(text)
 
@@ -100,6 +106,8 @@ jobs:
               raise RuntimeError('ANN forward double indexing was not repaired')
           if 'model$linears[[layer_index]]' not in ann_text:
               raise RuntimeError('ANN penalty double indexing was not repaired')
+          if 'weights[[length(weights) + 1L]]' not in ann_text:
+              raise RuntimeError('ANN output-weight double indexing was not repaired')
           PY
 
       - name: Parse all transformed R code
