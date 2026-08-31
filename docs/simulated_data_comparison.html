@@ -11,7 +11,7 @@
 
 <meta name="author" content="Weverton Gomes da Costa" />
 
-<meta name="date" content="2026-08-28" />
+<meta name="date" content="2026-08-31" />
 
 <title>Canonical comparison of GBLUP-ADE and regularized ANN models</title>
 
@@ -492,7 +492,7 @@ div.tocify {
 <h1 class="title toc-ignore">Canonical comparison of GBLUP-ADE and
 regularized ANN models</h1>
 <h4 class="author">Weverton Gomes da Costa</h4>
-<h4 class="date">2026-08-28</h4>
+<h4 class="date">2026-08-31</h4>
 
 </div>
 
@@ -521,7 +521,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-08-28
+<strong>Last updated:</strong> 2026-08-31
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -653,15 +653,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree35ac1972ab1a26a456497dee841190cb931e9303targetblank35ac197a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree1e0bc61230a788505727cc33c93674342efe341btargetblank1e0bc61a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/35ac1972ab1a26a456497dee841190cb931e9303" target="_blank">35ac197</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/1e0bc61230a788505727cc33c93674342efe341b" target="_blank">1e0bc61</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree35ac1972ab1a26a456497dee841190cb931e9303targetblank35ac197a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree1e0bc61230a788505727cc33c93674342efe341btargetblank1e0bc61a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -671,7 +671,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/35ac1972ab1a26a456497dee841190cb931e9303" target="_blank">35ac197</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/1e0bc61230a788505727cc33c93674342efe341b" target="_blank">1e0bc61</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -753,6 +753,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/1e0bc61230a788505727cc33c93674342efe341b/analysis/simulated_data_comparison.Rmd" target="_blank">1e0bc61</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-31
+</td>
+<td>
+Refine canonical model comparison for readers
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/fa907f622e87c1b6d24645834e212d7f7f963554/docs/simulated_data_comparison.html" target="_blank">fa907f6</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-28
+</td>
+<td>
+Publish audited workflowr documentation
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -909,103 +943,35 @@ individuals.</p>
 prediction-level audit independently verifies that the actual held-out
 individuals, observed phenotypes, and true simulated genetic values are
 identical across methods.</p>
+<p>The full compatibility audit is retained internally. For
+interpretation, the fair-comparison contract can be summarized by the
+four conditions below.</p>
 <table>
-<caption>Compatibility audit for the canonical model
-comparison.</caption>
+<caption>Reader-facing contract for a fair task-matched model
+comparison</caption>
 <thead>
 <tr class="header">
-<th align="left">Check</th>
+<th align="left">Requirement</th>
 <th align="left">Status</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">GBLUP has 150 result rows</td>
-<td align="left">PASS</td>
+<td align="left">Same 150 outer tasks</td>
+<td align="left">CONFIRMED</td>
 </tr>
 <tr class="even">
-<td align="left">ANN has 600 result rows</td>
-<td align="left">PASS</td>
+<td align="left">Same 200 assessment individuals per task</td>
+<td align="left">CONFIRMED</td>
 </tr>
 <tr class="odd">
-<td align="left">expected ANN models are present</td>
-<td align="left">PASS</td>
+<td align="left">Same phenotype and true genetic-value targets</td>
+<td align="left">CONFIRMED</td>
 </tr>
 <tr class="even">
-<td align="left">GBLUP TaskID values are unique</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="odd">
-<td align="left">each ANN model has identical result-level task
-keys</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="even">
-<td align="left">GBLUP has 30000 held-out prediction rows</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="odd">
-<td align="left">ANN has 120000 held-out prediction rows</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="even">
-<td align="left">GBLUP has exactly 200 predictions per task</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="odd">
-<td align="left">ANN has exactly 200 predictions per task and model</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="even">
-<td align="left">GBLUP TaskID/ID pairs are unique</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="odd">
-<td align="left">each ANN model has identical outer-assessment
-individuals</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="even">
-<td align="left">observed phenotypes are identical across paired
-assessments</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="odd">
-<td align="left">true genetic values are identical across paired
-assessments</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="even">
-<td align="left">all GBLUP result statuses are ok</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="odd">
-<td align="left">all ANN result statuses are ok</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="even">
-<td align="left">all GBLUP prediction statuses are ok</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="odd">
-<td align="left">all ANN prediction statuses are ok</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="even">
-<td align="left">all GBLUP comparison metrics are finite</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="odd">
-<td align="left">all ANN comparison metrics are finite</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="even">
-<td align="left">all GBLUP held-out predictions are finite</td>
-<td align="left">PASS</td>
-</tr>
-<tr class="odd">
-<td align="left">all ANN held-out predictions are finite</td>
-<td align="left">PASS</td>
+<td align="left">Successful finite predictions for all compared
+methods</td>
+<td align="left">CONFIRMED</td>
 </tr>
 </tbody>
 </table>
@@ -1040,20 +1006,13 @@ model superiority.</p>
 </div>
 <div id="overall-model-performance" class="section level1">
 <h1>Overall model performance</h1>
-<table style="width:100%;">
-<caption>Overall held-out predictive performance. Genetic-value
-prediction is the primary outcome.</caption>
-<colgroup>
-<col width="7%" />
-<col width="15%" />
-<col width="9%" />
-<col width="9%" />
-<col width="8%" />
-<col width="16%" />
-<col width="11%" />
-<col width="10%" />
-<col width="9%" />
-</colgroup>
+<p>Overall performance is shown separately for the two evaluation
+targets so that the primary simulated-data criterion is not visually
+mixed with the secondary phenotype criterion. Both summaries average the
+same 150 matched outer-CV tasks per model.</p>
+<table>
+<caption>Primary overall performance against true genetic
+value</caption>
 <thead>
 <tr class="header">
 <th align="left">Model</th>
@@ -1061,10 +1020,6 @@ prediction is the primary outcome.</caption>
 <th align="right">Genetic_RMSE</th>
 <th align="right">Genetic_MAE</th>
 <th align="right">Genetic_R2</th>
-<th align="right">Phenotype_Correlation</th>
-<th align="right">Phenotype_RMSE</th>
-<th align="right">Phenotype_MAE</th>
-<th align="right">Phenotype_R2</th>
 </tr>
 </thead>
 <tbody>
@@ -1074,10 +1029,6 @@ prediction is the primary outcome.</caption>
 <td align="right">0.5860</td>
 <td align="right">0.4687</td>
 <td align="right">0.5812</td>
-<td align="right">0.5374</td>
-<td align="right">0.9596</td>
-<td align="right">0.7737</td>
-<td align="right">0.2635</td>
 </tr>
 <tr class="even">
 <td align="left">ANN_L1</td>
@@ -1085,10 +1036,6 @@ prediction is the primary outcome.</caption>
 <td align="right">0.5541</td>
 <td align="right">0.4448</td>
 <td align="right">0.6092</td>
-<td align="right">0.5519</td>
-<td align="right">0.9340</td>
-<td align="right">0.7534</td>
-<td align="right">0.2846</td>
 </tr>
 <tr class="odd">
 <td align="left">ANN_L1_L2</td>
@@ -1096,10 +1043,6 @@ prediction is the primary outcome.</caption>
 <td align="right">0.5537</td>
 <td align="right">0.4444</td>
 <td align="right">0.6097</td>
-<td align="right">0.5520</td>
-<td align="right">0.9337</td>
-<td align="right">0.7531</td>
-<td align="right">0.2848</td>
 </tr>
 <tr class="even">
 <td align="left">ANN_L2</td>
@@ -1107,10 +1050,6 @@ prediction is the primary outcome.</caption>
 <td align="right">0.5856</td>
 <td align="right">0.4683</td>
 <td align="right">0.5817</td>
-<td align="right">0.5376</td>
-<td align="right">0.9592</td>
-<td align="right">0.7734</td>
-<td align="right">0.2638</td>
 </tr>
 <tr class="odd">
 <td align="left">GBLUP_ADE</td>
@@ -1118,6 +1057,59 @@ prediction is the primary outcome.</caption>
 <td align="right">0.5080</td>
 <td align="right">0.4094</td>
 <td align="right">0.6802</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Secondary overall performance against observed
+phenotype</caption>
+<colgroup>
+<col width="13%" />
+<col width="29%" />
+<col width="20%" />
+<col width="18%" />
+<col width="17%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Model</th>
+<th align="right">Phenotype_Correlation</th>
+<th align="right">Phenotype_RMSE</th>
+<th align="right">Phenotype_MAE</th>
+<th align="right">Phenotype_R2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ANN_0</td>
+<td align="right">0.5374</td>
+<td align="right">0.9596</td>
+<td align="right">0.7737</td>
+<td align="right">0.2635</td>
+</tr>
+<tr class="even">
+<td align="left">ANN_L1</td>
+<td align="right">0.5519</td>
+<td align="right">0.9340</td>
+<td align="right">0.7534</td>
+<td align="right">0.2846</td>
+</tr>
+<tr class="odd">
+<td align="left">ANN_L1_L2</td>
+<td align="right">0.5520</td>
+<td align="right">0.9337</td>
+<td align="right">0.7531</td>
+<td align="right">0.2848</td>
+</tr>
+<tr class="even">
+<td align="left">ANN_L2</td>
+<td align="right">0.5376</td>
+<td align="right">0.9592</td>
+<td align="right">0.7734</td>
+<td align="right">0.2638</td>
+</tr>
+<tr class="odd">
+<td align="left">GBLUP_ADE</td>
 <td align="right">0.5699</td>
 <td align="right">0.9074</td>
 <td align="right">0.7326</td>
@@ -1135,6 +1127,10 @@ within the prespecified canonical model/architecture search space.</p>
 </div>
 <div id="performance-by-simulation-scenario" class="section level1">
 <h1>Performance by simulation scenario</h1>
+<p>The next table asks whether the overall ranking persists across the
+six prespecified simulation scenarios. Only the primary genetic-value
+metrics are shown here; the complete metric set remains available in the
+versioned comparison outputs.</p>
 <table>
 <caption>Primary genetic-value prediction metrics by scenario.</caption>
 <thead>
@@ -1545,6 +1541,10 @@ naive fold-level significance test.</p>
 </div>
 <div id="paired-comparison-by-scenario" class="section level1">
 <h1>Paired comparison by scenario</h1>
+<p>To localize the paired pattern, genetic-correlation advantage is then
+summarized within each scenario over its 25 matched outer tasks.
+Positive values favor the ANN variant and negative values favor
+GBLUP-ADE.</p>
 <table>
 <caption>Paired genetic-correlation advantage by scenario. Positive
 values favor ANN.</caption>
@@ -1947,7 +1947,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
-  window.initializeCodeFolding("show" === "show");
+  window.initializeCodeFolding("hide" === "show");
 });
 </script>
 
