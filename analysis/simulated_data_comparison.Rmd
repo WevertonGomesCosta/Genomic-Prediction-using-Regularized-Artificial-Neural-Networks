@@ -8,7 +8,7 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
-    code_folding: show
+    code_folding: hide
 editor_options:
   chunk_output_type: console
 ---
@@ -28,6 +28,13 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
+
+WIDE_TABLE_ATTR <- paste(
+  'style="display:block;',
+  'overflow-x:auto;',
+  'white-space:nowrap;',
+  'width:100%;"'
+)
 
 find_project_root <- function(start = getwd()) {
   path <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -162,7 +169,7 @@ The result-level audit verifies the frozen task design. The prediction-level
 audit independently verifies that the actual held-out individuals, observed
 phenotypes, and true simulated genetic values are identical across methods.
 
-```{r compatibility-audit, echo=FALSE}
+```{r compatibility-audit, include=FALSE}
 required_result_cols <- c(
   "Scenario", "Repetition", "Fold", "SplitID", "TaskID",
   "Model", "Status", metrics
@@ -336,6 +343,49 @@ if (any(!compatibility_checks$PASS)) {
 }
 ```
 
+The full compatibility audit is retained internally. For interpretation, the
+fair-comparison contract can be summarized by the four conditions below.
+
+```{r compatibility-summary, echo=FALSE}
+comparison_contract <- data.frame(
+  Requirement = c(
+    "Same 150 outer tasks",
+    "Same 200 assessment individuals per task",
+    "Same phenotype and true genetic-value targets",
+    "Successful finite predictions for all compared methods"
+  ),
+  Status = c(
+    if (
+      !anyDuplicated(gr$TaskID) &&
+      all(ann_result_keys_match)
+    ) "CONFIRMED" else "BLOCKED",
+    if (
+      all(table(gp$TaskID) == 200L) &&
+      all(table(interaction(ap$TaskID, ap$Model, drop = TRUE)) == 200L) &&
+      all(ann_assessment_keys_match)
+    ) "CONFIRMED" else "BLOCKED",
+    if (
+      all(ann_phenotype_match) &&
+      all(ann_true_g_match)
+    ) "CONFIRMED" else "BLOCKED",
+    if (
+      all(gr$Status == "ok") &&
+      all(ar$Status == "ok") &&
+      all(gp$Status == "ok") &&
+      all(ap$Status == "ok") &&
+      all(is.finite(gp$Predicted_Value)) &&
+      all(is.finite(ap$Predicted_Value))
+    ) "CONFIRMED" else "BLOCKED"
+  ),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(
+  comparison_contract,
+  caption = "Reader-facing contract for a fair task-matched model comparison"
+)
+```
+
 # Interpretation of calibration metrics
 
 The same metric definitions are applied separately to prediction of the true
@@ -362,6 +412,11 @@ metric is interpreted as establishing universal model superiority.
 
 # Overall model performance
 
+Overall performance is shown separately for the two evaluation targets so that
+the primary simulated-data criterion is not visually mixed with the secondary
+phenotype criterion. Both summaries average the same 150 matched outer-CV tasks
+per model.
+
 ```{r overall-comparison, echo=FALSE}
 analysis_cols <- c(
   "Scenario", "Repetition", "Fold", "SplitID", "TaskID", "Model", metrics
@@ -375,25 +430,40 @@ overall <- aggregate(
   FUN = mean
 )
 
-overall_display <- overall[, c(
+overall_genetic_display <- overall[, c(
   "Model",
   "Genetic_Correlation",
   "Genetic_RMSE",
   "Genetic_MAE",
-  "Genetic_R2",
+  "Genetic_R2"
+)]
+overall_genetic_display[-1] <- lapply(
+  overall_genetic_display[-1],
+  round,
+  4
+)
+
+overall_phenotype_display <- overall[, c(
+  "Model",
   "Phenotype_Correlation",
   "Phenotype_RMSE",
   "Phenotype_MAE",
   "Phenotype_R2"
 )]
-overall_display[-1] <- lapply(overall_display[-1], round, 4)
+overall_phenotype_display[-1] <- lapply(
+  overall_phenotype_display[-1],
+  round,
+  4
+)
 
 knitr::kable(
-  overall_display,
-  caption = paste(
-    "Overall held-out predictive performance.",
-    "Genetic-value prediction is the primary outcome."
-  )
+  overall_genetic_display,
+  caption = "Primary overall performance against true genetic value"
+)
+
+knitr::kable(
+  overall_phenotype_display,
+  caption = "Secondary overall performance against observed phenotype"
 )
 ```
 
@@ -445,6 +515,11 @@ cat(sprintf(
 ```
 
 # Performance by simulation scenario
+
+The next table asks whether the overall ranking persists across the six
+prespecified simulation scenarios. Only the primary genetic-value metrics are
+shown here; the complete metric set remains available in the versioned
+comparison outputs.
 
 ```{r scenario-comparison, echo=FALSE}
 scenario_summary <- aggregate(
@@ -616,7 +691,8 @@ knitr::kable(
   caption = paste(
     "Paired ANN versus GBLUP-ADE comparison for the primary",
     "genetic-value metrics."
-  )
+  ),
+  table.attr = WIDE_TABLE_ATTR
 )
 ```
 
@@ -627,6 +703,10 @@ descriptive summaries of repeated cross-validation and are not treated as
 independent replicates for a naive fold-level significance test.
 
 # Paired comparison by scenario
+
+To localize the paired pattern, genetic-correlation advantage is then summarized
+within each scenario over its 25 matched outer tasks. Positive values favor the
+ANN variant and negative values favor GBLUP-ADE.
 
 ```{r paired-by-scenario, echo=FALSE}
 paired_scenario_list <- list()
