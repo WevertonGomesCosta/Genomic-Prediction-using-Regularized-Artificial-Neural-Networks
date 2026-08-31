@@ -8,7 +8,7 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
-    code_folding: hide
+    code_folding: show
 editor_options:
   chunk_output_type: console
 ---
@@ -627,7 +627,7 @@ to avoid numerical division by zero.
 This ordering prevents validation or assessment observations from influencing
 the preprocessing parameters used to fit the network.
 
-```{r support-functions, include=FALSE}
+```{r support-functions}
 safe_cor <- function(p, o) {
   z <- is.finite(p) & is.finite(o)
 
@@ -848,10 +848,10 @@ model <- nn_module(
 ```
 
 Smaller catalog architectures follow the same pattern with fewer hidden units
-or one hidden layer. The generic implementation that constructs all nine
-architectures is retained internally.
+or one hidden layer. The generic implementation shown next constructs all nine
+architectures from the same definition.
 
-```{r model-definition, eval=ANN_RUNTIME_REQUIRED, include=FALSE}
+```{r model-definition, eval=ANN_RUNTIME_REQUIRED}
 TorchGenomicMLP <- torch::nn_module(
   "TorchGenomicMLP_CanonicalTuning",
 
@@ -984,11 +984,12 @@ loss$backward()
 optimizer$step()
 ```
 
-The complete helper additionally applies the fitting-set scalers, monitors the
-early-validation loss, restores the best epoch, and predicts the untouched inner
-assessment fold. That bookkeeping is retained internally.
+The complete helper shown next additionally applies the fitting-set scalers,
+monitors the early-validation loss, restores the best epoch, and predicts the
+untouched inner assessment fold. The short optimization step above isolates the
+core gradient update before the complete training routine is presented.
 
-```{r training-functions, include=FALSE}
+```{r training-functions}
 prepare_bundle <- function(
   fit_ids,
   validation_ids,
@@ -1307,11 +1308,11 @@ candidate_summary <- candidate_summary[
 ]
 ```
 
-The first row is the selected candidate. Error handling and incomplete-fit
-bookkeeping are kept in the internal execution helper rather than in the
-tutorial code.
+The first row is the selected candidate. The complete function shown next
+implements this same ranking across the four inner folds and records incomplete
+fits separately from successful candidates.
 
-```{r candidate-functions, include=FALSE}
+```{r candidate-functions}
 evaluate_candidate <- function(
   bundles,
   model_name,
@@ -1522,7 +1523,7 @@ choose_candidate <- function(x) {
 The six scenarios share the same 25 frozen outer splits, producing 150
 `Scenario × outer split` tuning tasks.
 
-```{r tasks, include=FALSE}
+```{r tasks}
 outer_map <- unique(
   cv$outer_assignments[
     ,
@@ -1693,7 +1694,7 @@ regularization settings are compared within the same frozen outer task.
 This section evaluates only inner-CV candidates. It never predicts the outer
 assessment set.
 
-```{r run-tuning, eval=RUN_ANN_TUNING, include=FALSE}
+```{r run-tuning, eval=RUN_ANN_TUNING}
 run_start <-
   proc.time()[["elapsed"]]
 
@@ -2838,10 +2839,11 @@ hyperparameter selection and `Best_epoch` selection.
 | Final training length | exactly `Best_epoch` |
 | Final assessment | untouched 200 individuals |
 
-The execution code that performs the 600 final model-task fits is retained
-internally.
+The complete final-fitting code is shown below. The table above provides the
+conceptual contract first; the subsequent functions and loop implement that
+contract for all 600 model-by-task fits.
 
-```{r final-ann-contract, include=FALSE}
+```{r final-ann-contract}
 ANN_FORCE <- identical(Sys.getenv("ANN_FORCE", "0"), "1")
 ANN_PILOT <- identical(Sys.getenv("ANN_PILOT", "0"), "1")
 ANN_PILOT_TASK <- Sys.getenv("ANN_PILOT_TASK", "C1_R01_F01")
@@ -2896,7 +2898,7 @@ knitr::kable(data.frame(
 
 <!-- Source section: final-fit helper functions -->
 
-```{r final-ann-functions, include=FALSE}
+```{r final-ann-functions}
 final_safe_bias <- function(p,o){z<-is.finite(p)&is.finite(o);if(!any(z))return(NA_real_);mean(p[z]-o[z])}
 final_safe_slope <- function(p,o){z<-is.finite(p)&is.finite(o);if(sum(z)<3L||sd(p[z])==0)return(NA_real_);as.numeric(coef(lm(o[z]~p[z]))[2])}
 final_safe_r2 <- function(p,o){z<-is.finite(p)&is.finite(o);if(sum(z)<2L)return(NA_real_);d<-sum((o[z]-mean(o[z]))^2);if(d==0)return(NA_real_);1-sum((o[z]-p[z])^2)/d}
@@ -2931,7 +2933,7 @@ train_final_fixed <- function(train_ids,assessment_ids,scenario_index,architectu
 
 <!-- Source section: final outer-CV tasks -->
 
-```{r final-ann-tasks, include=FALSE}
+```{r final-ann-tasks}
 om<-unique(cv$outer_assignments[,c("Repetition","OuterFold","SplitID")]);om<-om[order(om$Repetition,om$OuterFold),]
 final_task_table<-merge(data.frame(Scenario=scenario_names),om,by=NULL);final_task_table<-final_task_table[order(match(final_task_table$Scenario,scenario_names),final_task_table$Repetition,final_task_table$OuterFold),];final_task_table$Fold<-final_task_table$OuterFold;final_task_table$TaskID<-paste(final_task_table$Scenario,final_task_table$SplitID,sep="_");rownames(final_task_table)<-NULL
 if(nrow(final_task_table)!=150L)stop("Expected 150 canonical ANN outer tasks.")
@@ -2941,7 +2943,7 @@ knitr::kable(head(final_task_table,15),caption=if(ANN_PILOT)"Canonical ANN final
 
 <!-- Source section: final fitting and outer prediction -->
 
-```{r run-final-ann, eval=RUN_ANN, include=FALSE}
+```{r run-final-ann, eval=RUN_ANN}
 req<-c(project_path("output","simulated","ann","tuning","simulated_ann_tuning_selected_configurations.rds"),project_path("output","simulated","ann","tuning","simulated_ann_tuning_run_metadata.rds"),project_path("output","simulated","ann","tuning","simulated_ann_tuning_manifest.rds"));if(!all(file.exists(req)))stop("Canonical tuning outputs are missing. Run RUN_ANN_TUNING=1 first. Missing: ",paste(req[!file.exists(req)],collapse=", "))
 sel<-readRDS(req[1]);tm<-readRDS(req[2]);if(!identical(tm$config_id,ANN_TUNING_CONFIG_ID))stop("Saved tuning config_id is incompatible with canonical ANN page.");if(!identical(tm$outer_assessment_used,FALSE)||!identical(tm$true_genetic_value_used,FALSE))stop("Saved tuning provenance failed.");if(nrow(sel)!=600L)stop("Expected 600 canonical selected configurations.")
 true_g<-common$true_genetic_value;control<-common$scenario_control;if(!identical(dim(true_g),c(1000L,6L)))stop("True G must be 1000 x 6.")

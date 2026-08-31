@@ -8,7 +8,7 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
-    code_folding: hide
+    code_folding: show
 editor_options:
   chunk_output_type: console
 ---
@@ -330,7 +330,7 @@ value, genotype, scenario, and frozen outer-split dimensions are checked
 internally. A blocking mismatch stops the module rather than allowing a result
 table to be interpreted against an inconsistent input contract.
 
-```{r prefit, include=FALSE}
+```{r prefit}
 checks <- data.frame(
   Check = c(
     "Phenotype dimensions",
@@ -422,7 +422,7 @@ Each row represents one `Scenario × outer split` combination. Because there are
 **6 × 25 = 150 GBLUP-ADE fits**. `TaskID` is the stable identifier used to link
 each fit to its held-out predictions and later to the ANN comparison.
 
-```{r task-table-integrity, include=FALSE}
+```{r task-table-integrity}
 if (nrow(task_table) != 150L) {
   stop("Expected 150 scenario-by-split tasks.")
 }
@@ -464,11 +464,12 @@ the 200 outer-assessment individuals. The matrices `A_matrix`, `D_matrix`, and
 `E_matrix` are shared across tasks; only the scenario and frozen assessment set
 change.
 
-The production loop repeats this same fitting logic over all 150 tasks, records
-the held-out predictions, and writes the canonical result files. That execution
-machinery is retained internally rather than displayed as tutorial code.
+The code below repeats this fitting logic over all 150 frozen tasks, records
+the held-out predictions, and writes the canonical result files. The preceding
+single-fit example provides the compact conceptual view; the complete chunk
+shows how that same model is applied across the full validation design.
 
-```{r fit-gblup-ade, eval=RUN_GBLUP, include=FALSE}
+```{r fit-gblup-ade, eval=RUN_GBLUP}
 set.seed(SEED_GLOBAL)
 
 run_start <- proc.time()[["elapsed"]]
@@ -1003,7 +1004,7 @@ Because the A, D, and E matrices are built once and reused across all 150
 tasks, their construction time is reported separately from the mean fitting and
 prediction times.
 
-```{r output-contract, include=FALSE}
+```{r output-contract}
 output_files <- c(
   RESULTS_RDS,
   PREDICTIONS_RDS,
