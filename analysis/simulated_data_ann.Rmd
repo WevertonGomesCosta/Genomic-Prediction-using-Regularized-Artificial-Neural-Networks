@@ -8,7 +8,7 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
-    code_folding: show
+    code_folding: hide
 editor_options:
   chunk_output_type: console
 ---
@@ -99,6 +99,13 @@ knitr::opts_chunk$set(
   cache = FALSE
 )
 options(stringsAsFactors = FALSE)
+
+WIDE_TABLE_ATTR <- paste(
+  'style="display:block;',
+  'overflow-x:auto;',
+  'white-space:nowrap;',
+  'width:100%;"'
+)
 
 find_project_root <- function(start = getwd()) {
   path <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -415,8 +422,10 @@ knitr::kable(
 This module uses the audited common preprocessing object and the frozen nested
 validation design established in the preceding modules. These fixed inputs keep
 model tuning and outer-CV evaluation aligned across all four ANN variants.
+Their dimensions, genotype coding, scenario names, and frozen split counts are
+verified internally before any ANN tuning summary is interpreted.
 
-```{r inputs}
+```{r inputs, include=FALSE}
 required_files <- c(
   DATA_FILE,
   CV_FILE,
@@ -2249,7 +2258,13 @@ write.csv(
 
 # Saved-result integrity
 
-```{r saved-integrity, echo=FALSE}
+The saved tuning outputs are checked against the canonical tuning contract
+before selected configurations or diagnostics are displayed. Configuration ID,
+row counts, finite metrics, exclusion of outer assessment/true genetic values,
+and the shared architecture/learning-rate rule remain blocking integrity
+conditions.
+
+```{r saved-integrity, include=FALSE}
 available <- all(
   file.exists(
     c(
@@ -2414,86 +2429,131 @@ if (!available) {
 
 # Selected configurations
 
+The summaries below show how often the 150 outer tasks selected each shared
+architecture and learning rate, followed by the selected penalty values for the
+regularized variants. A small configuration sample then illustrates the
+task-level selections without reproducing all 600 rows.
+
 ```{r selected-summary, echo=FALSE}
 if (available) {
-  cat(
-    "Selected architecture frequencies:\n"
-  )
-  print(
-    table(
-      unique(
-        selected_configurations[
-          ,
-          c(
-            "TaskID",
-            "Architecture"
-          )
-        ]
-      )$Architecture
-    )
+  task_level <- unique(
+    selected_configurations[
+      ,
+      c(
+        "TaskID",
+        "Architecture",
+        "Learning_rate"
+      )
+    ]
   )
 
-  cat(
-    "\nSelected learning-rate frequencies:\n"
-  )
-  print(
+  architecture_frequency <- as.data.frame(
     table(
-      unique(
-        selected_configurations[
-          ,
-          c(
-            "TaskID",
-            "Learning_rate"
-          )
-        ]
-      )$Learning_rate
-    )
+      Architecture = task_level$Architecture
+    ),
+    stringsAsFactors = FALSE
+  )
+  names(architecture_frequency)[2] <- "Selected_tasks"
+  architecture_frequency <- architecture_frequency[
+    order(
+      match(
+        architecture_frequency$Architecture,
+        names(ARCHITECTURES)
+      )
+    ),
+    ,
+    drop = FALSE
+  ]
+
+  learning_rate_frequency <- as.data.frame(
+    table(
+      Learning_rate = task_level$Learning_rate
+    ),
+    stringsAsFactors = FALSE
+  )
+  names(learning_rate_frequency)[2] <- "Selected_tasks"
+
+  l1_frequency <- selected_configurations[
+    selected_configurations$Model %in%
+      c("ANN_L1", "ANN_L1_L2"),
+    c("Model", "L1"),
+    drop = FALSE
+  ]
+  l1_frequency$Selected_tasks <- 1L
+  l1_frequency <- aggregate(
+    Selected_tasks ~ Model + L1,
+    data = l1_frequency,
+    FUN = sum
   )
 
-  cat(
-    "\nSelected L1 values:\n"
-  )
-  print(
-    table(
-      selected_configurations$Model,
-      selected_configurations$L1
-    )
-  )
-
-  cat(
-    "\nSelected L2 values:\n"
-  )
-  print(
-    table(
-      selected_configurations$Model,
-      selected_configurations$L2
-    )
+  l2_frequency <- selected_configurations[
+    selected_configurations$Model %in%
+      c("ANN_L2", "ANN_L1_L2"),
+    c("Model", "L2"),
+    drop = FALSE
+  ]
+  l2_frequency$Selected_tasks <- 1L
+  l2_frequency <- aggregate(
+    Selected_tasks ~ Model + L2,
+    data = l2_frequency,
+    FUN = sum
   )
 
   knitr::kable(
-    head(
-      selected_configurations[
-        order(
-          selected_configurations$Scenario,
-          selected_configurations$Repetition,
-          selected_configurations$Fold,
-          match(
-            selected_configurations$Model,
-            MODEL_LEVELS
-          )
-        ),
-        c(
-          'Scenario', 'Repetition', 'Fold', 'Model',
-          'Architecture', 'Learning_rate', 'L1', 'L2',
-          'Inner_RMSE', 'Inner_Correlation'
-        ),
-        drop = FALSE
-      ],
-      20
-    ),
+    architecture_frequency,
+    caption = "Selected shared architecture across the 150 outer tasks"
+  )
+
+  knitr::kable(
+    learning_rate_frequency,
+    caption = "Selected shared learning rate across the 150 outer tasks"
+  )
+
+  knitr::kable(
+    l1_frequency,
     digits = 6,
-    caption =
-      "First selected canonical ANN configurations"
+    caption = "Selected L1 coefficients by regularized ANN variant"
+  )
+
+  knitr::kable(
+    l2_frequency,
+    digits = 6,
+    caption = "Selected L2 coefficients by regularized ANN variant"
+  )
+
+  selected_display <- head(
+    selected_configurations[
+      order(
+        selected_configurations$Scenario,
+        selected_configurations$Repetition,
+        selected_configurations$Fold,
+        match(
+          selected_configurations$Model,
+          MODEL_LEVELS
+        )
+      ),
+      c(
+        "Scenario",
+        "Repetition",
+        "Fold",
+        "Model",
+        "Architecture",
+        "Learning_rate",
+        "L1",
+        "L2",
+        "Inner_RMSE",
+        "Inner_Correlation"
+      ),
+      drop = FALSE
+    ],
+    20
+  )
+
+  knitr::kable(
+    selected_display,
+    digits = 6,
+    caption = "First 20 selected canonical ANN configurations",
+    table.attr = WIDE_TABLE_ATTR
   )
 }
 ```
@@ -2502,51 +2562,12 @@ The selection frequencies summarize how often each architecture, learning rate, 
 
 # Optimization diagnostics
 
-These diagnostics describe the fixed optimization protocol. They do not change
-the tuning grid.
+These diagnostics describe how the fixed early-stopping protocol behaved over
+the canonical tuning fits. They do not enter candidate ranking and do not
+change the tuning grid.
 
 ```{r optimization-diagnostics, echo=FALSE}
 if (available) {
-  cat(
-    "EarlyStop_epoch summary:\n"
-  )
-  print(
-    summary(
-      fold_results$EarlyStop_epoch
-    )
-  )
-
-  cat(
-    "\nLast_epoch summary:\n"
-  )
-  print(
-    summary(
-      fold_results$Last_epoch
-    )
-  )
-
-  cat(
-    "\nFits stopped by patience:",
-    sum(
-      fold_results$Stopped_by_patience,
-      na.rm = TRUE
-    ),
-    "/",
-    nrow(fold_results),
-    "\n"
-  )
-
-  cat(
-    "Fits reaching the 2000-epoch ceiling without patience stop:",
-    sum(
-      fold_results$Hit_epoch_ceiling,
-      na.rm = TRUE
-    ),
-    "/",
-    nrow(fold_results),
-    "\n"
-  )
-
   selected_keys <- merge(
     selected_configurations[
       ,
@@ -2572,15 +2593,43 @@ if (available) {
     sort = FALSE
   )
 
-  cat(
-    "\nSelected-candidate inner folds reaching ceiling:",
-    sum(
-      selected_keys$Hit_epoch_ceiling,
-      na.rm = TRUE
+  optimization_summary <- data.frame(
+    Diagnostic = c(
+      "Inner candidate-fold fits",
+      "Median best early-stop epoch",
+      "Median last epoch",
+      "Fits stopped by patience",
+      "Fits reaching 2000-epoch ceiling",
+      "Selected-candidate inner folds",
+      "Selected-candidate folds reaching ceiling"
     ),
-    "/",
-    nrow(selected_keys),
-    "\n"
+    Value = c(
+      as.character(nrow(fold_results)),
+      sprintf("%.1f", median(fold_results$EarlyStop_epoch, na.rm = TRUE)),
+      sprintf("%.1f", median(fold_results$Last_epoch, na.rm = TRUE)),
+      sprintf(
+        "%d / %d",
+        sum(fold_results$Stopped_by_patience, na.rm = TRUE),
+        nrow(fold_results)
+      ),
+      sprintf(
+        "%d / %d",
+        sum(fold_results$Hit_epoch_ceiling, na.rm = TRUE),
+        nrow(fold_results)
+      ),
+      as.character(nrow(selected_keys)),
+      sprintf(
+        "%d / %d",
+        sum(selected_keys$Hit_epoch_ceiling, na.rm = TRUE),
+        nrow(selected_keys)
+      )
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  knitr::kable(
+    optimization_summary,
+    caption = "Canonical ANN tuning optimization diagnostics"
   )
 }
 ```
@@ -2835,7 +2884,12 @@ saveRDS(results,FINAL_RESULTS_RDS,compress="gzip");saveRDS(predictions,FINAL_PRE
 
 # Saved final-result integrity
 
-```{r final-ann-integrity, echo=FALSE}
+Before final predictive summaries are shown, the 600 model-task rows, 120,000
+held-out predictions, 600 epoch-selection rows, finite predictions, selected
+epoch range, and leakage-prevention flags are checked internally against the
+canonical final-fitting contract.
+
+```{r final-ann-integrity, include=FALSE}
 final_available<-all(file.exists(c(FINAL_RESULTS_RDS,FINAL_PREDICTIONS_RDS,FINAL_EPOCH_RDS,FINAL_RUN_RDS)))
 if(!final_available){cat("Canonical final ANN outputs are unavailable; final summaries cannot be displayed.\n")}else{
   results<-readRDS(FINAL_RESULTS_RDS);predictions<-readRDS(FINAL_PREDICTIONS_RDS);epoch_selection<-readRDS(FINAL_EPOCH_RDS);final_meta<-readRDS(FINAL_RUN_RDS);nt<-if(identical(final_meta$mode,"pilot"))1L else 150L;nr<-nt*4L;np<-nr*200L
@@ -2858,25 +2912,90 @@ if (final_available) {
 
 # Final ANN predictive performance
 
+Final performance is summarized separately for the two evaluation targets.
+Recovery of the known **true genetic value** is the primary simulated-data
+criterion; prediction of the **observed phenotype** is secondary. Both tables
+average the same 25 frozen outer splits for each scenario and ANN variant.
+
 ```{r final-ann-performance, echo=FALSE}
-if(final_available){ok<-results[results$Status=="ok",,drop=FALSE];perf<-aggregate(cbind(Genetic_Correlation,Genetic_RMSE,Genetic_MAE,Genetic_Bias,Genetic_Slope,Genetic_R2,Phenotype_Correlation,Phenotype_RMSE,Phenotype_MAE,Phenotype_Bias,Phenotype_Slope,Phenotype_R2)~Scenario+Model+QTL_N+H2_nominal,data=ok,FUN=mean,na.rm=TRUE);perf<-perf[order(match(perf$Scenario,scenario_names),match(perf$Model,MODEL_LEVELS)),];print(knitr::kable(
-  perf[, c(
-    "Scenario", "Model", "QTL_N", "H2_nominal",
-    "Genetic_Correlation", "Genetic_RMSE", "Genetic_MAE",
-    "Genetic_Bias", "Genetic_Slope", "Genetic_R2"
-  )],
-  digits=4,
-  caption="Mean outer-CV ANN performance against true genetic value"
-));
-print(knitr::kable(
-  perf[, c(
-    "Scenario", "Model", "QTL_N", "H2_nominal",
-    "Phenotype_Correlation", "Phenotype_RMSE", "Phenotype_MAE",
-    "Phenotype_Bias", "Phenotype_Slope", "Phenotype_R2"
-  )],
-  digits=4,
-  caption="Mean outer-CV ANN performance against observed phenotype"
-))}
+if (final_available) {
+  ok <- results[
+    results$Status == "ok",
+    ,
+    drop = FALSE
+  ]
+
+  perf <- aggregate(
+    cbind(
+      Genetic_Correlation,
+      Genetic_RMSE,
+      Genetic_MAE,
+      Genetic_Bias,
+      Genetic_Slope,
+      Genetic_R2,
+      Phenotype_Correlation,
+      Phenotype_RMSE,
+      Phenotype_MAE,
+      Phenotype_Bias,
+      Phenotype_Slope,
+      Phenotype_R2
+    ) ~ Scenario + Model + QTL_N + H2_nominal,
+    data = ok,
+    FUN = mean,
+    na.rm = TRUE
+  )
+
+  perf <- perf[
+    order(
+      match(perf$Scenario, scenario_names),
+      match(perf$Model, MODEL_LEVELS)
+    ),
+    ,
+    drop = FALSE
+  ]
+
+  knitr::kable(
+    perf[
+      ,
+      c(
+        "Scenario",
+        "Model",
+        "QTL_N",
+        "H2_nominal",
+        "Genetic_Correlation",
+        "Genetic_RMSE",
+        "Genetic_MAE",
+        "Genetic_Bias",
+        "Genetic_Slope",
+        "Genetic_R2"
+      )
+    ],
+    digits = 4,
+    caption = "Primary evaluation: mean outer-CV ANN performance against true genetic value",
+    table.attr = WIDE_TABLE_ATTR
+  )
+
+  knitr::kable(
+    perf[
+      ,
+      c(
+        "Scenario",
+        "Model",
+        "QTL_N",
+        "H2_nominal",
+        "Phenotype_Correlation",
+        "Phenotype_RMSE",
+        "Phenotype_MAE",
+        "Phenotype_Bias",
+        "Phenotype_Slope",
+        "Phenotype_R2"
+      )
+    ],
+    digits = 4,
+    caption = "Secondary evaluation: mean outer-CV ANN performance against observed phenotype",
+    table.attr = WIDE_TABLE_ATTR
+  )
+}
 ```
 
 ```{r final-performance-interpretation, echo=FALSE, results="asis"}
