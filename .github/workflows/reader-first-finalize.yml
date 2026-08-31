@@ -21,7 +21,7 @@ jobs:
         with:
           use-public-rspm: true
 
-      - name: Apply reader-first transformation and fix intended double indexing
+      - name: Apply reader-first transformation and normalize intended double indexing
         shell: bash
         run: |
           set -euo pipefail
@@ -40,26 +40,39 @@ jobs:
 
           ann = Path('analysis/simulated_data_ann.Rmd')
           text = ann.read_text()
-          text, n_self = re.subn(
-              r'self\$linears\[\s*\[layer_index\]\s*\]',
-              'self$linears[[layer_index]]',
-              text,
+
+          # The current main branch contains several intended [[...]] accesses
+          # formatted as object[ newline [index] newline ]. Normalize only that
+          # malformed, whitespace-separated form. Already-valid [[...]] and
+          # ordinary single-bracket matrix/vector indexing are untouched.
+          broken_double_index = re.compile(
+              r'(?P<object>[A-Za-z.][A-Za-z0-9._]*(?:\$[A-Za-z.][A-Za-z0-9._]*)*)'
+              r'\[\s+\[\s*(?P<index>[^\[\]]+?)\s*\]\s*\]'
           )
-          text, n_model = re.subn(
-              r'model\$linears\[\s*\[layer_index\]\s*\]',
-              'model$linears[[layer_index]]',
-              text,
-          )
-          text, n_weights = re.subn(
-              r'weights\[\s*\[length\(weights\) \+ 1L\]\s*\]',
-              'weights[[length(weights) + 1L]]',
-              text,
-          )
-          if n_self < 1 or n_model < 1 or n_weights < 1:
+
+          repaired = []
+
+          def repair_double_index(match):
+              object_name = match.group('object')
+              index = match.group('index').strip()
+              repaired.append(f'{object_name}[[{index}]]')
+              return f'{object_name}[[{index}]]'
+
+          text, n_repaired = broken_double_index.subn(repair_double_index, text)
+          if n_repaired < 1:
+              raise RuntimeError('No malformed ANN double-index expression was found')
+
+          remaining = broken_double_index.search(text)
+          if remaining:
               raise RuntimeError(
-                  'Expected ANN double-index fixes not found: '
-                  f'self={n_self}, model={n_model}, weights={n_weights}'
+                  'Malformed ANN double indexing remains after normalization: '
+                  + remaining.group(0)
               )
+
+          print('Normalized ANN double-index expressions:', n_repaired)
+          for expression in repaired:
+              print('  ', expression)
+
           ann.write_text(text)
 
           files = [
@@ -103,11 +116,15 @@ jobs:
           if 'stale_epochs >= PATIENCE' not in ann_text or 'break' not in ann_text:
               raise RuntimeError('ANN early stopping logic was not preserved')
           if 'self$linears[[layer_index]]' not in ann_text:
-              raise RuntimeError('ANN forward double indexing was not repaired')
+              raise RuntimeError('ANN forward indexing was not repaired')
           if 'model$linears[[layer_index]]' not in ann_text:
-              raise RuntimeError('ANN penalty double indexing was not repaired')
+              raise RuntimeError('ANN penalty indexing was not repaired')
           if 'weights[[length(weights) + 1L]]' not in ann_text:
-              raise RuntimeError('ANN output-weight double indexing was not repaired')
+              raise RuntimeError('ANN output-weight indexing was not repaired')
+          if 'structure_summary_rows[[candidate_index]]' not in ann_text:
+              raise RuntimeError('ANN structure-summary indexing was not repaired')
+          if 'structure_fold_rows[[candidate_index]]' not in ann_text:
+              raise RuntimeError('ANN structure-fold indexing was not repaired')
           PY
 
       - name: Parse all transformed R code
