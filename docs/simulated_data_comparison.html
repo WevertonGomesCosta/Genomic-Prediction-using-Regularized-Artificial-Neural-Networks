@@ -653,15 +653,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree1e0bc61230a788505727cc33c93674342efe341btargetblank1e0bc61a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed2d548c9e2337ed90d01fd6bb9107746b85c5784targetblankd2d548ca">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/1e0bc61230a788505727cc33c93674342efe341b" target="_blank">1e0bc61</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d2d548c9e2337ed90d01fd6bb9107746b85c5784" target="_blank">d2d548c</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree1e0bc61230a788505727cc33c93674342efe341btargetblank1e0bc61a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed2d548c9e2337ed90d01fd6bb9107746b85c5784targetblankd2d548ca"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -671,7 +671,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/1e0bc61230a788505727cc33c93674342efe341b" target="_blank">1e0bc61</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d2d548c9e2337ed90d01fd6bb9107746b85c5784" target="_blank">d2d548c</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -753,6 +753,57 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/d2d548c9e2337ed90d01fd6bb9107746b85c5784/analysis/simulated_data_comparison.Rmd" target="_blank">d2d548c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-31
+</td>
+<td>
+Refactor model comparison as tutorial
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/d2d548c9e2337ed90d01fd6bb9107746b85c5784/docs/simulated_data_comparison.html" target="_blank">d2d548c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-31
+</td>
+<td>
+Refactor model comparison as tutorial
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/f22824530501b1140fec85d691454e74d903d8c9/docs/simulated_data_comparison.html" target="_blank">f228245</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-31
+</td>
+<td>
+Publish reader-focused simulated workflow
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -946,6 +997,23 @@ identical across methods.</p>
 <p>The full compatibility audit is retained internally. For
 interpretation, the fair-comparison contract can be summarized by the
 four conditions below.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>comparison_contract <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="at">Requirement =</span> <span class="fu">c</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    <span class="st">&quot;Same 150 outer tasks&quot;</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>    <span class="st">&quot;Same 200 assessment individuals per task&quot;</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>    <span class="st">&quot;Same phenotype and true genetic-value targets&quot;</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>    <span class="st">&quot;Successful finite predictions for all compared methods&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  ),</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="at">Status =</span> <span class="fu">rep</span>(<span class="st">&quot;CONFIRMED&quot;</span>, <span class="dv">4</span><span class="dt">L</span>),</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>  comparison_contract,</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  <span class="at">caption =</span></span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>    <span class="st">&quot;Reader-facing contract for a fair task-matched model comparison&quot;</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>)</span></code></pre></div>
 <table>
 <caption>Reader-facing contract for a fair task-matched model
 comparison</caption>
@@ -975,6 +1043,10 @@ methods</td>
 </tr>
 </tbody>
 </table>
+<p>The four conditions are prerequisites rather than performance
+results. Because the hidden compatibility audit blocks execution when
+any condition fails, all subsequent tables compare the same tasks,
+individuals, and evaluation targets.</p>
 </div>
 <div id="interpretation-of-calibration-metrics" class="section level1">
 <h1>Interpretation of calibration metrics</h1>
@@ -1003,6 +1075,114 @@ target mean as a reference.</li>
 predictive agreement, while Bias and Slope provide calibration
 diagnostics. No single metric is interpreted as establishing universal
 model superiority.</p>
+<p>The comparison code groups the metrics according to the direction of
+a better value or the calibration target.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>higher_better <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="st">&quot;Genetic_Correlation&quot;</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="st">&quot;Genetic_R2&quot;</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="st">&quot;Phenotype_Correlation&quot;</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="st">&quot;Phenotype_R2&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>lower_better <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="st">&quot;Genetic_RMSE&quot;</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="st">&quot;Genetic_MAE&quot;</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="st">&quot;Phenotype_RMSE&quot;</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="st">&quot;Phenotype_MAE&quot;</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>)</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>zero_target <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>  <span class="st">&quot;Genetic_Bias&quot;</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>  <span class="st">&quot;Phenotype_Bias&quot;</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>)</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>one_target <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>  <span class="st">&quot;Genetic_Slope&quot;</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>  <span class="st">&quot;Phenotype_Slope&quot;</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>)</span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>metric_rule <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>  <span class="fu">setNames</span>(<span class="fu">rep</span>(<span class="st">&quot;higher&quot;</span>, <span class="fu">length</span>(higher_better)), higher_better),</span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>  <span class="fu">setNames</span>(<span class="fu">rep</span>(<span class="st">&quot;lower&quot;</span>, <span class="fu">length</span>(lower_better)), lower_better),</span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>  <span class="fu">setNames</span>(<span class="fu">rep</span>(<span class="st">&quot;zero&quot;</span>, <span class="fu">length</span>(zero_target)), zero_target),</span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>  <span class="fu">setNames</span>(<span class="fu">rep</span>(<span class="st">&quot;one&quot;</span>, <span class="fu">length</span>(one_target)), one_target)</span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a>)</span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a></span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a>metric_rule_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a>  <span class="at">Metric =</span> <span class="fu">names</span>(metric_rule),</span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a>  <span class="at">Better_value =</span> <span class="fu">unname</span>(metric_rule),</span>
+<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a>)</span>
+<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a></span>
+<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a>  metric_rule_table,</span>
+<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a>  <span class="at">caption =</span></span>
+<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a>    <span class="st">&quot;Direction or calibration target used in paired model comparisons&quot;</span>,</span>
+<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a>)</span></code></pre></div>
+<table>
+<caption>Direction or calibration target used in paired model
+comparisons</caption>
+<thead>
+<tr class="header">
+<th align="left">Metric</th>
+<th align="left">Better_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Genetic_Correlation</td>
+<td align="left">higher</td>
+</tr>
+<tr class="even">
+<td align="left">Genetic_R2</td>
+<td align="left">higher</td>
+</tr>
+<tr class="odd">
+<td align="left">Phenotype_Correlation</td>
+<td align="left">higher</td>
+</tr>
+<tr class="even">
+<td align="left">Phenotype_R2</td>
+<td align="left">higher</td>
+</tr>
+<tr class="odd">
+<td align="left">Genetic_RMSE</td>
+<td align="left">lower</td>
+</tr>
+<tr class="even">
+<td align="left">Genetic_MAE</td>
+<td align="left">lower</td>
+</tr>
+<tr class="odd">
+<td align="left">Phenotype_RMSE</td>
+<td align="left">lower</td>
+</tr>
+<tr class="even">
+<td align="left">Phenotype_MAE</td>
+<td align="left">lower</td>
+</tr>
+<tr class="odd">
+<td align="left">Genetic_Bias</td>
+<td align="left">zero</td>
+</tr>
+<tr class="even">
+<td align="left">Phenotype_Bias</td>
+<td align="left">zero</td>
+</tr>
+<tr class="odd">
+<td align="left">Genetic_Slope</td>
+<td align="left">one</td>
+</tr>
+<tr class="even">
+<td align="left">Phenotype_Slope</td>
+<td align="left">one</td>
+</tr>
+</tbody>
+</table>
+<p>For <code>higher</code>, larger values are preferred; for
+<code>lower</code>, smaller values are preferred. Bias is evaluated by
+distance from zero and slope by distance from one.</p>
 </div>
 <div id="overall-model-performance" class="section level1">
 <h1>Overall model performance</h1>
@@ -1010,6 +1190,50 @@ model superiority.</p>
 targets so that the primary simulated-data criterion is not visually
 mixed with the secondary phenotype criterion. Both summaries average the
 same 150 matched outer-CV tasks per model.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>analysis_cols <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="st">&quot;Scenario&quot;</span>, <span class="st">&quot;Repetition&quot;</span>, <span class="st">&quot;Fold&quot;</span>, <span class="st">&quot;SplitID&quot;</span>, <span class="st">&quot;TaskID&quot;</span>, <span class="st">&quot;Model&quot;</span>, metrics</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>all_results <span class="ot">&lt;-</span> <span class="fu">rbind</span>(gr[, analysis_cols], ar[, analysis_cols])</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>overall <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  all_results[, metrics],</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">by =</span> <span class="fu">list</span>(<span class="at">Model =</span> all_results<span class="sc">$</span>Model),</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">FUN =</span> mean</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>)</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>overall_genetic_display <span class="ot">&lt;-</span> overall[, <span class="fu">c</span>(</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="st">&quot;Model&quot;</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  <span class="st">&quot;Genetic_Correlation&quot;</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="st">&quot;Genetic_RMSE&quot;</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="st">&quot;Genetic_MAE&quot;</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="st">&quot;Genetic_R2&quot;</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>)]</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>overall_genetic_display[<span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  overall_genetic_display[<span class="sc">-</span><span class="dv">1</span>],</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>  round,</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>  <span class="dv">4</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>)</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>overall_phenotype_display <span class="ot">&lt;-</span> overall[, <span class="fu">c</span>(</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>  <span class="st">&quot;Model&quot;</span>,</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>  <span class="st">&quot;Phenotype_Correlation&quot;</span>,</span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>  <span class="st">&quot;Phenotype_RMSE&quot;</span>,</span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>  <span class="st">&quot;Phenotype_MAE&quot;</span>,</span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>  <span class="st">&quot;Phenotype_R2&quot;</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>)]</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>overall_phenotype_display[<span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>  overall_phenotype_display[<span class="sc">-</span><span class="dv">1</span>],</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>  round,</span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>  <span class="dv">4</span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>)</span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a>  overall_genetic_display,</span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>  <span class="at">caption =</span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a>    <span class="st">&quot;Primary overall performance against true genetic value&quot;</span>,</span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>)</span></code></pre></div>
 <table>
 <caption>Primary overall performance against true genetic
 value</caption>
@@ -1060,6 +1284,12 @@ value</caption>
 </tr>
 </tbody>
 </table>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  overall_phenotype_display,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">caption =</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="st">&quot;Secondary overall performance against observed phenotype&quot;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>)</span></code></pre></div>
 <table>
 <caption>Secondary overall performance against observed
 phenotype</caption>
@@ -1117,13 +1347,44 @@ phenotype</caption>
 </tr>
 </tbody>
 </table>
-<p>Across all 150 outer-CV tasks, GBLUP_ADE has the highest mean genetic
-correlation (0.8262), the lowest mean genetic RMSE (0.5080), and the
-highest mean genetic R2 (0.6802). Among the ANN variants, ANN_L1_L2 has
-the highest mean genetic correlation (0.8013). ANN_L1 is nearly tied
-with ANN_L1_L2, whereas ANN_L2 remains close to ANN_0, indicating that
-the observed regularization gain is driven mainly by the L1 component
-within the prespecified canonical model/architecture search space.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>best_corr_model <span class="ot">&lt;-</span> overall<span class="sc">$</span>Model[</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">which.max</span>(overall<span class="sc">$</span>Genetic_Correlation)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>]</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>best_rmse_model <span class="ot">&lt;-</span> overall<span class="sc">$</span>Model[</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="fu">which.min</span>(overall<span class="sc">$</span>Genetic_RMSE)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>]</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>best_r2_model <span class="ot">&lt;-</span> overall<span class="sc">$</span>Model[</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="fu">which.max</span>(overall<span class="sc">$</span>Genetic_R2)</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>]</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>best_overall <span class="ot">&lt;-</span> overall[</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  overall<span class="sc">$</span>Model <span class="sc">==</span> best_corr_model,</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  ,</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>  drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>]</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>ann_overall_now <span class="ot">&lt;-</span> overall[</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>  overall<span class="sc">$</span>Model <span class="sc">!=</span> <span class="st">&quot;GBLUP_ADE&quot;</span>,</span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>  ,</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>  drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>]</span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>best_ann_now <span class="ot">&lt;-</span> ann_overall_now[</span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a>  <span class="fu">which.max</span>(</span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>    ann_overall_now<span class="sc">$</span>Genetic_Correlation</span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>  ),</span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a>  ,</span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>  drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a>]</span></code></pre></div>
+<p>Across all 150 matched outer-CV tasks, <strong>GBLUP_ADE</strong> has
+the highest mean genetic correlation (0.8262), the lowest mean genetic
+RMSE (0.5080), and the highest mean genetic <span
+class="math inline">\(R^2\)</span> (0.6802). Among the ANN variants,
+<strong>ANN_L1_L2</strong> has the highest mean genetic correlation
+(0.8013). These statements describe the evaluated model and search
+space; they do not establish universal superiority.</p>
 </div>
 <div id="performance-by-simulation-scenario" class="section level1">
 <h1>Performance by simulation scenario</h1>
@@ -1131,8 +1392,32 @@ within the prespecified canonical model/architecture search space.</p>
 six prespecified simulation scenarios. Only the primary genetic-value
 metrics are shown here; the complete metric set remains available in the
 versioned comparison outputs.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>scenario_summary <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  all_results[, metrics],</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">by =</span> <span class="fu">list</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>    <span class="at">Scenario =</span> all_results<span class="sc">$</span>Scenario,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>    <span class="at">Model =</span> all_results<span class="sc">$</span>Model</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  ),</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">FUN =</span> mean</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>scenario_display <span class="ot">&lt;-</span> scenario_summary[, <span class="fu">c</span>(</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  <span class="st">&quot;Scenario&quot;</span>, <span class="st">&quot;Model&quot;</span>, <span class="st">&quot;Genetic_Correlation&quot;</span>, <span class="st">&quot;Genetic_RMSE&quot;</span>, <span class="st">&quot;Genetic_R2&quot;</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>)]</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>scenario_display[, <span class="sc">-</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>)] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>  scenario_display[, <span class="sc">-</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>), <span class="at">drop =</span> <span class="cn">FALSE</span>],</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>  round,</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>  <span class="dv">4</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  scenario_display,</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>  <span class="at">caption =</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>    <span class="st">&quot;Primary genetic-value prediction metrics by scenario&quot;</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>)</span></code></pre></div>
 <table>
-<caption>Primary genetic-value prediction metrics by scenario.</caption>
+<caption>Primary genetic-value prediction metrics by scenario</caption>
 <thead>
 <tr class="header">
 <th align="left">Scenario</th>
@@ -1355,38 +1640,171 @@ versioned comparison outputs.</p>
 </tr>
 </tbody>
 </table>
-<p>GBLUP-ADE has the best mean genetic correlation in 6 of 6 scenarios,
-the lowest mean genetic RMSE in 6 of 6 scenarios, and the highest mean
-genetic R2 in 6 of 6 scenarios. The C1–C6 sequence should be interpreted
-as performance across the prespecified simulation gradient rather than
-as an isolated causal effect of QTL number or nominal heritability,
-because those scenario characteristics change jointly across the
-sequence.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>scenario_ids <span class="ot">&lt;-</span> <span class="fu">sort</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="fu">unique</span>(scenario_summary<span class="sc">$</span>Scenario)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>)</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>scenario_winners <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  rbind,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="fu">lapply</span>(</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>    scenario_ids,</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>    <span class="cf">function</span>(sc) {</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>      z <span class="ot">&lt;-</span> scenario_summary[</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>        scenario_summary<span class="sc">$</span>Scenario <span class="sc">==</span> sc,</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>        ,</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>        drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>      ]</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>      <span class="fu">data.frame</span>(</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>        <span class="at">Scenario =</span> sc,</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>        <span class="at">Best_correlation =</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>          z<span class="sc">$</span>Model[<span class="fu">which.max</span>(z<span class="sc">$</span>Genetic_Correlation)],</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>        <span class="at">Best_RMSE =</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>          z<span class="sc">$</span>Model[<span class="fu">which.min</span>(z<span class="sc">$</span>Genetic_RMSE)],</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>        <span class="at">Best_R2 =</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>          z<span class="sc">$</span>Model[<span class="fu">which.max</span>(z<span class="sc">$</span>Genetic_R2)],</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>        <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>      )</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>    }</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>  )</span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>)</span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>corr_wins <span class="ot">&lt;-</span> <span class="fu">sum</span>(</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>  scenario_winners<span class="sc">$</span>Best_correlation <span class="sc">==</span> <span class="st">&quot;GBLUP_ADE&quot;</span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>)</span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>rmse_wins <span class="ot">&lt;-</span> <span class="fu">sum</span>(</span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>  scenario_winners<span class="sc">$</span>Best_RMSE <span class="sc">==</span> <span class="st">&quot;GBLUP_ADE&quot;</span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>)</span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>r2_wins <span class="ot">&lt;-</span> <span class="fu">sum</span>(</span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>  scenario_winners<span class="sc">$</span>Best_R2 <span class="sc">==</span> <span class="st">&quot;GBLUP_ADE&quot;</span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>)</span></code></pre></div>
+<p>GBLUP-ADE has the best mean genetic correlation in <strong>6 of 6
+scenarios</strong>, the lowest mean genetic RMSE in <strong>6 of
+6</strong>, and the highest mean genetic <span
+class="math inline">\(R^2\)</span> in <strong>6 of 6</strong>. The C1-C6
+sequence is interpreted as performance across the prespecified joint
+simulation gradient, not as an isolated causal effect of QTL number or
+nominal heritability.</p>
 </div>
 <div id="paired-ann-versus-gblup-ade-comparison" class="section level1">
 <h1>Paired ANN versus GBLUP-ADE comparison</h1>
-<p>A positive <code>performance_advantage</code> always means that the
-ANN variant performed better than GBLUP-ADE for the metric under
-consideration. Correlations and <span class="math inline">\(R^2\)</span>
-are maximized, RMSE and MAE are minimized, bias is evaluated by distance
-from zero, and slope is evaluated by distance from one.</p>
+<p>For the three primary genetic-value metrics, the paired advantage is
+especially simple:</p>
+<ul>
+<li><strong>Correlation advantage</strong> = ANN correlation - GBLUP-ADE
+correlation.</li>
+<li><strong>RMSE advantage</strong> = GBLUP-ADE RMSE - ANN RMSE.</li>
+<li><strong><span class="math inline">\(R^2\)</span> advantage</strong>
+= ANN <span class="math inline">\(R^2\)</span> - GBLUP-ADE <span
+class="math inline">\(R^2\)</span>.</li>
+</ul>
+<p>Thus, a positive value always favors the ANN variant. The same
+convention is extended to MAE, bias, slope, and the secondary phenotype
+metrics by comparing the appropriate direction or distance from the
+calibration target.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>performance_advantage <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  metric,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  ann_value,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  gblup_value</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>) {</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  rule <span class="ot">&lt;-</span> <span class="fu">unname</span>(</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    metric_rule[metric]</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  )</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  candidate_advantages <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>    <span class="at">higher =</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>      ann_value <span class="sc">-</span> gblup_value,</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>    <span class="at">lower =</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>      gblup_value <span class="sc">-</span> ann_value,</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    <span class="at">zero =</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>      <span class="fu">abs</span>(gblup_value) <span class="sc">-</span> <span class="fu">abs</span>(ann_value),</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>    <span class="at">one =</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>      <span class="fu">abs</span>(gblup_value <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">-</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>      <span class="fu">abs</span>(ann_value <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>  )</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  candidate_advantages[[rule]]</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>}</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>g <span class="ot">&lt;-</span> gr[, <span class="fu">c</span>(<span class="st">&quot;TaskID&quot;</span>, <span class="st">&quot;SplitID&quot;</span>, metrics)]</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="fu">names</span>(g)[<span class="sc">-</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>)] <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">names</span>(g)[<span class="sc">-</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>)], <span class="st">&quot;_GBLUP&quot;</span>)</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>paired_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a></span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a><span class="cf">for</span> (model <span class="cf">in</span> <span class="fu">sort</span>(<span class="fu">unique</span>(ar<span class="sc">$</span>Model))) {</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>  a <span class="ot">&lt;-</span> ar[</span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>    ar<span class="sc">$</span>Model <span class="sc">==</span> model,</span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>    <span class="fu">c</span>(<span class="st">&quot;TaskID&quot;</span>, <span class="st">&quot;SplitID&quot;</span>, <span class="st">&quot;Scenario&quot;</span>, metrics)</span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>  ]</span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a></span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>  z <span class="ot">&lt;-</span> <span class="fu">merge</span>(a, g, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;TaskID&quot;</span>, <span class="st">&quot;SplitID&quot;</span>), <span class="at">all =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a></span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a>  <span class="cf">for</span> (metric <span class="cf">in</span> metrics) {</span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>    ann_value <span class="ot">&lt;-</span> z[[metric]]</span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>    gblup_value <span class="ot">&lt;-</span> z[[<span class="fu">paste0</span>(metric, <span class="st">&quot;_GBLUP&quot;</span>)]]</span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>    raw_difference <span class="ot">&lt;-</span> ann_value <span class="sc">-</span> gblup_value</span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>    advantage <span class="ot">&lt;-</span> <span class="fu">performance_advantage</span>(metric, ann_value, gblup_value)</span>
+<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a></span>
+<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>    paired_list[[<span class="fu">length</span>(paired_list) <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span>]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>      <span class="at">Model =</span> model,</span>
+<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a>      <span class="at">Metric =</span> metric,</span>
+<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a>      <span class="at">N =</span> <span class="fu">length</span>(raw_difference),</span>
+<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a>      <span class="at">Mean_ANN =</span> <span class="fu">mean</span>(ann_value),</span>
+<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a>      <span class="at">Mean_GBLUP =</span> <span class="fu">mean</span>(gblup_value),</span>
+<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a>      <span class="at">Mean_raw_difference =</span> <span class="fu">mean</span>(raw_difference),</span>
+<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a>      <span class="at">Median_raw_difference =</span> <span class="fu">median</span>(raw_difference),</span>
+<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a>      <span class="at">Mean_performance_advantage =</span> <span class="fu">mean</span>(advantage),</span>
+<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a>      <span class="at">Median_performance_advantage =</span> <span class="fu">median</span>(advantage),</span>
+<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a>      <span class="at">ANN_better =</span> <span class="fu">sum</span>(advantage <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
+<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a>      <span class="at">Equal =</span> <span class="fu">sum</span>(advantage <span class="sc">==</span> <span class="dv">0</span>),</span>
+<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a>      <span class="at">GBLUP_better =</span> <span class="fu">sum</span>(advantage <span class="sc">&lt;</span> <span class="dv">0</span>),</span>
+<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-58"><a href="#cb8-58" tabindex="-1"></a>    )</span>
+<span id="cb8-59"><a href="#cb8-59" tabindex="-1"></a>  }</span>
+<span id="cb8-60"><a href="#cb8-60" tabindex="-1"></a>}</span>
+<span id="cb8-61"><a href="#cb8-61" tabindex="-1"></a></span>
+<span id="cb8-62"><a href="#cb8-62" tabindex="-1"></a>paired <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, paired_list)</span>
+<span id="cb8-63"><a href="#cb8-63" tabindex="-1"></a><span class="fu">rownames</span>(paired) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb8-64"><a href="#cb8-64" tabindex="-1"></a></span>
+<span id="cb8-65"><a href="#cb8-65" tabindex="-1"></a>paired_primary <span class="ot">&lt;-</span> paired[</span>
+<span id="cb8-66"><a href="#cb8-66" tabindex="-1"></a>  paired<span class="sc">$</span>Metric <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Genetic_Correlation&quot;</span>, <span class="st">&quot;Genetic_RMSE&quot;</span>, <span class="st">&quot;Genetic_R2&quot;</span>),</span>
+<span id="cb8-67"><a href="#cb8-67" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb8-68"><a href="#cb8-68" tabindex="-1"></a>    <span class="st">&quot;Model&quot;</span>, <span class="st">&quot;Metric&quot;</span>, <span class="st">&quot;Mean_ANN&quot;</span>, <span class="st">&quot;Mean_GBLUP&quot;</span>,</span>
+<span id="cb8-69"><a href="#cb8-69" tabindex="-1"></a>    <span class="st">&quot;Mean_performance_advantage&quot;</span>, <span class="st">&quot;ANN_better&quot;</span>, <span class="st">&quot;Equal&quot;</span>, <span class="st">&quot;GBLUP_better&quot;</span></span>
+<span id="cb8-70"><a href="#cb8-70" tabindex="-1"></a>  )</span>
+<span id="cb8-71"><a href="#cb8-71" tabindex="-1"></a>]</span>
+<span id="cb8-72"><a href="#cb8-72" tabindex="-1"></a>paired_primary[, <span class="dv">3</span><span class="sc">:</span><span class="dv">5</span>] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
+<span id="cb8-73"><a href="#cb8-73" tabindex="-1"></a>  paired_primary[, <span class="dv">3</span><span class="sc">:</span><span class="dv">5</span>, <span class="at">drop =</span> <span class="cn">FALSE</span>],</span>
+<span id="cb8-74"><a href="#cb8-74" tabindex="-1"></a>  round,</span>
+<span id="cb8-75"><a href="#cb8-75" tabindex="-1"></a>  <span class="dv">4</span></span>
+<span id="cb8-76"><a href="#cb8-76" tabindex="-1"></a>)</span>
+<span id="cb8-77"><a href="#cb8-77" tabindex="-1"></a></span>
+<span id="cb8-78"><a href="#cb8-78" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb8-79"><a href="#cb8-79" tabindex="-1"></a>  paired_primary,</span>
+<span id="cb8-80"><a href="#cb8-80" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
+<span id="cb8-81"><a href="#cb8-81" tabindex="-1"></a>    <span class="st">&quot;Paired ANN versus GBLUP-ADE comparison for the primary&quot;</span>,</span>
+<span id="cb8-82"><a href="#cb8-82" tabindex="-1"></a>    <span class="st">&quot;genetic-value metrics&quot;</span></span>
+<span id="cb8-83"><a href="#cb8-83" tabindex="-1"></a>  ),</span>
+<span id="cb8-84"><a href="#cb8-84" tabindex="-1"></a>  <span class="at">table.attr =</span> WIDE_TABLE_ATTR,</span>
+<span id="cb8-85"><a href="#cb8-85" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-86"><a href="#cb8-86" tabindex="-1"></a>)</span></code></pre></div>
 <table>
 <caption>Paired ANN versus GBLUP-ADE comparison for the primary
-genetic-value metrics.</caption>
+genetic-value metrics</caption>
 <colgroup>
-<col width="2%" />
 <col width="9%" />
 <col width="18%" />
 <col width="8%" />
 <col width="10%" />
-<col width="24%" />
+<col width="25%" />
 <col width="10%" />
 <col width="5%" />
-<col width="11%" />
+<col width="12%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="left"></th>
 <th align="left">Model</th>
 <th align="left">Metric</th>
 <th align="right">Mean_ANN</th>
@@ -1399,7 +1817,6 @@ genetic-value metrics.</caption>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">1</td>
 <td align="left">ANN_0</td>
 <td align="left">Genetic_Correlation</td>
 <td align="right">0.7848</td>
@@ -1410,7 +1827,6 @@ genetic-value metrics.</caption>
 <td align="right">123</td>
 </tr>
 <tr class="even">
-<td align="left">2</td>
 <td align="left">ANN_0</td>
 <td align="left">Genetic_RMSE</td>
 <td align="right">0.5860</td>
@@ -1421,7 +1837,6 @@ genetic-value metrics.</caption>
 <td align="right">138</td>
 </tr>
 <tr class="odd">
-<td align="left">6</td>
 <td align="left">ANN_0</td>
 <td align="left">Genetic_R2</td>
 <td align="right">0.5812</td>
@@ -1432,7 +1847,6 @@ genetic-value metrics.</caption>
 <td align="right">138</td>
 </tr>
 <tr class="even">
-<td align="left">13</td>
 <td align="left">ANN_L1</td>
 <td align="left">Genetic_Correlation</td>
 <td align="right">0.8011</td>
@@ -1443,7 +1857,6 @@ genetic-value metrics.</caption>
 <td align="right">119</td>
 </tr>
 <tr class="odd">
-<td align="left">14</td>
 <td align="left">ANN_L1</td>
 <td align="left">Genetic_RMSE</td>
 <td align="right">0.5541</td>
@@ -1454,7 +1867,6 @@ genetic-value metrics.</caption>
 <td align="right">134</td>
 </tr>
 <tr class="even">
-<td align="left">18</td>
 <td align="left">ANN_L1</td>
 <td align="left">Genetic_R2</td>
 <td align="right">0.6092</td>
@@ -1465,7 +1877,6 @@ genetic-value metrics.</caption>
 <td align="right">134</td>
 </tr>
 <tr class="odd">
-<td align="left">25</td>
 <td align="left">ANN_L1_L2</td>
 <td align="left">Genetic_Correlation</td>
 <td align="right">0.8013</td>
@@ -1476,7 +1887,6 @@ genetic-value metrics.</caption>
 <td align="right">119</td>
 </tr>
 <tr class="even">
-<td align="left">26</td>
 <td align="left">ANN_L1_L2</td>
 <td align="left">Genetic_RMSE</td>
 <td align="right">0.5537</td>
@@ -1487,7 +1897,6 @@ genetic-value metrics.</caption>
 <td align="right">134</td>
 </tr>
 <tr class="odd">
-<td align="left">30</td>
 <td align="left">ANN_L1_L2</td>
 <td align="left">Genetic_R2</td>
 <td align="right">0.6097</td>
@@ -1498,7 +1907,6 @@ genetic-value metrics.</caption>
 <td align="right">134</td>
 </tr>
 <tr class="even">
-<td align="left">37</td>
 <td align="left">ANN_L2</td>
 <td align="left">Genetic_Correlation</td>
 <td align="right">0.7851</td>
@@ -1509,7 +1917,6 @@ genetic-value metrics.</caption>
 <td align="right">121</td>
 </tr>
 <tr class="odd">
-<td align="left">38</td>
 <td align="left">ANN_L2</td>
 <td align="left">Genetic_RMSE</td>
 <td align="right">0.5856</td>
@@ -1520,7 +1927,6 @@ genetic-value metrics.</caption>
 <td align="right">138</td>
 </tr>
 <tr class="even">
-<td align="left">42</td>
 <td align="left">ANN_L2</td>
 <td align="left">Genetic_R2</td>
 <td align="right">0.5817</td>
@@ -1545,21 +1951,68 @@ naive fold-level significance test.</p>
 summarized within each scenario over its 25 matched outer tasks.
 Positive values favor the ANN variant and negative values favor
 GBLUP-ADE.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>paired_scenario_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="cf">for</span> (model <span class="cf">in</span> <span class="fu">sort</span>(<span class="fu">unique</span>(ar<span class="sc">$</span>Model))) {</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  a <span class="ot">&lt;-</span> ar[</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>    ar<span class="sc">$</span>Model <span class="sc">==</span> model,</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>    <span class="fu">c</span>(<span class="st">&quot;TaskID&quot;</span>, <span class="st">&quot;SplitID&quot;</span>, <span class="st">&quot;Scenario&quot;</span>, metrics)</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  ]</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  z <span class="ot">&lt;-</span> <span class="fu">merge</span>(a, g, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;TaskID&quot;</span>, <span class="st">&quot;SplitID&quot;</span>), <span class="at">all =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  <span class="cf">for</span> (scenario <span class="cf">in</span> <span class="fu">sort</span>(<span class="fu">unique</span>(z<span class="sc">$</span>Scenario))) {</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>    zs <span class="ot">&lt;-</span> z[z<span class="sc">$</span>Scenario <span class="sc">==</span> scenario, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>    <span class="cf">for</span> (metric <span class="cf">in</span> metrics) {</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>      ann_value <span class="ot">&lt;-</span> zs[[metric]]</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>      gblup_value <span class="ot">&lt;-</span> zs[[<span class="fu">paste0</span>(metric, <span class="st">&quot;_GBLUP&quot;</span>)]]</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>      advantage <span class="ot">&lt;-</span> <span class="fu">performance_advantage</span>(metric, ann_value, gblup_value)</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>      paired_scenario_list[[<span class="fu">length</span>(paired_scenario_list) <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span>]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>        <span class="at">Scenario =</span> scenario,</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>        <span class="at">Model =</span> model,</span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>        <span class="at">Metric =</span> metric,</span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>        <span class="at">N =</span> <span class="fu">nrow</span>(zs),</span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>        <span class="at">Mean_advantage =</span> <span class="fu">mean</span>(advantage),</span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>        <span class="at">Median_advantage =</span> <span class="fu">median</span>(advantage),</span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>        <span class="at">ANN_better =</span> <span class="fu">sum</span>(advantage <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>        <span class="at">Equal =</span> <span class="fu">sum</span>(advantage <span class="sc">==</span> <span class="dv">0</span>),</span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>        <span class="at">GBLUP_better =</span> <span class="fu">sum</span>(advantage <span class="sc">&lt;</span> <span class="dv">0</span>),</span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>        <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>      )</span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>    }</span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>  }</span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a>}</span>
+<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a></span>
+<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>paired_scenario <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, paired_scenario_list)</span>
+<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a><span class="fu">rownames</span>(paired_scenario) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a></span>
+<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a>paired_scenario_primary <span class="ot">&lt;-</span> paired_scenario[</span>
+<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a>  paired_scenario<span class="sc">$</span>Metric <span class="sc">==</span> <span class="st">&quot;Genetic_Correlation&quot;</span>,</span>
+<span id="cb9-40"><a href="#cb9-40" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb9-41"><a href="#cb9-41" tabindex="-1"></a>    <span class="st">&quot;Scenario&quot;</span>, <span class="st">&quot;Model&quot;</span>, <span class="st">&quot;Mean_advantage&quot;</span>,</span>
+<span id="cb9-42"><a href="#cb9-42" tabindex="-1"></a>    <span class="st">&quot;ANN_better&quot;</span>, <span class="st">&quot;Equal&quot;</span>, <span class="st">&quot;GBLUP_better&quot;</span></span>
+<span id="cb9-43"><a href="#cb9-43" tabindex="-1"></a>  )</span>
+<span id="cb9-44"><a href="#cb9-44" tabindex="-1"></a>]</span>
+<span id="cb9-45"><a href="#cb9-45" tabindex="-1"></a>paired_scenario_primary<span class="sc">$</span>Mean_advantage <span class="ot">&lt;-</span> <span class="fu">round</span>(</span>
+<span id="cb9-46"><a href="#cb9-46" tabindex="-1"></a>  paired_scenario_primary<span class="sc">$</span>Mean_advantage,</span>
+<span id="cb9-47"><a href="#cb9-47" tabindex="-1"></a>  <span class="dv">4</span></span>
+<span id="cb9-48"><a href="#cb9-48" tabindex="-1"></a>)</span>
+<span id="cb9-49"><a href="#cb9-49" tabindex="-1"></a></span>
+<span id="cb9-50"><a href="#cb9-50" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb9-51"><a href="#cb9-51" tabindex="-1"></a>  paired_scenario_primary,</span>
+<span id="cb9-52"><a href="#cb9-52" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
+<span id="cb9-53"><a href="#cb9-53" tabindex="-1"></a>    <span class="st">&quot;Paired genetic-correlation advantage by scenario.&quot;</span>,</span>
+<span id="cb9-54"><a href="#cb9-54" tabindex="-1"></a>    <span class="st">&quot;Positive values favor ANN.&quot;</span></span>
+<span id="cb9-55"><a href="#cb9-55" tabindex="-1"></a>  ),</span>
+<span id="cb9-56"><a href="#cb9-56" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb9-57"><a href="#cb9-57" tabindex="-1"></a>)</span></code></pre></div>
 <table>
 <caption>Paired genetic-correlation advantage by scenario. Positive
 values favor ANN.</caption>
-<colgroup>
-<col width="5%" />
-<col width="13%" />
-<col width="14%" />
-<col width="22%" />
-<col width="16%" />
-<col width="8%" />
-<col width="19%" />
-</colgroup>
 <thead>
 <tr class="header">
-<th align="left"></th>
 <th align="left">Scenario</th>
 <th align="left">Model</th>
 <th align="right">Mean_advantage</th>
@@ -1570,7 +2023,6 @@ values favor ANN.</caption>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">1</td>
 <td align="left">C1</td>
 <td align="left">ANN_0</td>
 <td align="right">-0.1461</td>
@@ -1579,7 +2031,6 @@ values favor ANN.</caption>
 <td align="right">25</td>
 </tr>
 <tr class="even">
-<td align="left">13</td>
 <td align="left">C2</td>
 <td align="left">ANN_0</td>
 <td align="right">-0.0277</td>
@@ -1588,7 +2039,6 @@ values favor ANN.</caption>
 <td align="right">24</td>
 </tr>
 <tr class="odd">
-<td align="left">25</td>
 <td align="left">C3</td>
 <td align="left">ANN_0</td>
 <td align="right">-0.0161</td>
@@ -1597,7 +2047,6 @@ values favor ANN.</caption>
 <td align="right">19</td>
 </tr>
 <tr class="even">
-<td align="left">37</td>
 <td align="left">C4</td>
 <td align="left">ANN_0</td>
 <td align="right">-0.0285</td>
@@ -1606,7 +2055,6 @@ values favor ANN.</caption>
 <td align="right">24</td>
 </tr>
 <tr class="odd">
-<td align="left">49</td>
 <td align="left">C5</td>
 <td align="left">ANN_0</td>
 <td align="right">-0.0111</td>
@@ -1615,7 +2063,6 @@ values favor ANN.</caption>
 <td align="right">13</td>
 </tr>
 <tr class="even">
-<td align="left">61</td>
 <td align="left">C6</td>
 <td align="left">ANN_0</td>
 <td align="right">-0.0185</td>
@@ -1624,7 +2071,6 @@ values favor ANN.</caption>
 <td align="right">18</td>
 </tr>
 <tr class="odd">
-<td align="left">73</td>
 <td align="left">C1</td>
 <td align="left">ANN_L1</td>
 <td align="right">-0.0463</td>
@@ -1633,7 +2079,6 @@ values favor ANN.</caption>
 <td align="right">20</td>
 </tr>
 <tr class="even">
-<td align="left">85</td>
 <td align="left">C2</td>
 <td align="left">ANN_L1</td>
 <td align="right">-0.0272</td>
@@ -1642,7 +2087,6 @@ values favor ANN.</caption>
 <td align="right">24</td>
 </tr>
 <tr class="odd">
-<td align="left">97</td>
 <td align="left">C3</td>
 <td align="left">ANN_L1</td>
 <td align="right">-0.0170</td>
@@ -1651,7 +2095,6 @@ values favor ANN.</caption>
 <td align="right">18</td>
 </tr>
 <tr class="even">
-<td align="left">109</td>
 <td align="left">C4</td>
 <td align="left">ANN_L1</td>
 <td align="right">-0.0284</td>
@@ -1660,7 +2103,6 @@ values favor ANN.</caption>
 <td align="right">23</td>
 </tr>
 <tr class="odd">
-<td align="left">121</td>
 <td align="left">C5</td>
 <td align="left">ANN_L1</td>
 <td align="right">-0.0169</td>
@@ -1669,7 +2111,6 @@ values favor ANN.</caption>
 <td align="right">15</td>
 </tr>
 <tr class="even">
-<td align="left">133</td>
 <td align="left">C6</td>
 <td align="left">ANN_L1</td>
 <td align="right">-0.0149</td>
@@ -1678,7 +2119,6 @@ values favor ANN.</caption>
 <td align="right">19</td>
 </tr>
 <tr class="odd">
-<td align="left">145</td>
 <td align="left">C1</td>
 <td align="left">ANN_L1_L2</td>
 <td align="right">-0.0456</td>
@@ -1687,7 +2127,6 @@ values favor ANN.</caption>
 <td align="right">20</td>
 </tr>
 <tr class="even">
-<td align="left">157</td>
 <td align="left">C2</td>
 <td align="left">ANN_L1_L2</td>
 <td align="right">-0.0272</td>
@@ -1696,7 +2135,6 @@ values favor ANN.</caption>
 <td align="right">24</td>
 </tr>
 <tr class="odd">
-<td align="left">169</td>
 <td align="left">C3</td>
 <td align="left">ANN_L1_L2</td>
 <td align="right">-0.0166</td>
@@ -1705,7 +2143,6 @@ values favor ANN.</caption>
 <td align="right">18</td>
 </tr>
 <tr class="even">
-<td align="left">181</td>
 <td align="left">C4</td>
 <td align="left">ANN_L1_L2</td>
 <td align="right">-0.0296</td>
@@ -1714,7 +2151,6 @@ values favor ANN.</caption>
 <td align="right">23</td>
 </tr>
 <tr class="odd">
-<td align="left">193</td>
 <td align="left">C5</td>
 <td align="left">ANN_L1_L2</td>
 <td align="right">-0.0163</td>
@@ -1723,7 +2159,6 @@ values favor ANN.</caption>
 <td align="right">15</td>
 </tr>
 <tr class="even">
-<td align="left">205</td>
 <td align="left">C6</td>
 <td align="left">ANN_L1_L2</td>
 <td align="right">-0.0139</td>
@@ -1732,7 +2167,6 @@ values favor ANN.</caption>
 <td align="right">19</td>
 </tr>
 <tr class="odd">
-<td align="left">217</td>
 <td align="left">C1</td>
 <td align="left">ANN_L2</td>
 <td align="right">-0.1456</td>
@@ -1741,7 +2175,6 @@ values favor ANN.</caption>
 <td align="right">25</td>
 </tr>
 <tr class="even">
-<td align="left">229</td>
 <td align="left">C2</td>
 <td align="left">ANN_L2</td>
 <td align="right">-0.0273</td>
@@ -1750,7 +2183,6 @@ values favor ANN.</caption>
 <td align="right">24</td>
 </tr>
 <tr class="odd">
-<td align="left">241</td>
 <td align="left">C3</td>
 <td align="left">ANN_L2</td>
 <td align="right">-0.0159</td>
@@ -1759,7 +2191,6 @@ values favor ANN.</caption>
 <td align="right">19</td>
 </tr>
 <tr class="even">
-<td align="left">253</td>
 <td align="left">C4</td>
 <td align="left">ANN_L2</td>
 <td align="right">-0.0288</td>
@@ -1768,7 +2199,6 @@ values favor ANN.</caption>
 <td align="right">23</td>
 </tr>
 <tr class="odd">
-<td align="left">265</td>
 <td align="left">C5</td>
 <td align="left">ANN_L2</td>
 <td align="right">-0.0107</td>
@@ -1777,7 +2207,6 @@ values favor ANN.</caption>
 <td align="right">12</td>
 </tr>
 <tr class="even">
-<td align="left">277</td>
 <td align="left">C6</td>
 <td align="left">ANN_L2</td>
 <td align="right">-0.0183</td>
@@ -1793,6 +2222,11 @@ the full C1–C6 sequence. Positive mean advantage values favor the ANN
 variant; negative values favor GBLUP-ADE. Together with the scenario
 means above, these paired summaries provide a task-matched description
 of how consistently the methods differ.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">dir.create</span>(COMPARISON_DIR, <span class="at">recursive =</span> <span class="cn">TRUE</span>, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">write.csv</span>(overall, OVERALL_CSV, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="fu">write.csv</span>(scenario_summary, SCENARIO_CSV, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="fu">write.csv</span>(paired, PAIRED_CSV, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="fu">write.csv</span>(paired_scenario, PAIRED_SCENARIO_CSV, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 </div>
 <div id="overall-conclusion" class="section level1">
 <h1>Overall conclusion</h1>
@@ -1814,7 +2248,9 @@ href="index.html">Home</a></p>
 </div>
 <div id="reproducibility-information" class="section level1">
 <h1>Reproducibility information</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<p><code>sessionInfo()</code> records the R version, platform, and
+loaded packages used to render this terminal comparison tutorial.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
@@ -1855,7 +2291,7 @@ Session information
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
@@ -1947,7 +2383,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
-  window.initializeCodeFolding("hide" === "show");
+  window.initializeCodeFolding("show" === "show");
 });
 </script>
 
