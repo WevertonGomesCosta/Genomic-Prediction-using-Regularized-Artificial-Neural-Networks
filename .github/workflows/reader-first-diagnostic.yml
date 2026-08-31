@@ -1,0 +1,48 @@
+name: reader-first-diagnostic
+
+on:
+  push:
+    branches:
+      - didactic-reader-first-cleanup
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: didactic-reader-first-cleanup
+          fetch-depth: 0
+
+      - name: Diagnose ANN source transformation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo '===== PRE-TRANSFORMATION SOURCE ====='
+          grep -n -C 6 -E 'should_write|run_ann_tuning|ANN_TUNING_PILOT' analysis/simulated_data_ann.Rmd || true
+
+          python - <<'PY'
+          from pathlib import Path
+          import textwrap
+
+          workflow = Path('.github/workflows/reader-first-cleanup.yml').read_text()
+          start_marker = "          python - <<'PY'\n"
+          end_marker = "\n          PY\n"
+          start = workflow.index(start_marker) + len(start_marker)
+          end = workflow.index(end_marker, start)
+          script = textwrap.dedent(workflow[start:end])
+          exec(compile(script, 'reader-first-cleanup.py', 'exec'))
+          PY
+
+          echo '===== POST-TRANSFORMATION SOURCE ====='
+          grep -n -C 8 -E 'should_write|run_ann_tuning|ANN_TUNING_PILOT' analysis/simulated_data_ann.Rmd || true
+
+          echo '===== EXTRACTED R ====='
+          grep -n -C 8 -E 'should_write|run_ann_tuning|ANN_TUNING_PILOT' /tmp/rmd-parse/simulated_data_ann.R || true
+
+          echo '===== ANN DIFF AROUND RELEVANT TERMS ====='
+          git diff -- analysis/simulated_data_ann.Rmd | grep -n -C 10 -E 'should_write|run_ann_tuning|ANN_TUNING_PILOT' || true
