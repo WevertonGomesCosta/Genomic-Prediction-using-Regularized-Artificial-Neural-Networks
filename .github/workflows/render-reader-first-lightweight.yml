@@ -1,0 +1,142 @@
+name: render-reader-first-lightweight
+
+on:
+  push:
+    branches:
+      - didactic-reader-first-cleanup
+
+permissions:
+  contents: write
+
+jobs:
+  render-and-verify:
+    runs-on: ubuntu-latest
+    env:
+      RUN_GBLUP: "0"
+      RUN_ANN_TUNING: "0"
+      RUN_ANN: "0"
+      WRITE_COMPARISON_OUTPUTS: "0"
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: didactic-reader-first-cleanup
+          fetch-depth: 0
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Install lightweight render dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libgit2-dev libssl-dev libxml2-dev
+          Rscript --no-init-file - <<'RS'
+          repos <- getOption("repos")
+          if (identical(unname(repos["CRAN"]), "@CRAN@")) {
+            repos["CRAN"] <- "https://cloud.r-project.org"
+          }
+          install.packages(
+            c("workflowr", "rmarkdown", "knitr"),
+            repos = repos,
+            dependencies = c("Depends", "Imports", "LinkingTo")
+          )
+          cat("workflowr:", as.character(packageVersion("workflowr")), "\n")
+          cat("rmarkdown:", as.character(packageVersion("rmarkdown")), "\n")
+          cat("knitr:", as.character(packageVersion("knitr")), "\n")
+          RS
+
+      - name: Record canonical output state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --quiet -- output
+          git diff --cached --quiet -- output
+          find output -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/output-before.sha256
+
+      - name: Render five canonical tutorial pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          Rscript --no-init-file - <<'RS'
+          files <- c(
+            "analysis/simulated_data_audit.Rmd",
+            "analysis/simulated_data_validation.Rmd",
+            "analysis/simulated_data_gblup.Rmd",
+            "analysis/simulated_data_ann.Rmd",
+            "analysis/simulated_data_comparison.Rmd"
+          )
+          workflowr::wflow_build(files)
+          RS
+
+      - name: Verify scientific outputs are unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          find output -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/output-after.sha256
+          diff -u /tmp/output-before.sha256 /tmp/output-after.sha256
+          git diff --quiet -- output
+          git diff --cached --quiet -- output
+          echo "Canonical output artifacts are byte-for-byte unchanged."
+
+      - name: Verify rendered scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          echo "===== STATUS AFTER RENDER ====="
+          git status --short
+
+          allowed='^(docs/simulated_data_(audit|validation|gblup|ann|comparison)\.html|\.github/workflows/render-reader-first-(validation|lightweight)\.yml)$'
+          changed=$(git status --short | sed -E 's/^.. //' | sed -E 's/.* -> //')
+          if [ -n "$changed" ]; then
+            unexpected=$(printf '%s\n' "$changed" | grep -Ev "$allowed" || true)
+            if [ -n "$unexpected" ]; then
+              echo "Unexpected changed paths after rendering:"
+              printf '%s\n' "$unexpected"
+              exit 1
+            fi
+          fi
+
+          for page in audit validation gblup ann comparison; do
+            test -s "docs/simulated_data_${page}.html"
+          done
+
+      - name: Commit rendered HTML and remove temporary workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f \
+            .github/workflows/render-reader-first-validation.yml \
+            .github/workflows/render-reader-first-lightweight.yml
+
+          git add \
+            docs/simulated_data_audit.html \
+            docs/simulated_data_validation.html \
+            docs/simulated_data_gblup.html \
+            docs/simulated_data_ann.html \
+            docs/simulated_data_comparison.html \
+            .github/workflows/render-reader-first-validation.yml \
+            .github/workflows/render-reader-first-lightweight.yml
+
+          staged=$(git diff --cached --name-only)
+          echo "===== STAGED PATHS ====="
+          printf '%s\n' "$staged"
+
+          unexpected=$(printf '%s\n' "$staged" | grep -Ev '^docs/simulated_data_(audit|validation|gblup|ann|comparison)\.html$|^\.github/workflows/render-reader-first-(validation|lightweight)\.yml$' || true)
+          if [ -n "$unexpected" ]; then
+            echo "Unexpected staged paths:"
+            printf '%s\n' "$unexpected"
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Render reader-first tutorial pages"
+          git push origin HEAD:didactic-reader-first-cleanup
