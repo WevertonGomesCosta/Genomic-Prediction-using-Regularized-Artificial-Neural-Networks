@@ -263,57 +263,65 @@ knitr::kable(input_summary)
 
 # GBLUP-ADE model
 
-For each scenario and frozen outer split, the phenotype is modeled as
+The benchmark predicts each phenotype from three genomic components:
 
 \[
-\mathbf{y} = \mathbf{1}\mu + \mathbf{a} + \mathbf{d} + \mathbf{e} + \boldsymbol{\varepsilon},
+\mathbf{y} = \mathbf{1}\mu + \mathbf{a} + \mathbf{d} + \mathbf{e} +
+\boldsymbol{\varepsilon}.
 \]
 
-where \(\mu\) is the intercept, \(\mathbf{a}\) is the additive genomic effect,
-\(\mathbf{d}\) is the dominance effect, \(\mathbf{e}\) is the epistatic effect,
-and \(\boldsymbol{\varepsilon}\) is the residual.
+## Objects in the model
 
-The corresponding covariance structures are
+| Object | Meaning |
+|---|---|
+| \(\mathbf{y}\) | phenotype vector for one simulation scenario |
+| \(\mu\) | overall intercept |
+| \(\mathbf{a}\) | additive genomic effect |
+| \(\mathbf{d}\) | dominance genomic effect |
+| \(\mathbf{e}\) | epistatic genomic effect |
+| \(\boldsymbol{\varepsilon}\) | residual |
+
+The three genetic components are modeled as random effects:
 
 \[
-\mathbf{a} \sim N(0,\mathbf{A}\sigma_a^2),\quad
-\mathbf{d} \sim N(0,\mathbf{D}\sigma_d^2),
+\mathbf{a}\sim N(0,\mathbf{A}\sigma_a^2),\qquad
+\mathbf{d}\sim N(0,\mathbf{D}\sigma_d^2),
 \]
 
 \[
-\mathbf{e} \sim N(0,\mathbf{E}\sigma_e^2),\quad
-\boldsymbol{\varepsilon} \sim N(0,\mathbf{I}\sigma_{\varepsilon}^2).
+\mathbf{e}\sim N(0,\mathbf{E}\sigma_e^2),\qquad
+\boldsymbol{\varepsilon}\sim N(0,\mathbf{I}\sigma_\varepsilon^2).
 \]
 
-At the scientific level, \(\mathbf{A}\), \(\mathbf{D}\), and \(\mathbf{E}\)
-are three genomic relationship structures built from the marker data. They
-specify how covariance is shared among individuals for each random genetic
-component of the same phenotype:
+## Genomic relationship matrices
 
-- \(\mathbf{A}\) represents additive genomic relationship and structures the
-  covariance of the additive effects \(\mathbf{a}\);
-- \(\mathbf{D}\) represents dominance genomic relationship and structures the
-  covariance of the dominance effects \(\mathbf{d}\);
-- \(\mathbf{E}\) represents the epistatic genomic relationship used by this
-  benchmark and structures the covariance of the epistatic effects
-  \(\mathbf{e}\).
+| Matrix | Role |
+|---|---|
+| \(\mathbf{A}\) | additive genomic relationships |
+| \(\mathbf{D}\) | dominance genomic relationships |
+| \(\mathbf{E}\) | epistatic genomic relationships |
 
-These matrices are covariance structures, not additional response variables.
-The model combines the three predicted genetic components to represent the
-total predicted genetic value for each individual.
+The matrices are built from the marker data with `sommer::A.mat()`,
+`sommer::D.mat()`, and `sommer::E.mat()`. They describe covariance among
+individuals; they are not additional response variables.
 
-The genomic relationship matrices \(\mathbf{A}\), \(\mathbf{D}\), and
-\(\mathbf{E}\) are constructed with `sommer::A.mat()`, `sommer::D.mat()`,
-and `sommer::E.mat()`, respectively. In `sommer::mmes()`, `ism()` identifies
-the individual levels associated with each random effect and `vsm()` links that
-effect to its genomic covariance matrix through `Gu`.
+## sommer implementation
 
-The canonical fitting protocol uses `nIters = 20`. This value is fixed across
-all scenarios and outer splits and is not a tuned model-selection parameter.
+In `sommer::mmes()`, `ism()` identifies the individual levels associated with
+each random effect and `vsm()` connects that effect to the corresponding genomic
+relationship matrix through `Gu`.
 
-The total predicted genetic component used for evaluation is the sum of the
-additive, dominance, and epistatic predictions. The model intercept is added
-when predicting the phenotype.
+The canonical fit uses `nIters = 20` for every scenario and outer split. This is
+a fixed fitting control, not a tuned hyperparameter.
+
+The predicted genetic value is the sum
+
+\[
+\widehat{G}=\widehat{a}+\widehat{d}+\widehat{e},
+\]
+
+and the phenotype prediction adds the fitted intercept to this genetic
+component.
 
 # Pre-fit integrity
 
@@ -403,9 +411,18 @@ task_table$TaskID <- paste(
 
 rownames(task_table) <- NULL
 
-cat("Expected GBLUP-ADE tasks:", nrow(task_table), "\n")
-knitr::kable(head(task_table, 15))
+knitr::kable(
+  head(task_table, 15),
+  caption = "First 15 GBLUP-ADE scenario-by-split tasks"
+)
+```
 
+Each row represents one `Scenario × outer split` combination. Because there are
+6 scenarios and 25 frozen outer splits, the complete benchmark contains
+**6 × 25 = 150 GBLUP-ADE fits**. `TaskID` is the stable identifier used to link
+each fit to its held-out predictions and later to the ANN comparison.
+
+```{r task-table-integrity, include=FALSE}
 if (nrow(task_table) != 150L) {
   stop("Expected 150 scenario-by-split tasks.")
 }
@@ -424,7 +441,34 @@ genomic relationships but not response information. Their true genetic values
 are also excluded from fitting and are accessed only after prediction for
 performance evaluation.
 
-```{r fit-gblup-ade, eval=RUN_GBLUP}
+## One representative fit
+
+The essential model call for one scenario and one outer split is:
+
+```{r gblup-fit-example, eval=FALSE}
+fit <- sommer::mmes(
+  y ~ 1,
+  random = ~
+    vsm(ism(id),  Gu = A_matrix) +
+    vsm(ism(idd), Gu = D_matrix) +
+    vsm(ism(ide), Gu = E_matrix),
+  rcov = ~ units,
+  nIters = 20,
+  data = dat,
+  verbose = FALSE
+)
+```
+
+Here `dat$y` contains phenotype values for the analysis individuals and `NA` for
+the 200 outer-assessment individuals. The matrices `A_matrix`, `D_matrix`, and
+`E_matrix` are shared across tasks; only the scenario and frozen assessment set
+change.
+
+The production loop repeats this same fitting logic over all 150 tasks, records
+the held-out predictions, and writes the canonical result files. That execution
+machinery is retained internally rather than displayed as tutorial code.
+
+```{r fit-gblup-ade, eval=RUN_GBLUP, include=FALSE}
 set.seed(SEED_GLOBAL)
 
 run_start <- proc.time()[["elapsed"]]
@@ -716,23 +760,16 @@ kernel table is retained as an output artifact; the reader-facing page reports
 the scientifically relevant structural summary.
 
 ```{r kernel-diagnostics, include=FALSE}
-if (file.exists(KERNEL_CSV)) {
-  kernel_summary <- read.csv(KERNEL_CSV)
-  knitr::kable(
-    kernel_summary,
-    digits = 5,
-    caption = "A, D, and E kernel diagnostics"
-  )
-} else {
-  cat("Canonical kernel diagnostics are unavailable in the current saved result set.\n")
-}
+kernel_summary <- read.csv(
+  KERNEL_CSV,
+  stringsAsFactors = FALSE
+)
 ```
 
-```{r kernel-interpretation, echo=FALSE, results="asis"}
-if (file.exists(KERNEL_CSV)) {
-  cat("The canonical diagnostics contain three 1,000 x 1,000 relationship matrices. All three are finite and symmetric, and their mean diagonal values are close to one. These checks support the numerical integrity of the additive, dominance, and epistatic covariance structures before interpreting predictions.\n")
-}
-```
+The saved diagnostics contain three **1,000 × 1,000** genomic relationship
+matrices. All three are finite and symmetric, with mean diagonal values close
+to one. This confirms that the additive, dominance, and epistatic covariance
+structures are numerically suitable for interpreting the fitted predictions.
 
 # Saved-result integrity
 
@@ -748,41 +785,41 @@ results_available <-
   file.exists(RUN_RDS)
 
 if (!results_available) {
-  cat("Canonical fitted results are unavailable; predictive summaries cannot be displayed.\n")
-} else {
-  results <- readRDS(RESULTS_RDS)
-  predictions <- readRDS(PREDICTIONS_RDS)
-  run_metadata <- readRDS(RUN_RDS)
-
-  result_audit <- data.frame(
-    Check = c(
-      "Task rows",
-      "Prediction rows",
-      "Unique tasks",
-      "Predictions per task",
-      "Successful tasks",
-      "Finite predictions",
-      "Frozen split IDs"
-    ),
-    Status = c(
-      if (nrow(results) == 150L) "PASS" else "BLOCKED",
-      if (nrow(predictions) == 30000L) "PASS" else "BLOCKED",
-      if (length(unique(results$TaskID)) == 150L) "PASS" else "BLOCKED",
-      if (all(table(predictions$TaskID) == 200L)) "PASS" else "BLOCKED",
-      if (all(results$Status == "ok")) "PASS" else "WARNING",
-      if (all(is.finite(predictions$Predicted_Value))) "PASS" else "WARNING",
-      if (
-        setequal(unique(results$SplitID), names(cv$outer_splits))
-      ) "PASS" else "BLOCKED"
-    ),
-    stringsAsFactors = FALSE
+  stop(
+    "Canonical GBLUP-ADE outputs are required to render the tutorial results."
   )
+}
 
-  knitr::kable(result_audit)
+results <- readRDS(RESULTS_RDS)
+predictions <- readRDS(PREDICTIONS_RDS)
+run_metadata <- readRDS(RUN_RDS)
 
-  if (any(result_audit$Status == "BLOCKED")) {
-    stop("Saved GBLUP-ADE results failed a blocking audit check.")
-  }
+result_audit <- data.frame(
+  Check = c(
+    "Task rows",
+    "Prediction rows",
+    "Unique tasks",
+    "Predictions per task",
+    "Successful tasks",
+    "Finite predictions",
+    "Frozen split IDs"
+  ),
+  Status = c(
+    if (nrow(results) == 150L) "PASS" else "BLOCKED",
+    if (nrow(predictions) == 30000L) "PASS" else "BLOCKED",
+    if (length(unique(results$TaskID)) == 150L) "PASS" else "BLOCKED",
+    if (all(table(predictions$TaskID) == 200L)) "PASS" else "BLOCKED",
+    if (all(results$Status == "ok")) "PASS" else "WARNING",
+    if (all(is.finite(predictions$Predicted_Value))) "PASS" else "WARNING",
+    if (
+      setequal(unique(results$SplitID), names(cv$outer_splits))
+    ) "PASS" else "BLOCKED"
+  ),
+  stringsAsFactors = FALSE
+)
+
+if (any(result_audit$Status == "BLOCKED")) {
+  stop("Saved GBLUP-ADE results failed a blocking audit check.")
 }
 ```
 
@@ -798,15 +835,11 @@ The primary metrics compare the held-out final prediction
 genetic value. Phenotype metrics are secondary.
 
 ```{r performance}
-if (results_available) {
-  ok_results <- results[results$Status == "ok", , drop = FALSE]
-
-  if (nrow(ok_results) == 0L) {
-    cat(
-      "No successful GBLUP-ADE tasks are available for performance aggregation.\n",
-      "Inspect the saved-result audit and Error column before rerunning.\n"
-    )
-  } else {
+ok_results <- results[
+  results$Status == "ok",
+  ,
+  drop = FALSE
+]
 
   scenario_performance <- aggregate(
     cbind(
@@ -875,12 +908,9 @@ if (results_available) {
     caption = "Secondary evaluation: phenotype prediction across the 25 outer splits",
     table.attr = WIDE_TABLE_ATTR
   )
-  }
-}
 ```
 
 ```{r performance-interpretation, echo=FALSE, results="asis"}
-if (results_available && exists("scenario_performance")) {
   cat(
     sprintf(
       "Across the six scenarios, mean held-out genetic correlation ranges from %.4f to %.4f, while mean genetic RMSE ranges from %.4f to %.4f. The C1--C6 pattern is interpreted as performance across the prespecified genetic-complexity gradient; because QTL number and nominal heritability vary together across the complete sequence, it is not an isolated causal effect of either factor.\n",
@@ -890,7 +920,6 @@ if (results_available && exists("scenario_performance")) {
       max(scenario_performance$Genetic_RMSE)
     )
   )
-}
 ```
 
 # Split-level variability
@@ -900,7 +929,6 @@ next summary therefore describes the distribution of primary genetic-value
 performance across the 25 frozen outer splits within each scenario.
 
 ```{r split-summary}
-if (results_available && exists("ok_results") && nrow(ok_results) > 0L) {
   split_summary <- do.call(
     rbind,
     lapply(
@@ -933,7 +961,6 @@ if (results_available && exists("ok_results") && nrow(ok_results) > 0L) {
     caption = "Genetic-value prediction variability across outer splits",
     table.attr = WIDE_TABLE_ATTR
   )
-}
 ```
 
 Variation across the 25 outer splits quantifies the sensitivity of predictive
@@ -950,7 +977,6 @@ tasks. This distinction prevents kernel construction from being interpreted as
 a cost paid independently for every split.
 
 ```{r time-summary}
-if (results_available) {
   time_summary <- aggregate(
     cbind(Fit_seconds, Predict_seconds) ~ Scenario,
     data = results,
@@ -971,7 +997,6 @@ if (results_available) {
     round(run_metadata$total_run_seconds, 2),
     "seconds.\n"
   )
-}
 ```
 
 Because the A, D, and E matrices are built once and reused across all 150

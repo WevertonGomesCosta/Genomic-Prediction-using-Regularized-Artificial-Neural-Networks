@@ -499,7 +499,7 @@ div.tocify {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-ok text-success"
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -510,8 +510,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
-</a>
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -524,9 +524,9 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 0
+aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -550,18 +550,21 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
-</a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate"
+<div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git
-repository, you know the exact version of the code that produced these
-results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
 </div>
 </div>
 </div>
@@ -652,15 +655,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree1e0bc61230a788505727cc33c93674342efe341btargetblank1e0bc61a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed7fbd45cfd29e97daf48ef249391c6855f745877targetblankd7fbd45a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/1e0bc61230a788505727cc33c93674342efe341b" target="_blank">1e0bc61</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d7fbd45cfd29e97daf48ef249391c6855f745877" target="_blank">d7fbd45</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree1e0bc61230a788505727cc33c93674342efe341btargetblank1e0bc61a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed7fbd45cfd29e97daf48ef249391c6855f745877targetblankd7fbd45a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -670,7 +673,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/1e0bc61230a788505727cc33c93674342efe341b" target="_blank">1e0bc61</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d7fbd45cfd29e97daf48ef249391c6855f745877" target="_blank">d7fbd45</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -707,6 +710,10 @@ Ignored files:
     Ignored:    data/dados_reais/plants-13-01876-v2.pdf
     Ignored:    data/dados_reais/pos_geno_real.rds
     Ignored:    renv/library/
+
+Unstaged changes:
+    Modified:   analysis/simulated_data_ann.Rmd
+    Modified:   analysis/simulated_data_gblup.Rmd
 
 </code></pre>
 <p>
@@ -751,6 +758,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/f22824530501b1140fec85d691454e74d903d8c9/docs/simulated_data_gblup.html" target="_blank">f228245</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-31
+</td>
+<td>
+Publish reader-focused simulated workflow
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -997,66 +1021,103 @@ before any model result is used.</p>
 </div>
 <div id="gblup-ade-model" class="section level1">
 <h1>GBLUP-ADE model</h1>
-<p>For each scenario and frozen outer split, the phenotype is modeled
-as</p>
+<p>The benchmark predicts each phenotype from three genomic
+components:</p>
 <p><span class="math display">\[
 \mathbf{y} = \mathbf{1}\mu + \mathbf{a} + \mathbf{d} + \mathbf{e} +
-\boldsymbol{\varepsilon},
+\boldsymbol{\varepsilon}.
 \]</span></p>
-<p>where <span class="math inline">\(\mu\)</span> is the intercept,
-<span class="math inline">\(\mathbf{a}\)</span> is the additive genomic
-effect, <span class="math inline">\(\mathbf{d}\)</span> is the dominance
-effect, <span class="math inline">\(\mathbf{e}\)</span> is the epistatic
-effect, and <span
-class="math inline">\(\boldsymbol{\varepsilon}\)</span> is the
-residual.</p>
-<p>The corresponding covariance structures are</p>
+<div id="objects-in-the-model" class="section level2">
+<h2>Objects in the model</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Object</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{y}\)</span></td>
+<td>phenotype vector for one simulation scenario</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mu\)</span></td>
+<td>overall intercept</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{a}\)</span></td>
+<td>additive genomic effect</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{d}\)</span></td>
+<td>dominance genomic effect</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{e}\)</span></td>
+<td>epistatic genomic effect</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\boldsymbol{\varepsilon}\)</span></td>
+<td>residual</td>
+</tr>
+</tbody>
+</table>
+<p>The three genetic components are modeled as random effects:</p>
 <p><span class="math display">\[
-\mathbf{a} \sim N(0,\mathbf{A}\sigma_a^2),\quad
-\mathbf{d} \sim N(0,\mathbf{D}\sigma_d^2),
+\mathbf{a}\sim N(0,\mathbf{A}\sigma_a^2),\qquad
+\mathbf{d}\sim N(0,\mathbf{D}\sigma_d^2),
 \]</span></p>
 <p><span class="math display">\[
-\mathbf{e} \sim N(0,\mathbf{E}\sigma_e^2),\quad
-\boldsymbol{\varepsilon} \sim N(0,\mathbf{I}\sigma_{\varepsilon}^2).
+\mathbf{e}\sim N(0,\mathbf{E}\sigma_e^2),\qquad
+\boldsymbol{\varepsilon}\sim N(0,\mathbf{I}\sigma_\varepsilon^2).
 \]</span></p>
-<p>At the scientific level, <span
-class="math inline">\(\mathbf{A}\)</span>, <span
-class="math inline">\(\mathbf{D}\)</span>, and <span
-class="math inline">\(\mathbf{E}\)</span> are three genomic relationship
-structures built from the marker data. They specify how covariance is
-shared among individuals for each random genetic component of the same
-phenotype:</p>
-<ul>
-<li><span class="math inline">\(\mathbf{A}\)</span> represents additive
-genomic relationship and structures the covariance of the additive
-effects <span class="math inline">\(\mathbf{a}\)</span>;</li>
-<li><span class="math inline">\(\mathbf{D}\)</span> represents dominance
-genomic relationship and structures the covariance of the dominance
-effects <span class="math inline">\(\mathbf{d}\)</span>;</li>
-<li><span class="math inline">\(\mathbf{E}\)</span> represents the
-epistatic genomic relationship used by this benchmark and structures the
-covariance of the epistatic effects <span
-class="math inline">\(\mathbf{e}\)</span>.</li>
-</ul>
-<p>These matrices are covariance structures, not additional response
-variables. The model combines the three predicted genetic components to
-represent the total predicted genetic value for each individual.</p>
-<p>The genomic relationship matrices <span
-class="math inline">\(\mathbf{A}\)</span>, <span
-class="math inline">\(\mathbf{D}\)</span>, and <span
-class="math inline">\(\mathbf{E}\)</span> are constructed with
+</div>
+<div id="genomic-relationship-matrices" class="section level2">
+<h2>Genomic relationship matrices</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Matrix</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{A}\)</span></td>
+<td>additive genomic relationships</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{D}\)</span></td>
+<td>dominance genomic relationships</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{E}\)</span></td>
+<td>epistatic genomic relationships</td>
+</tr>
+</tbody>
+</table>
+<p>The matrices are built from the marker data with
 <code>sommer::A.mat()</code>, <code>sommer::D.mat()</code>, and
-<code>sommer::E.mat()</code>, respectively. In
-<code>sommer::mmes()</code>, <code>ism()</code> identifies the
+<code>sommer::E.mat()</code>. They describe covariance among
+individuals; they are not additional response variables.</p>
+</div>
+<div id="sommer-implementation" class="section level2">
+<h2>sommer implementation</h2>
+<p>In <code>sommer::mmes()</code>, <code>ism()</code> identifies the
 individual levels associated with each random effect and
-<code>vsm()</code> links that effect to its genomic covariance matrix
-through <code>Gu</code>.</p>
-<p>The canonical fitting protocol uses <code>nIters = 20</code>. This
-value is fixed across all scenarios and outer splits and is not a tuned
-model-selection parameter.</p>
-<p>The total predicted genetic component used for evaluation is the sum
-of the additive, dominance, and epistatic predictions. The model
-intercept is added when predicting the phenotype.</p>
+<code>vsm()</code> connects that effect to the corresponding genomic
+relationship matrix through <code>Gu</code>.</p>
+<p>The canonical fit uses <code>nIters = 20</code> for every scenario
+and outer split. This is a fixed fitting control, not a tuned
+hyperparameter.</p>
+<p>The predicted genetic value is the sum</p>
+<p><span class="math display">\[
+\widehat{G}=\widehat{a}+\widehat{d}+\widehat{e},
+\]</span></p>
+<p>and the phenotype prediction adds the fitted intercept to this
+genetic component.</p>
+</div>
 </div>
 <div id="pre-fit-integrity" class="section level1">
 <h1>Pre-fit integrity</h1>
@@ -1102,10 +1163,12 @@ design contains 150 tasks.</p>
 <span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a></span>
 <span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a><span class="fu">rownames</span>(task_table) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
 <span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a></span>
-<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Expected GBLUP-ADE tasks:&quot;</span>, <span class="fu">nrow</span>(task_table), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>Expected GBLUP-ADE tasks: 150 </code></pre>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(task_table, <span class="dv">15</span>))</span></code></pre></div>
+<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a>  <span class="fu">head</span>(task_table, <span class="dv">15</span>),</span>
+<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;First 15 GBLUP-ADE scenario-by-split tasks&quot;</span></span>
+<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a>)</span></code></pre></div>
 <table>
+<caption>First 15 GBLUP-ADE scenario-by-split tasks</caption>
 <thead>
 <tr class="header">
 <th align="left">Scenario</th>
@@ -1223,9 +1286,12 @@ design contains 150 tasks.</p>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">nrow</span>(task_table) <span class="sc">!=</span> <span class="dv">150</span><span class="dt">L</span>) {</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">&quot;Expected 150 scenario-by-split tasks.&quot;</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>}</span></code></pre></div>
+<p>Each row represents one <code>Scenario × outer split</code>
+combination. Because there are 6 scenarios and 25 frozen outer splits,
+the complete benchmark contains <strong>6 × 25 = 150 GBLUP-ADE
+fits</strong>. <code>TaskID</code> is the stable identifier used to link
+each fit to its held-out predictions and later to the ANN
+comparison.</p>
 </div>
 <div id="fit-gblup-ade" class="section level1">
 <h1>Fit GBLUP-ADE</h1>
@@ -1239,287 +1305,30 @@ Consequently, those individuals contribute genomic relationships but not
 response information. Their true genetic values are also excluded from
 fitting and are accessed only after prediction for performance
 evaluation.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">set.seed</span>(SEED_GLOBAL)</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>run_start <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>kernel_start <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>A_matrix <span class="ot">&lt;-</span> sommer<span class="sc">::</span><span class="fu">A.mat</span>(geno)</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>D_matrix <span class="ot">&lt;-</span> sommer<span class="sc">::</span><span class="fu">D.mat</span>(geno)</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>E_matrix <span class="ot">&lt;-</span> sommer<span class="sc">::</span><span class="fu">E.mat</span>(geno)</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>kernel_seconds <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span> kernel_start</span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="fu">rownames</span>(A_matrix) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(A_matrix) <span class="ot">&lt;-</span> id_labels</span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="fu">rownames</span>(D_matrix) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(D_matrix) <span class="ot">&lt;-</span> id_labels</span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="fu">rownames</span>(E_matrix) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(E_matrix) <span class="ot">&lt;-</span> id_labels</span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>kernel_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>  <span class="at">Kernel =</span> <span class="fu">c</span>(<span class="st">&quot;Additive&quot;</span>, <span class="st">&quot;Dominance&quot;</span>, <span class="st">&quot;Epistatic&quot;</span>),</span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>  <span class="at">Rows =</span> <span class="fu">c</span>(<span class="fu">nrow</span>(A_matrix), <span class="fu">nrow</span>(D_matrix), <span class="fu">nrow</span>(E_matrix)),</span>
-<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>  <span class="at">Columns =</span> <span class="fu">c</span>(<span class="fu">ncol</span>(A_matrix), <span class="fu">ncol</span>(D_matrix), <span class="fu">ncol</span>(E_matrix)),</span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>  <span class="at">Symmetric =</span> <span class="fu">c</span>(</span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>    <span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(A_matrix, <span class="fu">t</span>(A_matrix), <span class="at">tolerance =</span> <span class="fl">1e-8</span>)),</span>
-<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>    <span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(D_matrix, <span class="fu">t</span>(D_matrix), <span class="at">tolerance =</span> <span class="fl">1e-8</span>)),</span>
-<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>    <span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(E_matrix, <span class="fu">t</span>(E_matrix), <span class="at">tolerance =</span> <span class="fl">1e-8</span>))</span>
-<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>  ),</span>
-<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a>  <span class="at">Finite =</span> <span class="fu">c</span>(</span>
-<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>    <span class="fu">all</span>(<span class="fu">is.finite</span>(A_matrix)),</span>
-<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>    <span class="fu">all</span>(<span class="fu">is.finite</span>(D_matrix)),</span>
-<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a>    <span class="fu">all</span>(<span class="fu">is.finite</span>(E_matrix))</span>
-<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>  ),</span>
-<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a>  <span class="at">Mean_diagonal =</span> <span class="fu">c</span>(</span>
-<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a>    <span class="fu">mean</span>(<span class="fu">diag</span>(A_matrix)),</span>
-<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a>    <span class="fu">mean</span>(<span class="fu">diag</span>(D_matrix)),</span>
-<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a>    <span class="fu">mean</span>(<span class="fu">diag</span>(E_matrix))</span>
-<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a>  ),</span>
-<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a>  <span class="at">Kernel_build_seconds =</span> <span class="fu">rep</span>(kernel_seconds, <span class="dv">3</span><span class="dt">L</span>)</span>
-<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a>)</span>
-<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a></span>
-<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">any</span>(<span class="sc">!</span>kernel_summary<span class="sc">$</span>Symmetric) <span class="sc">||</span> <span class="fu">any</span>(<span class="sc">!</span>kernel_summary<span class="sc">$</span>Finite)) {</span>
-<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">&quot;A, D, or E kernel failed integrity checks.&quot;</span>)</span>
-<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a>}</span>
-<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a></span>
-<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a><span class="fu">write.csv</span>(kernel_summary, KERNEL_CSV, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a></span>
-<span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a>result_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">nrow</span>(task_table))</span>
-<span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a>prediction_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">nrow</span>(task_table))</span>
-<span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a></span>
-<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(task_table))) {</span>
-<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a>  task <span class="ot">&lt;-</span> task_table[i, ]</span>
-<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a>  scenario <span class="ot">&lt;-</span> task<span class="sc">$</span>Scenario</span>
-<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a>  split_id <span class="ot">&lt;-</span> task<span class="sc">$</span>SplitID</span>
-<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a>  j <span class="ot">&lt;-</span> <span class="fu">match</span>(scenario, scenario_names)</span>
-<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a></span>
-<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a>  split <span class="ot">&lt;-</span> cv<span class="sc">$</span>outer_splits[[split_id]]</span>
-<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a></span>
-<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a>  tr_idx <span class="ot">&lt;-</span> <span class="fu">match</span>(split<span class="sc">$</span>analysis_ids, ids)</span>
-<span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a>  te_idx <span class="ot">&lt;-</span> <span class="fu">match</span>(split<span class="sc">$</span>assessment_ids, ids)</span>
-<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a></span>
-<span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">anyNA</span>(tr_idx) <span class="sc">||</span> <span class="fu">anyNA</span>(te_idx)) {</span>
-<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="fu">paste</span>(<span class="st">&quot;ID alignment failed for&quot;</span>, task<span class="sc">$</span>TaskID))</span>
-<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a>  }</span>
-<span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a></span>
-<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a>  y <span class="ot">&lt;-</span> phenotype[, j]</span>
-<span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a>  g <span class="ot">&lt;-</span> true_g[, j]</span>
-<span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a></span>
-<span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a>  id_factor <span class="ot">&lt;-</span> <span class="fu">factor</span>(id_labels, <span class="at">levels =</span> id_labels)</span>
-<span id="cb5-67"><a href="#cb5-67" tabindex="-1"></a></span>
-<span id="cb5-68"><a href="#cb5-68" tabindex="-1"></a>  dat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-69"><a href="#cb5-69" tabindex="-1"></a>    <span class="at">y =</span> y,</span>
-<span id="cb5-70"><a href="#cb5-70" tabindex="-1"></a>    <span class="at">id =</span> id_factor,</span>
-<span id="cb5-71"><a href="#cb5-71" tabindex="-1"></a>    <span class="at">idd =</span> id_factor,</span>
-<span id="cb5-72"><a href="#cb5-72" tabindex="-1"></a>    <span class="at">ide =</span> id_factor</span>
-<span id="cb5-73"><a href="#cb5-73" tabindex="-1"></a>  )</span>
-<span id="cb5-74"><a href="#cb5-74" tabindex="-1"></a></span>
-<span id="cb5-75"><a href="#cb5-75" tabindex="-1"></a>  dat<span class="sc">$</span>y[te_idx] <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
-<span id="cb5-76"><a href="#cb5-76" tabindex="-1"></a></span>
-<span id="cb5-77"><a href="#cb5-77" tabindex="-1"></a>  fit_status <span class="ot">&lt;-</span> <span class="st">&quot;ok&quot;</span></span>
-<span id="cb5-78"><a href="#cb5-78" tabindex="-1"></a>  pred_status <span class="ot">&lt;-</span> <span class="st">&quot;not_run&quot;</span></span>
-<span id="cb5-79"><a href="#cb5-79" tabindex="-1"></a>  error_message <span class="ot">&lt;-</span> <span class="cn">NA_character_</span></span>
-<span id="cb5-80"><a href="#cb5-80" tabindex="-1"></a></span>
-<span id="cb5-81"><a href="#cb5-81" tabindex="-1"></a>  y_pred <span class="ot">&lt;-</span> gebv <span class="ot">&lt;-</span> u_add <span class="ot">&lt;-</span> u_dom <span class="ot">&lt;-</span> u_epi <span class="ot">&lt;-</span></span>
-<span id="cb5-82"><a href="#cb5-82" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="cn">NA_real_</span>, <span class="fu">nrow</span>(dat))</span>
-<span id="cb5-83"><a href="#cb5-83" tabindex="-1"></a></span>
-<span id="cb5-84"><a href="#cb5-84" tabindex="-1"></a>  fit_start <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
-<span id="cb5-85"><a href="#cb5-85" tabindex="-1"></a></span>
-<span id="cb5-86"><a href="#cb5-86" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb5-87"><a href="#cb5-87" tabindex="-1"></a>    sommer<span class="sc">::</span><span class="fu">mmes</span>(</span>
-<span id="cb5-88"><a href="#cb5-88" tabindex="-1"></a>      y <span class="sc">~</span> <span class="dv">1</span>,</span>
-<span id="cb5-89"><a href="#cb5-89" tabindex="-1"></a>      <span class="at">random =</span> <span class="sc">~</span></span>
-<span id="cb5-90"><a href="#cb5-90" tabindex="-1"></a>        <span class="fu">vsm</span>(<span class="fu">ism</span>(id), <span class="at">Gu =</span> A_matrix) <span class="sc">+</span></span>
-<span id="cb5-91"><a href="#cb5-91" tabindex="-1"></a>        <span class="fu">vsm</span>(<span class="fu">ism</span>(idd), <span class="at">Gu =</span> D_matrix) <span class="sc">+</span></span>
-<span id="cb5-92"><a href="#cb5-92" tabindex="-1"></a>        <span class="fu">vsm</span>(<span class="fu">ism</span>(ide), <span class="at">Gu =</span> E_matrix),</span>
-<span id="cb5-93"><a href="#cb5-93" tabindex="-1"></a>      <span class="at">rcov =</span> <span class="sc">~</span> units,</span>
-<span id="cb5-94"><a href="#cb5-94" tabindex="-1"></a>      <span class="at">nIters =</span> N_ITERS_SOMMER,</span>
-<span id="cb5-95"><a href="#cb5-95" tabindex="-1"></a>      <span class="at">data =</span> dat,</span>
-<span id="cb5-96"><a href="#cb5-96" tabindex="-1"></a>      <span class="at">verbose =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb5-97"><a href="#cb5-97" tabindex="-1"></a>      <span class="at">dateWarning =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-98"><a href="#cb5-98" tabindex="-1"></a>    ),</span>
-<span id="cb5-99"><a href="#cb5-99" tabindex="-1"></a>    <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
-<span id="cb5-100"><a href="#cb5-100" tabindex="-1"></a>      fit_status <span class="ot">&lt;&lt;-</span> <span class="st">&quot;fit_error&quot;</span></span>
-<span id="cb5-101"><a href="#cb5-101" tabindex="-1"></a>      error_message <span class="ot">&lt;&lt;-</span> <span class="fu">conditionMessage</span>(e)</span>
-<span id="cb5-102"><a href="#cb5-102" tabindex="-1"></a>      <span class="cn">NULL</span></span>
-<span id="cb5-103"><a href="#cb5-103" tabindex="-1"></a>    }</span>
-<span id="cb5-104"><a href="#cb5-104" tabindex="-1"></a>  )</span>
-<span id="cb5-105"><a href="#cb5-105" tabindex="-1"></a></span>
-<span id="cb5-106"><a href="#cb5-106" tabindex="-1"></a>  fit_seconds <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span> fit_start</span>
-<span id="cb5-107"><a href="#cb5-107" tabindex="-1"></a>  predict_seconds <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb5-108"><a href="#cb5-108" tabindex="-1"></a></span>
-<span id="cb5-109"><a href="#cb5-109" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(fit)) {</span>
-<span id="cb5-110"><a href="#cb5-110" tabindex="-1"></a>    pred_status <span class="ot">&lt;-</span> <span class="st">&quot;ok&quot;</span></span>
-<span id="cb5-111"><a href="#cb5-111" tabindex="-1"></a>    predict_start <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
-<span id="cb5-112"><a href="#cb5-112" tabindex="-1"></a></span>
-<span id="cb5-113"><a href="#cb5-113" tabindex="-1"></a>    pc <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb5-114"><a href="#cb5-114" tabindex="-1"></a>      {</span>
-<span id="cb5-115"><a href="#cb5-115" tabindex="-1"></a>        a <span class="ot">&lt;-</span> <span class="fu">extract_u</span>(</span>
-<span id="cb5-116"><a href="#cb5-116" tabindex="-1"></a>          fit, dat, <span class="st">&quot;id&quot;</span>,</span>
-<span id="cb5-117"><a href="#cb5-117" tabindex="-1"></a>          <span class="st">&quot;vsm(ism(id), Gu = A_matrix)&quot;</span></span>
-<span id="cb5-118"><a href="#cb5-118" tabindex="-1"></a>        )</span>
-<span id="cb5-119"><a href="#cb5-119" tabindex="-1"></a>        d <span class="ot">&lt;-</span> <span class="fu">extract_u</span>(</span>
-<span id="cb5-120"><a href="#cb5-120" tabindex="-1"></a>          fit, dat, <span class="st">&quot;idd&quot;</span>,</span>
-<span id="cb5-121"><a href="#cb5-121" tabindex="-1"></a>          <span class="st">&quot;vsm(ism(idd), Gu = D_matrix)&quot;</span></span>
-<span id="cb5-122"><a href="#cb5-122" tabindex="-1"></a>        )</span>
-<span id="cb5-123"><a href="#cb5-123" tabindex="-1"></a>        e <span class="ot">&lt;-</span> <span class="fu">extract_u</span>(</span>
-<span id="cb5-124"><a href="#cb5-124" tabindex="-1"></a>          fit, dat, <span class="st">&quot;ide&quot;</span>,</span>
-<span id="cb5-125"><a href="#cb5-125" tabindex="-1"></a>          <span class="st">&quot;vsm(ism(ide), Gu = E_matrix)&quot;</span></span>
-<span id="cb5-126"><a href="#cb5-126" tabindex="-1"></a>        )</span>
-<span id="cb5-127"><a href="#cb5-127" tabindex="-1"></a></span>
-<span id="cb5-128"><a href="#cb5-128" tabindex="-1"></a>        gv <span class="ot">&lt;-</span> a <span class="sc">+</span> d <span class="sc">+</span> e</span>
-<span id="cb5-129"><a href="#cb5-129" tabindex="-1"></a>        beta0 <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(fit<span class="sc">$</span>b)[<span class="dv">1</span><span class="dt">L</span>]</span>
-<span id="cb5-130"><a href="#cb5-130" tabindex="-1"></a></span>
-<span id="cb5-131"><a href="#cb5-131" tabindex="-1"></a>        <span class="fu">list</span>(</span>
-<span id="cb5-132"><a href="#cb5-132" tabindex="-1"></a>          <span class="at">additive =</span> a,</span>
-<span id="cb5-133"><a href="#cb5-133" tabindex="-1"></a>          <span class="at">dominance =</span> d,</span>
-<span id="cb5-134"><a href="#cb5-134" tabindex="-1"></a>          <span class="at">epistatic =</span> e,</span>
-<span id="cb5-135"><a href="#cb5-135" tabindex="-1"></a>          <span class="at">gebv =</span> gv,</span>
-<span id="cb5-136"><a href="#cb5-136" tabindex="-1"></a>          <span class="at">prediction =</span> beta0 <span class="sc">+</span> gv</span>
-<span id="cb5-137"><a href="#cb5-137" tabindex="-1"></a>        )</span>
-<span id="cb5-138"><a href="#cb5-138" tabindex="-1"></a>      },</span>
-<span id="cb5-139"><a href="#cb5-139" tabindex="-1"></a>      <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
-<span id="cb5-140"><a href="#cb5-140" tabindex="-1"></a>        pred_status <span class="ot">&lt;&lt;-</span> <span class="st">&quot;pred_error&quot;</span></span>
-<span id="cb5-141"><a href="#cb5-141" tabindex="-1"></a>        error_message <span class="ot">&lt;&lt;-</span> <span class="fu">conditionMessage</span>(e)</span>
-<span id="cb5-142"><a href="#cb5-142" tabindex="-1"></a>        <span class="cn">NULL</span></span>
-<span id="cb5-143"><a href="#cb5-143" tabindex="-1"></a>      }</span>
-<span id="cb5-144"><a href="#cb5-144" tabindex="-1"></a>    )</span>
-<span id="cb5-145"><a href="#cb5-145" tabindex="-1"></a></span>
-<span id="cb5-146"><a href="#cb5-146" tabindex="-1"></a>    predict_seconds <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span> predict_start</span>
-<span id="cb5-147"><a href="#cb5-147" tabindex="-1"></a></span>
-<span id="cb5-148"><a href="#cb5-148" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(pc)) {</span>
-<span id="cb5-149"><a href="#cb5-149" tabindex="-1"></a>      u_add <span class="ot">&lt;-</span> pc<span class="sc">$</span>additive</span>
-<span id="cb5-150"><a href="#cb5-150" tabindex="-1"></a>      u_dom <span class="ot">&lt;-</span> pc<span class="sc">$</span>dominance</span>
-<span id="cb5-151"><a href="#cb5-151" tabindex="-1"></a>      u_epi <span class="ot">&lt;-</span> pc<span class="sc">$</span>epistatic</span>
-<span id="cb5-152"><a href="#cb5-152" tabindex="-1"></a>      gebv <span class="ot">&lt;-</span> pc<span class="sc">$</span>gebv</span>
-<span id="cb5-153"><a href="#cb5-153" tabindex="-1"></a>      y_pred <span class="ot">&lt;-</span> pc<span class="sc">$</span>prediction</span>
-<span id="cb5-154"><a href="#cb5-154" tabindex="-1"></a>    }</span>
-<span id="cb5-155"><a href="#cb5-155" tabindex="-1"></a>  }</span>
-<span id="cb5-156"><a href="#cb5-156" tabindex="-1"></a></span>
-<span id="cb5-157"><a href="#cb5-157" tabindex="-1"></a>  obs_test <span class="ot">&lt;-</span> y[te_idx]</span>
-<span id="cb5-158"><a href="#cb5-158" tabindex="-1"></a>  g_test <span class="ot">&lt;-</span> g[te_idx]</span>
-<span id="cb5-159"><a href="#cb5-159" tabindex="-1"></a>  pred_test <span class="ot">&lt;-</span> y_pred[te_idx]</span>
-<span id="cb5-160"><a href="#cb5-160" tabindex="-1"></a>  gebv_test <span class="ot">&lt;-</span> gebv[te_idx]</span>
-<span id="cb5-161"><a href="#cb5-161" tabindex="-1"></a></span>
-<span id="cb5-162"><a href="#cb5-162" tabindex="-1"></a>  mg <span class="ot">&lt;-</span> <span class="fu">metrics</span>(pred_test, g_test, <span class="st">&quot;Genetic&quot;</span>)</span>
-<span id="cb5-163"><a href="#cb5-163" tabindex="-1"></a>  mp <span class="ot">&lt;-</span> <span class="fu">metrics</span>(pred_test, obs_test, <span class="st">&quot;Phenotype&quot;</span>)</span>
-<span id="cb5-164"><a href="#cb5-164" tabindex="-1"></a></span>
-<span id="cb5-165"><a href="#cb5-165" tabindex="-1"></a>  n_finite <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">is.finite</span>(pred_test))</span>
-<span id="cb5-166"><a href="#cb5-166" tabindex="-1"></a></span>
-<span id="cb5-167"><a href="#cb5-167" tabindex="-1"></a>  status <span class="ot">&lt;-</span> <span class="cf">if</span> (</span>
-<span id="cb5-168"><a href="#cb5-168" tabindex="-1"></a>    fit_status <span class="sc">==</span> <span class="st">&quot;ok&quot;</span> <span class="sc">&amp;&amp;</span></span>
-<span id="cb5-169"><a href="#cb5-169" tabindex="-1"></a>      pred_status <span class="sc">==</span> <span class="st">&quot;ok&quot;</span> <span class="sc">&amp;&amp;</span></span>
-<span id="cb5-170"><a href="#cb5-170" tabindex="-1"></a>      n_finite <span class="sc">==</span> <span class="dv">200</span><span class="dt">L</span></span>
-<span id="cb5-171"><a href="#cb5-171" tabindex="-1"></a>  ) {</span>
-<span id="cb5-172"><a href="#cb5-172" tabindex="-1"></a>    <span class="st">&quot;ok&quot;</span></span>
-<span id="cb5-173"><a href="#cb5-173" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb5-174"><a href="#cb5-174" tabindex="-1"></a>    <span class="fu">paste</span>(fit_status, pred_status, <span class="at">sep =</span> <span class="st">&quot;;&quot;</span>)</span>
-<span id="cb5-175"><a href="#cb5-175" tabindex="-1"></a>  }</span>
-<span id="cb5-176"><a href="#cb5-176" tabindex="-1"></a></span>
-<span id="cb5-177"><a href="#cb5-177" tabindex="-1"></a>  meta <span class="ot">&lt;-</span> control[control<span class="sc">$</span>Scenario <span class="sc">==</span> scenario, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
-<span id="cb5-178"><a href="#cb5-178" tabindex="-1"></a></span>
-<span id="cb5-179"><a href="#cb5-179" tabindex="-1"></a>  result_list[[i]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-180"><a href="#cb5-180" tabindex="-1"></a>    <span class="at">Dataset =</span> <span class="st">&quot;simulated&quot;</span>,</span>
-<span id="cb5-181"><a href="#cb5-181" tabindex="-1"></a>    <span class="at">Scenario =</span> scenario,</span>
-<span id="cb5-182"><a href="#cb5-182" tabindex="-1"></a>    <span class="at">QTL_N =</span> meta<span class="sc">$</span>QTL_N,</span>
-<span id="cb5-183"><a href="#cb5-183" tabindex="-1"></a>    <span class="at">H2_nominal =</span> meta<span class="sc">$</span>H2_nominal,</span>
-<span id="cb5-184"><a href="#cb5-184" tabindex="-1"></a>    <span class="at">Repetition =</span> task<span class="sc">$</span>Repetition,</span>
-<span id="cb5-185"><a href="#cb5-185" tabindex="-1"></a>    <span class="at">Fold =</span> task<span class="sc">$</span>OuterFold,</span>
-<span id="cb5-186"><a href="#cb5-186" tabindex="-1"></a>    <span class="at">SplitID =</span> split_id,</span>
-<span id="cb5-187"><a href="#cb5-187" tabindex="-1"></a>    <span class="at">TaskID =</span> task<span class="sc">$</span>TaskID,</span>
-<span id="cb5-188"><a href="#cb5-188" tabindex="-1"></a>    <span class="at">Model =</span> <span class="st">&quot;GBLUP_ADE&quot;</span>,</span>
-<span id="cb5-189"><a href="#cb5-189" tabindex="-1"></a>    <span class="at">N_train =</span> <span class="fu">length</span>(tr_idx),</span>
-<span id="cb5-190"><a href="#cb5-190" tabindex="-1"></a>    <span class="at">N_test =</span> <span class="fu">length</span>(te_idx),</span>
-<span id="cb5-191"><a href="#cb5-191" tabindex="-1"></a>    <span class="at">N_pred_finite =</span> n_finite,</span>
-<span id="cb5-192"><a href="#cb5-192" tabindex="-1"></a>    <span class="at">Genetic_Correlation =</span> mg[<span class="st">&quot;Genetic_Correlation&quot;</span>],</span>
-<span id="cb5-193"><a href="#cb5-193" tabindex="-1"></a>    <span class="at">Genetic_RMSE =</span> mg[<span class="st">&quot;Genetic_RMSE&quot;</span>],</span>
-<span id="cb5-194"><a href="#cb5-194" tabindex="-1"></a>    <span class="at">Genetic_MAE =</span> mg[<span class="st">&quot;Genetic_MAE&quot;</span>],</span>
-<span id="cb5-195"><a href="#cb5-195" tabindex="-1"></a>    <span class="at">Genetic_Bias =</span> mg[<span class="st">&quot;Genetic_Bias&quot;</span>],</span>
-<span id="cb5-196"><a href="#cb5-196" tabindex="-1"></a>    <span class="at">Genetic_Slope =</span> mg[<span class="st">&quot;Genetic_Slope&quot;</span>],</span>
-<span id="cb5-197"><a href="#cb5-197" tabindex="-1"></a>    <span class="at">Genetic_R2 =</span> mg[<span class="st">&quot;Genetic_R2&quot;</span>],</span>
-<span id="cb5-198"><a href="#cb5-198" tabindex="-1"></a>    <span class="at">GEBV_TrueG_Correlation =</span> <span class="fu">safe_cor</span>(gebv_test, g_test),</span>
-<span id="cb5-199"><a href="#cb5-199" tabindex="-1"></a>    <span class="at">Phenotype_Correlation =</span> mp[<span class="st">&quot;Phenotype_Correlation&quot;</span>],</span>
-<span id="cb5-200"><a href="#cb5-200" tabindex="-1"></a>    <span class="at">Phenotype_RMSE =</span> mp[<span class="st">&quot;Phenotype_RMSE&quot;</span>],</span>
-<span id="cb5-201"><a href="#cb5-201" tabindex="-1"></a>    <span class="at">Phenotype_MAE =</span> mp[<span class="st">&quot;Phenotype_MAE&quot;</span>],</span>
-<span id="cb5-202"><a href="#cb5-202" tabindex="-1"></a>    <span class="at">Phenotype_Bias =</span> mp[<span class="st">&quot;Phenotype_Bias&quot;</span>],</span>
-<span id="cb5-203"><a href="#cb5-203" tabindex="-1"></a>    <span class="at">Phenotype_Slope =</span> mp[<span class="st">&quot;Phenotype_Slope&quot;</span>],</span>
-<span id="cb5-204"><a href="#cb5-204" tabindex="-1"></a>    <span class="at">Phenotype_R2 =</span> mp[<span class="st">&quot;Phenotype_R2&quot;</span>],</span>
-<span id="cb5-205"><a href="#cb5-205" tabindex="-1"></a>    <span class="at">Kernel_build_seconds =</span> kernel_seconds,</span>
-<span id="cb5-206"><a href="#cb5-206" tabindex="-1"></a>    <span class="at">Fit_seconds =</span> fit_seconds,</span>
-<span id="cb5-207"><a href="#cb5-207" tabindex="-1"></a>    <span class="at">Predict_seconds =</span> predict_seconds,</span>
-<span id="cb5-208"><a href="#cb5-208" tabindex="-1"></a>    <span class="at">Status =</span> status,</span>
-<span id="cb5-209"><a href="#cb5-209" tabindex="-1"></a>    <span class="at">Error =</span> error_message,</span>
-<span id="cb5-210"><a href="#cb5-210" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-211"><a href="#cb5-211" tabindex="-1"></a>  )</span>
-<span id="cb5-212"><a href="#cb5-212" tabindex="-1"></a></span>
-<span id="cb5-213"><a href="#cb5-213" tabindex="-1"></a>  prediction_list[[i]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-214"><a href="#cb5-214" tabindex="-1"></a>    <span class="at">Dataset =</span> <span class="st">&quot;simulated&quot;</span>,</span>
-<span id="cb5-215"><a href="#cb5-215" tabindex="-1"></a>    <span class="at">Scenario =</span> scenario,</span>
-<span id="cb5-216"><a href="#cb5-216" tabindex="-1"></a>    <span class="at">QTL_N =</span> meta<span class="sc">$</span>QTL_N,</span>
-<span id="cb5-217"><a href="#cb5-217" tabindex="-1"></a>    <span class="at">H2_nominal =</span> meta<span class="sc">$</span>H2_nominal,</span>
-<span id="cb5-218"><a href="#cb5-218" tabindex="-1"></a>    <span class="at">Repetition =</span> task<span class="sc">$</span>Repetition,</span>
-<span id="cb5-219"><a href="#cb5-219" tabindex="-1"></a>    <span class="at">Fold =</span> task<span class="sc">$</span>OuterFold,</span>
-<span id="cb5-220"><a href="#cb5-220" tabindex="-1"></a>    <span class="at">SplitID =</span> split_id,</span>
-<span id="cb5-221"><a href="#cb5-221" tabindex="-1"></a>    <span class="at">TaskID =</span> task<span class="sc">$</span>TaskID,</span>
-<span id="cb5-222"><a href="#cb5-222" tabindex="-1"></a>    <span class="at">Model =</span> <span class="st">&quot;GBLUP_ADE&quot;</span>,</span>
-<span id="cb5-223"><a href="#cb5-223" tabindex="-1"></a>    <span class="at">ID =</span> ids[te_idx],</span>
-<span id="cb5-224"><a href="#cb5-224" tabindex="-1"></a>    <span class="at">Observed_Phenotype =</span> obs_test,</span>
-<span id="cb5-225"><a href="#cb5-225" tabindex="-1"></a>    <span class="at">True_Genetic_Value =</span> g_test,</span>
-<span id="cb5-226"><a href="#cb5-226" tabindex="-1"></a>    <span class="at">Predicted_Value =</span> pred_test,</span>
-<span id="cb5-227"><a href="#cb5-227" tabindex="-1"></a>    <span class="at">GEBV =</span> gebv_test,</span>
-<span id="cb5-228"><a href="#cb5-228" tabindex="-1"></a>    <span class="at">Additive_Prediction =</span> u_add[te_idx],</span>
-<span id="cb5-229"><a href="#cb5-229" tabindex="-1"></a>    <span class="at">Dominance_Prediction =</span> u_dom[te_idx],</span>
-<span id="cb5-230"><a href="#cb5-230" tabindex="-1"></a>    <span class="at">Epistatic_Prediction =</span> u_epi[te_idx],</span>
-<span id="cb5-231"><a href="#cb5-231" tabindex="-1"></a>    <span class="at">Status =</span> status,</span>
-<span id="cb5-232"><a href="#cb5-232" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-233"><a href="#cb5-233" tabindex="-1"></a>  )</span>
-<span id="cb5-234"><a href="#cb5-234" tabindex="-1"></a></span>
-<span id="cb5-235"><a href="#cb5-235" tabindex="-1"></a>  <span class="fu">cat</span>(</span>
-<span id="cb5-236"><a href="#cb5-236" tabindex="-1"></a>    <span class="fu">sprintf</span>(</span>
-<span id="cb5-237"><a href="#cb5-237" tabindex="-1"></a>      <span class="st">&quot;[%03d/%03d] %s | %s | rG=%.4f | RMSE_G=%.4f | fit=%.2fs</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
-<span id="cb5-238"><a href="#cb5-238" tabindex="-1"></a>      i,</span>
-<span id="cb5-239"><a href="#cb5-239" tabindex="-1"></a>      <span class="fu">nrow</span>(task_table),</span>
-<span id="cb5-240"><a href="#cb5-240" tabindex="-1"></a>      task<span class="sc">$</span>TaskID,</span>
-<span id="cb5-241"><a href="#cb5-241" tabindex="-1"></a>      status,</span>
-<span id="cb5-242"><a href="#cb5-242" tabindex="-1"></a>      result_list[[i]]<span class="sc">$</span>Genetic_Correlation,</span>
-<span id="cb5-243"><a href="#cb5-243" tabindex="-1"></a>      result_list[[i]]<span class="sc">$</span>Genetic_RMSE,</span>
-<span id="cb5-244"><a href="#cb5-244" tabindex="-1"></a>      fit_seconds</span>
-<span id="cb5-245"><a href="#cb5-245" tabindex="-1"></a>    )</span>
-<span id="cb5-246"><a href="#cb5-246" tabindex="-1"></a>  )</span>
-<span id="cb5-247"><a href="#cb5-247" tabindex="-1"></a>}</span>
-<span id="cb5-248"><a href="#cb5-248" tabindex="-1"></a></span>
-<span id="cb5-249"><a href="#cb5-249" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, result_list)</span>
-<span id="cb5-250"><a href="#cb5-250" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, prediction_list)</span>
-<span id="cb5-251"><a href="#cb5-251" tabindex="-1"></a></span>
-<span id="cb5-252"><a href="#cb5-252" tabindex="-1"></a><span class="fu">rownames</span>(results) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb5-253"><a href="#cb5-253" tabindex="-1"></a><span class="fu">rownames</span>(predictions) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb5-254"><a href="#cb5-254" tabindex="-1"></a></span>
-<span id="cb5-255"><a href="#cb5-255" tabindex="-1"></a>run_seconds <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span> run_start</span>
-<span id="cb5-256"><a href="#cb5-256" tabindex="-1"></a></span>
-<span id="cb5-257"><a href="#cb5-257" tabindex="-1"></a>run_metadata <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb5-258"><a href="#cb5-258" tabindex="-1"></a>  <span class="at">dataset =</span> <span class="st">&quot;simulated&quot;</span>,</span>
-<span id="cb5-259"><a href="#cb5-259" tabindex="-1"></a>  <span class="at">model =</span> <span class="st">&quot;GBLUP_ADE&quot;</span>,</span>
-<span id="cb5-260"><a href="#cb5-260" tabindex="-1"></a>  <span class="at">seed_global =</span> SEED_GLOBAL,</span>
-<span id="cb5-261"><a href="#cb5-261" tabindex="-1"></a>  <span class="at">sommer_version =</span> <span class="fu">as.character</span>(<span class="fu">packageVersion</span>(<span class="st">&quot;sommer&quot;</span>)),</span>
-<span id="cb5-262"><a href="#cb5-262" tabindex="-1"></a>  <span class="at">nIters_sommer =</span> N_ITERS_SOMMER,</span>
-<span id="cb5-263"><a href="#cb5-263" tabindex="-1"></a>  <span class="at">tasks =</span> <span class="fu">nrow</span>(results),</span>
-<span id="cb5-264"><a href="#cb5-264" tabindex="-1"></a>  <span class="at">prediction_rows =</span> <span class="fu">nrow</span>(predictions),</span>
-<span id="cb5-265"><a href="#cb5-265" tabindex="-1"></a>  <span class="at">kernel_build_seconds =</span> kernel_seconds,</span>
-<span id="cb5-266"><a href="#cb5-266" tabindex="-1"></a>  <span class="at">total_run_seconds =</span> run_seconds,</span>
-<span id="cb5-267"><a href="#cb5-267" tabindex="-1"></a>  <span class="at">timestamp =</span> <span class="fu">as.character</span>(<span class="fu">Sys.time</span>())</span>
-<span id="cb5-268"><a href="#cb5-268" tabindex="-1"></a>)</span>
-<span id="cb5-269"><a href="#cb5-269" tabindex="-1"></a></span>
-<span id="cb5-270"><a href="#cb5-270" tabindex="-1"></a><span class="fu">saveRDS</span>(results, RESULTS_RDS, <span class="at">compress =</span> <span class="st">&quot;gzip&quot;</span>)</span>
-<span id="cb5-271"><a href="#cb5-271" tabindex="-1"></a><span class="fu">saveRDS</span>(predictions, PREDICTIONS_RDS, <span class="at">compress =</span> <span class="st">&quot;gzip&quot;</span>)</span>
-<span id="cb5-272"><a href="#cb5-272" tabindex="-1"></a><span class="fu">write.csv</span>(results, RESULTS_CSV, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb5-273"><a href="#cb5-273" tabindex="-1"></a><span class="fu">write.csv</span>(predictions, PREDICTIONS_CSV, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb5-274"><a href="#cb5-274" tabindex="-1"></a><span class="fu">saveRDS</span>(run_metadata, RUN_RDS, <span class="at">compress =</span> <span class="st">&quot;gzip&quot;</span>)</span>
-<span id="cb5-275"><a href="#cb5-275" tabindex="-1"></a></span>
-<span id="cb5-276"><a href="#cb5-276" tabindex="-1"></a><span class="fu">cat</span>(</span>
-<span id="cb5-277"><a href="#cb5-277" tabindex="-1"></a>  <span class="st">&quot;</span><span class="sc">\n</span><span class="st">GBLUP-ADE completed:&quot;</span>,</span>
-<span id="cb5-278"><a href="#cb5-278" tabindex="-1"></a>  <span class="fu">nrow</span>(results), <span class="st">&quot;tasks;&quot;</span>,</span>
-<span id="cb5-279"><a href="#cb5-279" tabindex="-1"></a>  <span class="fu">nrow</span>(predictions), <span class="st">&quot;held-out predictions;&quot;</span>,</span>
-<span id="cb5-280"><a href="#cb5-280" tabindex="-1"></a>  <span class="fu">round</span>(run_seconds, <span class="dv">2</span>), <span class="st">&quot;seconds.</span><span class="sc">\n</span><span class="st">&quot;</span></span>
-<span id="cb5-281"><a href="#cb5-281" tabindex="-1"></a>)</span></code></pre></div>
+<div id="one-representative-fit" class="section level2">
+<h2>One representative fit</h2>
+<p>The essential model call for one scenario and one outer split is:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>fit <span class="ot">&lt;-</span> sommer<span class="sc">::</span><span class="fu">mmes</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  y <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">random =</span> <span class="sc">~</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>    <span class="fu">vsm</span>(<span class="fu">ism</span>(id),  <span class="at">Gu =</span> A_matrix) <span class="sc">+</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>    <span class="fu">vsm</span>(<span class="fu">ism</span>(idd), <span class="at">Gu =</span> D_matrix) <span class="sc">+</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    <span class="fu">vsm</span>(<span class="fu">ism</span>(ide), <span class="at">Gu =</span> E_matrix),</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">rcov =</span> <span class="sc">~</span> units,</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">nIters =</span> <span class="dv">20</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">data =</span> dat,</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>)</span></code></pre></div>
+<p>Here <code>dat$y</code> contains phenotype values for the analysis
+individuals and <code>NA</code> for the 200 outer-assessment
+individuals. The matrices <code>A_matrix</code>, <code>D_matrix</code>,
+and <code>E_matrix</code> are shared across tasks; only the scenario and
+frozen assessment set change.</p>
+<p>The production loop repeats this same fitting logic over all 150
+tasks, records the held-out predictions, and writes the canonical result
+files. That execution machinery is retained internally rather than
+displayed as tutorial code.</p>
+</div>
 </div>
 <div id="kernel-diagnostics" class="section level1">
 <h1>Kernel diagnostics</h1>
@@ -1528,11 +1337,11 @@ relationship matrices is checked before saved predictions are
 interpreted. The detailed kernel table is retained as an output
 artifact; the reader-facing page reports the scientifically relevant
 structural summary.</p>
-<p>The canonical diagnostics contain three 1,000 x 1,000 relationship
-matrices. All three are finite and symmetric, and their mean diagonal
-values are close to one. These checks support the numerical integrity of
-the additive, dominance, and epistatic covariance structures before
-interpreting predictions.</p>
+<p>The saved diagnostics contain three <strong>1,000 × 1,000</strong>
+genomic relationship matrices. All three are finite and symmetric, with
+mean diagonal values close to one. This confirms that the additive,
+dominance, and epistatic covariance structures are numerically suitable
+for interpreting the fitted predictions.</p>
 </div>
 <div id="saved-result-integrity" class="section level1">
 <h1>Saved-result integrity</h1>
@@ -1552,85 +1361,182 @@ interpreted.</p>
 <p>The primary metrics compare the held-out final prediction (intercept
 + additive + dominance + epistatic components) with the known true
 genetic value. Phenotype metrics are secondary.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="cf">if</span> (results_available) {</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  ok_results <span class="ot">&lt;-</span> results[results<span class="sc">$</span>Status <span class="sc">==</span> <span class="st">&quot;ok&quot;</span>, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(ok_results) <span class="sc">==</span> <span class="dv">0</span><span class="dt">L</span>) {</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>    <span class="fu">cat</span>(</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>      <span class="st">&quot;No successful GBLUP-ADE tasks are available for performance aggregation.</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>      <span class="st">&quot;Inspect the saved-result audit and Error column before rerunning.</span><span class="sc">\n</span><span class="st">&quot;</span></span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>    )</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  scenario_performance <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>    <span class="fu">cbind</span>(</span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>      Genetic_Correlation,</span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>      Genetic_RMSE,</span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>      Genetic_MAE,</span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>      Genetic_Bias,</span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>      Genetic_Slope,</span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>      Genetic_R2,</span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>      Phenotype_Correlation,</span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>      Phenotype_RMSE,</span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>      Phenotype_MAE,</span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>      Phenotype_Bias,</span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>      Phenotype_Slope,</span>
-<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>      Phenotype_R2</span>
-<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>    ) <span class="sc">~</span> Scenario <span class="sc">+</span> QTL_N <span class="sc">+</span> H2_nominal,</span>
-<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>    <span class="at">data =</span> ok_results,</span>
-<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>    <span class="at">FUN =</span> mean,</span>
-<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>    <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>  )</span>
-<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a></span>
-<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>  scenario_performance <span class="ot">&lt;-</span> scenario_performance[</span>
-<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>    <span class="fu">order</span>(<span class="fu">match</span>(scenario_performance<span class="sc">$</span>Scenario, scenario_names)),</span>
-<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>  ]</span>
-<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a></span>
-<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>  genetic_performance_display <span class="ot">&lt;-</span> scenario_performance[</span>
-<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>    ,</span>
-<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>    <span class="fu">c</span>(</span>
-<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>      <span class="st">&quot;Scenario&quot;</span>,</span>
-<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>      <span class="st">&quot;QTL_N&quot;</span>,</span>
-<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a>      <span class="st">&quot;H2_nominal&quot;</span>,</span>
-<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>      <span class="st">&quot;Genetic_Correlation&quot;</span>,</span>
-<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>      <span class="st">&quot;Genetic_RMSE&quot;</span>,</span>
-<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>      <span class="st">&quot;Genetic_MAE&quot;</span>,</span>
-<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a>      <span class="st">&quot;Genetic_Bias&quot;</span>,</span>
-<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>      <span class="st">&quot;Genetic_Slope&quot;</span>,</span>
-<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a>      <span class="st">&quot;Genetic_R2&quot;</span></span>
-<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a>    )</span>
-<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>  ]</span>
-<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a></span>
-<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>  phenotype_performance_display <span class="ot">&lt;-</span> scenario_performance[</span>
-<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a>    ,</span>
-<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a>    <span class="fu">c</span>(</span>
-<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a>      <span class="st">&quot;Scenario&quot;</span>,</span>
-<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a>      <span class="st">&quot;QTL_N&quot;</span>,</span>
-<span id="cb6-55"><a href="#cb6-55" tabindex="-1"></a>      <span class="st">&quot;H2_nominal&quot;</span>,</span>
-<span id="cb6-56"><a href="#cb6-56" tabindex="-1"></a>      <span class="st">&quot;Phenotype_Correlation&quot;</span>,</span>
-<span id="cb6-57"><a href="#cb6-57" tabindex="-1"></a>      <span class="st">&quot;Phenotype_RMSE&quot;</span>,</span>
-<span id="cb6-58"><a href="#cb6-58" tabindex="-1"></a>      <span class="st">&quot;Phenotype_MAE&quot;</span>,</span>
-<span id="cb6-59"><a href="#cb6-59" tabindex="-1"></a>      <span class="st">&quot;Phenotype_Bias&quot;</span>,</span>
-<span id="cb6-60"><a href="#cb6-60" tabindex="-1"></a>      <span class="st">&quot;Phenotype_Slope&quot;</span>,</span>
-<span id="cb6-61"><a href="#cb6-61" tabindex="-1"></a>      <span class="st">&quot;Phenotype_R2&quot;</span></span>
-<span id="cb6-62"><a href="#cb6-62" tabindex="-1"></a>    )</span>
-<span id="cb6-63"><a href="#cb6-63" tabindex="-1"></a>  ]</span>
-<span id="cb6-64"><a href="#cb6-64" tabindex="-1"></a></span>
-<span id="cb6-65"><a href="#cb6-65" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb6-66"><a href="#cb6-66" tabindex="-1"></a>    genetic_performance_display,</span>
-<span id="cb6-67"><a href="#cb6-67" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
-<span id="cb6-68"><a href="#cb6-68" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Primary evaluation: true genetic-value prediction across the 25 outer splits&quot;</span>,</span>
-<span id="cb6-69"><a href="#cb6-69" tabindex="-1"></a>    <span class="at">table.attr =</span> WIDE_TABLE_ATTR</span>
-<span id="cb6-70"><a href="#cb6-70" tabindex="-1"></a>  )</span>
-<span id="cb6-71"><a href="#cb6-71" tabindex="-1"></a></span>
-<span id="cb6-72"><a href="#cb6-72" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb6-73"><a href="#cb6-73" tabindex="-1"></a>    phenotype_performance_display,</span>
-<span id="cb6-74"><a href="#cb6-74" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
-<span id="cb6-75"><a href="#cb6-75" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Secondary evaluation: phenotype prediction across the 25 outer splits&quot;</span>,</span>
-<span id="cb6-76"><a href="#cb6-76" tabindex="-1"></a>    <span class="at">table.attr =</span> WIDE_TABLE_ATTR</span>
-<span id="cb6-77"><a href="#cb6-77" tabindex="-1"></a>  )</span>
-<span id="cb6-78"><a href="#cb6-78" tabindex="-1"></a>  }</span>
-<span id="cb6-79"><a href="#cb6-79" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>ok_results <span class="ot">&lt;-</span> results[</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  results<span class="sc">$</span>Status <span class="sc">==</span> <span class="st">&quot;ok&quot;</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  ,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>]</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  scenario_performance <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>    <span class="fu">cbind</span>(</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>      Genetic_Correlation,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>      Genetic_RMSE,</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>      Genetic_MAE,</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>      Genetic_Bias,</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>      Genetic_Slope,</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>      Genetic_R2,</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>      Phenotype_Correlation,</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>      Phenotype_RMSE,</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>      Phenotype_MAE,</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>      Phenotype_Bias,</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>      Phenotype_Slope,</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>      Phenotype_R2</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>    ) <span class="sc">~</span> Scenario <span class="sc">+</span> QTL_N <span class="sc">+</span> H2_nominal,</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>    <span class="at">data =</span> ok_results,</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>    <span class="at">FUN =</span> mean,</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>    <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>  )</span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>  scenario_performance <span class="ot">&lt;-</span> scenario_performance[</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>    <span class="fu">order</span>(<span class="fu">match</span>(scenario_performance<span class="sc">$</span>Scenario, scenario_names)),</span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>  ]</span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>  genetic_performance_display <span class="ot">&lt;-</span> scenario_performance[</span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>    ,</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>      <span class="st">&quot;Scenario&quot;</span>,</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>      <span class="st">&quot;QTL_N&quot;</span>,</span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>      <span class="st">&quot;H2_nominal&quot;</span>,</span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>      <span class="st">&quot;Genetic_Correlation&quot;</span>,</span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a>      <span class="st">&quot;Genetic_RMSE&quot;</span>,</span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a>      <span class="st">&quot;Genetic_MAE&quot;</span>,</span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a>      <span class="st">&quot;Genetic_Bias&quot;</span>,</span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>      <span class="st">&quot;Genetic_Slope&quot;</span>,</span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a>      <span class="st">&quot;Genetic_R2&quot;</span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a>    )</span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>  ]</span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a>  phenotype_performance_display <span class="ot">&lt;-</span> scenario_performance[</span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a>    ,</span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a>      <span class="st">&quot;Scenario&quot;</span>,</span>
+<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a>      <span class="st">&quot;QTL_N&quot;</span>,</span>
+<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a>      <span class="st">&quot;H2_nominal&quot;</span>,</span>
+<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a>      <span class="st">&quot;Phenotype_Correlation&quot;</span>,</span>
+<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a>      <span class="st">&quot;Phenotype_RMSE&quot;</span>,</span>
+<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a>      <span class="st">&quot;Phenotype_MAE&quot;</span>,</span>
+<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a>      <span class="st">&quot;Phenotype_Bias&quot;</span>,</span>
+<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a>      <span class="st">&quot;Phenotype_Slope&quot;</span>,</span>
+<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a>      <span class="st">&quot;Phenotype_R2&quot;</span></span>
+<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a>    )</span>
+<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a>  ]</span>
+<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a>    genetic_performance_display,</span>
+<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Primary evaluation: true genetic-value prediction across the 25 outer splits&quot;</span>,</span>
+<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a>    <span class="at">table.attr =</span> WIDE_TABLE_ATTR</span>
+<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a>  )</span></code></pre></div>
+<table>
+<caption>Primary evaluation: true genetic-value prediction across the 25
+outer splits</caption>
+<colgroup>
+<col width="2%" />
+<col width="8%" />
+<col width="5%" />
+<col width="9%" />
+<col width="17%" />
+<col width="11%" />
+<col width="10%" />
+<col width="11%" />
+<col width="12%" />
+<col width="9%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Scenario</th>
+<th align="right">QTL_N</th>
+<th align="right">H2_nominal</th>
+<th align="right">Genetic_Correlation</th>
+<th align="right">Genetic_RMSE</th>
+<th align="right">Genetic_MAE</th>
+<th align="right">Genetic_Bias</th>
+<th align="right">Genetic_Slope</th>
+<th align="right">Genetic_R2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">C1</td>
+<td align="right">8</td>
+<td align="right">0.7</td>
+<td align="right">0.7324</td>
+<td align="right">1.3262</td>
+<td align="right">1.0777</td>
+<td align="right">-0.0035</td>
+<td align="right">1.0099</td>
+<td align="right">0.5312</td>
+</tr>
+<tr class="even">
+<td align="left">6</td>
+<td align="left">C2</td>
+<td align="right">40</td>
+<td align="right">0.7</td>
+<td align="right">0.7704</td>
+<td align="right">0.6096</td>
+<td align="right">0.4886</td>
+<td align="right">0.0100</td>
+<td align="right">1.0151</td>
+<td align="right">0.5866</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">C3</td>
+<td align="right">80</td>
+<td align="right">0.5</td>
+<td align="right">0.8126</td>
+<td align="right">0.4070</td>
+<td align="right">0.3234</td>
+<td align="right">0.0020</td>
+<td align="right">1.0148</td>
+<td align="right">0.6543</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">C4</td>
+<td align="right">120</td>
+<td align="right">0.5</td>
+<td align="right">0.8594</td>
+<td align="right">0.3020</td>
+<td align="right">0.2402</td>
+<td align="right">0.0037</td>
+<td align="right">0.9936</td>
+<td align="right">0.7324</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">C5</td>
+<td align="right">240</td>
+<td align="right">0.3</td>
+<td align="right">0.8681</td>
+<td align="right">0.2346</td>
+<td align="right">0.1905</td>
+<td align="right">0.0028</td>
+<td align="right">1.0213</td>
+<td align="right">0.7477</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">C6</td>
+<td align="right">480</td>
+<td align="right">0.3</td>
+<td align="right">0.9141</td>
+<td align="right">0.1684</td>
+<td align="right">0.1359</td>
+<td align="right">-0.0008</td>
+<td align="right">1.0626</td>
+<td align="right">0.8292</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    phenotype_performance_display,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Secondary evaluation: phenotype prediction across the 25 outer splits&quot;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="at">table.attr =</span> WIDE_TABLE_ATTR</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  )</span></code></pre></div>
 <table>
 <caption>Secondary evaluation: phenotype prediction across the 25 outer
 splits</caption>
@@ -1748,40 +1654,38 @@ isolated causal effect of either factor.</p>
 out. The next summary therefore describes the distribution of primary
 genetic-value performance across the 25 frozen outer splits within each
 scenario.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="cf">if</span> (results_available <span class="sc">&amp;&amp;</span> <span class="fu">exists</span>(<span class="st">&quot;ok_results&quot;</span>) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(ok_results) <span class="sc">&gt;</span> <span class="dv">0</span><span class="dt">L</span>) {</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  split_summary <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>    rbind,</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>    <span class="fu">lapply</span>(</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>      <span class="fu">split</span>(ok_results, ok_results<span class="sc">$</span>Scenario),</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>      <span class="cf">function</span>(x) {</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>        <span class="fu">data.frame</span>(</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>          <span class="at">Scenario =</span> <span class="fu">unique</span>(x<span class="sc">$</span>Scenario),</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>          <span class="at">N =</span> <span class="fu">nrow</span>(x),</span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>          <span class="at">Cor_mean =</span> <span class="fu">mean</span>(x<span class="sc">$</span>Genetic_Correlation, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>          <span class="at">Cor_sd =</span> <span class="fu">sd</span>(x<span class="sc">$</span>Genetic_Correlation, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>          <span class="at">Cor_min =</span> <span class="fu">min</span>(x<span class="sc">$</span>Genetic_Correlation, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>          <span class="at">Cor_max =</span> <span class="fu">max</span>(x<span class="sc">$</span>Genetic_Correlation, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>          <span class="at">RMSE_mean =</span> <span class="fu">mean</span>(x<span class="sc">$</span>Genetic_RMSE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>          <span class="at">RMSE_sd =</span> <span class="fu">sd</span>(x<span class="sc">$</span>Genetic_RMSE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>          <span class="at">MAE_mean =</span> <span class="fu">mean</span>(x<span class="sc">$</span>Genetic_MAE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>          <span class="at">R2_mean =</span> <span class="fu">mean</span>(x<span class="sc">$</span>Genetic_R2, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>        )</span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>      }</span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>    )</span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  )</span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  <span class="fu">rownames</span>(split_summary) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>  split_summary <span class="ot">&lt;-</span> split_summary[</span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>    <span class="fu">order</span>(<span class="fu">match</span>(split_summary<span class="sc">$</span>Scenario, scenario_names)),</span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>  ]</span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>    split_summary,</span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Genetic-value prediction variability across outer splits&quot;</span>,</span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>    <span class="at">table.attr =</span> WIDE_TABLE_ATTR</span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>  )</span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>  split_summary <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>    rbind,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>    <span class="fu">lapply</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>      <span class="fu">split</span>(ok_results, ok_results<span class="sc">$</span>Scenario),</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>      <span class="cf">function</span>(x) {</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>        <span class="fu">data.frame</span>(</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>          <span class="at">Scenario =</span> <span class="fu">unique</span>(x<span class="sc">$</span>Scenario),</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>          <span class="at">N =</span> <span class="fu">nrow</span>(x),</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>          <span class="at">Cor_mean =</span> <span class="fu">mean</span>(x<span class="sc">$</span>Genetic_Correlation, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>          <span class="at">Cor_sd =</span> <span class="fu">sd</span>(x<span class="sc">$</span>Genetic_Correlation, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>          <span class="at">Cor_min =</span> <span class="fu">min</span>(x<span class="sc">$</span>Genetic_Correlation, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>          <span class="at">Cor_max =</span> <span class="fu">max</span>(x<span class="sc">$</span>Genetic_Correlation, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>          <span class="at">RMSE_mean =</span> <span class="fu">mean</span>(x<span class="sc">$</span>Genetic_RMSE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>          <span class="at">RMSE_sd =</span> <span class="fu">sd</span>(x<span class="sc">$</span>Genetic_RMSE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>          <span class="at">MAE_mean =</span> <span class="fu">mean</span>(x<span class="sc">$</span>Genetic_MAE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>          <span class="at">R2_mean =</span> <span class="fu">mean</span>(x<span class="sc">$</span>Genetic_R2, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>        )</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>      }</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>    )</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>  )</span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>  <span class="fu">rownames</span>(split_summary) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>  split_summary <span class="ot">&lt;-</span> split_summary[</span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>    <span class="fu">order</span>(<span class="fu">match</span>(split_summary<span class="sc">$</span>Scenario, scenario_names)),</span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>  ]</span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>    split_summary,</span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Genetic-value prediction variability across outer splits&quot;</span>,</span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a>    <span class="at">table.attr =</span> WIDE_TABLE_ATTR</span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a>  )</span></code></pre></div>
 <table style="width:100%;">
 <caption>Genetic-value prediction variability across outer
 splits</caption>
@@ -1898,28 +1802,74 @@ partition from determining the conclusion.</p>
 relationship matrices from repeated model fitting and prediction across
 the 150 tasks. This distinction prevents kernel construction from being
 interpreted as a cost paid independently for every split.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="cf">if</span> (results_available) {</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  time_summary <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>    <span class="fu">cbind</span>(Fit_seconds, Predict_seconds) <span class="sc">~</span> Scenario,</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    <span class="at">data =</span> results,</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="at">FUN =</span> mean,</span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  )</span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a></span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  time_summary<span class="sc">$</span>Kernel_build_seconds <span class="ot">&lt;-</span> run_metadata<span class="sc">$</span>kernel_build_seconds</span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>    time_summary,</span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">3</span>,</span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;GBLUP-ADE computational time&quot;</span></span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>  )</span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a></span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>  <span class="fu">cat</span>(</span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    <span class="st">&quot;Total run time:&quot;</span>,</span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>    <span class="fu">round</span>(run_metadata<span class="sc">$</span>total_run_seconds, <span class="dv">2</span>),</span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>    <span class="st">&quot;seconds.</span><span class="sc">\n</span><span class="st">&quot;</span></span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>  )</span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>  time_summary <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>    <span class="fu">cbind</span>(Fit_seconds, Predict_seconds) <span class="sc">~</span> Scenario,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>    <span class="at">data =</span> results,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>    <span class="at">FUN =</span> mean,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>    <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  )</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  time_summary<span class="sc">$</span>Kernel_build_seconds <span class="ot">&lt;-</span> run_metadata<span class="sc">$</span>kernel_build_seconds</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>    time_summary,</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;GBLUP-ADE computational time&quot;</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>  )</span></code></pre></div>
+<table>
+<caption>GBLUP-ADE computational time</caption>
+<thead>
+<tr class="header">
+<th align="left">Scenario</th>
+<th align="right">Fit_seconds</th>
+<th align="right">Predict_seconds</th>
+<th align="right">Kernel_build_seconds</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">C1</td>
+<td align="right">11.420</td>
+<td align="right">0.042</td>
+<td align="right">5.17</td>
+</tr>
+<tr class="even">
+<td align="left">C2</td>
+<td align="right">14.399</td>
+<td align="right">0.052</td>
+<td align="right">5.17</td>
+</tr>
+<tr class="odd">
+<td align="left">C3</td>
+<td align="right">12.654</td>
+<td align="right">0.054</td>
+<td align="right">5.17</td>
+</tr>
+<tr class="even">
+<td align="left">C4</td>
+<td align="right">11.732</td>
+<td align="right">0.040</td>
+<td align="right">5.17</td>
+</tr>
+<tr class="odd">
+<td align="left">C5</td>
+<td align="right">10.034</td>
+<td align="right">0.036</td>
+<td align="right">5.17</td>
+</tr>
+<tr class="even">
+<td align="left">C6</td>
+<td align="right">10.938</td>
+<td align="right">0.028</td>
+<td align="right">5.17</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>  <span class="fu">cat</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>    <span class="st">&quot;Total run time:&quot;</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>    <span class="fu">round</span>(run_metadata<span class="sc">$</span>total_run_seconds, <span class="dv">2</span>),</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>    <span class="st">&quot;seconds.</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  )</span></code></pre></div>
 <pre><code>Total run time: 1791.75 seconds.</code></pre>
 <p>Because the A, D, and E matrices are built once and reused across all
 150 tasks, their construction time is reported separately from the mean
@@ -1934,7 +1884,7 @@ Model comparison</a></p>
 </div>
 <div id="reproducibility-information" class="section level1">
 <h1>Reproducibility information</h1>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
@@ -1975,7 +1925,7 @@ Session information
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)

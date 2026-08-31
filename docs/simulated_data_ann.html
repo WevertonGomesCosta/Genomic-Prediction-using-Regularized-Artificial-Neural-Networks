@@ -500,7 +500,7 @@ simulated genomic data</h1>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-ok text-success"
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -511,8 +511,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
-</a>
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -525,9 +525,9 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 0
+aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -551,18 +551,21 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
-</a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate"
+<div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git
-repository, you know the exact version of the code that produced these
-results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
 </div>
 </div>
 </div>
@@ -653,15 +656,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree1e0bc61230a788505727cc33c93674342efe341btargetblank1e0bc61a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed7fbd45cfd29e97daf48ef249391c6855f745877targetblankd7fbd45a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/1e0bc61230a788505727cc33c93674342efe341b" target="_blank">1e0bc61</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d7fbd45cfd29e97daf48ef249391c6855f745877" target="_blank">d7fbd45</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree1e0bc61230a788505727cc33c93674342efe341btargetblank1e0bc61a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed7fbd45cfd29e97daf48ef249391c6855f745877targetblankd7fbd45a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -671,7 +674,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/1e0bc61230a788505727cc33c93674342efe341b" target="_blank">1e0bc61</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d7fbd45cfd29e97daf48ef249391c6855f745877" target="_blank">d7fbd45</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -708,6 +711,10 @@ Ignored files:
     Ignored:    data/dados_reais/plants-13-01876-v2.pdf
     Ignored:    data/dados_reais/pos_geno_real.rds
     Ignored:    renv/library/
+
+Unstaged changes:
+    Modified:   analysis/simulated_data_ann.Rmd
+    Modified:   analysis/simulated_data_gblup.Rmd
 
 </code></pre>
 <p>
@@ -752,6 +759,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/f22824530501b1140fec85d691454e74d903d8c9/docs/simulated_data_ann.html" target="_blank">f228245</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-08-31
+</td>
+<td>
+Publish reader-focused simulated workflow
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1061,70 +1085,95 @@ differ only in L1/L2 weight penalties.</p>
 </div>
 <div id="tuning-contract" class="section level1">
 <h1>Tuning contract</h1>
-<p>Only four quantities are treated as hyperparameters:</p>
-<ol style="list-style-type: decimal">
-<li>hidden-layer architecture;</li>
-<li>Adam learning rate;</li>
-<li>L1 penalty coefficient;</li>
-<li>L2 penalty coefficient.</li>
-</ol>
-<p>The following are <strong>fixed optimization controls</strong>, not
-tuned quantities:</p>
-<ul>
-<li>activation: ReLU;</li>
-<li>optimizer: Adam;</li>
-<li>dropout: 0;</li>
-<li>maximum epochs available to an early-stopped fit: 2000;</li>
-<li>patience: 25;</li>
-<li>minimum validation improvement: <span
-class="math inline">\(10^{-6}\)</span>;</li>
-<li>early-validation fraction: 0.15.</li>
-</ul>
-<div id="optimization-concepts-used-in-this-workflow"
-class="section level2">
-<h2>Optimization concepts used in this workflow</h2>
-<p>These controls describe <strong>how each candidate network is
-optimized</strong>; they are distinct from the scientific comparison
-among ANN variants.</p>
-<ul>
-<li><strong>Adam</strong> is the gradient-based optimizer used to update
-the network weights. It adapts the magnitude of parameter updates from
-the recent history of the gradients. In this workflow Adam is fixed as
-the optimizer; it is not compared with alternative optimization
-algorithms.</li>
-<li>The <strong>learning rate</strong> controls the size of the
-optimization steps taken by Adam. It is a tuned quantity and is selected
-together with network architecture using <code>ANN_0</code> within each
-outer task.</li>
-<li>An <strong>epoch</strong> is one complete pass through the fitting
-observations used in a particular network fit. The number of epochs
-completed is therefore an optimization quantity, not a new
-cross-validation replicate.</li>
-<li><strong>Early stopping</strong> monitors loss on the separate
-early-validation subset during optimization and stops training when
-additional epochs no longer produce sufficient improvement. The frozen
-inner-assessment and outer- assessment observations are not used for
-this stopping decision.</li>
-<li><strong>Patience = 25</strong> means that optimization stops after
-25 consecutive epochs without a qualifying improvement in
-early-validation loss.</li>
-<li><strong>Minimum improvement (<code>min_delta</code>) = <span
-class="math inline">\(10^{-6}\)</span></strong> defines the decrease in
-early-validation loss required to count as an improvement and reset the
-patience counter. Changes smaller than this threshold do not reset
-patience.</li>
-</ul>
-<p>Thus, early stopping determines how long an individual optimization
-run is allowed to continue, whereas nested cross-validation determines
-which prespecified architecture, learning rate, and penalty
-configuration is selected.</p>
-<p>The 2000-epoch value is a <strong>convergence ceiling</strong>, not a
-fixed final training length. Epoch diagnostics are excluded from
-hyperparameter ranking. After hyperparameters are selected, a separate
-early-stopping fit uses only the outer-analysis sample to select
-<code>Best_epoch</code>; the final network is then reinitialized and
-refit on all 800 outer-analysis individuals for exactly
-<code>Best_epoch</code>.</p>
+<p>The four ANN variants use the same multilayer perceptron. They differ
+only in the L1 and L2 coefficients applied to the network weights.</p>
+<div id="tuned-hyperparameters" class="section level2">
+<h2>Tuned hyperparameters</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Hyperparameter</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Architecture</td>
+<td>number of hidden units/layers</td>
+</tr>
+<tr class="even">
+<td>Learning rate</td>
+<td>Adam step size</td>
+</tr>
+<tr class="odd">
+<td>L1 coefficient</td>
+<td>strength of absolute-weight penalty</td>
+</tr>
+<tr class="even">
+<td>L2 coefficient</td>
+<td>strength of squared-weight penalty</td>
+</tr>
+</tbody>
+</table>
+<p>Architecture and learning rate are selected once per outer task with
+<code>ANN_0</code> and then shared by all four ANN variants. The
+regularized variants subsequently select only their penalty
+coefficient(s).</p>
+</div>
+<div id="fixed-optimization-controls" class="section level2">
+<h2>Fixed optimization controls</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Control</th>
+<th align="right">Canonical value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Activation</td>
+<td align="right">ReLU</td>
+</tr>
+<tr class="even">
+<td>Optimizer</td>
+<td align="right">Adam</td>
+</tr>
+<tr class="odd">
+<td>Dropout</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td>Maximum tuning epochs</td>
+<td align="right">2000</td>
+</tr>
+<tr class="odd">
+<td>Patience</td>
+<td align="right">25</td>
+</tr>
+<tr class="even">
+<td>Minimum improvement (<code>min_delta</code>)</td>
+<td align="right"><span class="math inline">\(10^{-6}\)</span></td>
+</tr>
+<tr class="odd">
+<td>Early-validation fraction</td>
+<td align="right">0.15</td>
+</tr>
+</tbody>
+</table>
+<p>These values control <strong>how</strong> a candidate is optimized;
+they are not additional hyperparameters in the scientific
+comparison.</p>
+</div>
+<div id="early-stopping" class="section level2">
+<h2>Early stopping</h2>
+<p>An epoch is one complete pass through the current fitting
+observations. Early stopping monitors loss on a separate
+early-validation subset drawn only from the current analysis sample.
+Training stops after 25 consecutive epochs without an improvement of at
+least <span class="math inline">\(10^{-6}\)</span>.</p>
+<p>The 2000-epoch value is therefore a convergence ceiling, not a fixed
+training length. Epoch diagnostics are excluded from candidate
+ranking.</p>
 </div>
 </div>
 <div id="architecture-range" class="section level1">
@@ -1300,17 +1349,50 @@ influencing the preprocessing parameters used to fit the network.</p>
 </div>
 <div id="shared-ann-implementation" class="section level1">
 <h1>Shared ANN implementation</h1>
-<p>For standardized marker vector <span
-class="math inline">\(\mathbf{x}\)</span>, hidden layers apply affine
-transformations followed by ReLU activation,</p>
+<div id="network-objects" class="section level2">
+<h2>Network objects</h2>
+<p>For a standardized marker vector <span
+class="math inline">\(\mathbf{x}\)</span>, each hidden layer applies a
+linear transformation followed by ReLU activation:</p>
 <p><span class="math display">\[
-\mathbf{h}^{(0)}=\mathbf{x}, \qquad
-\mathbf{h}^{(\ell)}=\operatorname{ReLU}(\mathbf{W}_{\ell}\mathbf{h}^{(\ell-1)}+\mathbf{b}_{\ell}),
+\mathbf{h}^{(\ell)} =
+\operatorname{ReLU}
+(\mathbf{W}_{\ell}\mathbf{h}^{(\ell-1)}+\mathbf{b}_{\ell}).
 \]</span></p>
-<p>with a linear output layer</p>
-<p><span class="math display">\[
-\hat{y}=\mathbf{w}_{o}^{\mathsf{T}}\mathbf{h}^{(L)}+b_o.
-\]</span></p>
+<table>
+<thead>
+<tr class="header">
+<th>Symbol</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{x}\)</span></td>
+<td>standardized marker vector</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{W}\)</span></td>
+<td>layer weights</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{b}\)</span></td>
+<td>layer biases</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{h}\)</span></td>
+<td>hidden-layer activations</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\hat{y}\)</span></td>
+<td>network prediction</td>
+</tr>
+</tbody>
+</table>
+<p>The output layer is linear because the response is continuous.</p>
+</div>
+<div id="loss-and-regularization" class="section level2">
+<h2>Loss and regularization</h2>
 <p>Training minimizes</p>
 <p><span class="math display">\[
 \mathcal{L}=
@@ -1318,127 +1400,36 @@ transformations followed by ReLU activation,</p>
 \lambda_1\sum_j |w_j|+
 \frac{\lambda_2}{2}\sum_j w_j^2.
 \]</span></p>
-<p>In this objective, <span class="math inline">\(y\)</span> is the
-observed phenotype on the standardized scale defined from the current
-fitting subset, and <span class="math inline">\(\hat{y}\)</span> is the
-corresponding network prediction on that same scale during optimization.
-The terms <span class="math inline">\(w_j\)</span> denote the penalized
-network weights, while <span class="math inline">\(\lambda_1\)</span>
-and <span class="math inline">\(\lambda_2\)</span> control the strengths
-of the L1 and L2 penalties, respectively. Bias parameters are excluded
-from both penalty sums.</p>
-<p>Standardization is used only to fit the network on a common numerical
-scale. Before inner-assessment or outer-assessment performance is
-calculated, predictions are transformed back with the fitting-set
-phenotype mean and standard deviation, so the reported prediction errors
-are expressed on the original phenotype scale.</p>
-<p><code>ANN_0</code> sets both penalty coefficients to zero,
-<code>ANN_L1</code> uses a selected positive <span
-class="math inline">\(\lambda_1\)</span> with <span
-class="math inline">\(\lambda_2=0\)</span>, <code>ANN_L2</code> uses a
-selected positive <span class="math inline">\(\lambda_2\)</span> with
-<span class="math inline">\(\lambda_1=0\)</span>, and
-<code>ANN_L1_L2</code> uses selected positive values of both
-coefficients. Penalties are applied to network weights but not biases.
-Adam uses <code>weight_decay = 0</code>, so the L2 contribution enters
-only through the explicit <code>weight_penalty()</code> term shown
-below.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>TorchGenomicMLP <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">nn_module</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="st">&quot;TorchGenomicMLP_CanonicalTuning&quot;</span>,</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>(</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    input_dim,</span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    hidden_units</span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  ) {</span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    self<span class="sc">$</span>linears <span class="ot">&lt;-</span></span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>      torch<span class="sc">::</span><span class="fu">nn_module_list</span>()</span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>    previous <span class="ot">&lt;-</span></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>      <span class="fu">as.integer</span>(input_dim)</span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a></span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    <span class="cf">for</span> (h <span class="cf">in</span> hidden_units) {</span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>      self<span class="sc">$</span>linears<span class="sc">$</span><span class="fu">append</span>(</span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>        torch<span class="sc">::</span><span class="fu">nn_linear</span>(</span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>          previous,</span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>          <span class="fu">as.integer</span>(h)</span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>        )</span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>      )</span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>      previous <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(h)</span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>    }</span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a></span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>    self<span class="sc">$</span>output <span class="ot">&lt;-</span></span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>      torch<span class="sc">::</span><span class="fu">nn_linear</span>(</span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>        previous,</span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>        <span class="dv">1</span><span class="dt">L</span></span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>      )</span>
-<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>  },</span>
-<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a></span>
-<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
-<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">length</span>(self<span class="sc">$</span>linears) <span class="sc">&gt;</span> <span class="dv">0</span><span class="dt">L</span>) {</span>
-<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>      <span class="cf">for</span> (</span>
-<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>        i <span class="cf">in</span> <span class="fu">seq_len</span>(</span>
-<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>          <span class="fu">length</span>(self<span class="sc">$</span>linears)</span>
-<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>        )</span>
-<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a>      ) {</span>
-<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a>        x <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">nnf_relu</span>(</span>
-<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>          self<span class="sc">$</span>linears[[i]](x)</span>
-<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>        )</span>
-<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>      }</span>
-<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>    }</span>
-<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a></span>
-<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>    self<span class="sc">$</span><span class="fu">output</span>(x)</span>
-<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>  }</span>
-<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a>)</span>
-<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a></span>
-<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a>weight_penalty <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
-<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a>  model,</span>
-<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a>  l1,</span>
-<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a>  l2</span>
-<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a>) {</span>
-<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a>  weights <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
-<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a>    <span class="fu">seq_len</span>(</span>
-<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a>      <span class="fu">length</span>(model<span class="sc">$</span>linears)</span>
-<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a>    ),</span>
-<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a>    <span class="cf">function</span>(i) {</span>
-<span id="cb8-58"><a href="#cb8-58" tabindex="-1"></a>      model<span class="sc">$</span>linears[[i]]<span class="sc">$</span>weight</span>
-<span id="cb8-59"><a href="#cb8-59" tabindex="-1"></a>    }</span>
-<span id="cb8-60"><a href="#cb8-60" tabindex="-1"></a>  )</span>
-<span id="cb8-61"><a href="#cb8-61" tabindex="-1"></a></span>
-<span id="cb8-62"><a href="#cb8-62" tabindex="-1"></a>  weights[[<span class="fu">length</span>(weights) <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span>]] <span class="ot">&lt;-</span></span>
-<span id="cb8-63"><a href="#cb8-63" tabindex="-1"></a>    model<span class="sc">$</span>output<span class="sc">$</span>weight</span>
-<span id="cb8-64"><a href="#cb8-64" tabindex="-1"></a></span>
-<span id="cb8-65"><a href="#cb8-65" tabindex="-1"></a>  zero <span class="ot">&lt;-</span> weights[[<span class="dv">1</span>]]<span class="sc">$</span><span class="fu">sum</span>() <span class="sc">*</span> <span class="dv">0</span></span>
-<span id="cb8-66"><a href="#cb8-66" tabindex="-1"></a>  penalty_l1 <span class="ot">&lt;-</span> zero</span>
-<span id="cb8-67"><a href="#cb8-67" tabindex="-1"></a>  penalty_l2 <span class="ot">&lt;-</span> zero</span>
-<span id="cb8-68"><a href="#cb8-68" tabindex="-1"></a></span>
-<span id="cb8-69"><a href="#cb8-69" tabindex="-1"></a>  <span class="cf">for</span> (w <span class="cf">in</span> weights) {</span>
-<span id="cb8-70"><a href="#cb8-70" tabindex="-1"></a>    penalty_l1 <span class="ot">&lt;-</span></span>
-<span id="cb8-71"><a href="#cb8-71" tabindex="-1"></a>      penalty_l1 <span class="sc">+</span></span>
-<span id="cb8-72"><a href="#cb8-72" tabindex="-1"></a>      w<span class="sc">$</span><span class="fu">abs</span>()<span class="sc">$</span><span class="fu">sum</span>()</span>
-<span id="cb8-73"><a href="#cb8-73" tabindex="-1"></a></span>
-<span id="cb8-74"><a href="#cb8-74" tabindex="-1"></a>    penalty_l2 <span class="ot">&lt;-</span></span>
-<span id="cb8-75"><a href="#cb8-75" tabindex="-1"></a>      penalty_l2 <span class="sc">+</span></span>
-<span id="cb8-76"><a href="#cb8-76" tabindex="-1"></a>      w<span class="sc">$</span><span class="fu">pow</span>(<span class="dv">2</span>)<span class="sc">$</span><span class="fu">sum</span>()</span>
-<span id="cb8-77"><a href="#cb8-77" tabindex="-1"></a>  }</span>
-<span id="cb8-78"><a href="#cb8-78" tabindex="-1"></a></span>
-<span id="cb8-79"><a href="#cb8-79" tabindex="-1"></a>  l1 <span class="sc">*</span> penalty_l1 <span class="sc">+</span></span>
-<span id="cb8-80"><a href="#cb8-80" tabindex="-1"></a>    (l2 <span class="sc">/</span> <span class="dv">2</span>) <span class="sc">*</span> penalty_l2</span>
-<span id="cb8-81"><a href="#cb8-81" tabindex="-1"></a>}</span>
-<span id="cb8-82"><a href="#cb8-82" tabindex="-1"></a></span>
-<span id="cb8-83"><a href="#cb8-83" tabindex="-1"></a>clone_state <span class="ot">&lt;-</span> <span class="cf">function</span>(model) {</span>
-<span id="cb8-84"><a href="#cb8-84" tabindex="-1"></a>  state <span class="ot">&lt;-</span> model<span class="sc">$</span><span class="fu">state_dict</span>()</span>
-<span id="cb8-85"><a href="#cb8-85" tabindex="-1"></a></span>
-<span id="cb8-86"><a href="#cb8-86" tabindex="-1"></a>  copy <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
-<span id="cb8-87"><a href="#cb8-87" tabindex="-1"></a>    state,</span>
-<span id="cb8-88"><a href="#cb8-88" tabindex="-1"></a>    <span class="cf">function</span>(x) {</span>
-<span id="cb8-89"><a href="#cb8-89" tabindex="-1"></a>      x<span class="sc">$</span><span class="fu">detach</span>()<span class="sc">$</span><span class="fu">clone</span>()</span>
-<span id="cb8-90"><a href="#cb8-90" tabindex="-1"></a>    }</span>
-<span id="cb8-91"><a href="#cb8-91" tabindex="-1"></a>  )</span>
-<span id="cb8-92"><a href="#cb8-92" tabindex="-1"></a></span>
-<span id="cb8-93"><a href="#cb8-93" tabindex="-1"></a>  <span class="fu">names</span>(copy) <span class="ot">&lt;-</span> <span class="fu">names</span>(state)</span>
-<span id="cb8-94"><a href="#cb8-94" tabindex="-1"></a></span>
-<span id="cb8-95"><a href="#cb8-95" tabindex="-1"></a>  copy</span>
-<span id="cb8-96"><a href="#cb8-96" tabindex="-1"></a>}</span></code></pre></div>
+<p><code>ANN_0</code> uses <span
+class="math inline">\(\lambda_1=\lambda_2=0\)</span>,
+<code>ANN_L1</code> uses only L1, <code>ANN_L2</code> uses only L2, and
+<code>ANN_L1_L2</code> uses both. Bias terms are not penalized. Adam
+uses <code>weight_decay = 0</code>, so L2 enters only through the
+explicit penalty above.</p>
+<p>The response is standardized from the fitting subset during
+optimization and predictions are transformed back to the original
+phenotype scale before performance metrics are calculated.</p>
+</div>
+<div id="representative-64-32-network" class="section level2">
+<h2>Representative 64-32 network</h2>
+<p>The largest architecture in the prespecified catalog can be written
+directly as:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>(input_dim) {</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>    self<span class="sc">$</span>hidden1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(input_dim, <span class="dv">64</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    self<span class="sc">$</span>hidden2 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">64</span>, <span class="dv">32</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    self<span class="sc">$</span>output <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">32</span>, <span class="dv">1</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  },</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_relu</span>(self<span class="sc">$</span><span class="fu">hidden1</span>(x))</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_relu</span>(self<span class="sc">$</span><span class="fu">hidden2</span>(x))</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    self<span class="sc">$</span><span class="fu">output</span>(x)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  }</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>)</span></code></pre></div>
+<p>Smaller catalog architectures follow the same pattern with fewer
+hidden units or one hidden layer. The generic implementation that
+constructs all nine architectures is retained internally.</p>
+</div>
 </div>
 <div id="inner-cv-training" class="section level1">
 <h1>Inner-CV training</h1>
@@ -1452,294 +1443,28 @@ that candidate. Preprocessing is estimated from the fitting subset
 only.</p>
 <p>Early stopping is an optimization mechanism. Its epoch diagnostics
 are saved but excluded from the tuning rule.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>prepare_bundle <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  fit_ids,</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  validation_ids,</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  assessment_ids,</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  scenario_index</span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>) {</span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  fit_index <span class="ot">&lt;-</span> <span class="fu">match</span>(</span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>    fit_ids,</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>    ids</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  )</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  validation_index <span class="ot">&lt;-</span> <span class="fu">match</span>(</span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>    validation_ids,</span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>    ids</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  )</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>  assessment_index <span class="ot">&lt;-</span> <span class="fu">match</span>(</span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>    assessment_ids,</span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>    ids</span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  )</span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a></span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>  <span class="cf">if</span> (</span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>    <span class="fu">anyNA</span>(</span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>      <span class="fu">c</span>(</span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>        fit_index,</span>
-<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>        validation_index,</span>
-<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>        assessment_index</span>
-<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>      )</span>
-<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>    )</span>
-<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>  ) {</span>
-<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>    <span class="fu">stop</span>(</span>
-<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>      <span class="st">&quot;ANN ID alignment failed.&quot;</span></span>
-<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>    )</span>
-<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>  }</span>
-<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a></span>
-<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a>  x_scaler <span class="ot">&lt;-</span> <span class="fu">fit_x_scaler</span>(</span>
-<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>    geno[</span>
-<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>      fit_index,</span>
-<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a>      ,</span>
-<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a>      <span class="at">drop =</span> <span class="cn">FALSE</span></span>
-<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a>    ]</span>
-<span id="cb9-40"><a href="#cb9-40" tabindex="-1"></a>  )</span>
-<span id="cb9-41"><a href="#cb9-41" tabindex="-1"></a></span>
-<span id="cb9-42"><a href="#cb9-42" tabindex="-1"></a>  y_scaler <span class="ot">&lt;-</span> <span class="fu">fit_y_scaler</span>(</span>
-<span id="cb9-43"><a href="#cb9-43" tabindex="-1"></a>    phenotype[</span>
-<span id="cb9-44"><a href="#cb9-44" tabindex="-1"></a>      fit_index,</span>
-<span id="cb9-45"><a href="#cb9-45" tabindex="-1"></a>      scenario_index</span>
-<span id="cb9-46"><a href="#cb9-46" tabindex="-1"></a>    ]</span>
-<span id="cb9-47"><a href="#cb9-47" tabindex="-1"></a>  )</span>
-<span id="cb9-48"><a href="#cb9-48" tabindex="-1"></a></span>
-<span id="cb9-49"><a href="#cb9-49" tabindex="-1"></a>  <span class="fu">list</span>(</span>
-<span id="cb9-50"><a href="#cb9-50" tabindex="-1"></a>    <span class="at">x_fit =</span> <span class="fu">scale_x</span>(</span>
-<span id="cb9-51"><a href="#cb9-51" tabindex="-1"></a>      geno[</span>
-<span id="cb9-52"><a href="#cb9-52" tabindex="-1"></a>        fit_index,</span>
-<span id="cb9-53"><a href="#cb9-53" tabindex="-1"></a>        ,</span>
-<span id="cb9-54"><a href="#cb9-54" tabindex="-1"></a>        <span class="at">drop =</span> <span class="cn">FALSE</span></span>
-<span id="cb9-55"><a href="#cb9-55" tabindex="-1"></a>      ],</span>
-<span id="cb9-56"><a href="#cb9-56" tabindex="-1"></a>      x_scaler</span>
-<span id="cb9-57"><a href="#cb9-57" tabindex="-1"></a>    ),</span>
-<span id="cb9-58"><a href="#cb9-58" tabindex="-1"></a>    <span class="at">x_validation =</span> <span class="fu">scale_x</span>(</span>
-<span id="cb9-59"><a href="#cb9-59" tabindex="-1"></a>      geno[</span>
-<span id="cb9-60"><a href="#cb9-60" tabindex="-1"></a>        validation_index,</span>
-<span id="cb9-61"><a href="#cb9-61" tabindex="-1"></a>        ,</span>
-<span id="cb9-62"><a href="#cb9-62" tabindex="-1"></a>        <span class="at">drop =</span> <span class="cn">FALSE</span></span>
-<span id="cb9-63"><a href="#cb9-63" tabindex="-1"></a>      ],</span>
-<span id="cb9-64"><a href="#cb9-64" tabindex="-1"></a>      x_scaler</span>
-<span id="cb9-65"><a href="#cb9-65" tabindex="-1"></a>    ),</span>
-<span id="cb9-66"><a href="#cb9-66" tabindex="-1"></a>    <span class="at">x_assessment =</span> <span class="fu">scale_x</span>(</span>
-<span id="cb9-67"><a href="#cb9-67" tabindex="-1"></a>      geno[</span>
-<span id="cb9-68"><a href="#cb9-68" tabindex="-1"></a>        assessment_index,</span>
-<span id="cb9-69"><a href="#cb9-69" tabindex="-1"></a>        ,</span>
-<span id="cb9-70"><a href="#cb9-70" tabindex="-1"></a>        <span class="at">drop =</span> <span class="cn">FALSE</span></span>
-<span id="cb9-71"><a href="#cb9-71" tabindex="-1"></a>      ],</span>
-<span id="cb9-72"><a href="#cb9-72" tabindex="-1"></a>      x_scaler</span>
-<span id="cb9-73"><a href="#cb9-73" tabindex="-1"></a>    ),</span>
-<span id="cb9-74"><a href="#cb9-74" tabindex="-1"></a>    <span class="at">y_fit =</span> <span class="fu">scale_y</span>(</span>
-<span id="cb9-75"><a href="#cb9-75" tabindex="-1"></a>      phenotype[</span>
-<span id="cb9-76"><a href="#cb9-76" tabindex="-1"></a>        fit_index,</span>
-<span id="cb9-77"><a href="#cb9-77" tabindex="-1"></a>        scenario_index</span>
-<span id="cb9-78"><a href="#cb9-78" tabindex="-1"></a>      ],</span>
-<span id="cb9-79"><a href="#cb9-79" tabindex="-1"></a>      y_scaler</span>
-<span id="cb9-80"><a href="#cb9-80" tabindex="-1"></a>    ),</span>
-<span id="cb9-81"><a href="#cb9-81" tabindex="-1"></a>    <span class="at">y_validation =</span> <span class="fu">scale_y</span>(</span>
-<span id="cb9-82"><a href="#cb9-82" tabindex="-1"></a>      phenotype[</span>
-<span id="cb9-83"><a href="#cb9-83" tabindex="-1"></a>        validation_index,</span>
-<span id="cb9-84"><a href="#cb9-84" tabindex="-1"></a>        scenario_index</span>
-<span id="cb9-85"><a href="#cb9-85" tabindex="-1"></a>      ],</span>
-<span id="cb9-86"><a href="#cb9-86" tabindex="-1"></a>      y_scaler</span>
-<span id="cb9-87"><a href="#cb9-87" tabindex="-1"></a>    ),</span>
-<span id="cb9-88"><a href="#cb9-88" tabindex="-1"></a>    <span class="at">y_assessment =</span> phenotype[</span>
-<span id="cb9-89"><a href="#cb9-89" tabindex="-1"></a>      assessment_index,</span>
-<span id="cb9-90"><a href="#cb9-90" tabindex="-1"></a>      scenario_index</span>
-<span id="cb9-91"><a href="#cb9-91" tabindex="-1"></a>    ],</span>
-<span id="cb9-92"><a href="#cb9-92" tabindex="-1"></a>    <span class="at">y_scaler =</span> y_scaler,</span>
-<span id="cb9-93"><a href="#cb9-93" tabindex="-1"></a>    <span class="at">zero_variance_markers =</span></span>
-<span id="cb9-94"><a href="#cb9-94" tabindex="-1"></a>      <span class="fu">sum</span>(x_scaler<span class="sc">$</span>zero)</span>
-<span id="cb9-95"><a href="#cb9-95" tabindex="-1"></a>  )</span>
-<span id="cb9-96"><a href="#cb9-96" tabindex="-1"></a>}</span>
-<span id="cb9-97"><a href="#cb9-97" tabindex="-1"></a></span>
-<span id="cb9-98"><a href="#cb9-98" tabindex="-1"></a>train_inner_candidate <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
-<span id="cb9-99"><a href="#cb9-99" tabindex="-1"></a>  bundle,</span>
-<span id="cb9-100"><a href="#cb9-100" tabindex="-1"></a>  architecture,</span>
-<span id="cb9-101"><a href="#cb9-101" tabindex="-1"></a>  learning_rate,</span>
-<span id="cb9-102"><a href="#cb9-102" tabindex="-1"></a>  l1,</span>
-<span id="cb9-103"><a href="#cb9-103" tabindex="-1"></a>  l2,</span>
-<span id="cb9-104"><a href="#cb9-104" tabindex="-1"></a>  seed</span>
-<span id="cb9-105"><a href="#cb9-105" tabindex="-1"></a>) {</span>
-<span id="cb9-106"><a href="#cb9-106" tabindex="-1"></a>  <span class="fu">set_ann_seed</span>(seed)</span>
-<span id="cb9-107"><a href="#cb9-107" tabindex="-1"></a></span>
-<span id="cb9-108"><a href="#cb9-108" tabindex="-1"></a>  x_fit <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">torch_tensor</span>(</span>
-<span id="cb9-109"><a href="#cb9-109" tabindex="-1"></a>    bundle<span class="sc">$</span>x_fit,</span>
-<span id="cb9-110"><a href="#cb9-110" tabindex="-1"></a>    <span class="at">dtype =</span> torch<span class="sc">::</span><span class="fu">torch_float</span>()</span>
-<span id="cb9-111"><a href="#cb9-111" tabindex="-1"></a>  )<span class="sc">$</span><span class="fu">to</span>(<span class="at">device =</span> ANN_DEVICE)</span>
-<span id="cb9-112"><a href="#cb9-112" tabindex="-1"></a></span>
-<span id="cb9-113"><a href="#cb9-113" tabindex="-1"></a>  y_fit <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">torch_tensor</span>(</span>
-<span id="cb9-114"><a href="#cb9-114" tabindex="-1"></a>    <span class="fu">matrix</span>(</span>
-<span id="cb9-115"><a href="#cb9-115" tabindex="-1"></a>      bundle<span class="sc">$</span>y_fit,</span>
-<span id="cb9-116"><a href="#cb9-116" tabindex="-1"></a>      <span class="at">ncol =</span> <span class="dv">1</span></span>
-<span id="cb9-117"><a href="#cb9-117" tabindex="-1"></a>    ),</span>
-<span id="cb9-118"><a href="#cb9-118" tabindex="-1"></a>    <span class="at">dtype =</span> torch<span class="sc">::</span><span class="fu">torch_float</span>()</span>
-<span id="cb9-119"><a href="#cb9-119" tabindex="-1"></a>  )<span class="sc">$</span><span class="fu">to</span>(<span class="at">device =</span> ANN_DEVICE)</span>
-<span id="cb9-120"><a href="#cb9-120" tabindex="-1"></a></span>
-<span id="cb9-121"><a href="#cb9-121" tabindex="-1"></a>  x_validation <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">torch_tensor</span>(</span>
-<span id="cb9-122"><a href="#cb9-122" tabindex="-1"></a>    bundle<span class="sc">$</span>x_validation,</span>
-<span id="cb9-123"><a href="#cb9-123" tabindex="-1"></a>    <span class="at">dtype =</span> torch<span class="sc">::</span><span class="fu">torch_float</span>()</span>
-<span id="cb9-124"><a href="#cb9-124" tabindex="-1"></a>  )<span class="sc">$</span><span class="fu">to</span>(<span class="at">device =</span> ANN_DEVICE)</span>
-<span id="cb9-125"><a href="#cb9-125" tabindex="-1"></a></span>
-<span id="cb9-126"><a href="#cb9-126" tabindex="-1"></a>  y_validation <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">torch_tensor</span>(</span>
-<span id="cb9-127"><a href="#cb9-127" tabindex="-1"></a>    <span class="fu">matrix</span>(</span>
-<span id="cb9-128"><a href="#cb9-128" tabindex="-1"></a>      bundle<span class="sc">$</span>y_validation,</span>
-<span id="cb9-129"><a href="#cb9-129" tabindex="-1"></a>      <span class="at">ncol =</span> <span class="dv">1</span></span>
-<span id="cb9-130"><a href="#cb9-130" tabindex="-1"></a>    ),</span>
-<span id="cb9-131"><a href="#cb9-131" tabindex="-1"></a>    <span class="at">dtype =</span> torch<span class="sc">::</span><span class="fu">torch_float</span>()</span>
-<span id="cb9-132"><a href="#cb9-132" tabindex="-1"></a>  )<span class="sc">$</span><span class="fu">to</span>(<span class="at">device =</span> ANN_DEVICE)</span>
-<span id="cb9-133"><a href="#cb9-133" tabindex="-1"></a></span>
-<span id="cb9-134"><a href="#cb9-134" tabindex="-1"></a>  x_assessment <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">torch_tensor</span>(</span>
-<span id="cb9-135"><a href="#cb9-135" tabindex="-1"></a>    bundle<span class="sc">$</span>x_assessment,</span>
-<span id="cb9-136"><a href="#cb9-136" tabindex="-1"></a>    <span class="at">dtype =</span> torch<span class="sc">::</span><span class="fu">torch_float</span>()</span>
-<span id="cb9-137"><a href="#cb9-137" tabindex="-1"></a>  )<span class="sc">$</span><span class="fu">to</span>(<span class="at">device =</span> ANN_DEVICE)</span>
-<span id="cb9-138"><a href="#cb9-138" tabindex="-1"></a></span>
-<span id="cb9-139"><a href="#cb9-139" tabindex="-1"></a>  model <span class="ot">&lt;-</span> <span class="fu">TorchGenomicMLP</span>(</span>
-<span id="cb9-140"><a href="#cb9-140" tabindex="-1"></a>    <span class="fu">ncol</span>(bundle<span class="sc">$</span>x_fit),</span>
-<span id="cb9-141"><a href="#cb9-141" tabindex="-1"></a>    ARCHITECTURES[[architecture]]</span>
-<span id="cb9-142"><a href="#cb9-142" tabindex="-1"></a>  )<span class="sc">$</span><span class="fu">to</span>(<span class="at">device =</span> ANN_DEVICE)</span>
-<span id="cb9-143"><a href="#cb9-143" tabindex="-1"></a></span>
-<span id="cb9-144"><a href="#cb9-144" tabindex="-1"></a>  optimizer <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">optim_adam</span>(</span>
-<span id="cb9-145"><a href="#cb9-145" tabindex="-1"></a>    <span class="at">params =</span> model<span class="sc">$</span>parameters,</span>
-<span id="cb9-146"><a href="#cb9-146" tabindex="-1"></a>    <span class="at">lr =</span> learning_rate,</span>
-<span id="cb9-147"><a href="#cb9-147" tabindex="-1"></a>    <span class="at">weight_decay =</span> <span class="dv">0</span></span>
-<span id="cb9-148"><a href="#cb9-148" tabindex="-1"></a>  )</span>
-<span id="cb9-149"><a href="#cb9-149" tabindex="-1"></a></span>
-<span id="cb9-150"><a href="#cb9-150" tabindex="-1"></a>  best_validation_loss <span class="ot">&lt;-</span> <span class="cn">Inf</span></span>
-<span id="cb9-151"><a href="#cb9-151" tabindex="-1"></a>  checkpoint_epoch <span class="ot">&lt;-</span> <span class="cn">NA_integer_</span></span>
-<span id="cb9-152"><a href="#cb9-152" tabindex="-1"></a>  checkpoint_state <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb9-153"><a href="#cb9-153" tabindex="-1"></a>  stale <span class="ot">&lt;-</span> <span class="dv">0</span><span class="dt">L</span></span>
-<span id="cb9-154"><a href="#cb9-154" tabindex="-1"></a>  last_epoch <span class="ot">&lt;-</span> <span class="dv">0</span><span class="dt">L</span></span>
-<span id="cb9-155"><a href="#cb9-155" tabindex="-1"></a>  stopped_by_patience <span class="ot">&lt;-</span> <span class="cn">FALSE</span></span>
-<span id="cb9-156"><a href="#cb9-156" tabindex="-1"></a></span>
-<span id="cb9-157"><a href="#cb9-157" tabindex="-1"></a>  <span class="fu">sync_device</span>()</span>
-<span id="cb9-158"><a href="#cb9-158" tabindex="-1"></a>  fit_start <span class="ot">&lt;-</span></span>
-<span id="cb9-159"><a href="#cb9-159" tabindex="-1"></a>    <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
-<span id="cb9-160"><a href="#cb9-160" tabindex="-1"></a></span>
-<span id="cb9-161"><a href="#cb9-161" tabindex="-1"></a>  <span class="cf">for</span> (</span>
-<span id="cb9-162"><a href="#cb9-162" tabindex="-1"></a>    epoch <span class="cf">in</span> <span class="fu">seq_len</span>(MAX_EPOCHS)</span>
-<span id="cb9-163"><a href="#cb9-163" tabindex="-1"></a>  ) {</span>
-<span id="cb9-164"><a href="#cb9-164" tabindex="-1"></a>    last_epoch <span class="ot">&lt;-</span> epoch</span>
-<span id="cb9-165"><a href="#cb9-165" tabindex="-1"></a></span>
-<span id="cb9-166"><a href="#cb9-166" tabindex="-1"></a>    model<span class="sc">$</span><span class="fu">train</span>()</span>
-<span id="cb9-167"><a href="#cb9-167" tabindex="-1"></a>    optimizer<span class="sc">$</span><span class="fu">zero_grad</span>()</span>
-<span id="cb9-168"><a href="#cb9-168" tabindex="-1"></a></span>
-<span id="cb9-169"><a href="#cb9-169" tabindex="-1"></a>    prediction <span class="ot">&lt;-</span></span>
-<span id="cb9-170"><a href="#cb9-170" tabindex="-1"></a>      <span class="fu">model</span>(x_fit)</span>
-<span id="cb9-171"><a href="#cb9-171" tabindex="-1"></a></span>
-<span id="cb9-172"><a href="#cb9-172" tabindex="-1"></a>    loss <span class="ot">&lt;-</span></span>
-<span id="cb9-173"><a href="#cb9-173" tabindex="-1"></a>      torch<span class="sc">::</span><span class="fu">nnf_mse_loss</span>(</span>
-<span id="cb9-174"><a href="#cb9-174" tabindex="-1"></a>        prediction,</span>
-<span id="cb9-175"><a href="#cb9-175" tabindex="-1"></a>        y_fit</span>
-<span id="cb9-176"><a href="#cb9-176" tabindex="-1"></a>      ) <span class="sc">+</span></span>
-<span id="cb9-177"><a href="#cb9-177" tabindex="-1"></a>      <span class="fu">weight_penalty</span>(</span>
-<span id="cb9-178"><a href="#cb9-178" tabindex="-1"></a>        model,</span>
-<span id="cb9-179"><a href="#cb9-179" tabindex="-1"></a>        l1,</span>
-<span id="cb9-180"><a href="#cb9-180" tabindex="-1"></a>        l2</span>
-<span id="cb9-181"><a href="#cb9-181" tabindex="-1"></a>      )</span>
-<span id="cb9-182"><a href="#cb9-182" tabindex="-1"></a></span>
-<span id="cb9-183"><a href="#cb9-183" tabindex="-1"></a>    loss<span class="sc">$</span><span class="fu">backward</span>()</span>
-<span id="cb9-184"><a href="#cb9-184" tabindex="-1"></a>    optimizer<span class="sc">$</span><span class="fu">step</span>()</span>
-<span id="cb9-185"><a href="#cb9-185" tabindex="-1"></a></span>
-<span id="cb9-186"><a href="#cb9-186" tabindex="-1"></a>    model<span class="sc">$</span><span class="fu">eval</span>()</span>
-<span id="cb9-187"><a href="#cb9-187" tabindex="-1"></a></span>
-<span id="cb9-188"><a href="#cb9-188" tabindex="-1"></a>    validation_loss <span class="ot">&lt;-</span></span>
-<span id="cb9-189"><a href="#cb9-189" tabindex="-1"></a>      torch<span class="sc">::</span><span class="fu">with_no_grad</span>({</span>
-<span id="cb9-190"><a href="#cb9-190" tabindex="-1"></a>        torch<span class="sc">::</span><span class="fu">nnf_mse_loss</span>(</span>
-<span id="cb9-191"><a href="#cb9-191" tabindex="-1"></a>          <span class="fu">model</span>(x_validation),</span>
-<span id="cb9-192"><a href="#cb9-192" tabindex="-1"></a>          y_validation</span>
-<span id="cb9-193"><a href="#cb9-193" tabindex="-1"></a>        )</span>
-<span id="cb9-194"><a href="#cb9-194" tabindex="-1"></a>      })</span>
-<span id="cb9-195"><a href="#cb9-195" tabindex="-1"></a></span>
-<span id="cb9-196"><a href="#cb9-196" tabindex="-1"></a>    validation_value <span class="ot">&lt;-</span></span>
-<span id="cb9-197"><a href="#cb9-197" tabindex="-1"></a>      <span class="fu">as.numeric</span>(</span>
-<span id="cb9-198"><a href="#cb9-198" tabindex="-1"></a>        validation_loss<span class="sc">$</span><span class="fu">to</span>(</span>
-<span id="cb9-199"><a href="#cb9-199" tabindex="-1"></a>          <span class="at">device =</span></span>
-<span id="cb9-200"><a href="#cb9-200" tabindex="-1"></a>            torch<span class="sc">::</span><span class="fu">torch_device</span>(<span class="st">&quot;cpu&quot;</span>)</span>
-<span id="cb9-201"><a href="#cb9-201" tabindex="-1"></a>        )</span>
-<span id="cb9-202"><a href="#cb9-202" tabindex="-1"></a>      )</span>
-<span id="cb9-203"><a href="#cb9-203" tabindex="-1"></a></span>
-<span id="cb9-204"><a href="#cb9-204" tabindex="-1"></a>    <span class="cf">if</span> (</span>
-<span id="cb9-205"><a href="#cb9-205" tabindex="-1"></a>      <span class="fu">is.finite</span>(validation_value) <span class="sc">&amp;&amp;</span></span>
-<span id="cb9-206"><a href="#cb9-206" tabindex="-1"></a>      validation_value <span class="sc">&lt;</span></span>
-<span id="cb9-207"><a href="#cb9-207" tabindex="-1"></a>        best_validation_loss <span class="sc">-</span></span>
-<span id="cb9-208"><a href="#cb9-208" tabindex="-1"></a>        MIN_DELTA</span>
-<span id="cb9-209"><a href="#cb9-209" tabindex="-1"></a>    ) {</span>
-<span id="cb9-210"><a href="#cb9-210" tabindex="-1"></a>      best_validation_loss <span class="ot">&lt;-</span></span>
-<span id="cb9-211"><a href="#cb9-211" tabindex="-1"></a>        validation_value</span>
-<span id="cb9-212"><a href="#cb9-212" tabindex="-1"></a></span>
-<span id="cb9-213"><a href="#cb9-213" tabindex="-1"></a>      checkpoint_epoch <span class="ot">&lt;-</span></span>
-<span id="cb9-214"><a href="#cb9-214" tabindex="-1"></a>        epoch</span>
-<span id="cb9-215"><a href="#cb9-215" tabindex="-1"></a></span>
-<span id="cb9-216"><a href="#cb9-216" tabindex="-1"></a>      checkpoint_state <span class="ot">&lt;-</span></span>
-<span id="cb9-217"><a href="#cb9-217" tabindex="-1"></a>        <span class="fu">clone_state</span>(model)</span>
-<span id="cb9-218"><a href="#cb9-218" tabindex="-1"></a></span>
-<span id="cb9-219"><a href="#cb9-219" tabindex="-1"></a>      stale <span class="ot">&lt;-</span> <span class="dv">0</span><span class="dt">L</span></span>
-<span id="cb9-220"><a href="#cb9-220" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb9-221"><a href="#cb9-221" tabindex="-1"></a>      stale <span class="ot">&lt;-</span> stale <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span></span>
-<span id="cb9-222"><a href="#cb9-222" tabindex="-1"></a>    }</span>
-<span id="cb9-223"><a href="#cb9-223" tabindex="-1"></a></span>
-<span id="cb9-224"><a href="#cb9-224" tabindex="-1"></a>    <span class="cf">if</span> (stale <span class="sc">&gt;=</span> PATIENCE) {</span>
-<span id="cb9-225"><a href="#cb9-225" tabindex="-1"></a>      stopped_by_patience <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span>
-<span id="cb9-226"><a href="#cb9-226" tabindex="-1"></a>      <span class="cf">break</span></span>
-<span id="cb9-227"><a href="#cb9-227" tabindex="-1"></a>    }</span>
-<span id="cb9-228"><a href="#cb9-228" tabindex="-1"></a>  }</span>
-<span id="cb9-229"><a href="#cb9-229" tabindex="-1"></a></span>
-<span id="cb9-230"><a href="#cb9-230" tabindex="-1"></a>  <span class="fu">sync_device</span>()</span>
-<span id="cb9-231"><a href="#cb9-231" tabindex="-1"></a>  fit_seconds <span class="ot">&lt;-</span></span>
-<span id="cb9-232"><a href="#cb9-232" tabindex="-1"></a>    <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span></span>
-<span id="cb9-233"><a href="#cb9-233" tabindex="-1"></a>    fit_start</span>
-<span id="cb9-234"><a href="#cb9-234" tabindex="-1"></a></span>
-<span id="cb9-235"><a href="#cb9-235" tabindex="-1"></a>  <span class="cf">if</span> (</span>
-<span id="cb9-236"><a href="#cb9-236" tabindex="-1"></a>    <span class="fu">is.null</span>(checkpoint_state) <span class="sc">||</span></span>
-<span id="cb9-237"><a href="#cb9-237" tabindex="-1"></a>    <span class="fu">is.na</span>(checkpoint_epoch)</span>
-<span id="cb9-238"><a href="#cb9-238" tabindex="-1"></a>  ) {</span>
-<span id="cb9-239"><a href="#cb9-239" tabindex="-1"></a>    <span class="fu">stop</span>(</span>
-<span id="cb9-240"><a href="#cb9-240" tabindex="-1"></a>      <span class="st">&quot;No finite early-validation checkpoint.&quot;</span></span>
-<span id="cb9-241"><a href="#cb9-241" tabindex="-1"></a>    )</span>
-<span id="cb9-242"><a href="#cb9-242" tabindex="-1"></a>  }</span>
-<span id="cb9-243"><a href="#cb9-243" tabindex="-1"></a></span>
-<span id="cb9-244"><a href="#cb9-244" tabindex="-1"></a>  model<span class="sc">$</span><span class="fu">load_state_dict</span>(</span>
-<span id="cb9-245"><a href="#cb9-245" tabindex="-1"></a>    checkpoint_state</span>
-<span id="cb9-246"><a href="#cb9-246" tabindex="-1"></a>  )</span>
-<span id="cb9-247"><a href="#cb9-247" tabindex="-1"></a>  model<span class="sc">$</span><span class="fu">eval</span>()</span>
-<span id="cb9-248"><a href="#cb9-248" tabindex="-1"></a></span>
-<span id="cb9-249"><a href="#cb9-249" tabindex="-1"></a>  <span class="fu">sync_device</span>()</span>
-<span id="cb9-250"><a href="#cb9-250" tabindex="-1"></a>  prediction_start <span class="ot">&lt;-</span></span>
-<span id="cb9-251"><a href="#cb9-251" tabindex="-1"></a>    <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
-<span id="cb9-252"><a href="#cb9-252" tabindex="-1"></a></span>
-<span id="cb9-253"><a href="#cb9-253" tabindex="-1"></a>  prediction_scaled <span class="ot">&lt;-</span></span>
-<span id="cb9-254"><a href="#cb9-254" tabindex="-1"></a>    torch<span class="sc">::</span><span class="fu">with_no_grad</span>({</span>
-<span id="cb9-255"><a href="#cb9-255" tabindex="-1"></a>      <span class="fu">as.numeric</span>(</span>
-<span id="cb9-256"><a href="#cb9-256" tabindex="-1"></a>        <span class="fu">model</span>(x_assessment)<span class="sc">$</span><span class="fu">to</span>(</span>
-<span id="cb9-257"><a href="#cb9-257" tabindex="-1"></a>          <span class="at">device =</span></span>
-<span id="cb9-258"><a href="#cb9-258" tabindex="-1"></a>            torch<span class="sc">::</span><span class="fu">torch_device</span>(<span class="st">&quot;cpu&quot;</span>)</span>
-<span id="cb9-259"><a href="#cb9-259" tabindex="-1"></a>        )</span>
-<span id="cb9-260"><a href="#cb9-260" tabindex="-1"></a>      )</span>
-<span id="cb9-261"><a href="#cb9-261" tabindex="-1"></a>    })</span>
-<span id="cb9-262"><a href="#cb9-262" tabindex="-1"></a></span>
-<span id="cb9-263"><a href="#cb9-263" tabindex="-1"></a>  <span class="fu">sync_device</span>()</span>
-<span id="cb9-264"><a href="#cb9-264" tabindex="-1"></a>  prediction_seconds <span class="ot">&lt;-</span></span>
-<span id="cb9-265"><a href="#cb9-265" tabindex="-1"></a>    <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span></span>
-<span id="cb9-266"><a href="#cb9-266" tabindex="-1"></a>    prediction_start</span>
-<span id="cb9-267"><a href="#cb9-267" tabindex="-1"></a></span>
-<span id="cb9-268"><a href="#cb9-268" tabindex="-1"></a>  <span class="fu">list</span>(</span>
-<span id="cb9-269"><a href="#cb9-269" tabindex="-1"></a>    <span class="at">prediction =</span> <span class="fu">unscale_y</span>(</span>
-<span id="cb9-270"><a href="#cb9-270" tabindex="-1"></a>      prediction_scaled,</span>
-<span id="cb9-271"><a href="#cb9-271" tabindex="-1"></a>      bundle<span class="sc">$</span>y_scaler</span>
-<span id="cb9-272"><a href="#cb9-272" tabindex="-1"></a>    ),</span>
-<span id="cb9-273"><a href="#cb9-273" tabindex="-1"></a>    <span class="at">early_stop_epoch =</span></span>
-<span id="cb9-274"><a href="#cb9-274" tabindex="-1"></a>      <span class="fu">as.integer</span>(checkpoint_epoch),</span>
-<span id="cb9-275"><a href="#cb9-275" tabindex="-1"></a>    <span class="at">last_epoch =</span></span>
-<span id="cb9-276"><a href="#cb9-276" tabindex="-1"></a>      <span class="fu">as.integer</span>(last_epoch),</span>
-<span id="cb9-277"><a href="#cb9-277" tabindex="-1"></a>    <span class="at">stopped_by_patience =</span></span>
-<span id="cb9-278"><a href="#cb9-278" tabindex="-1"></a>      stopped_by_patience,</span>
-<span id="cb9-279"><a href="#cb9-279" tabindex="-1"></a>    <span class="at">hit_epoch_ceiling =</span></span>
-<span id="cb9-280"><a href="#cb9-280" tabindex="-1"></a>      last_epoch <span class="sc">&gt;=</span> MAX_EPOCHS <span class="sc">&amp;&amp;</span></span>
-<span id="cb9-281"><a href="#cb9-281" tabindex="-1"></a>      <span class="sc">!</span>stopped_by_patience,</span>
-<span id="cb9-282"><a href="#cb9-282" tabindex="-1"></a>    <span class="at">fit_seconds =</span> fit_seconds,</span>
-<span id="cb9-283"><a href="#cb9-283" tabindex="-1"></a>    <span class="at">prediction_seconds =</span></span>
-<span id="cb9-284"><a href="#cb9-284" tabindex="-1"></a>      prediction_seconds,</span>
-<span id="cb9-285"><a href="#cb9-285" tabindex="-1"></a>    <span class="at">zero_variance_markers =</span></span>
-<span id="cb9-286"><a href="#cb9-286" tabindex="-1"></a>      bundle<span class="sc">$</span>zero_variance_markers</span>
-<span id="cb9-287"><a href="#cb9-287" tabindex="-1"></a>  )</span>
-<span id="cb9-288"><a href="#cb9-288" tabindex="-1"></a>}</span></code></pre></div>
+<p>The core optimization step itself is simple: predict the fitting
+subset, calculate MSE plus the selected penalty, backpropagate, and
+update the weights.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>optimizer<span class="sc">$</span><span class="fu">zero_grad</span>()</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>prediction <span class="ot">&lt;-</span> <span class="fu">model</span>(x_fit)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>loss <span class="ot">&lt;-</span> <span class="fu">nnf_mse_loss</span>(</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  prediction,</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  y_fit</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>) <span class="sc">+</span> <span class="fu">weight_penalty</span>(</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  model,</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  l1,</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  l2</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>)</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>loss<span class="sc">$</span><span class="fu">backward</span>()</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>optimizer<span class="sc">$</span><span class="fu">step</span>()</span></code></pre></div>
+<p>The complete helper additionally applies the fitting-set scalers,
+monitors the early-validation loss, restores the best epoch, and
+predicts the untouched inner assessment fold. That bookkeeping is
+retained internally.</p>
 </div>
 <div id="candidate-evaluation-and-selection" class="section level1">
 <h1>Candidate evaluation and selection</h1>
@@ -1754,220 +1479,26 @@ include epoch information.</p>
 <li>smaller learning rate;</li>
 <li>candidate ID.</li>
 </ol>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>evaluate_candidate <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  bundles,</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  model_name,</span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  architecture,</span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  learning_rate,</span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  l1,</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  l2,</span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>  seed_base,</span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>  candidate_id</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>) {</span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>  rows <span class="ot">&lt;-</span> <span class="fu">vector</span>(</span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>    <span class="st">&quot;list&quot;</span>,</span>
-<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>    <span class="dv">4</span><span class="dt">L</span></span>
-<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>  )</span>
-<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a></span>
-<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>  <span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>) {</span>
-<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>    fitted <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
-<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>      <span class="fu">train_inner_candidate</span>(</span>
-<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>        bundles[[k]],</span>
-<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>        architecture,</span>
-<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>        learning_rate,</span>
-<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>        l1,</span>
-<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>        l2,</span>
-<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>        seed_base <span class="sc">+</span> k</span>
-<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>      ),</span>
-<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>      <span class="at">error =</span> <span class="cf">function</span>(e) e</span>
-<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>    )</span>
-<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a></span>
-<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>    <span class="cf">if</span> (</span>
-<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>      <span class="fu">inherits</span>(</span>
-<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>        fitted,</span>
-<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a>        <span class="st">&quot;error&quot;</span></span>
-<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>      )</span>
-<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a>    ) {</span>
-<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>      rows[[k]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a>        <span class="at">Model =</span> model_name,</span>
-<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>        <span class="at">CandidateID =</span> candidate_id,</span>
-<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a>        <span class="at">Architecture =</span> architecture,</span>
-<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a>        <span class="at">Learning_rate =</span> learning_rate,</span>
-<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a>        <span class="at">L1 =</span> l1,</span>
-<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a>        <span class="at">L2 =</span> l2,</span>
-<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a>        <span class="at">InnerFold =</span> k,</span>
-<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a>        <span class="at">RMSE =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a>        <span class="at">Correlation =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a>        <span class="at">MAE =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a>        <span class="at">EarlyStop_epoch =</span> <span class="cn">NA_integer_</span>,</span>
-<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a>        <span class="at">Last_epoch =</span> <span class="cn">NA_integer_</span>,</span>
-<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a>        <span class="at">Stopped_by_patience =</span> <span class="cn">NA</span>,</span>
-<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a>        <span class="at">Hit_epoch_ceiling =</span> <span class="cn">NA</span>,</span>
-<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a>        <span class="at">Fit_seconds =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a>        <span class="at">Prediction_seconds =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a>        <span class="at">Status =</span> <span class="st">&quot;error&quot;</span>,</span>
-<span id="cb10-53"><a href="#cb10-53" tabindex="-1"></a>        <span class="at">Error =</span> <span class="fu">conditionMessage</span>(fitted),</span>
-<span id="cb10-54"><a href="#cb10-54" tabindex="-1"></a>        <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb10-55"><a href="#cb10-55" tabindex="-1"></a>      )</span>
-<span id="cb10-56"><a href="#cb10-56" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb10-57"><a href="#cb10-57" tabindex="-1"></a>      rows[[k]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb10-58"><a href="#cb10-58" tabindex="-1"></a>        <span class="at">Model =</span> model_name,</span>
-<span id="cb10-59"><a href="#cb10-59" tabindex="-1"></a>        <span class="at">CandidateID =</span> candidate_id,</span>
-<span id="cb10-60"><a href="#cb10-60" tabindex="-1"></a>        <span class="at">Architecture =</span> architecture,</span>
-<span id="cb10-61"><a href="#cb10-61" tabindex="-1"></a>        <span class="at">Learning_rate =</span> learning_rate,</span>
-<span id="cb10-62"><a href="#cb10-62" tabindex="-1"></a>        <span class="at">L1 =</span> l1,</span>
-<span id="cb10-63"><a href="#cb10-63" tabindex="-1"></a>        <span class="at">L2 =</span> l2,</span>
-<span id="cb10-64"><a href="#cb10-64" tabindex="-1"></a>        <span class="at">InnerFold =</span> k,</span>
-<span id="cb10-65"><a href="#cb10-65" tabindex="-1"></a>        <span class="at">RMSE =</span> <span class="fu">safe_rmse</span>(</span>
-<span id="cb10-66"><a href="#cb10-66" tabindex="-1"></a>          fitted<span class="sc">$</span>prediction,</span>
-<span id="cb10-67"><a href="#cb10-67" tabindex="-1"></a>          bundles[[k]]<span class="sc">$</span>y_assessment</span>
-<span id="cb10-68"><a href="#cb10-68" tabindex="-1"></a>        ),</span>
-<span id="cb10-69"><a href="#cb10-69" tabindex="-1"></a>        <span class="at">Correlation =</span> <span class="fu">safe_cor</span>(</span>
-<span id="cb10-70"><a href="#cb10-70" tabindex="-1"></a>          fitted<span class="sc">$</span>prediction,</span>
-<span id="cb10-71"><a href="#cb10-71" tabindex="-1"></a>          bundles[[k]]<span class="sc">$</span>y_assessment</span>
-<span id="cb10-72"><a href="#cb10-72" tabindex="-1"></a>        ),</span>
-<span id="cb10-73"><a href="#cb10-73" tabindex="-1"></a>        <span class="at">MAE =</span> <span class="fu">safe_mae</span>(</span>
-<span id="cb10-74"><a href="#cb10-74" tabindex="-1"></a>          fitted<span class="sc">$</span>prediction,</span>
-<span id="cb10-75"><a href="#cb10-75" tabindex="-1"></a>          bundles[[k]]<span class="sc">$</span>y_assessment</span>
-<span id="cb10-76"><a href="#cb10-76" tabindex="-1"></a>        ),</span>
-<span id="cb10-77"><a href="#cb10-77" tabindex="-1"></a>        <span class="at">EarlyStop_epoch =</span></span>
-<span id="cb10-78"><a href="#cb10-78" tabindex="-1"></a>          fitted<span class="sc">$</span>early_stop_epoch,</span>
-<span id="cb10-79"><a href="#cb10-79" tabindex="-1"></a>        <span class="at">Last_epoch =</span></span>
-<span id="cb10-80"><a href="#cb10-80" tabindex="-1"></a>          fitted<span class="sc">$</span>last_epoch,</span>
-<span id="cb10-81"><a href="#cb10-81" tabindex="-1"></a>        <span class="at">Stopped_by_patience =</span></span>
-<span id="cb10-82"><a href="#cb10-82" tabindex="-1"></a>          fitted<span class="sc">$</span>stopped_by_patience,</span>
-<span id="cb10-83"><a href="#cb10-83" tabindex="-1"></a>        <span class="at">Hit_epoch_ceiling =</span></span>
-<span id="cb10-84"><a href="#cb10-84" tabindex="-1"></a>          fitted<span class="sc">$</span>hit_epoch_ceiling,</span>
-<span id="cb10-85"><a href="#cb10-85" tabindex="-1"></a>        <span class="at">Fit_seconds =</span></span>
-<span id="cb10-86"><a href="#cb10-86" tabindex="-1"></a>          fitted<span class="sc">$</span>fit_seconds,</span>
-<span id="cb10-87"><a href="#cb10-87" tabindex="-1"></a>        <span class="at">Prediction_seconds =</span></span>
-<span id="cb10-88"><a href="#cb10-88" tabindex="-1"></a>          fitted<span class="sc">$</span>prediction_seconds,</span>
-<span id="cb10-89"><a href="#cb10-89" tabindex="-1"></a>        <span class="at">Status =</span> <span class="st">&quot;ok&quot;</span>,</span>
-<span id="cb10-90"><a href="#cb10-90" tabindex="-1"></a>        <span class="at">Error =</span> <span class="cn">NA_character_</span>,</span>
-<span id="cb10-91"><a href="#cb10-91" tabindex="-1"></a>        <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb10-92"><a href="#cb10-92" tabindex="-1"></a>      )</span>
-<span id="cb10-93"><a href="#cb10-93" tabindex="-1"></a>    }</span>
-<span id="cb10-94"><a href="#cb10-94" tabindex="-1"></a>  }</span>
-<span id="cb10-95"><a href="#cb10-95" tabindex="-1"></a></span>
-<span id="cb10-96"><a href="#cb10-96" tabindex="-1"></a>  folds <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
-<span id="cb10-97"><a href="#cb10-97" tabindex="-1"></a>    rbind,</span>
-<span id="cb10-98"><a href="#cb10-98" tabindex="-1"></a>    rows</span>
-<span id="cb10-99"><a href="#cb10-99" tabindex="-1"></a>  )</span>
-<span id="cb10-100"><a href="#cb10-100" tabindex="-1"></a></span>
-<span id="cb10-101"><a href="#cb10-101" tabindex="-1"></a>  ok <span class="ot">&lt;-</span> folds<span class="sc">$</span>Status <span class="sc">==</span> <span class="st">&quot;ok&quot;</span></span>
-<span id="cb10-102"><a href="#cb10-102" tabindex="-1"></a></span>
-<span id="cb10-103"><a href="#cb10-103" tabindex="-1"></a>  summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb10-104"><a href="#cb10-104" tabindex="-1"></a>    <span class="at">Model =</span> model_name,</span>
-<span id="cb10-105"><a href="#cb10-105" tabindex="-1"></a>    <span class="at">CandidateID =</span> candidate_id,</span>
-<span id="cb10-106"><a href="#cb10-106" tabindex="-1"></a>    <span class="at">Architecture =</span> architecture,</span>
-<span id="cb10-107"><a href="#cb10-107" tabindex="-1"></a>    <span class="at">Learning_rate =</span> learning_rate,</span>
-<span id="cb10-108"><a href="#cb10-108" tabindex="-1"></a>    <span class="at">L1 =</span> l1,</span>
-<span id="cb10-109"><a href="#cb10-109" tabindex="-1"></a>    <span class="at">L2 =</span> l2,</span>
-<span id="cb10-110"><a href="#cb10-110" tabindex="-1"></a>    <span class="at">Inner_folds_ok =</span> <span class="fu">sum</span>(ok),</span>
-<span id="cb10-111"><a href="#cb10-111" tabindex="-1"></a>    <span class="at">Mean_RMSE =</span> <span class="cf">if</span> (<span class="fu">all</span>(ok)) {</span>
-<span id="cb10-112"><a href="#cb10-112" tabindex="-1"></a>      <span class="fu">mean</span>(folds<span class="sc">$</span>RMSE)</span>
-<span id="cb10-113"><a href="#cb10-113" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb10-114"><a href="#cb10-114" tabindex="-1"></a>      <span class="cn">NA_real_</span></span>
-<span id="cb10-115"><a href="#cb10-115" tabindex="-1"></a>    },</span>
-<span id="cb10-116"><a href="#cb10-116" tabindex="-1"></a>    <span class="at">Mean_Correlation =</span> <span class="cf">if</span> (<span class="fu">all</span>(ok)) {</span>
-<span id="cb10-117"><a href="#cb10-117" tabindex="-1"></a>      <span class="fu">mean</span>(folds<span class="sc">$</span>Correlation)</span>
-<span id="cb10-118"><a href="#cb10-118" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb10-119"><a href="#cb10-119" tabindex="-1"></a>      <span class="cn">NA_real_</span></span>
-<span id="cb10-120"><a href="#cb10-120" tabindex="-1"></a>    },</span>
-<span id="cb10-121"><a href="#cb10-121" tabindex="-1"></a>    <span class="at">Mean_MAE =</span> <span class="cf">if</span> (<span class="fu">all</span>(ok)) {</span>
-<span id="cb10-122"><a href="#cb10-122" tabindex="-1"></a>      <span class="fu">mean</span>(folds<span class="sc">$</span>MAE)</span>
-<span id="cb10-123"><a href="#cb10-123" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb10-124"><a href="#cb10-124" tabindex="-1"></a>      <span class="cn">NA_real_</span></span>
-<span id="cb10-125"><a href="#cb10-125" tabindex="-1"></a>    },</span>
-<span id="cb10-126"><a href="#cb10-126" tabindex="-1"></a>    <span class="at">Median_EarlyStop_epoch =</span> <span class="cf">if</span> (<span class="fu">all</span>(ok)) {</span>
-<span id="cb10-127"><a href="#cb10-127" tabindex="-1"></a>      <span class="fu">median</span>(folds<span class="sc">$</span>EarlyStop_epoch)</span>
-<span id="cb10-128"><a href="#cb10-128" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb10-129"><a href="#cb10-129" tabindex="-1"></a>      <span class="cn">NA_real_</span></span>
-<span id="cb10-130"><a href="#cb10-130" tabindex="-1"></a>    },</span>
-<span id="cb10-131"><a href="#cb10-131" tabindex="-1"></a>    <span class="at">Max_Last_epoch =</span> <span class="cf">if</span> (<span class="fu">all</span>(ok)) {</span>
-<span id="cb10-132"><a href="#cb10-132" tabindex="-1"></a>      <span class="fu">max</span>(folds<span class="sc">$</span>Last_epoch)</span>
-<span id="cb10-133"><a href="#cb10-133" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb10-134"><a href="#cb10-134" tabindex="-1"></a>      <span class="cn">NA_real_</span></span>
-<span id="cb10-135"><a href="#cb10-135" tabindex="-1"></a>    },</span>
-<span id="cb10-136"><a href="#cb10-136" tabindex="-1"></a>    <span class="at">N_epoch_ceiling =</span> <span class="cf">if</span> (<span class="fu">all</span>(ok)) {</span>
-<span id="cb10-137"><a href="#cb10-137" tabindex="-1"></a>      <span class="fu">sum</span>(folds<span class="sc">$</span>Hit_epoch_ceiling)</span>
-<span id="cb10-138"><a href="#cb10-138" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb10-139"><a href="#cb10-139" tabindex="-1"></a>      <span class="cn">NA_integer_</span></span>
-<span id="cb10-140"><a href="#cb10-140" tabindex="-1"></a>    },</span>
-<span id="cb10-141"><a href="#cb10-141" tabindex="-1"></a>    <span class="at">Status =</span> <span class="cf">if</span> (<span class="fu">all</span>(ok)) {</span>
-<span id="cb10-142"><a href="#cb10-142" tabindex="-1"></a>      <span class="st">&quot;ok&quot;</span></span>
-<span id="cb10-143"><a href="#cb10-143" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb10-144"><a href="#cb10-144" tabindex="-1"></a>      <span class="st">&quot;incomplete&quot;</span></span>
-<span id="cb10-145"><a href="#cb10-145" tabindex="-1"></a>    },</span>
-<span id="cb10-146"><a href="#cb10-146" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb10-147"><a href="#cb10-147" tabindex="-1"></a>  )</span>
-<span id="cb10-148"><a href="#cb10-148" tabindex="-1"></a></span>
-<span id="cb10-149"><a href="#cb10-149" tabindex="-1"></a>  <span class="fu">list</span>(</span>
-<span id="cb10-150"><a href="#cb10-150" tabindex="-1"></a>    <span class="at">summary =</span> summary,</span>
-<span id="cb10-151"><a href="#cb10-151" tabindex="-1"></a>    <span class="at">folds =</span> folds</span>
-<span id="cb10-152"><a href="#cb10-152" tabindex="-1"></a>  )</span>
-<span id="cb10-153"><a href="#cb10-153" tabindex="-1"></a>}</span>
-<span id="cb10-154"><a href="#cb10-154" tabindex="-1"></a></span>
-<span id="cb10-155"><a href="#cb10-155" tabindex="-1"></a>choose_candidate <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb10-156"><a href="#cb10-156" tabindex="-1"></a>  eligible <span class="ot">&lt;-</span> x[</span>
-<span id="cb10-157"><a href="#cb10-157" tabindex="-1"></a>    x<span class="sc">$</span>Status <span class="sc">==</span> <span class="st">&quot;ok&quot;</span> <span class="sc">&amp;</span></span>
-<span id="cb10-158"><a href="#cb10-158" tabindex="-1"></a>      <span class="fu">is.finite</span>(x<span class="sc">$</span>Mean_RMSE),</span>
-<span id="cb10-159"><a href="#cb10-159" tabindex="-1"></a>    ,</span>
-<span id="cb10-160"><a href="#cb10-160" tabindex="-1"></a>    drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
-<span id="cb10-161"><a href="#cb10-161" tabindex="-1"></a>  ]</span>
-<span id="cb10-162"><a href="#cb10-162" tabindex="-1"></a></span>
-<span id="cb10-163"><a href="#cb10-163" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">nrow</span>(eligible)) {</span>
-<span id="cb10-164"><a href="#cb10-164" tabindex="-1"></a>    <span class="fu">stop</span>(</span>
-<span id="cb10-165"><a href="#cb10-165" tabindex="-1"></a>      <span class="st">&quot;No complete ANN candidate is available.&quot;</span></span>
-<span id="cb10-166"><a href="#cb10-166" tabindex="-1"></a>    )</span>
-<span id="cb10-167"><a href="#cb10-167" tabindex="-1"></a>  }</span>
-<span id="cb10-168"><a href="#cb10-168" tabindex="-1"></a></span>
-<span id="cb10-169"><a href="#cb10-169" tabindex="-1"></a>  eligible<span class="sc">$</span>Parameters <span class="ot">&lt;-</span> <span class="fu">vapply</span>(</span>
-<span id="cb10-170"><a href="#cb10-170" tabindex="-1"></a>    eligible<span class="sc">$</span>Architecture,</span>
-<span id="cb10-171"><a href="#cb10-171" tabindex="-1"></a>    <span class="cf">function</span>(architecture) {</span>
-<span id="cb10-172"><a href="#cb10-172" tabindex="-1"></a>      <span class="fu">parameter_count</span>(</span>
-<span id="cb10-173"><a href="#cb10-173" tabindex="-1"></a>        <span class="fu">ncol</span>(geno),</span>
-<span id="cb10-174"><a href="#cb10-174" tabindex="-1"></a>        ARCHITECTURES[[architecture]]</span>
-<span id="cb10-175"><a href="#cb10-175" tabindex="-1"></a>      )</span>
-<span id="cb10-176"><a href="#cb10-176" tabindex="-1"></a>    },</span>
-<span id="cb10-177"><a href="#cb10-177" tabindex="-1"></a>    <span class="fu">numeric</span>(<span class="dv">1</span>)</span>
-<span id="cb10-178"><a href="#cb10-178" tabindex="-1"></a>  )</span>
-<span id="cb10-179"><a href="#cb10-179" tabindex="-1"></a></span>
-<span id="cb10-180"><a href="#cb10-180" tabindex="-1"></a>  eligible<span class="sc">$</span>Penalty <span class="ot">&lt;-</span></span>
-<span id="cb10-181"><a href="#cb10-181" tabindex="-1"></a>    eligible<span class="sc">$</span>L1 <span class="sc">+</span></span>
-<span id="cb10-182"><a href="#cb10-182" tabindex="-1"></a>    eligible<span class="sc">$</span>L2</span>
-<span id="cb10-183"><a href="#cb10-183" tabindex="-1"></a></span>
-<span id="cb10-184"><a href="#cb10-184" tabindex="-1"></a>  eligible <span class="ot">&lt;-</span> eligible[</span>
-<span id="cb10-185"><a href="#cb10-185" tabindex="-1"></a>    <span class="fu">order</span>(</span>
-<span id="cb10-186"><a href="#cb10-186" tabindex="-1"></a>      eligible<span class="sc">$</span>Mean_RMSE,</span>
-<span id="cb10-187"><a href="#cb10-187" tabindex="-1"></a>      <span class="sc">-</span>eligible<span class="sc">$</span>Mean_Correlation,</span>
-<span id="cb10-188"><a href="#cb10-188" tabindex="-1"></a>      eligible<span class="sc">$</span>Parameters,</span>
-<span id="cb10-189"><a href="#cb10-189" tabindex="-1"></a>      eligible<span class="sc">$</span>Penalty,</span>
-<span id="cb10-190"><a href="#cb10-190" tabindex="-1"></a>      eligible<span class="sc">$</span>Learning_rate,</span>
-<span id="cb10-191"><a href="#cb10-191" tabindex="-1"></a>      eligible<span class="sc">$</span>CandidateID</span>
-<span id="cb10-192"><a href="#cb10-192" tabindex="-1"></a>    ),</span>
-<span id="cb10-193"><a href="#cb10-193" tabindex="-1"></a>    ,</span>
-<span id="cb10-194"><a href="#cb10-194" tabindex="-1"></a>    drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
-<span id="cb10-195"><a href="#cb10-195" tabindex="-1"></a>  ]</span>
-<span id="cb10-196"><a href="#cb10-196" tabindex="-1"></a></span>
-<span id="cb10-197"><a href="#cb10-197" tabindex="-1"></a>  <span class="co"># Epoch diagnostics are intentionally absent from the ranking above.</span></span>
-<span id="cb10-198"><a href="#cb10-198" tabindex="-1"></a>  eligible[</span>
-<span id="cb10-199"><a href="#cb10-199" tabindex="-1"></a>    <span class="dv">1</span>,</span>
-<span id="cb10-200"><a href="#cb10-200" tabindex="-1"></a>    ,</span>
-<span id="cb10-201"><a href="#cb10-201" tabindex="-1"></a>    drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
-<span id="cb10-202"><a href="#cb10-202" tabindex="-1"></a>  ]</span>
-<span id="cb10-203"><a href="#cb10-203" tabindex="-1"></a>}</span></code></pre></div>
+<p>A completed candidate table is therefore sorted by the same
+hierarchy:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>candidate_summary <span class="ot">&lt;-</span> candidate_summary[</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="fu">order</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>    candidate_summary<span class="sc">$</span>Mean_RMSE,</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>    <span class="sc">-</span>candidate_summary<span class="sc">$</span>Mean_Correlation,</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>    candidate_summary<span class="sc">$</span>Parameters,</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>    candidate_summary<span class="sc">$</span>Penalty,</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>    candidate_summary<span class="sc">$</span>Learning_rate,</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>    candidate_summary<span class="sc">$</span>CandidateID</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>  ),</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>]</span></code></pre></div>
+<p>The first row is the selected candidate. Error handling and
+incomplete-fit bookkeeping are kept in the internal execution helper
+rather than in the tutorial code.</p>
 </div>
 <div id="outer-task-table" class="section level1">
 <h1>Outer-task table</h1>
 <p>The six scenarios share the same 25 frozen outer splits, producing
 150 <code>Scenario × outer split</code> tuning tasks.</p>
-<pre><code>Mode: FULL </code></pre>
-<pre><code>Tasks: 150 </code></pre>
-<pre><code>Configuration ID: ANN_TUNING_CANONICAL_V1__2-4-8-16-32-8-4-16-8-32-16-64-32__0.000125-0.00025-5e-04-0.001__1e-05-1e-04-0.001-0.01-0.03-0.1__1e-05-1e-04-0.001-0.01__2000__25__1e-06__0.15__2000 </code></pre>
-<pre><code>Expected selected rows: 600 </code></pre>
-<pre><code>Expected candidate rows: 10500 </code></pre>
-<pre><code>Expected fold rows: 42000 </code></pre>
 <table>
 <caption>First 15 canonical ANN tuning tasks</caption>
 <thead>
@@ -2103,6 +1634,10 @@ include epoch information.</p>
 </tr>
 </tbody>
 </table>
+<p>Each row represents one <code>Scenario × Repetition × Fold</code>
+combination. The same <code>TaskID</code> is used for all four ANN
+variants, which ensures that their selected regularization settings are
+compared within the same frozen outer task.</p>
 </div>
 <div id="canonical-nested-tuning" class="section level1">
 <h1>Canonical nested tuning</h1>
@@ -2448,6 +1983,11 @@ ranking and do not change the tuning grid.</p>
 </tr>
 </tbody>
 </table>
+<p>The table shows whether candidate optimization usually stopped
+because early-validation loss stopped improving or because the
+2000-epoch ceiling was reached. The median best epoch summarizes where
+the best validation checkpoint typically occurred; it is a diagnostic
+only and is not used to rank candidates.</p>
 </div>
 <div id="boundary-description" class="section level1">
 <h1>Boundary description</h1>
@@ -2508,31 +2048,69 @@ extending the search space after observing the results.</p>
 </tr>
 </tbody>
 </table>
+<p>In the canonical run, the upper architecture <code>64-32</code> was
+selected in 89 of 150 tasks. The remaining rows show how often the
+selected learning rate or penalty coefficient reached the edge of its
+prespecified grid. These counts are reported as search-space
+diagnostics, not as a reason to enlarge the grid after observing the
+results.</p>
 </div>
 <div id="from-tuning-to-final-fitting" class="section level1">
 <h1>From tuning to final fitting</h1>
-<p>Nested tuning produces one selected architecture, learning rate, and
-applicable penalty coefficient(s) for each
-<code>Scenario × outer split × ANN variant</code>. The final stage
-consumes those selections directly under the same frozen validation
-design; hyperparameter selection is not repeated.</p>
-</div>
-<div id="final-ann-fitting" class="section level1">
-<h1>Final ANN fitting</h1>
-<p>The tuning stage uses a 2000-epoch convergence ceiling. Final epoch
-selection uses a separate 3000-epoch safety ceiling so that
-patience-based stopping can operate within the outer-analysis sample
-without imposing a fixed training length. The 3000-epoch value is only
-an upper bound: each final network is reinitialized and refit on all 800
-outer-analysis individuals for exactly its selected
-<code>Best_epoch</code>.</p>
-<p>The final stage consumes the selected hyperparameters from nested
-tuning; it does not repeat model selection.</p>
-<p>For each <code>Scenario × outer split × ANN variant</code>,
-<code>Best_epoch</code> is selected with early stopping using only the
-800 outer-analysis individuals. The network is then reinitialized, refit
-on all 800 for exactly <code>Best_epoch</code>, and only then applied to
-the untouched 200 outer-assessment individuals.</p>
+<p>Nested tuning returns one architecture, learning rate, and applicable
+penalty coefficient(s) for each
+<code>Scenario × outer split × ANN variant</code>.</p>
+<p>The final stage follows one fixed sequence:</p>
+<ol style="list-style-type: decimal">
+<li>take the selected hyperparameters from nested tuning;</li>
+<li>use only the 800 outer-analysis individuals to select
+<code>Best_epoch</code>;</li>
+<li>allow at most 3000 epochs during this epoch-selection fit;</li>
+<li>reinitialize the network;</li>
+<li>refit all 800 outer-analysis individuals for exactly
+<code>Best_epoch</code>;</li>
+<li>predict the untouched 200 outer-assessment individuals.</li>
+</ol>
+<p>The 3000-epoch value is a <strong>safety ceiling</strong>, not the
+final training length. Outer-assessment phenotypes and true genetic
+values are excluded from both hyperparameter selection and
+<code>Best_epoch</code> selection.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Final-fitting item</th>
+<th>Canonical rule</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hyperparameters</td>
+<td>inherited from nested tuning</td>
+</tr>
+<tr class="even">
+<td>Epoch-selection sample</td>
+<td>800 outer-analysis individuals only</td>
+</tr>
+<tr class="odd">
+<td>Safety ceiling</td>
+<td>3000 epochs</td>
+</tr>
+<tr class="even">
+<td>Final refit</td>
+<td>all 800 outer-analysis individuals</td>
+</tr>
+<tr class="odd">
+<td>Final training length</td>
+<td>exactly <code>Best_epoch</code></td>
+</tr>
+<tr class="even">
+<td>Final assessment</td>
+<td>untouched 200 individuals</td>
+</tr>
+</tbody>
+</table>
+<p>The execution code that performs the 600 final model-task fits is
+retained internally.</p>
 <!-- Source section: final-fit helper functions -->
 <!-- Source section: final outer-CV tasks -->
 <!-- Source section: final fitting and outer prediction -->
@@ -2544,10 +2122,9 @@ the untouched 200 outer-assessment individuals.</p>
 predictions, selected epoch range, and leakage-prevention flags are
 checked internally against the canonical final-fitting contract.</p>
 <p>Across the 600 final epoch-selection fits, 600 stopped by patience
-and 0 reached the 3000-epoch ceiling without a patience stop. Thus, the
-final ceiling acts as a safety bound rather than a fixed training
-length; each network is subsequently refit for its selected
-<code>Best_epoch</code>.</p>
+and 0 reached the 3000-epoch ceiling. Thus, the safety ceiling did not
+define a common training length; each final network was subsequently
+refit for its own selected <code>Best_epoch</code>.</p>
 </div>
 <div id="final-ann-predictive-performance" class="section level1">
 <h1>Final ANN predictive performance</h1>
@@ -2556,6 +2133,352 @@ targets. Recovery of the known <strong>true genetic value</strong> is
 the primary simulated-data criterion; prediction of the <strong>observed
 phenotype</strong> is secondary. Both tables average the same 25 frozen
 outer splits for each scenario and ANN variant.</p>
+<table>
+<caption>Primary evaluation: mean outer-CV ANN performance against true
+genetic value</caption>
+<colgroup>
+<col width="2%" />
+<col width="7%" />
+<col width="8%" />
+<col width="4%" />
+<col width="9%" />
+<col width="16%" />
+<col width="10%" />
+<col width="9%" />
+<col width="10%" />
+<col width="11%" />
+<col width="9%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Scenario</th>
+<th align="left">Model</th>
+<th align="right">QTL_N</th>
+<th align="right">H2_nominal</th>
+<th align="right">Genetic_Correlation</th>
+<th align="right">Genetic_RMSE</th>
+<th align="right">Genetic_MAE</th>
+<th align="right">Genetic_Bias</th>
+<th align="right">Genetic_Slope</th>
+<th align="right">Genetic_R2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">17</td>
+<td align="left">C1</td>
+<td align="left">ANN_0</td>
+<td align="right">8</td>
+<td align="right">0.7</td>
+<td align="right">0.5863</td>
+<td align="right">1.5974</td>
+<td align="right">1.2814</td>
+<td align="right">-0.0276</td>
+<td align="right">0.8516</td>
+<td align="right">0.3208</td>
+</tr>
+<tr class="even">
+<td align="left">18</td>
+<td align="left">C1</td>
+<td align="left">ANN_L1</td>
+<td align="right">8</td>
+<td align="right">0.7</td>
+<td align="right">0.6861</td>
+<td align="right">1.4194</td>
+<td align="right">1.1454</td>
+<td align="right">-0.0402</td>
+<td align="right">1.0909</td>
+<td align="right">0.4604</td>
+</tr>
+<tr class="odd">
+<td align="left">20</td>
+<td align="left">C1</td>
+<td align="left">ANN_L2</td>
+<td align="right">8</td>
+<td align="right">0.7</td>
+<td align="right">0.5869</td>
+<td align="right">1.5972</td>
+<td align="right">1.2806</td>
+<td align="right">-0.0303</td>
+<td align="right">0.8495</td>
+<td align="right">0.3210</td>
+</tr>
+<tr class="even">
+<td align="left">19</td>
+<td align="left">C1</td>
+<td align="left">ANN_L1_L2</td>
+<td align="right">8</td>
+<td align="right">0.7</td>
+<td align="right">0.6868</td>
+<td align="right">1.4177</td>
+<td align="right">1.1441</td>
+<td align="right">-0.0424</td>
+<td align="right">1.0871</td>
+<td align="right">0.4617</td>
+</tr>
+<tr class="odd">
+<td align="left">21</td>
+<td align="left">C2</td>
+<td align="left">ANN_0</td>
+<td align="right">40</td>
+<td align="right">0.7</td>
+<td align="right">0.7427</td>
+<td align="right">0.6589</td>
+<td align="right">0.5262</td>
+<td align="right">-0.0320</td>
+<td align="right">1.0311</td>
+<td align="right">0.5153</td>
+</tr>
+<tr class="even">
+<td align="left">22</td>
+<td align="left">C2</td>
+<td align="left">ANN_L1</td>
+<td align="right">40</td>
+<td align="right">0.7</td>
+<td align="right">0.7432</td>
+<td align="right">0.6561</td>
+<td align="right">0.5256</td>
+<td align="right">-0.0276</td>
+<td align="right">1.0545</td>
+<td align="right">0.5197</td>
+</tr>
+<tr class="odd">
+<td align="left">24</td>
+<td align="left">C2</td>
+<td align="left">ANN_L2</td>
+<td align="right">40</td>
+<td align="right">0.7</td>
+<td align="right">0.7431</td>
+<td align="right">0.6582</td>
+<td align="right">0.5257</td>
+<td align="right">-0.0340</td>
+<td align="right">1.0329</td>
+<td align="right">0.5163</td>
+</tr>
+<tr class="even">
+<td align="left">23</td>
+<td align="left">C2</td>
+<td align="left">ANN_L1_L2</td>
+<td align="right">40</td>
+<td align="right">0.7</td>
+<td align="right">0.7431</td>
+<td align="right">0.6560</td>
+<td align="right">0.5255</td>
+<td align="right">-0.0279</td>
+<td align="right">1.0571</td>
+<td align="right">0.5198</td>
+</tr>
+<tr class="odd">
+<td align="left">9</td>
+<td align="left">C3</td>
+<td align="left">ANN_0</td>
+<td align="right">80</td>
+<td align="right">0.5</td>
+<td align="right">0.7965</td>
+<td align="right">0.4431</td>
+<td align="right">0.3527</td>
+<td align="right">0.0028</td>
+<td align="right">0.9925</td>
+<td align="right">0.5875</td>
+</tr>
+<tr class="even">
+<td align="left">10</td>
+<td align="left">C3</td>
+<td align="left">ANN_L1</td>
+<td align="right">80</td>
+<td align="right">0.5</td>
+<td align="right">0.7956</td>
+<td align="right">0.4405</td>
+<td align="right">0.3508</td>
+<td align="right">0.0049</td>
+<td align="right">1.0315</td>
+<td align="right">0.5929</td>
+</tr>
+<tr class="odd">
+<td align="left">12</td>
+<td align="left">C3</td>
+<td align="left">ANN_L2</td>
+<td align="right">80</td>
+<td align="right">0.5</td>
+<td align="right">0.7967</td>
+<td align="right">0.4431</td>
+<td align="right">0.3527</td>
+<td align="right">0.0027</td>
+<td align="right">0.9923</td>
+<td align="right">0.5876</td>
+</tr>
+<tr class="even">
+<td align="left">11</td>
+<td align="left">C3</td>
+<td align="left">ANN_L1_L2</td>
+<td align="right">80</td>
+<td align="right">0.5</td>
+<td align="right">0.7960</td>
+<td align="right">0.4398</td>
+<td align="right">0.3503</td>
+<td align="right">0.0056</td>
+<td align="right">1.0330</td>
+<td align="right">0.5942</td>
+</tr>
+<tr class="odd">
+<td align="left">13</td>
+<td align="left">C4</td>
+<td align="left">ANN_0</td>
+<td align="right">120</td>
+<td align="right">0.5</td>
+<td align="right">0.8309</td>
+<td align="right">0.3505</td>
+<td align="right">0.2798</td>
+<td align="right">-0.0204</td>
+<td align="right">0.9888</td>
+<td align="right">0.6359</td>
+</tr>
+<tr class="even">
+<td align="left">14</td>
+<td align="left">C4</td>
+<td align="left">ANN_L1</td>
+<td align="right">120</td>
+<td align="right">0.5</td>
+<td align="right">0.8310</td>
+<td align="right">0.3467</td>
+<td align="right">0.2769</td>
+<td align="right">-0.0224</td>
+<td align="right">1.0081</td>
+<td align="right">0.6438</td>
+</tr>
+<tr class="odd">
+<td align="left">16</td>
+<td align="left">C4</td>
+<td align="left">ANN_L2</td>
+<td align="right">120</td>
+<td align="right">0.5</td>
+<td align="right">0.8306</td>
+<td align="right">0.3499</td>
+<td align="right">0.2791</td>
+<td align="right">-0.0208</td>
+<td align="right">0.9918</td>
+<td align="right">0.6373</td>
+</tr>
+<tr class="even">
+<td align="left">15</td>
+<td align="left">C4</td>
+<td align="left">ANN_L1_L2</td>
+<td align="right">120</td>
+<td align="right">0.5</td>
+<td align="right">0.8298</td>
+<td align="right">0.3474</td>
+<td align="right">0.2772</td>
+<td align="right">-0.0180</td>
+<td align="right">1.0249</td>
+<td align="right">0.6425</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">C5</td>
+<td align="left">ANN_0</td>
+<td align="right">240</td>
+<td align="right">0.3</td>
+<td align="right">0.8570</td>
+<td align="right">0.2635</td>
+<td align="right">0.2101</td>
+<td align="right">0.0112</td>
+<td align="right">0.8951</td>
+<td align="right">0.6779</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">C5</td>
+<td align="left">ANN_L1</td>
+<td align="right">240</td>
+<td align="right">0.3</td>
+<td align="right">0.8512</td>
+<td align="right">0.2657</td>
+<td align="right">0.2128</td>
+<td align="right">0.0073</td>
+<td align="right">1.0238</td>
+<td align="right">0.6728</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="left">C5</td>
+<td align="left">ANN_L2</td>
+<td align="right">240</td>
+<td align="right">0.3</td>
+<td align="right">0.8574</td>
+<td align="right">0.2629</td>
+<td align="right">0.2096</td>
+<td align="right">0.0113</td>
+<td align="right">0.8934</td>
+<td align="right">0.6794</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="left">C5</td>
+<td align="left">ANN_L1_L2</td>
+<td align="right">240</td>
+<td align="right">0.3</td>
+<td align="right">0.8517</td>
+<td align="right">0.2671</td>
+<td align="right">0.2137</td>
+<td align="right">0.0077</td>
+<td align="right">1.0211</td>
+<td align="right">0.6700</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">C6</td>
+<td align="left">ANN_0</td>
+<td align="right">480</td>
+<td align="right">0.3</td>
+<td align="right">0.8956</td>
+<td align="right">0.2023</td>
+<td align="right">0.1623</td>
+<td align="right">-0.0296</td>
+<td align="right">0.9441</td>
+<td align="right">0.7494</td>
+</tr>
+<tr class="even">
+<td align="left">6</td>
+<td align="left">C6</td>
+<td align="left">ANN_L1</td>
+<td align="right">480</td>
+<td align="right">0.3</td>
+<td align="right">0.8992</td>
+<td align="right">0.1961</td>
+<td align="right">0.1572</td>
+<td align="right">-0.0292</td>
+<td align="right">1.0033</td>
+<td align="right">0.7655</td>
+</tr>
+<tr class="odd">
+<td align="left">8</td>
+<td align="left">C6</td>
+<td align="left">ANN_L2</td>
+<td align="right">480</td>
+<td align="right">0.3</td>
+<td align="right">0.8959</td>
+<td align="right">0.2026</td>
+<td align="right">0.1624</td>
+<td align="right">-0.0287</td>
+<td align="right">0.9439</td>
+<td align="right">0.7487</td>
+</tr>
+<tr class="even">
+<td align="left">7</td>
+<td align="left">C6</td>
+<td align="left">ANN_L1_L2</td>
+<td align="right">480</td>
+<td align="right">0.3</td>
+<td align="right">0.9002</td>
+<td align="right">0.1944</td>
+<td align="right">0.1557</td>
+<td align="right">-0.0300</td>
+<td align="right">1.0099</td>
+<td align="right">0.7698</td>
+</tr>
+</tbody>
+</table>
 <table>
 <caption>Secondary evaluation: mean outer-CV ANN performance against
 observed phenotype</caption>
@@ -2920,7 +2843,7 @@ comparison</a></p>
 </div>
 <div id="reproducibility-information" class="section level1">
 <h1>Reproducibility information</h1>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
@@ -2961,7 +2884,7 @@ Session information
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
