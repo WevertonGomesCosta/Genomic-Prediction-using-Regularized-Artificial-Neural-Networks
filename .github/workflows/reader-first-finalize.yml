@@ -21,7 +21,7 @@ jobs:
         with:
           use-public-rspm: true
 
-      - name: Apply reader-first transformation and normalize intended double indexing
+      - name: Apply reader-first transformation and normalize syntax
         shell: bash
         run: |
           set -euo pipefail
@@ -37,6 +37,15 @@ jobs:
           end = workflow.index(end_marker, start)
           script = textwrap.dedent(workflow[start:end])
           exec(compile(script, 'reader-first-cleanup.py', 'exec'))
+
+          audit = Path('analysis/simulated_data_audit.Rmd')
+          audit_text = audit.read_text()
+          old_regex = r'"^\s*Escal"'
+          new_regex = r'"^\\s*Escal"'
+          if old_regex not in audit_text:
+              raise RuntimeError('Expected transformed audit regex escape was not found')
+          audit_text = audit_text.replace(old_regex, new_regex)
+          audit.write_text(audit_text)
 
           ann = Path('analysis/simulated_data_ann.Rmd')
           text = ann.read_text()
