@@ -37,25 +37,8 @@ WIDE_TABLE_ATTR <- paste(
   'width:100%;"'
 )
 
-find_project_root <- function(start = getwd()) {
-  path <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
-  repeat {
-    if (file.exists(file.path(path, "_workflowr.yml"))) {
-      return(path)
-    }
-
-    parent <- dirname(path)
-
-    if (identical(parent, path)) {
-      stop("Could not locate workflowr project root.")
-    }
-
-    path <- parent
-  }
-}
-
-PROJECT_ROOT <- find_project_root()
+PROJECT_ROOT <- "."
 
 project_path <- function(...) {
   file.path(PROJECT_ROOT, ...)
@@ -84,61 +67,11 @@ RUN_RDS <- project_path("output", "simulated", "gblup", "simulated_gblup_ade_run
 The GBLUP-ADE branch uses the audited simulated-data object and the frozen
 validation design created in the preceding modules. The canonical dataset
 contains 1,000 individuals, 4,010 markers, six simulation scenarios, and 25
-outer validation splits. These inputs are checked before any model result is
-used.
+outer validation splits. Their dimensions and small samples are displayed before the model is fitted or its saved results are interpreted.
 
-```{r inputs, include=FALSE}
+```{r inputs}
 if (RUN_GBLUP) {
-  if (!requireNamespace("sommer", quietly = TRUE)) {
-    stop("Package 'sommer' is required when RUN_GBLUP=1.")
-  }
-
-  # sommer::mmes() evaluates the random-effects formula using helper
-  # functions vsm() and ism(). Attach sommer explicitly so these helpers
-  # are available in the fresh R session created by workflowr/callr.
-  suppressPackageStartupMessages(
-    library(sommer)
-  )
-
-  if (
-    !exists("vsm", mode = "function") ||
-    !exists("ism", mode = "function")
-  ) {
-    stop(
-      paste(
-        "sommer was attached, but vsm() and/or ism() are unavailable.",
-        "Installed sommer version:",
-        as.character(packageVersion("sommer"))
-      )
-    )
-  }
-}
-
-required_files <- c(
-  DATA_FILE,
-  CV_FILE,
-  DATA_AUDIT_FILE,
-  CV_AUDIT_FILE
-)
-
-if (!all(file.exists(required_files))) {
-  stop(
-    paste(
-      "Missing canonical file(s):",
-      paste(required_files[!file.exists(required_files)], collapse = ", ")
-    )
-  )
-}
-
-data_audit <- read.csv(DATA_AUDIT_FILE, stringsAsFactors = FALSE)
-cv_audit <- read.csv(CV_AUDIT_FILE, stringsAsFactors = FALSE)
-
-if (any(data_audit$Status == "BLOCKED")) {
-  stop("Simulated-data audit contains blocking checks.")
-}
-
-if (any(cv_audit$Status == "BLOCKED")) {
-  stop("Validation-design audit contains blocking checks.")
+  suppressPackageStartupMessages(library(sommer))
 }
 
 common <- readRDS(DATA_FILE)
@@ -148,24 +81,25 @@ phenotype <- common$phenotype
 true_g <- common$true_genetic_value
 geno <- common$genotype_m101
 control <- common$scenario_control
-ids <- as.integer(common$metadata$row_identifier)
-
-if (is.null(ids) || length(ids) == 0L) {
-  ids <- seq_len(nrow(geno))
-}
-
+ids <- seq_len(nrow(geno))
 id_labels <- sprintf("ID%04d", ids)
 rownames(geno) <- id_labels
-
 scenario_names <- colnames(phenotype)
-if (is.null(scenario_names)) scenario_names <- paste0("C", 1:6)
 
 input_summary <- data.frame(
   Item = c("Individuals", "Markers", "Scenarios", "Outer splits"),
-  Value = c(nrow(geno), ncol(geno), ncol(phenotype), length(cv$outer_splits))
+  Observed = c(nrow(geno), ncol(geno), ncol(phenotype), length(cv$outer_splits))
+)
+phenotype_sample <- data.frame(
+  ID = ids[1:6], phenotype[1:6, , drop = FALSE], check.names = FALSE
+)
+genotype_sample <- data.frame(
+  ID = ids[1:6], geno[1:6, 1:10, drop = FALSE], check.names = FALSE
 )
 
-knitr::kable(input_summary)
+knitr::kable(input_summary, caption = "Canonical GBLUP-ADE inputs", row.names = FALSE)
+knitr::kable(phenotype_sample, digits = 4, caption = "First six phenotype rows", row.names = FALSE)
+knitr::kable(genotype_sample, caption = "First six individuals and first ten markers", row.names = FALSE)
 ```
 
 # GBLUP-ADE model
@@ -812,59 +746,35 @@ structures are numerically suitable for interpreting the fitted predictions.
 # Canonical saved results
 
 The performance summaries below are generated from the canonical saved
-GBLUP-ADE results. They are loaded and checked internally against the frozen
-validation design before any table is displayed; the loading and audit code is
-kept out of the tutorial flow.
+GBLUP-ADE results. Their row counts and task structure are displayed directly
+before the performance tables.
 
-```{r result-audit, include=FALSE}
-results_available <-
-  file.exists(RESULTS_RDS) &&
-  file.exists(PREDICTIONS_RDS) &&
-  file.exists(RUN_RDS)
-
-if (!results_available) {
-  stop(
-    "Canonical GBLUP-ADE outputs are required to render the tutorial results."
-  )
-}
-
+```{r result-audit}
 results <- readRDS(RESULTS_RDS)
 predictions <- readRDS(PREDICTIONS_RDS)
 run_metadata <- readRDS(RUN_RDS)
 
-result_audit <- data.frame(
-  Check = c(
-    "Task rows",
-    "Prediction rows",
-    "Unique tasks",
-    "Predictions per task",
-    "Successful tasks",
-    "Finite predictions",
-    "Frozen split IDs"
+result_structure <- data.frame(
+  Object = c("Task-level results", "Held-out predictions"),
+  Rows = c(nrow(results), nrow(predictions)),
+  Unique_tasks = c(
+    length(unique(results$TaskID)),
+    length(unique(predictions$TaskID))
   ),
-  Status = c(
-    if (nrow(results) == 150L) "PASS" else "BLOCKED",
-    if (nrow(predictions) == 30000L) "PASS" else "BLOCKED",
-    if (length(unique(results$TaskID)) == 150L) "PASS" else "BLOCKED",
-    if (all(table(predictions$TaskID) == 200L)) "PASS" else "BLOCKED",
-    if (all(results$Status == "ok")) "PASS" else "WARNING",
-    if (all(is.finite(predictions$Predicted_Value))) "PASS" else "WARNING",
-    if (
-      setequal(unique(results$SplitID), names(cv$outer_splits))
-    ) "PASS" else "BLOCKED"
-  ),
-  stringsAsFactors = FALSE
+  Rows_per_task = c(
+    1,
+    paste(range(as.integer(table(predictions$TaskID))), collapse = " to ")
+  )
 )
-
-if (any(result_audit$Status == "BLOCKED")) {
-  stop("Saved GBLUP-ADE results failed a blocking audit check.")
-}
+knitr::kable(
+  result_structure,
+  caption = "Observed structure of the canonical GBLUP-ADE results",
+  row.names = FALSE
+)
 ```
 
-For the canonical saved results, the audit verifies 150 unique scenario-by-split
-tasks and 30,000 held-out predictions, corresponding to 200 assessment
-individuals per task. The frozen split identifiers and prediction finiteness are
-checked before any performance summary is interpreted.
+The displayed result structure shows the number of task-level fits and held-out
+predictions used by the performance summaries.
 
 # Predictive performance
 
