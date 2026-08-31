@@ -1,0 +1,1642 @@
+name: reader-first-cleanup
+
+on:
+  push:
+    branches:
+      - didactic-reader-first-cleanup
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: didactic-reader-first-cleanup
+          fetch-depth: 0
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Replace defensive audits with observed summaries
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          analysis = Path('analysis')
+
+          def replace_chunk(text, label, body, options=''):
+              pattern = re.compile(
+                  r"```\{r\s+" + re.escape(label) + r"[^}]*\}\n.*?\n```",
+                  re.S,
+              )
+              header = f"```{{r {label}{options}}}"
+              replacement = header + "\n" + body.strip('\n') + "\n```"
+              text, n = pattern.subn(replacement, text, count=1)
+              if n != 1:
+                  raise RuntimeError(f'chunk not found: {label}')
+              return text
+
+          def replace_chunk_containing(text, needle, label, body, options=''):
+              pos = text.find(needle)
+              if pos < 0:
+                  raise RuntimeError(f'needle not found: {needle}')
+              start = text.rfind('```{r', 0, pos)
+              end = text.find('\n```', pos)
+              if start < 0 or end < 0:
+                  raise RuntimeError(f'chunk bounds not found for: {needle}')
+              end += len('\n```')
+              header = f"```{{r {label}{options}}}"
+              return text[:start] + header + "\n" + body.strip('\n') + "\n```" + text[end:]
+
+          def remove_function(text, name):
+              token = f'{name} <- function'
+              start = text.find(token)
+              if start < 0:
+                  return text
+              brace = text.find('{', start)
+              depth = 0
+              quote = None
+              escape = False
+              for i in range(brace, len(text)):
+                  ch = text[i]
+                  if quote:
+                      if escape:
+                          escape = False
+                      elif ch == '\\':
+                          escape = True
+                      elif ch == quote:
+                          quote = None
+                      continue
+                  if ch in ('"', "'"):
+                      quote = ch
+                  elif ch == '{':
+                      depth += 1
+                  elif ch == '}':
+                      depth -= 1
+                      if depth == 0:
+                          end = i + 1
+                          while end < len(text) and text[end] in ' \t':
+                              end += 1
+                          if end < len(text) and text[end] == '\n':
+                              end += 1
+                          return text[:start] + text[end:]
+              raise RuntimeError(f'unbalanced function: {name}')
+
+          def simplify_root(text):
+              text = remove_function(text, 'find_project_root')
+              text = text.replace('PROJECT_ROOT <- find_project_root()', 'PROJECT_ROOT <- "."')
+              return text
+
+          def remove_if_block_with_needle(text, needle):
+              pos = text.find(needle)
+              if pos < 0:
+                  return text
+              # Find nearest preceding if whose brace encloses the needle.
+              candidates = [m.start() for m in re.finditer(r'\bif\s*\(', text[:pos])]
+              for start in reversed(candidates):
+                  brace = text.find('{', start, pos + 1)
+                  if brace < 0:
+                      continue
+                  depth = 0
+                  quote = None
+                  escape = False
+                  for i in range(brace, len(text)):
+                      ch = text[i]
+                      if quote:
+                          if escape:
+                              escape = False
+                          elif ch == '\\':
+                              escape = True
+                          elif ch == quote:
+                              quote = None
+                          continue
+                      if ch in ('"', "'"):
+                          quote = ch
+                      elif ch == '{':
+                          depth += 1
+                      elif ch == '}':
+                          depth -= 1
+                          if depth == 0:
+                              end = i + 1
+                              if brace < pos < end:
+                                  while end < len(text) and text[end] in ' \t':
+                                      end += 1
+                                  if end < len(text) and text[end] == '\n':
+                                      end += 1
+                                  return text[:start] + text[end:]
+                              break
+              raise RuntimeError(f'enclosing if not found for: {needle}')
+
+          # ================================================================
+          # M01 — Data audit
+          # ================================================================
+          p = analysis / 'simulated_data_audit.Rmd'
+          t = p.read_text()
+          t = simplify_root(t)
+
+          setup = r'''
+          knitr::opts_chunk$set(
+            echo = TRUE,
+            message = FALSE,
+            warning = FALSE
+          )
+
+          options(stringsAsFactors = FALSE)
+
+          WIDE_TABLE_ATTR <- paste(
+            'style="display:block;',
+            'overflow-x:auto;',
+            'white-space:nowrap;',
+            'width:100%;"'
+          )
+
+          PROJECT_ROOT <- "."
+          project_path <- function(...) file.path(PROJECT_ROOT, ...)
+
+          SEED_GLOBAL <- 20260821L
+          set.seed(SEED_GLOBAL)
+
+          data_dir <- project_path("data", "dados_simulados")
+          output_dir <- project_path("output", "simulated", "audit")
+          dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+          '''
+          t = replace_chunk(t, 'setup', setup, ', include=FALSE')
+
+          expected_files = r'''
+          expected_files <- c(
+            "controlegenetico#1.dat",
+            "DG#gen_F2_Vfen.txt",
+            "DG#gen_F2_Vgen.dat",
+            "genoma.txt",
+            "genoma_mapa.txt",
+            "genoma_mapa_tr.txt",
+            "genoma_pais.txt",
+            "map.rds"
+          )
+
+          file_paths <- file.path(data_dir, expected_files)
+          file_table <- data.frame(
+            File = expected_files,
+            Exists = file.exists(file_paths),
+            Size_MB = round(file.info(file_paths)$size / 1024^2, 3),
+            stringsAsFactors = FALSE
+          )
+
+          knitr::kable(
+            file_table,
+            caption = "Simulator files used in the audit",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'expected-files', expected_files)
+
+          core = r'''
+          core_dimensions <- data.frame(
+            Object = c(
+              "Phenotypic values",
+              "True genetic values",
+              "Genotype matrix (0/1/2)",
+              "Genotype matrix (11/12/22)"
+            ),
+            Rows = c(
+              nrow(phenotype),
+              nrow(true_genetic_value),
+              nrow(geno_012),
+              nrow(geno_1122)
+            ),
+            Columns = c(
+              ncol(phenotype),
+              ncol(true_genetic_value),
+              ncol(geno_012),
+              ncol(geno_1122)
+            )
+          )
+
+          response_summary <- data.frame(
+            Object = c("Phenotypic values", "True genetic values"),
+            Missing = c(sum(is.na(phenotype)), sum(is.na(true_genetic_value))),
+            Minimum = c(min(phenotype), min(true_genetic_value)),
+            Median = c(median(phenotype), median(true_genetic_value)),
+            Maximum = c(max(phenotype), max(true_genetic_value))
+          )
+
+          knitr::kable(
+            core_dimensions,
+            caption = "Dimensions of the four primary matrices",
+            row.names = FALSE
+          )
+
+          knitr::kable(
+            response_summary,
+            digits = 4,
+            caption = "Observed values and missing cells in the response matrices",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'core-dimensions', core)
+
+          coding = r'''
+          codes_012 <- sort(unique(as.vector(geno_012)))
+          codes_1122 <- sort(unique(as.vector(geno_1122)))
+
+          geno_1122_to_012 <- matrix(
+            NA_integer_,
+            nrow = nrow(geno_1122),
+            ncol = ncol(geno_1122)
+          )
+          geno_1122_to_012[geno_1122 == 11L] <- 2L
+          geno_1122_to_012[geno_1122 == 12L] <- 1L
+          geno_1122_to_012[geno_1122 == 22L] <- 0L
+
+          genotype_mismatches <- sum(geno_012 != geno_1122_to_012)
+          geno_m101 <- geno_012 - 1L
+          codes_m101 <- sort(unique(as.vector(geno_m101)))
+
+          geno_code_table <- data.frame(
+            Representation = c(
+              "Source 0/1/2",
+              "Source 11/12/22",
+              "Canonical -1/0/1"
+            ),
+            Observed_codes = c(
+              paste(codes_012, collapse = ", "),
+              paste(codes_1122, collapse = ", "),
+              paste(codes_m101, collapse = ", ")
+            ),
+            stringsAsFactors = FALSE
+          )
+
+          knitr::kable(
+            geno_code_table,
+            caption = "Observed genotype codes before and after transformation",
+            row.names = FALSE
+          )
+
+          data.frame(
+            Quantity = "Cell differences after recoding 11/12/22 to 2/1/0",
+            Observed = genotype_mismatches
+          ) |>
+            knitr::kable(row.names = FALSE)
+
+          rm(geno_1122, geno_1122_to_012)
+          invisible(gc())
+          '''
+          t = replace_chunk(t, 'genotype-coding', coding)
+
+          genetic_map = r'''
+          map_lines <- readLines(
+            file.path(data_dir, "genoma.txt"),
+            warn = FALSE,
+            encoding = "latin1"
+          )
+          map_parts <- lapply(strsplit(map_lines, ",", fixed = TRUE), trimws)
+          is_marker_line <- vapply(
+            map_parts,
+            function(z) length(z) == 5L && toupper(z[3]) == "C",
+            logical(1)
+          )
+          marker_matrix <- do.call(rbind, map_parts[is_marker_line])
+
+          genetic_map <- data.frame(
+            LG = as.integer(marker_matrix[, 1]),
+            Marker_within_LG = as.integer(marker_matrix[, 2]),
+            Type = marker_matrix[, 3],
+            Marker = marker_matrix[, 4],
+            Position_cM = as.numeric(marker_matrix[, 5]),
+            stringsAsFactors = FALSE
+          )
+          genetic_map$Global_marker <- seq_len(nrow(genetic_map))
+
+          map_summary <- do.call(
+            rbind,
+            lapply(split(genetic_map, genetic_map$LG), function(x) {
+              pos <- sort(x$Position_cM)
+              data.frame(
+                LG = unique(x$LG),
+                Markers = nrow(x),
+                Min_cM = min(pos),
+                Max_cM = max(pos),
+                Spacing_cM = median(diff(pos))
+              )
+            })
+          )
+          rownames(map_summary) <- NULL
+          n_duplicate_marker_names <- sum(duplicated(genetic_map$Marker))
+          '''
+          t = replace_chunk(t, 'genetic-map', genetic_map, ', include=FALSE')
+
+          map_summary = r'''
+          knitr::kable(
+            map_summary,
+            digits = 3,
+            caption = "Canonical genetic-map structure",
+            row.names = FALSE
+          )
+
+          knitr::kable(
+            data.frame(
+              Quantity = c("Map markers", "Linkage groups", "Duplicate marker names"),
+              Observed = c(
+                nrow(genetic_map),
+                length(unique(genetic_map$LG)),
+                n_duplicate_marker_names
+              )
+            ),
+            caption = "Observed map totals",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'genetic-map-summary', map_summary)
+
+          simulation_control = r'''
+          control_raw <- readLines(
+            file.path(data_dir, "controlegenetico#1.dat"),
+            warn = FALSE
+          )
+          control_ascii <- iconv(
+            control_raw,
+            from = "latin1",
+            to = "ASCII//TRANSLIT",
+            sub = ""
+          )
+
+          normalize_control_key <- function(x) {
+            key <- trimws(sub(",.*$", "", x))
+            key <- gsub("[[:space:]]+", "", key)
+            tolower(key)
+          }
+
+          extract_control_value <- function(block, key) {
+            block_keys <- vapply(block, normalize_control_key, character(1))
+            hit <- which(block_keys == normalize_control_key(paste0(key, ",")))[1L]
+            value_text <- trimws(sub("^[^,]*,", "", block[hit]))
+            suppressWarnings(as.numeric(value_text))
+          }
+
+          control_keys <- vapply(control_ascii, normalize_control_key, character(1))
+          scenario_start <- which(control_keys == "variavel")
+          scenario_end <- c(scenario_start[-1L] - 1L, length(control_ascii))
+
+          scale_source_lines <- grep(
+            "^\\s*Escal",
+            control_ascii,
+            value = TRUE,
+            ignore.case = TRUE
+          )
+          scale_source_keys <- trimws(sub(",.*$", "", scale_source_lines))
+
+          control_rows <- vector("list", length(scenario_start))
+          qtl_lists <- vector("list", length(scenario_start))
+
+          for (i in seq_along(scenario_start)) {
+            block <- control_ascii[scenario_start[i]:scenario_end[i]]
+            block_keys <- vapply(block, normalize_control_key, character(1))
+            selected_line <- which(block_keys == "locos_selecionados")[1L]
+            qtl_line <- block[selected_line + 1L]
+
+            qtl_lists[[i]] <- as.integer(
+              scan(text = qtl_line, what = numeric(), quiet = TRUE)
+            )
+
+            control_rows[[i]] <- data.frame(
+              Scenario = paste0("C", i),
+              Variable = extract_control_value(block, "Variavel"),
+              Total_loci = extract_control_value(block, "Locos_total"),
+              QTL_N = extract_control_value(block, "Locos_selecionados"),
+              gmd = extract_control_value(block, "gmd"),
+              Model = extract_control_value(block, "Modelo"),
+              H2_nominal = extract_control_value(block, "Herdabilidade"),
+              Constant = extract_control_value(block, "Constante"),
+              Scale = extract_control_value(block, "Escala"),
+              CV_metadata = extract_control_value(block, "CV")
+            )
+          }
+
+          control_table <- do.call(rbind, control_rows)
+          '''
+          t = replace_chunk(t, 'simulation-control', simulation_control, ', include=FALSE')
+
+          simulation_summary = r'''
+          control_display <- control_table[
+            ,
+            c(
+              "Scenario", "QTL_N", "H2_nominal", "gmd",
+              "Model", "Constant", "Scale", "CV_metadata"
+            )
+          ]
+
+          knitr::kable(
+            control_display,
+            digits = 4,
+            caption = "Simulation-scenario parameters used downstream",
+            row.names = FALSE
+          )
+
+          knitr::kable(
+            data.frame(
+              Scenario = paste0("C", seq_along(qtl_lists)),
+              QTL_in_file = vapply(qtl_lists, length, integer(1)),
+              QTL_metadata = control_table$QTL_N
+            ),
+            caption = "QTL counts read from each scenario block",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'simulation-control-summary', simulation_summary)
+
+          qtl = r'''
+          qtl_rows <- do.call(
+            rbind,
+            lapply(seq_along(qtl_lists), function(i) {
+              qtl <- qtl_lists[[i]]
+              data.frame(
+                Scenario = paste0("C", i),
+                QTL_index = qtl,
+                LG = genetic_map$LG[qtl],
+                Position_cM = genetic_map$Position_cM[qtl]
+              )
+            })
+          )
+
+          qtl_table_matrix <- table(
+            factor(qtl_rows$Scenario, levels = paste0("C", 1:6)),
+            factor(qtl_rows$LG, levels = 1:10)
+          )
+          qtl_by_lg <- data.frame(
+            Scenario = rownames(qtl_table_matrix),
+            unclass(qtl_table_matrix),
+            check.names = FALSE,
+            row.names = NULL
+          )
+          names(qtl_by_lg)[-1] <- paste0("LG", 1:10)
+
+          qtl_overlap <- outer(
+            seq_along(qtl_lists),
+            seq_along(qtl_lists),
+            Vectorize(function(i, j) length(intersect(qtl_lists[[i]], qtl_lists[[j]])))
+          )
+          dimnames(qtl_overlap) <- list(paste0("C", 1:6), paste0("C", 1:6))
+
+          qtl_observed <- data.frame(
+            Scenario = paste0("C", seq_along(qtl_lists)),
+            QTL_N = vapply(qtl_lists, length, integer(1)),
+            Minimum_index = vapply(qtl_lists, min, integer(1)),
+            Maximum_index = vapply(qtl_lists, max, integer(1)),
+            Duplicated_indices = vapply(
+              qtl_lists,
+              function(x) sum(duplicated(x)),
+              integer(1)
+            )
+          )
+
+          knitr::kable(
+            qtl_observed,
+            caption = "Observed QTL indices by scenario",
+            row.names = FALSE
+          )
+          knitr::kable(
+            qtl_by_lg,
+            caption = "Number of QTL per linkage group",
+            row.names = FALSE
+          )
+          knitr::kable(
+            qtl_overlap,
+            caption = "Number of shared QTL indices between simulation scenarios"
+          )
+          '''
+          t = replace_chunk(t, 'qtl-audit', qtl)
+
+          phen = r'''
+          scenario_names <- paste0("C", 1:6)
+          colnames(phenotype) <- scenario_names
+          colnames(true_genetic_value) <- scenario_names
+          residual_value <- phenotype - true_genetic_value
+
+          scenario_summary <- data.frame(
+            Scenario = scenario_names,
+            QTL_N = control_table$QTL_N,
+            H2_nominal = control_table$H2_nominal,
+            Phenotype_mean = colMeans(phenotype),
+            Phenotype_sd = apply(phenotype, 2, sd),
+            Genetic_mean = colMeans(true_genetic_value),
+            Genetic_sd = apply(true_genetic_value, 2, sd),
+            Residual_mean = colMeans(residual_value),
+            Residual_sd = apply(residual_value, 2, sd),
+            Cor_P_G = vapply(
+              seq_len(ncol(phenotype)),
+              function(j) cor(phenotype[, j], true_genetic_value[, j]),
+              numeric(1)
+            ),
+            Cor_G_E = vapply(
+              seq_len(ncol(phenotype)),
+              function(j) cor(true_genetic_value[, j], residual_value[, j]),
+              numeric(1)
+            ),
+            H2_realized = vapply(
+              seq_len(ncol(phenotype)),
+              function(j) {
+                vg <- var(true_genetic_value[, j])
+                ve <- var(residual_value[, j])
+                vg / (vg + ve)
+              },
+              numeric(1)
+            ),
+            VarG_over_VarP = vapply(
+              seq_len(ncol(phenotype)),
+              function(j) var(true_genetic_value[, j]) / var(phenotype[, j]),
+              numeric(1)
+            ),
+            CV_empirical_pct = 100 * apply(phenotype, 2, sd) / colMeans(phenotype),
+            CV_metadata = control_table$CV_metadata
+          )
+          scenario_summary$H2_difference <-
+            scenario_summary$H2_realized - scenario_summary$H2_nominal
+          scenario_summary$CV_difference <-
+            scenario_summary$CV_empirical_pct - scenario_summary$CV_metadata
+
+          scenario_signal_display <- scenario_summary[
+            , c(
+              "Scenario", "QTL_N", "H2_nominal", "H2_realized",
+              "H2_difference", "Phenotype_mean", "Genetic_mean", "Cor_P_G"
+            )
+          ]
+          scenario_diagnostics_display <- scenario_summary[
+            , c(
+              "Scenario", "Phenotype_sd", "Genetic_sd", "Residual_mean",
+              "Residual_sd", "Cor_G_E", "VarG_over_VarP",
+              "CV_empirical_pct", "CV_metadata", "CV_difference"
+            )
+          ]
+
+          knitr::kable(
+            scenario_signal_display,
+            digits = 4,
+            caption = "Phenotypic and true-genetic signal by simulation scenario",
+            row.names = FALSE
+          )
+          knitr::kable(
+            scenario_diagnostics_display,
+            digits = 4,
+            caption = "Dispersion and residual diagnostics by simulation scenario",
+            table.attr = WIDE_TABLE_ATTR,
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'phenotypic-genetic-summary', phen)
+
+          qc = r'''
+          missing_genotypes <- sum(is.na(geno_012))
+          duplicate_individuals <- sum(duplicated(geno_012, MARGIN = 1))
+          duplicate_markers <- sum(duplicated(geno_012, MARGIN = 2))
+
+          allele_frequency <- colMeans(geno_012) / 2
+          maf <- pmin(allele_frequency, 1 - allele_frequency)
+          heterozygosity <- colMeans(geno_012 == 1L)
+          marker_variance <- apply(geno_012, 2, var)
+          monomorphic_markers <- sum(marker_variance == 0)
+
+          geno_frequency <- prop.table(
+            table(factor(as.vector(geno_012), levels = 0:2))
+          )
+          geno_frequency_table <- data.frame(
+            Genotype_code = 0:2,
+            Proportion = as.numeric(geno_frequency),
+            F2_expectation = c(0.25, 0.50, 0.25)
+          )
+          marker_qc_summary <- data.frame(
+            Statistic = c(
+              "Missing genotype cells", "Duplicate individuals",
+              "Duplicate markers", "Monomorphic markers",
+              "Minimum MAF", "Median MAF", "Maximum MAF",
+              "Minimum heterozygosity", "Median heterozygosity",
+              "Maximum heterozygosity"
+            ),
+            Value = c(
+              missing_genotypes, duplicate_individuals, duplicate_markers,
+              monomorphic_markers, min(maf), median(maf), max(maf),
+              min(heterozygosity), median(heterozygosity), max(heterozygosity)
+            )
+          )
+
+          knitr::kable(
+            geno_frequency_table,
+            digits = 6,
+            caption = "Observed 0/1/2 genotype proportions and F2 expectation",
+            row.names = FALSE
+          )
+          knitr::kable(
+            marker_qc_summary,
+            digits = 6,
+            caption = "Marker and individual quality-control summary",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'genotype-qc', qc)
+
+          parents = r'''
+          parents <- as.matrix(
+            read.table(file.path(data_dir, "genoma_pais.txt"), header = FALSE)
+          )
+          parent_id <- parents[, 1]
+          parent_lg <- parents[, 2]
+          parent_nmarkers <- parents[, 3]
+          parent_genotypes <- parents[, 5:405, drop = FALSE]
+          '''
+          t = replace_chunk(t, 'parents', parents, ', include=FALSE')
+
+          map_rds = r'''
+          map_rds <- readRDS(file.path(data_dir, "map.rds"))
+          map_rds_info <- data.frame(
+            Property = c("Class", "Dimensions", "Names"),
+            Value = c(
+              paste(class(map_rds), collapse = ", "),
+              if (is.null(dim(map_rds))) "No dimensions" else paste(dim(map_rds), collapse = " x "),
+              if (is.null(names(map_rds))) "No names" else paste(head(names(map_rds), 20), collapse = ", ")
+            )
+          )
+          knitr::kable(map_rds_info, caption = "Serialized map object")
+          '''
+          t = replace_chunk(t, 'map-rds', map_rds)
+
+          # Keep the scientific LD calculation, remove only boolean audit classification.
+          ld_pattern = re.compile(
+              r'\nshort_ld <- ld_summary\$Mean_r2\[.*?\nknitr::kable\(\n  ld_summary,',
+              re.S,
+          )
+          ld_replacement = '''
+          \nknitr::kable(\n  ld_summary,'''
+          t, n = ld_pattern.subn(ld_replacement, t, count=1)
+          if n != 1:
+              raise RuntimeError('LD audit classification block not found')
+
+          final_audit = r'''
+          audit_overview <- data.frame(
+            Quantity = c(
+              "Input files present",
+              "Individuals",
+              "Markers",
+              "Scenarios",
+              "Genotype-code mismatches after recoding",
+              "Missing genotype cells",
+              "Duplicate individuals",
+              "Duplicate markers",
+              "Monomorphic markers",
+              "Duplicate map marker names",
+              "Minimum MAF",
+              "Mean interchromosomal r2"
+            ),
+            Observed = c(
+              paste(sum(file_table$Exists), "of", nrow(file_table)),
+              nrow(geno_012),
+              ncol(geno_012),
+              ncol(phenotype),
+              genotype_mismatches,
+              missing_genotypes,
+              duplicate_individuals,
+              duplicate_markers,
+              monomorphic_markers,
+              n_duplicate_marker_names,
+              round(min(maf), 4),
+              round(interchromosomal_ld$Mean_r2, 5)
+            ),
+            stringsAsFactors = FALSE
+          )
+
+          knitr::kable(
+            audit_overview,
+            caption = "Observed summary of the simulated-data audit",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'final-audit', final_audit)
+
+          save = r'''
+          write.csv(
+            audit_overview,
+            file.path(output_dir, "simulated_audit_summary.csv"),
+            row.names = FALSE
+          )
+          write.csv(
+            scenario_summary,
+            file.path(output_dir, "simulated_scenario_summary.csv"),
+            row.names = FALSE
+          )
+          write.csv(
+            qtl_rows,
+            file.path(output_dir, "simulated_qtl_map.csv"),
+            row.names = FALSE
+          )
+          write.csv(
+            ld_summary,
+            file.path(output_dir, "simulated_ld_summary.csv"),
+            row.names = FALSE
+          )
+
+          simulated_common <- list(
+            metadata = list(
+              dataset = "simulated",
+              seed = SEED_GLOBAL,
+              n_individuals = nrow(geno_012),
+              n_markers = ncol(geno_012),
+              n_scenarios = ncol(phenotype),
+              row_identifier = seq_len(nrow(geno_012)),
+              row_alignment = "row position",
+              canonical_genotype_coding = "-1/0/1"
+            ),
+            phenotype = phenotype,
+            true_genetic_value = true_genetic_value,
+            residual_value = residual_value,
+            genotype_012 = geno_012,
+            genotype_m101 = geno_m101,
+            genetic_map = genetic_map,
+            scenario_control = control_table,
+            qtl_lists = qtl_lists,
+            qtl_map = qtl_rows,
+            scenario_summary = scenario_summary,
+            marker_qc = list(
+              allele_frequency = allele_frequency,
+              maf = maf,
+              heterozygosity = heterozygosity
+            ),
+            ld_summary = ld_summary,
+            interchromosomal_ld = interchromosomal_ld
+          )
+
+          saveRDS(
+            simulated_common,
+            file.path(output_dir, "preprocessed_simulated_common.rds"),
+            compress = "gzip"
+          )
+
+          cat(
+            "Canonical object written to:",
+            file.path(output_dir, "preprocessed_simulated_common.rds"),
+            "\n"
+          )
+          '''
+          t = replace_chunk(t, 'save-canonical-object', save)
+
+          t = t.replace(
+            'Internal\nintegrity checks still classify conditions as `PASS`, `WARNING`, or `BLOCKED`,\nbut the complete operational checklist is written to the audit output rather\nthan repeated throughout the public page. A `BLOCKED` condition prevents\ncreation of the canonical modeling object, while scientifically relevant\nwarnings are discussed directly in the section where they arise.',
+            'The audit reports observed dimensions, codes, distributions, frequencies, and\ndiagnostics directly. The reader can therefore inspect what is present in the\nsimulated data without translating boolean guards into scientific meaning.'
+          )
+          t = t.replace('# Internal integrity status', '# Audit summary')
+          t = re.sub(
+            r'The internal checks classify this preprocessing stage as\n.*?classified as `BLOCKED`\.',
+            'The table above collects the principal observed quantities used to interpret the\nsimulated dataset. Features that require scientific interpretation are discussed\nin the section where they arise rather than converted into execution guards.',
+            t,
+            flags=re.S,
+          )
+          t = t.replace(
+            'The canonical preprocessed object is generated only when no blocking audit\nfailure is present.',
+            'The canonical preprocessed object is generated from the data and summaries shown above.'
+          )
+          t = t.replace('recorded as a `WARNING` about the\nsimulator\'s long-distance recombination behavior.',
+                        'reported explicitly as a feature of the\nsimulator\'s long-distance recombination behavior.')
+          t = t.replace('this is recorded as a `WARNING`. The warning does not alter or\nfilter the genotype matrix;',
+                        'this remains visible in the LD table and does not alter or\nfilter the genotype matrix;')
+          t = t.replace('Non-blocking departures are\nreported as `WARNING` and retained explicitly instead of being filtered\nsilently from the canonical genotype matrix.',
+                        'Observed departures are retained explicitly instead of being filtered\nsilently from the canonical genotype matrix.')
+          p.write_text(t)
+
+          # ================================================================
+          # M02 — Validation design
+          # ================================================================
+          p = analysis / 'simulated_data_validation.Rmd'
+          t = p.read_text()
+          t = simplify_root(t)
+
+          setup = r'''
+          knitr::opts_chunk$set(
+            echo = TRUE,
+            message = FALSE,
+            warning = FALSE
+          )
+          options(stringsAsFactors = FALSE)
+          PROJECT_ROOT <- "."
+          project_path <- function(...) file.path(PROJECT_ROOT, ...)
+          input_file <- project_path(
+            "output", "simulated", "audit", "preprocessed_simulated_common.rds"
+          )
+          output_dir <- project_path("output", "simulated", "validation")
+          dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+          '''
+          t = replace_chunk(t, 'setup', setup, ', include=FALSE')
+
+          prerequisites = r'''
+          simulated_common <- readRDS(input_file)
+          canonical_components <- data.frame(
+            Component = c("phenotype", "true_genetic_value", "genotype_m101"),
+            Rows = c(
+              nrow(simulated_common$phenotype),
+              nrow(simulated_common$true_genetic_value),
+              nrow(simulated_common$genotype_m101)
+            ),
+            Columns = c(
+              ncol(simulated_common$phenotype),
+              ncol(simulated_common$true_genetic_value),
+              ncol(simulated_common$genotype_m101)
+            )
+          )
+          knitr::kable(
+            canonical_components,
+            caption = "Canonical objects used to construct the validation design",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'prerequisites', prerequisites)
+
+          universe = r'''
+          ids <- as.integer(simulated_common$metadata$row_identifier)
+          individual_universe <- data.frame(
+            Quantity = c(
+              "Individuals used to generate folds",
+              "First row identifier",
+              "Last row identifier"
+            ),
+            Observed = c(length(ids), min(ids), max(ids))
+          )
+          knitr::kable(
+            individual_universe,
+            caption = "Individual universe used for fold generation",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'individual-universe', universe)
+
+          outer = r'''
+          outer_assignments <- do.call(
+            rbind,
+            lapply(seq_len(N_OUTER_REPEATS), function(rep_id) {
+              assignment <- balanced_fold_assignment(
+                ids = ids,
+                k = N_OUTER_FOLDS,
+                seed = SEED_GLOBAL + rep_id
+              )
+              data.frame(
+                Repetition = rep_id,
+                ID = assignment$ID,
+                OuterFold = assignment$Fold,
+                stringsAsFactors = FALSE
+              )
+            })
+          )
+          rownames(outer_assignments) <- NULL
+          outer_assignments$SplitID <- sprintf(
+            "R%02d_F%02d",
+            outer_assignments$Repetition,
+            outer_assignments$OuterFold
+          )
+
+          outer_sizes <- aggregate(
+            ID ~ Repetition + OuterFold + SplitID,
+            data = outer_assignments,
+            FUN = length
+          )
+          names(outer_sizes)[names(outer_sizes) == "ID"] <- "Assessment_N"
+          outer_sizes$Analysis_N <- length(ids) - outer_sizes$Assessment_N
+
+          knitr::kable(
+            outer_sizes,
+            caption = "Outer repeated cross-validation split sizes",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'outer-folds', outer)
+
+          outer_objects = r'''
+          outer_split_ids <- sort(unique(outer_assignments$SplitID))
+          outer_splits <- setNames(
+            vector("list", length(outer_split_ids)),
+            outer_split_ids
+          )
+
+          for (split_id in outer_split_ids) {
+            assessment_ids <- outer_assignments$ID[
+              outer_assignments$SplitID == split_id
+            ]
+            analysis_ids <- setdiff(ids, assessment_ids)
+            outer_splits[[split_id]] <- list(
+              split_id = split_id,
+              analysis_ids = sort(analysis_ids),
+              assessment_ids = sort(assessment_ids)
+            )
+          }
+
+          example_outer_split <- outer_splits[[1]]
+          outer_object_summary <- data.frame(
+            Component = c("analysis_ids", "assessment_ids", "overlap"),
+            N = c(
+              length(example_outer_split$analysis_ids),
+              length(example_outer_split$assessment_ids),
+              length(intersect(
+                example_outer_split$analysis_ids,
+                example_outer_split$assessment_ids
+              ))
+            ),
+            First_IDs = c(
+              paste(head(example_outer_split$analysis_ids, 6), collapse = ", "),
+              paste(head(example_outer_split$assessment_ids, 6), collapse = ", "),
+              "-"
+            )
+          )
+          knitr::kable(
+            outer_object_summary,
+            caption = paste("Structure of outer split", example_outer_split$split_id),
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'outer-split-objects', outer_objects)
+
+          inner = r'''
+          inner_assignments_list <- vector("list", length(outer_splits))
+          names(inner_assignments_list) <- names(outer_splits)
+          inner_splits <- setNames(
+            vector("list", length(outer_splits)),
+            names(outer_splits)
+          )
+
+          for (split_id in names(outer_splits)) {
+            outer_split <- outer_splits[[split_id]]
+            split_tokens <- strsplit(sub("^R", "", split_id), "_F")[[1]]
+            rep_id <- as.integer(split_tokens[1])
+            outer_fold <- as.integer(split_tokens[2])
+            inner_seed <- SEED_GLOBAL + 100000L + rep_id * 100L + outer_fold
+
+            assignment <- balanced_fold_assignment(
+              ids = outer_split$analysis_ids,
+              k = N_INNER_FOLDS,
+              seed = inner_seed
+            )
+
+            inner_assignments_list[[split_id]] <- data.frame(
+              SplitID = split_id,
+              Repetition = rep_id,
+              OuterFold = outer_fold,
+              ID = assignment$ID,
+              InnerFold = assignment$Fold,
+              stringsAsFactors = FALSE
+            )
+
+            current_inner_splits <- setNames(
+              vector("list", N_INNER_FOLDS),
+              paste0("I", seq_len(N_INNER_FOLDS))
+            )
+
+            for (inner_fold in seq_len(N_INNER_FOLDS)) {
+              inner_assessment_ids <- assignment$ID[assignment$Fold == inner_fold]
+              inner_analysis_ids <- setdiff(
+                outer_split$analysis_ids,
+                inner_assessment_ids
+              )
+              current_inner_splits[[paste0("I", inner_fold)]] <- list(
+                split_id = split_id,
+                inner_fold = inner_fold,
+                analysis_ids = sort(inner_analysis_ids),
+                assessment_ids = sort(inner_assessment_ids)
+              )
+            }
+            inner_splits[[split_id]] <- current_inner_splits
+          }
+
+          inner_assignments <- do.call(rbind, inner_assignments_list)
+          rownames(inner_assignments) <- NULL
+          inner_sizes <- aggregate(
+            ID ~ SplitID + Repetition + OuterFold + InnerFold,
+            data = inner_assignments,
+            FUN = length
+          )
+          names(inner_sizes)[names(inner_sizes) == "ID"] <- "Assessment_N"
+          inner_sizes$Analysis_N <- 800L - inner_sizes$Assessment_N
+
+          knitr::kable(
+            head(inner_sizes, 20),
+            caption = "First 20 nested inner split sizes",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'inner-folds', inner)
+
+          independence = r'''
+          partition_information <- data.frame(
+            Information = c(
+              "Individual ID", "Deterministic seed", "Scenario",
+              "Phenotype", "True genetic value", "Model"
+            ),
+            Used_to_generate_folds = c(TRUE, TRUE, FALSE, FALSE, FALSE, FALSE)
+          )
+          knitr::kable(
+            partition_information,
+            caption = "Information used to generate the frozen validation partitions",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'independence-contract', independence)
+
+          final_validation = r'''
+          outer_overlap <- max(vapply(
+            outer_splits,
+            function(x) length(intersect(x$analysis_ids, x$assessment_ids)),
+            integer(1)
+          ))
+          inner_overlap <- max(unlist(lapply(
+            inner_splits,
+            function(split) vapply(
+              split,
+              function(x) length(intersect(x$analysis_ids, x$assessment_ids)),
+              integer(1)
+            )
+          )))
+
+          validation_observed <- data.frame(
+            Quantity = c(
+              "Outer assignment rows", "Outer splits", "Outer analysis N",
+              "Outer assessment N", "Maximum outer overlap",
+              "Inner assignment rows", "Inner splits", "Inner analysis N",
+              "Inner assessment N", "Maximum inner overlap"
+            ),
+            Observed = c(
+              nrow(outer_assignments),
+              length(outer_splits),
+              unique(outer_sizes$Analysis_N),
+              unique(outer_sizes$Assessment_N),
+              outer_overlap,
+              nrow(inner_assignments),
+              sum(vapply(inner_splits, length, integer(1))),
+              unique(inner_sizes$Analysis_N),
+              unique(inner_sizes$Assessment_N),
+              inner_overlap
+            )
+          )
+          knitr::kable(
+            validation_observed,
+            caption = "Observed structure of the frozen nested cross-validation design",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'final-validation-audit', final_validation)
+
+          save_validation = r'''
+          write.csv(
+            validation_observed,
+            file.path(output_dir, "simulated_cv_design_audit.csv"),
+            row.names = FALSE
+          )
+          write.csv(
+            outer_assignments,
+            file.path(output_dir, "simulated_cv_outer_assignments.csv"),
+            row.names = FALSE
+          )
+          write.csv(
+            inner_assignments,
+            file.path(output_dir, "simulated_cv_inner_assignments.csv"),
+            row.names = FALSE
+          )
+          write.csv(
+            design_summary,
+            file.path(output_dir, "simulated_cv_design_summary.csv"),
+            row.names = FALSE
+          )
+
+          cv_design <- list(
+            metadata = list(
+              dataset = "simulated",
+              seed_global = SEED_GLOBAL,
+              n_individuals = length(ids),
+              n_scenarios = simulated_common$metadata$n_scenarios,
+              outer_repetitions = N_OUTER_REPEATS,
+              outer_folds = N_OUTER_FOLDS,
+              inner_folds = N_INNER_FOLDS,
+              outer_analysis_n = 800L,
+              outer_assessment_n = 200L,
+              inner_analysis_n = 600L,
+              inner_assessment_n = 200L,
+              scenario_independent = TRUE,
+              model_independent = TRUE,
+              phenotype_used_for_partitioning = FALSE,
+              true_genetic_value_used_for_partitioning = FALSE
+            ),
+            outer_assignments = outer_assignments,
+            outer_splits = outer_splits,
+            inner_assignments = inner_assignments,
+            inner_splits = inner_splits,
+            audit = validation_observed
+          )
+
+          saveRDS(
+            cv_design,
+            file.path(output_dir, "simulated_cv_design.rds"),
+            compress = "gzip"
+          )
+          cat(
+            "Frozen validation design written to:",
+            file.path(output_dir, "simulated_cv_design.rds"),
+            "\n"
+          )
+          '''
+          t = replace_chunk(t, 'save-validation-design', save_validation)
+
+          t = t.replace(
+            'Internal integrity checks still verify file availability, ID alignment,\npartition sizes, disjointness, and coverage. Those checks remain executable and\nare exported with the validation outputs, but the public page emphasizes the\nvalidation logic that determines how models are trained and evaluated.',
+            'The sections below show the individual universe, partition sizes, overlap, and\ncoverage directly. The validation structure can therefore be inspected from the\ndisplayed objects rather than inferred from boolean checks.'
+          )
+          t = t.replace(
+            'The validation design is built only after the simulated-data audit has\ncompleted without any blocking check.',
+            'The validation design is built from the canonical simulated-data object created\nin the preceding module.'
+          )
+          t = t.replace('# Internal validation status', '# Observed validation structure')
+          t = re.sub(
+            r'The internal checks classify the frozen validation design as\n.*?canonical cross-validation object\.',
+            'The table above shows the sizes and overlap of the frozen outer and inner\npartitions before they are saved for the modeling modules.',
+            t,
+            flags=re.S,
+          )
+          t = t.replace(
+            'The validated design is stored only after all blocking conditions have been\nexcluded.',
+            'The design is stored after its observed partition structure has been displayed.'
+          )
+          p.write_text(t)
+
+          # ================================================================
+          # M03 — GBLUP-ADE
+          # ================================================================
+          p = analysis / 'simulated_data_gblup.Rmd'
+          t = simplify_root(p.read_text())
+
+          inputs = r'''
+          if (RUN_GBLUP) {
+            suppressPackageStartupMessages(library(sommer))
+          }
+
+          common <- readRDS(DATA_FILE)
+          cv <- readRDS(CV_FILE)
+
+          phenotype <- common$phenotype
+          true_g <- common$true_genetic_value
+          geno <- common$genotype_m101
+          control <- common$scenario_control
+          ids <- seq_len(nrow(geno))
+          id_labels <- sprintf("ID%04d", ids)
+          rownames(geno) <- id_labels
+          scenario_names <- colnames(phenotype)
+
+          input_summary <- data.frame(
+            Item = c("Individuals", "Markers", "Scenarios", "Outer splits"),
+            Observed = c(nrow(geno), ncol(geno), ncol(phenotype), length(cv$outer_splits))
+          )
+          phenotype_sample <- data.frame(
+            ID = ids[1:6], phenotype[1:6, , drop = FALSE], check.names = FALSE
+          )
+          genotype_sample <- data.frame(
+            ID = ids[1:6], geno[1:6, 1:10, drop = FALSE], check.names = FALSE
+          )
+
+          knitr::kable(input_summary, caption = "Canonical GBLUP-ADE inputs", row.names = FALSE)
+          knitr::kable(phenotype_sample, digits = 4, caption = "First six phenotype rows", row.names = FALSE)
+          knitr::kable(genotype_sample, caption = "First six individuals and first ten markers", row.names = FALSE)
+          '''
+          t = replace_chunk(t, 'inputs', inputs)
+
+          result_audit = r'''
+          results <- readRDS(RESULTS_RDS)
+          predictions <- readRDS(PREDICTIONS_RDS)
+          run_metadata <- readRDS(RUN_RDS)
+
+          result_structure <- data.frame(
+            Object = c("Task-level results", "Held-out predictions"),
+            Rows = c(nrow(results), nrow(predictions)),
+            Unique_tasks = c(
+              length(unique(results$TaskID)),
+              length(unique(predictions$TaskID))
+            ),
+            Rows_per_task = c(
+              1,
+              paste(range(as.integer(table(predictions$TaskID))), collapse = " to ")
+            )
+          )
+          knitr::kable(
+            result_structure,
+            caption = "Observed structure of the canonical GBLUP-ADE results",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'result-audit', result_audit)
+          t = t.replace(
+            'These inputs are checked before any model result is\nused.',
+            'Their dimensions and small samples are displayed before the model is fitted or its saved results are interpreted.'
+          )
+          t = t.replace(
+            'The performance summaries below are generated from the canonical saved\nGBLUP-ADE results. They are loaded and checked internally against the frozen\nvalidation design before any table is displayed; the loading and audit code is\nkept out of the tutorial flow.',
+            'The performance summaries below are generated from the canonical saved\nGBLUP-ADE results. Their row counts and task structure are displayed directly\nbefore the performance tables.'
+          )
+          t = re.sub(
+            r'For the canonical saved results, the audit verifies .*?performance summary is interpreted\.',
+            'The displayed result structure shows the number of task-level fits and held-out\npredictions used by the performance summaries.',
+            t,
+            flags=re.S,
+          )
+          p.write_text(t)
+
+          # ================================================================
+          # M04 — ANN
+          # ================================================================
+          p = analysis / 'simulated_data_ann.Rmd'
+          t = simplify_root(p.read_text())
+
+          packages = r'''
+          if (ANN_RUNTIME_REQUIRED) {
+            suppressPackageStartupMessages(library(torch))
+            cuda_available <- torch::cuda_is_available()
+            requested_device <- tolower(Sys.getenv("ANN_DEVICE", "auto"))
+
+            ANN_DEVICE_LABEL <- if (requested_device == "cuda") {
+              "cuda"
+            } else if (requested_device == "cpu") {
+              "cpu"
+            } else if (cuda_available) {
+              "cuda"
+            } else {
+              "cpu"
+            }
+            ANN_DEVICE <- torch::torch_device(ANN_DEVICE_LABEL)
+
+            sync_device <- function() {
+              if (ANN_DEVICE_LABEL == "cuda") torch::cuda_synchronize()
+              invisible(NULL)
+            }
+            set_ann_seed <- function(seed) {
+              set.seed(as.integer(seed))
+              torch::torch_manual_seed(as.integer(seed))
+              invisible(NULL)
+            }
+
+            torch_version_display <- as.character(packageVersion("torch"))
+            cuda_display <- cuda_available
+            device_display <- ANN_DEVICE_LABEL
+          } else {
+            cuda_available <- NA
+            ANN_DEVICE_LABEL <- "not initialized (saved-output render)"
+            ANN_DEVICE <- NULL
+            sync_device <- function() invisible(NULL)
+            set_ann_seed <- function(seed) invisible(seed)
+            torch_version_display <- "not initialized (saved-output render)"
+            cuda_display <- "not initialized (saved-output render)"
+            device_display <- ANN_DEVICE_LABEL
+          }
+
+          environment_table <- data.frame(
+            Item = c(
+              "torch version", "CUDA available", "device", "MAX_EPOCHS",
+              "TUNING_V1_COMPATIBILITY_TOKEN", "patience",
+              "minimum improvement", "early-validation fraction", "dropout"
+            ),
+            Value = c(
+              torch_version_display, cuda_display, device_display,
+              MAX_EPOCHS, TUNING_V1_COMPATIBILITY_TOKEN, PATIENCE,
+              MIN_DELTA, EARLY_VALIDATION_FRACTION, DROPOUT
+            )
+          )
+          knitr::kable(environment_table, caption = "Fixed ANN computational protocol")
+          '''
+          t = replace_chunk(t, 'packages', packages)
+
+          ann_inputs = r'''
+          common <- readRDS(DATA_FILE)
+          cv <- readRDS(CV_FILE)
+          phenotype <- common$phenotype
+          geno <- common$genotype_m101
+          ids <- seq_len(nrow(geno))
+          scenario_names <- colnames(phenotype)
+
+          ann_input_summary <- data.frame(
+            Object = c("Phenotype", "Genotype", "Outer splits", "Inner splits"),
+            Rows_or_count = c(
+              nrow(phenotype), nrow(geno), length(cv$outer_splits),
+              sum(vapply(cv$inner_splits, length, integer(1)))
+            ),
+            Columns = c(ncol(phenotype), ncol(geno), NA, NA)
+          )
+          phenotype_sample <- data.frame(
+            ID = ids[1:6], phenotype[1:6, , drop = FALSE], check.names = FALSE
+          )
+          genotype_sample <- data.frame(
+            ID = ids[1:6], geno[1:6, 1:10, drop = FALSE], check.names = FALSE
+          )
+
+          knitr::kable(ann_input_summary, caption = "Canonical ANN inputs", row.names = FALSE)
+          knitr::kable(phenotype_sample, digits = 4, caption = "First six phenotype rows", row.names = FALSE)
+          knitr::kable(genotype_sample, caption = "First six individuals and first ten markers", row.names = FALSE)
+          '''
+          t = replace_chunk(t, 'inputs', ann_inputs)
+
+          prefit = r'''
+          tuning_input_summary <- data.frame(
+            Quantity = c(
+              "Individuals", "Markers", "Scenarios", "Outer splits", "Inner splits"
+            ),
+            Observed = c(
+              nrow(geno), ncol(geno), length(scenario_names), length(cv$outer_splits),
+              sum(vapply(cv$inner_splits, length, integer(1)))
+            )
+          )
+          knitr::kable(
+            tuning_input_summary,
+            caption = "Observed ANN tuning input structure",
+            row.names = FALSE
+          )
+          '''
+          if 'input_checks <- data.frame' in t:
+              t = replace_chunk_containing(t, 'input_checks <- data.frame', 'tuning-input-summary', prefit)
+
+          saved_tuning = r'''
+          selected_configurations <- readRDS(SELECTED_RDS)
+          candidate_summary <- readRDS(CANDIDATE_RDS)
+          fold_results <- readRDS(FOLD_RDS)
+          run_metadata <- readRDS(RUN_RDS)
+
+          tuning_output_summary <- data.frame(
+            Object = c(
+              "Selected configurations", "Candidate summaries",
+              "Inner candidate-fold results"
+            ),
+            Rows = c(
+              nrow(selected_configurations), nrow(candidate_summary), nrow(fold_results)
+            )
+          )
+          knitr::kable(
+            tuning_output_summary,
+            caption = "Observed size of the canonical ANN tuning outputs",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'saved-integrity', saved_tuning)
+
+          t = remove_if_block_with_needle(
+            t,
+            'Canonical ANN tuning failed a blocking integrity check.'
+          )
+
+          final_saved = r'''
+          results <- readRDS(FINAL_RESULTS_RDS)
+          predictions <- readRDS(FINAL_PREDICTIONS_RDS)
+          epoch_selection <- readRDS(FINAL_EPOCH_RDS)
+          final_meta <- readRDS(FINAL_RUN_RDS)
+
+          final_output_summary <- data.frame(
+            Object = c("Model-task results", "Held-out predictions", "Epoch selections"),
+            Rows = c(nrow(results), nrow(predictions), nrow(epoch_selection)),
+            Unique_tasks = c(
+              length(unique(results$TaskID)),
+              length(unique(predictions$TaskID)),
+              length(unique(epoch_selection$TaskID))
+            )
+          )
+          knitr::kable(
+            final_output_summary,
+            caption = "Observed size of the canonical final ANN outputs",
+            row.names = FALSE
+          )
+          cat("\nFinal Best_epoch summary:\n")
+          print(summary(epoch_selection$Best_epoch))
+          cat(
+            "\nFinal epoch-selection fits reaching the",
+            FINAL_EPOCH_MAX_EPOCHS,
+            "epoch ceiling:",
+            sum(epoch_selection$Hit_epoch_ceiling, na.rm = TRUE),
+            "/", nrow(epoch_selection), "\n"
+          )
+          '''
+          if 'final_available<-all(' in t:
+              t = replace_chunk_containing(t, 'final_available<-all(', 'final-saved-results', final_saved)
+
+          t = t.replace(
+            'Their dimensions, genotype coding, scenario names, and frozen split counts are\nverified internally before any ANN tuning summary is interpreted.',
+            'Their dimensions and small samples are displayed directly before the tuning code so the reader can see the objects used by the network.'
+          )
+          t = t.replace(
+            'The selected configurations and tuning diagnostics below are generated from\nthe canonical saved tuning outputs. These files are loaded and checked\ninternally before display so the tutorial can focus on how the selected\nhyperparameters are summarized and interpreted.',
+            'The selected configurations and tuning diagnostics below are generated from\nthe canonical saved tuning outputs. Their sizes are displayed directly before\nthe selected hyperparameters are summarized and interpreted.'
+          )
+          p.write_text(t)
+
+          # ================================================================
+          # M05 — Model comparison
+          # ================================================================
+          p = analysis / 'simulated_data_comparison.Rmd'
+          t = simplify_root(p.read_text())
+
+          load = r'''
+          gr <- readRDS(GBLUP_RESULTS_RDS)
+          gp <- readRDS(GBLUP_PREDICTIONS_RDS)
+          ar <- readRDS(ANN_RESULTS_RDS)
+          ap <- readRDS(ANN_PREDICTIONS_RDS)
+
+          input_rows <- data.frame(
+            Object = c(
+              "GBLUP task results", "GBLUP predictions",
+              "ANN task-by-model results", "ANN predictions"
+            ),
+            Rows = c(nrow(gr), nrow(gp), nrow(ar), nrow(ap))
+          )
+          knitr::kable(
+            input_rows,
+            caption = "Canonical model-comparison inputs",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'load-canonical-inputs', load)
+
+          compatibility = r'''
+          comparison_keys <- c(
+            "Scenario", "Repetition", "Fold", "SplitID", "TaskID", "ID"
+          )
+          g_targets <- gp[
+            , c(comparison_keys, "Observed_Phenotype", "True_Genetic_Value")
+          ]
+          paired_targets <- merge(
+            g_targets,
+            ap[, c(
+              comparison_keys, "Model", "Observed_Phenotype", "True_Genetic_Value"
+            )],
+            by = comparison_keys,
+            suffixes = c("_GBLUP", "_ANN"),
+            sort = FALSE
+          )
+          paired_targets$Phenotype_difference <- abs(
+            paired_targets$Observed_Phenotype_GBLUP -
+              paired_targets$Observed_Phenotype_ANN
+          )
+          paired_targets$TrueG_difference <- abs(
+            paired_targets$True_Genetic_Value_GBLUP -
+              paired_targets$True_Genetic_Value_ANN
+          )
+
+          model_structure <- do.call(
+            rbind,
+            lapply(c("GBLUP_ADE", expected_ann_models), function(model) {
+              if (model == "GBLUP_ADE") {
+                result_data <- gr
+                prediction_data <- gp
+              } else {
+                result_data <- ar[ar$Model == model, , drop = FALSE]
+                prediction_data <- ap[ap$Model == model, , drop = FALSE]
+              }
+              predictions_per_task <- as.integer(table(prediction_data$TaskID))
+              data.frame(
+                Model = model,
+                Tasks = length(unique(result_data$TaskID)),
+                Predictions = nrow(prediction_data),
+                Min_predictions_per_task = min(predictions_per_task),
+                Max_predictions_per_task = max(predictions_per_task)
+              )
+            })
+          )
+
+          target_match <- aggregate(
+            cbind(Phenotype_difference, TrueG_difference) ~ Model,
+            data = paired_targets,
+            FUN = max
+          )
+
+          knitr::kable(
+            model_structure,
+            caption = "Observed task and assessment structure by model",
+            row.names = FALSE
+          )
+          knitr::kable(
+            target_match,
+            digits = 12,
+            caption = "Maximum paired target difference relative to GBLUP-ADE",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'compatibility-audit', compatibility)
+
+          contract = r'''
+          comparison_contract <- data.frame(
+            Quantity = c(
+              "Outer tasks per model",
+              "Assessment predictions per task",
+              "Maximum paired phenotype difference",
+              "Maximum paired true-G difference"
+            ),
+            Observed = c(
+              paste(range(model_structure$Tasks), collapse = " to "),
+              paste(
+                range(c(
+                  model_structure$Min_predictions_per_task,
+                  model_structure$Max_predictions_per_task
+                )),
+                collapse = " to "
+              ),
+              max(target_match$Phenotype_difference),
+              max(target_match$TrueG_difference)
+            )
+          )
+          knitr::kable(
+            comparison_contract,
+            caption = "Observed contract for the task-matched model comparison",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'compatibility-summary', contract)
+
+          verify_outputs = r'''
+          canonical_files <- c(
+            OVERALL_CSV, SCENARIO_CSV, PAIRED_CSV, PAIRED_SCENARIO_CSV
+          )
+          output_files <- data.frame(
+            File = basename(canonical_files),
+            Exists = file.exists(canonical_files),
+            Size_KB = round(file.info(canonical_files)$size / 1024, 1)
+          )
+          knitr::kable(
+            output_files,
+            caption = "Versioned comparison tables available for reuse",
+            row.names = FALSE
+          )
+          '''
+          t = replace_chunk(t, 'verify-comparison-outputs', verify_outputs)
+
+          t = t.replace(
+            'The full compatibility audit is retained internally. For interpretation, the\nfair-comparison contract can be summarized by the four conditions below.',
+            'The tables above expose the task counts, assessment counts, and paired target\ndifferences directly. The compact summary below restates those observed values.'
+          )
+          t = t.replace(
+            'The four conditions are prerequisites rather than performance results. Because\nthe hidden compatibility audit blocks execution when any condition fails, all\nsubsequent tables compare the same tasks, individuals, and evaluation targets.',
+            'These quantities describe the pairing structure rather than predictive\nperformance. They show directly that the subsequent summaries use matched tasks,\nindividuals, and evaluation targets.'
+          )
+          p.write_text(t)
+
+          # ================================================================
+          # Mechanical checks before R parsing.
+          # ================================================================
+          files = [
+            analysis / 'simulated_data_audit.Rmd',
+            analysis / 'simulated_data_validation.Rmd',
+            analysis / 'simulated_data_gblup.Rmd',
+            analysis / 'simulated_data_ann.Rmd',
+            analysis / 'simulated_data_comparison.Rmd',
+          ]
+
+          def extract_r_chunks(path):
+              lines = path.read_text().splitlines()
+              code = []
+              in_chunk = False
+              for line in lines:
+                  if not in_chunk and re.match(r'^```\{r(?:[ ,}]|$)', line):
+                      in_chunk = True
+                      code.append(f'# ---- {line} ----')
+                      continue
+                  if in_chunk and line.strip() == '```':
+                      in_chunk = False
+                      code.append('')
+                      continue
+                  if in_chunk:
+                      code.append(line)
+              if in_chunk:
+                  raise RuntimeError(f'unclosed R chunk in {path}')
+              return '\n'.join(code) + '\n'
+
+          temp = Path('/tmp/rmd-parse')
+          temp.mkdir(parents=True, exist_ok=True)
+          for path in files:
+              text = path.read_text()
+              rcode = extract_r_chunks(path)
+              if re.search(r'\bstopifnot\s*\(', rcode):
+                  raise RuntimeError(f'stopifnot remains in {path}')
+              if re.search(r'\bstop\s*\(', rcode):
+                  raise RuntimeError(f'stop() remains in {path}')
+              (temp / f'{path.stem}.R').write_text(rcode)
+
+          ann_text = (analysis / 'simulated_data_ann.Rmd').read_text()
+          if 'stale_epochs >= PATIENCE' not in ann_text or 'break' not in ann_text:
+              raise RuntimeError('ANN early stopping logic was not preserved')
+          PY
+
+      - name: Parse every R chunk
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in /tmp/rmd-parse/*.R; do
+            echo "Parsing $f"
+            Rscript -e "parse(file='$f'); cat('OK\n')"
+          done
+
+      - name: Record final diff
+        shell: bash
+        run: |
+          git diff --check
+          git status --short
+          rm -f .github/workflows/reader-first-cleanup.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Replace defensive guards with reader-facing summaries"
+          git push origin HEAD:didactic-reader-first-cleanup
