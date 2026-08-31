@@ -63,7 +63,6 @@ project_path <- function(...) {
 
 
 SEED_GLOBAL <- 20260821L
-N_ITERS_SOMMER <- 20L
 RUN_GBLUP <- identical(Sys.getenv("RUN_GBLUP", "0"), "1")
 
 DATA_FILE <- project_path("output", "simulated", "audit", "preprocessed_simulated_common.rds")
@@ -78,98 +77,6 @@ PREDICTIONS_CSV <- project_path("output", "simulated", "gblup", "simulated_gblup
 KERNEL_CSV <- project_path("output", "simulated", "gblup", "simulated_gblup_ade_kernel_summary.csv")
 RUN_RDS <- project_path("output", "simulated", "gblup", "simulated_gblup_ade_run_metadata.rds")
 
-safe_cor <- function(pred, obs) {
-  ok <- is.finite(pred) & is.finite(obs)
-  if (sum(ok) < 3L || sd(pred[ok]) == 0 || sd(obs[ok]) == 0) return(NA_real_)
-  cor(pred[ok], obs[ok])
-}
-
-safe_rmse <- function(pred, obs) {
-  ok <- is.finite(pred) & is.finite(obs)
-  if (!any(ok)) return(NA_real_)
-  sqrt(mean((pred[ok] - obs[ok])^2))
-}
-
-safe_mae <- function(pred, obs) {
-  ok <- is.finite(pred) & is.finite(obs)
-  if (!any(ok)) return(NA_real_)
-  mean(abs(pred[ok] - obs[ok]))
-}
-
-safe_bias <- function(pred, obs) {
-  ok <- is.finite(pred) & is.finite(obs)
-  if (!any(ok)) return(NA_real_)
-  mean(pred[ok] - obs[ok])
-}
-
-safe_slope <- function(pred, obs) {
-  ok <- is.finite(pred) & is.finite(obs)
-  if (sum(ok) < 3L || sd(pred[ok]) == 0) return(NA_real_)
-  as.numeric(coef(lm(obs[ok] ~ pred[ok]))[2])
-}
-
-safe_r2 <- function(pred, obs) {
-  ok <- is.finite(pred) & is.finite(obs)
-  if (sum(ok) < 2L) return(NA_real_)
-  den <- sum((obs[ok] - mean(obs[ok]))^2)
-  if (den == 0) return(NA_real_)
-  1 - sum((obs[ok] - pred[ok])^2) / den
-}
-
-metrics <- function(pred, obs, prefix) {
-  z <- c(
-    safe_cor(pred, obs),
-    safe_rmse(pred, obs),
-    safe_mae(pred, obs),
-    safe_bias(pred, obs),
-    safe_slope(pred, obs),
-    safe_r2(pred, obs)
-  )
-  names(z) <- paste0(
-    prefix,
-    c("_Correlation", "_RMSE", "_MAE", "_Bias", "_Slope", "_R2")
-  )
-  z
-}
-
-extract_u <- function(fit, dat, factor_name, exact_name) {
-  unames <- names(fit$uList)
-  if (exact_name %in% unames) {
-    nm <- exact_name
-  } else {
-    token <- paste0("ism(", factor_name, ")")
-    hit <- grep(token, unames, fixed = TRUE)
-    if (length(hit) != 1L) {
-      stop(
-        paste(
-          "Could not identify random component for", factor_name,
-          ". Available:", paste(unames, collapse = " | ")
-        )
-      )
-    }
-    nm <- unames[hit]
-  }
-
-  u <- fit$uList[[nm]]
-  if (is.data.frame(u)) u <- as.matrix(u)
-  if (is.vector(u)) u <- matrix(u, ncol = 1L)
-
-  X <- model.matrix(
-    as.formula(paste0("~", factor_name, " - 1")),
-    data = dat
-  )
-
-  if (ncol(X) != nrow(u)) {
-    stop(
-      paste(
-        "Random-effect dimension mismatch for", factor_name,
-        ":", ncol(X), "vs", nrow(u)
-      )
-    )
-  }
-
-  as.numeric(X %*% u[, 1L, drop = FALSE])
-}
 ```
 
 # Canonical inputs
@@ -323,7 +230,156 @@ The predicted genetic value is the sum
 and the phenotype prediction adds the fitted intercept to this genetic
 component.
 
-# Pre-fit integrity
+## Fixed fitting control
+
+The number of `sommer::mmes()` iterations is fixed for every scenario and outer
+split. It is part of the benchmark specification and is not selected from the
+data.
+
+```{r gblup-control}
+N_ITERS_SOMMER <- 20L
+```
+
+The same value, `nIters = 20`, is therefore used in all 150 fits.
+
+## Evaluation metrics
+
+The held-out predictions are summarized with correlation, RMSE, MAE, bias,
+calibration slope, and \(R^2\). The functions below assume the audited canonical
+assessment vectors are finite.
+
+```{r gblup-metrics}
+safe_cor <- function(pred, obs) {
+  cor(pred, obs)
+}
+
+safe_rmse <- function(pred, obs) {
+  sqrt(
+    mean(
+      (pred - obs)^2
+    )
+  )
+}
+
+safe_mae <- function(pred, obs) {
+  mean(
+    abs(
+      pred - obs
+    )
+  )
+}
+
+safe_bias <- function(pred, obs) {
+  mean(
+    pred - obs
+  )
+}
+
+safe_slope <- function(pred, obs) {
+  as.numeric(
+    coef(
+      lm(
+        obs ~ pred
+      )
+    )[2]
+  )
+}
+
+safe_r2 <- function(pred, obs) {
+  total_variation <- sum(
+    (
+      obs -
+      mean(obs)
+    )^2
+  )
+
+  1 -
+    sum(
+      (
+        obs -
+        pred
+      )^2
+    ) /
+    total_variation
+}
+
+metrics <- function(
+  pred,
+  obs,
+  prefix
+) {
+  values <- c(
+    safe_cor(pred, obs),
+    safe_rmse(pred, obs),
+    safe_mae(pred, obs),
+    safe_bias(pred, obs),
+    safe_slope(pred, obs),
+    safe_r2(pred, obs)
+  )
+
+  names(values) <- paste0(
+    prefix,
+    c(
+      "_Correlation",
+      "_RMSE",
+      "_MAE",
+      "_Bias",
+      "_Slope",
+      "_R2"
+    )
+  )
+
+  values
+}
+```
+
+For bias, positive values indicate overprediction because the definition is
+`mean(predicted - observed)`. The calibration slope is obtained from
+`observed ~ predicted`, and \(R^2\) is computed as \(1-SSE/SST\).
+
+## Recovering genomic components
+
+`sommer::mmes()` stores the fitted additive, dominance, and epistatic random
+effects in `fit$uList`. The helper below maps each fitted random-effect vector
+back to the 1,000 individuals through the corresponding model matrix.
+
+```{r extract-genomic-component}
+extract_u <- function(
+  fit,
+  dat,
+  factor_name,
+  effect_name
+) {
+  random_effect <- as.matrix(
+    fit$uList[[effect_name]]
+  )
+
+  incidence_matrix <- model.matrix(
+    as.formula(
+      paste0(
+        "~",
+        factor_name,
+        " - 1"
+      )
+    ),
+    data = dat
+  )
+
+  as.numeric(
+    incidence_matrix %*%
+      random_effect[
+        ,
+        1L,
+        drop = FALSE
+      ]
+  )
+}
+```
+
+The three calls later in the fitting loop differ only in the factor and
+relationship-matrix names (`id/A`, `idd/D`, and `ide/E`).
+
+# Canonical input objects
 
 The canonical objects are summarized below before fitting. Their integrity is
 already checked in the hidden input-loading stage, so the tutorial can focus on
@@ -403,7 +459,8 @@ rownames(task_table) <- NULL
 
 knitr::kable(
   head(task_table, 15),
-  caption = "First 15 GBLUP-ADE scenario-by-split tasks"
+  caption = "First 15 GBLUP-ADE scenario-by-split tasks",
+  row.names = FALSE
 )
 ```
 
@@ -752,12 +809,12 @@ matrices. All three are finite and symmetric, with mean diagonal values close
 to one. This confirms that the additive, dominance, and epistatic covariance
 structures are numerically suitable for interpreting the fitted predictions.
 
-# Saved-result integrity
+# Canonical saved results
 
-The saved canonical results are checked against the frozen validation contract
-before performance aggregation. Task count, prediction count, split IDs,
-successful status, and prediction finiteness remain blocking or warning checks,
-but the detailed PASS table is kept out of the main narrative.
+The performance summaries below are generated from the canonical saved
+GBLUP-ADE results. They are loaded and checked internally against the frozen
+validation design before any table is displayed; the loading and audit code is
+kept out of the tutorial flow.
 
 ```{r result-audit, include=FALSE}
 results_available <-

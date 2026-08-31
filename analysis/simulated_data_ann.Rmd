@@ -404,6 +404,73 @@ knitr::kable(
 )
 ```
 
+# Canonical ANN parameter values
+
+The exact search space and optimization controls used by the canonical ANN
+workflow are defined explicitly below. These objects are referenced by the
+candidate-grid, training, tuning, and final-fitting chunks that follow.
+
+```{r ann-parameter-values}
+MAX_EPOCHS <- 2000L
+PATIENCE <- 25L
+MIN_DELTA <- 1e-6
+EARLY_VALIDATION_FRACTION <- 0.15
+DROPOUT <- 0
+
+ARCHITECTURES <- list(
+  `2` = c(2L),
+  `4` = c(4L),
+  `8` = c(8L),
+  `16` = c(16L),
+  `32` = c(32L),
+  `8-4` = c(8L, 4L),
+  `16-8` = c(16L, 8L),
+  `32-16` = c(32L, 16L),
+  `64-32` = c(64L, 32L)
+)
+
+LEARNING_RATES <- c(
+  1.25e-4,
+  2.5e-4,
+  5e-4,
+  1e-3
+)
+
+L1_VALUES <- c(
+  1e-5,
+  1e-4,
+  1e-3,
+  1e-2,
+  3e-2,
+  1e-1
+)
+
+L2_VALUES <- c(
+  1e-5,
+  1e-4,
+  1e-3,
+  1e-2
+)
+
+L1_L2_GRID <- expand.grid(
+  L1 = L1_VALUES,
+  L2 = L2_VALUES,
+  KEEP.OUT.ATTRS = FALSE,
+  stringsAsFactors = FALSE
+)
+
+MODEL_LEVELS <- c(
+  "ANN_0",
+  "ANN_L1",
+  "ANN_L2",
+  "ANN_L1_L2"
+)
+```
+
+There are nine candidate architectures and four learning rates for the shared
+structure search. `ANN_L1` evaluates six L1 values, `ANN_L2` evaluates four L2
+values, and `ANN_L1_L2` evaluates the 24 positive L1 × L2 combinations.
+
 # Canonical inputs
 
 This module uses the audited common preprocessing object and the frozen nested
@@ -2002,13 +2069,12 @@ write.csv(
 )
 ```
 
-# Saved-result integrity
+# Canonical tuning results
 
-The saved tuning outputs are checked against the canonical tuning contract
-before selected configurations or diagnostics are displayed. Configuration ID,
-row counts, finite metrics, exclusion of outer assessment/true genetic values,
-and the shared architecture/learning-rate rule remain blocking integrity
-conditions.
+The selected configurations and tuning diagnostics below are generated from
+the canonical saved tuning outputs. These files are loaded and checked
+internally before display so the tutorial can focus on how the selected
+hyperparameters are summarized and interpreted.
 
 ```{r saved-integrity, include=FALSE}
 available <- all(
@@ -2514,7 +2580,8 @@ knitr::kable(
   boundary_table,
   digits = 4,
   caption =
-    "Descriptive canonical tuning-boundary occupancy"
+    "Descriptive canonical tuning-boundary occupancy",
+  row.names = FALSE
 )
 ```
 
@@ -2639,6 +2706,11 @@ knitr::kable(
   row.names = FALSE
 )
 ```
+
+The three `FALSE` entries are the key leakage controls: the outer assessment
+set is excluded from tuning and epoch selection, and true genetic values are
+used only after prediction for evaluation. `Best_epoch` is therefore selected
+without access to either final assessment target.
 
 <!-- Source section: final-fit helper functions -->
 
@@ -3682,12 +3754,12 @@ write.csv(
 )
 ```
 
-# Saved final-result integrity
+# Canonical final results
 
-Before final predictive summaries are shown, the 600 model-task rows, 120,000
-held-out predictions, 600 epoch-selection rows, finite predictions, selected
-epoch range, and leakage-prevention flags are checked internally against the
-canonical final-fitting contract.
+The final performance tables use the canonical 600 model-task results,
+120,000 held-out predictions, and 600 epoch-selection records. These saved
+objects are loaded and checked internally before the reader-facing summaries are
+constructed.
 
 ```{r final-ann-integrity, include=FALSE}
 final_available<-all(file.exists(c(FINAL_RESULTS_RDS,FINAL_PREDICTIONS_RDS,FINAL_EPOCH_RDS,FINAL_RUN_RDS)))
