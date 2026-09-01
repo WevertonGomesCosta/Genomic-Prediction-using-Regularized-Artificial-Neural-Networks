@@ -7,13 +7,15 @@ site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
     toc: true
+    toc_depth: 3
     toc_float: true
+    code_download: true
     code_folding: show
 editor_options:
   chunk_output_type: console
 ---
 
-# Purpose
+## 1. Objective
 
 This analysis performs the canonical audit and preprocessing of the simulated
 genomic dataset before any genomic prediction model is fitted.
@@ -28,53 +30,123 @@ No genomic prediction model is fitted in this document.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
+  warning = FALSE,
   message = FALSE,
-  warning = FALSE
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
 )
 
 options(stringsAsFactors = FALSE)
-
-WIDE_TABLE_ATTR <- paste(
-  'style="display:block;',
-  'overflow-x:auto;',
-  'white-space:nowrap;',
-  'width:100%;"'
-)
-
-PROJECT_ROOT <- "."
-project_path <- function(...) file.path(PROJECT_ROOT, ...)
-
-SEED_GLOBAL <- 20260821L
-set.seed(SEED_GLOBAL)
-
-data_dir <- project_path("data", "dados_simulados")
-output_dir <- project_path("output", "simulated", "audit")
-dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 ```
 
-## How to read this audit
+### 1.1 How to read this module
 
 Each section explains a property required before genomic prediction and shows
 the data summaries that are useful for scientific interpretation. The audit reports observed dimensions, codes, distributions, frequencies, and
 diagnostics directly. The reader can therefore inspect what is present in the
 simulated data without translating boolean guards into scientific meaning.
 
-# Expected files
+## 2. Packages, files, and parameters
+
+### 2.1 Package used
+
+This module uses base R for the audit calculations and `knitr` to format the
+tables presented in the tutorial.
+
+```{r packages, warning=FALSE, message=FALSE}
+library(knitr) # Format tables and R Markdown output.
+```
+
+```{r table-formatting, include=FALSE}
+format_table <- function(
+  x,
+  caption = NULL,
+  digits = getOption("digits"),
+  row.names = NA,
+  ...
+) {
+  table <- knitr::kable(
+    x,
+    format = "html",
+    caption = caption,
+    digits = digits,
+    row.names = row.names,
+    table.attr = paste0(
+      'class="table table-striped table-hover table-bordered" ',
+      'style="width:100%; margin-bottom:0;"'
+    ),
+    ...
+  )
+
+  knitr::asis_output(
+    paste0(
+      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
+      table,
+      '</div>'
+    )
+  )
+}
+```
+
+### 2.2 Paths and reproducibility parameters
+
+The audit uses a single project-wide seed. The input directory contains the
+original simulator files, while the output directory stores the canonical
+objects created by this module.
+
+```{r paths-and-parameters}
+PROJECT_ROOT <- "."
+project_path <- function(...) file.path(PROJECT_ROOT, ...)
+
+# Reproduce stochastic diagnostics such as the interchromosomal LD sample.
+SEED_GLOBAL <- 20260821L
+set.seed(SEED_GLOBAL)
+
+# Define the input and output directories used by this module.
+data_dir <- project_path("data", "dados_simulados")
+output_dir <- project_path("output", "simulated", "audit")
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+```
+
+The seed affects only operations that require random sampling during the audit;
+it does not modify the simulated phenotype, genotype, map, or scenario data.
+
+### 2.3 Input files
 
 Before checking file availability, the table below maps each simulator input to
 its scientific role in the audit. This separates file names from the biological
 or analytical quantity that each file contributes to the workflow.
 
-| File | Scientific role in this workflow |
-|---|---|
-| `controlegenetico#1.dat` | Simulation-control metadata, including scenario parameters and the QTL lists used to define C1-C6. |
-| `DG#gen_F2_Vfen.txt` | Phenotypic values for the 1,000 individuals across the six simulated scenarios. |
-| `DG#gen_F2_Vgen.dat` | True simulated genetic values for the same individuals and scenarios; retained for downstream evaluation, not model fitting. |
-| `genoma.txt` | Text representation of the genetic map used to recover linkage groups, marker identities, and map positions. |
-| `genoma_mapa.txt` | Genotype matrix in 0/1/2 coding; after orientation and validation, it is the source of the canonical genotype representation used downstream. |
-| `genoma_mapa_tr.txt` | Alternative 11/12/22 genotype representation used to verify cell-by-cell equivalence with `genoma_mapa.txt`. |
-| `genoma_pais.txt` | Parental genotype information used to audit the parental contrast underlying the simulated F2 population. |
-| `map.rds` | Serialized map object supplied with the simulation data and inspected independently from the text map rather than assumed to be canonical. |
+```{r input-file-roles}
+file_roles <- data.frame(
+  File = c(
+    "controlegenetico#1.dat",
+    "DG#gen_F2_Vfen.txt",
+    "DG#gen_F2_Vgen.dat",
+    "genoma.txt",
+    "genoma_mapa.txt",
+    "genoma_mapa_tr.txt",
+    "genoma_pais.txt",
+    "map.rds"
+  ),
+  Scientific_role = c(
+    "Simulation-control metadata, scenario parameters, and QTL lists.",
+    "Phenotypic values for 1,000 individuals across six scenarios.",
+    "True simulated genetic values retained for predictive evaluation.",
+    "Text genetic map with linkage groups, markers, and positions.",
+    "Genotype matrix in 0/1/2 coding used as the canonical source.",
+    "Alternative 11/12/22 coding used to verify genotype equivalence.",
+    "Parental genotypes used to characterize the simulated F2 cross.",
+    "Serialized map object inspected as an independent map reference."
+  )
+)
+
+format_table(
+  file_roles,
+  caption = "Scientific role of the simulator input files"
+)
+```
 
 The audit first verifies that all eight inputs are present and then evaluates
 their internal consistency in the sections that follow.
@@ -99,10 +171,9 @@ file_table <- data.frame(
   stringsAsFactors = FALSE
 )
 
-knitr::kable(
+format_table(
   file_table,
-  caption = "Simulator files used in the audit",
-  row.names = FALSE
+  caption = "Simulator files used in the audit"
 )
 ```
 
@@ -111,14 +182,17 @@ Their availability and file-level provenance are checked internally; the table
 above is retained as the reader-facing description of what each file contributes
 scientifically to the workflow.
 
-# Read primary matrices
+## 3. Reading the simulated data
+
+### 3.1 Primary matrices
 
 The first computational step reads the phenotype, true simulated genetic
 value, and genotype matrices supplied by the simulator. The genotype file in
 0/1/2 coding is transposed so that all downstream matrices use the same
 orientation: **individuals in rows and variables or markers in columns**.
 
-```{r read-primary-data, include=FALSE}
+```{r read-primary-data}
+# Read phenotypic values for the six simulation scenarios.
 phenotype <- as.matrix(
   read.table(
     file.path(data_dir, "DG#gen_F2_Vfen.txt"),
@@ -126,6 +200,7 @@ phenotype <- as.matrix(
   )
 )
 
+# Read the true simulated genetic values used later for evaluation.
 true_genetic_value <- as.matrix(
   read.table(
     file.path(data_dir, "DG#gen_F2_Vgen.dat"),
@@ -133,6 +208,7 @@ true_genetic_value <- as.matrix(
   )
 )
 
+# Read the genotype matrix provided in 0/1/2 coding.
 geno_raw_012 <- as.matrix(
   read.table(
     file.path(data_dir, "genoma_mapa.txt"),
@@ -140,12 +216,14 @@ geno_raw_012 <- as.matrix(
   )
 )
 
+# Transpose the matrix so individuals are rows and markers are columns.
 geno_012 <- t(geno_raw_012)
 storage.mode(geno_012) <- "integer"
 
 rm(geno_raw_012)
 invisible(gc())
 
+# Read the alternative 11/12/22 representation for coding comparison.
 geno_1122 <- as.matrix(
   read.table(
     file.path(data_dir, "genoma_mapa_tr.txt"),
@@ -155,6 +233,8 @@ geno_1122 <- as.matrix(
 
 storage.mode(geno_1122) <- "integer"
 ```
+
+### 3.2 Data preview
 
 Before checking dimensions and coding, the small previews below make that
 orientation explicit. Only the first six individuals and, for the genotype
@@ -186,25 +266,21 @@ genotype_preview <- data.frame(
 )
 names(genotype_preview)[-1] <- paste0("M", seq_len(10))
 
-knitr::kable(
+format_table(
   phenotype_preview,
   digits = 4,
-  caption = "First six rows of the phenotype matrix",
-  row.names = FALSE
+  caption = "First six rows of the phenotype matrix"
 )
 
-knitr::kable(
+format_table(
   true_g_preview,
   digits = 4,
-  caption = "First six rows of the true genetic-value matrix",
-  row.names = FALSE
+  caption = "First six rows of the true genetic-value matrix"
 )
 
-knitr::kable(
+format_table(
   genotype_preview,
-  caption = "First six individuals and first ten markers in 0/1/2 coding",
-  table.attr = WIDE_TABLE_ATTR,
-  row.names = FALSE
+  caption = "First six individuals and first ten markers in 0/1/2 coding"
 )
 ```
 
@@ -214,7 +290,7 @@ marker (`M1`-`M10` in this small display). In all three objects, rows represent
 the same simulated individuals; only a small sample is printed, while the full
 matrices remain in memory for the analyses below.
 
-# Core dimensions
+### 3.3 Matrix dimensions
 
 The next check verifies that the objects just loaded match the dimensions
 defined by the simulation design. This is the point at which the reader can
@@ -250,17 +326,15 @@ response_summary <- data.frame(
   Maximum = c(max(phenotype), max(true_genetic_value))
 )
 
-knitr::kable(
+format_table(
   core_dimensions,
-  caption = "Dimensions of the four primary matrices",
-  row.names = FALSE
+  caption = "Dimensions of the four primary matrices"
 )
 
-knitr::kable(
+format_table(
   response_summary,
   digits = 4,
-  caption = "Observed values and missing cells in the response matrices",
-  row.names = FALSE
+  caption = "Observed values and missing cells in the response matrices"
 )
 ```
 
@@ -270,70 +344,96 @@ The four core matrices have the dimensions required by the simulation design:
 phenotypic and genetic values are finite, so the dataset can proceed to the
 genotype-level integrity checks.
 
-# Genotype coding
+## 4. Genotype coding
 
-The simulator provides the genotype matrix in two representations. The
-canonical representation used in subsequent analyses is constructed from
-`genoma_mapa.txt`, transposed to individuals by markers.
+The simulator provides the genotype matrix in two numerical representations.
+This section first inspects the codes observed in each source file, then checks
+their cell-by-cell equivalence, and finally derives the canonical -1/0/1 coding
+used by the genomic prediction models.
 
-The following code first confirms the valid codes in both source files,
-verifies their cell-by-cell equivalence after recoding 11/12/22 to 2/1/0, and
-then derives the -1/0/1 representation consumed by the prediction models.
+### 4.1 Original genotype representations
 
-```{r genotype-coding}
+The two source matrices encode the same three genotype classes using different
+numerical labels.
+
+```{r genotype-source-codes}
 codes_012 <- sort(unique(as.vector(geno_012)))
 codes_1122 <- sort(unique(as.vector(geno_1122)))
 
+source_code_table <- data.frame(
+  Representation = c("Source 0/1/2", "Source 11/12/22"),
+  Observed_codes = c(
+    paste(codes_012, collapse = ", "),
+    paste(codes_1122, collapse = ", ")
+  )
+)
+
+format_table(
+  source_code_table,
+  caption = "Genotype codes observed in the two source matrices"
+)
+```
+
+The first source uses `0`, `1`, and `2`, whereas the alternative file uses
+`11`, `12`, and `22`. These are alternative numerical representations rather
+than different biological genotype calls.
+
+### 4.2 Equivalence of genotype representations
+
+The 11/12/22 matrix is recoded to the corresponding 2/1/0 representation and
+compared directly with the original 0/1/2 matrix.
+
+```{r genotype-equivalence}
+# Translate the alternative coding to the 0/1/2 scale.
 geno_1122_to_012 <- matrix(
   NA_integer_,
   nrow = nrow(geno_1122),
   ncol = ncol(geno_1122)
 )
+
 geno_1122_to_012[geno_1122 == 11L] <- 2L
 geno_1122_to_012[geno_1122 == 12L] <- 1L
 geno_1122_to_012[geno_1122 == 22L] <- 0L
 
+# Count cell-level differences between the two representations.
 genotype_mismatches <- sum(geno_012 != geno_1122_to_012)
+
+format_table(
+  data.frame(
+    Quantity = "Cell differences after recoding 11/12/22 to 2/1/0",
+    Observed = genotype_mismatches
+  ),
+  caption = "Equivalence of the two genotype source files"
+)
+```
+
+The observed mismatch count shows whether the two files encode the same
+individual-marker genotypes after accounting for their different numerical
+conventions. The comparison changes only the coding scale; it does not alter
+the underlying genotype calls.
+
+### 4.3 Canonical -1/0/1 representation
+
+The validated 0/1/2 matrix is shifted by one unit to obtain the canonical
+-1/0/1 representation used by the downstream GBLUP-ADE and ANN workflows.
+
+```{r canonical-genotype-coding}
 geno_m101 <- geno_012 - 1L
 codes_m101 <- sort(unique(as.vector(geno_m101)))
 
-geno_code_table <- data.frame(
-  Representation = c(
-    "Source 0/1/2",
-    "Source 11/12/22",
-    "Canonical -1/0/1"
-  ),
-  Observed_codes = c(
-    paste(codes_012, collapse = ", "),
-    paste(codes_1122, collapse = ", "),
-    paste(codes_m101, collapse = ", ")
-  ),
-  stringsAsFactors = FALSE
+canonical_code_table <- data.frame(
+  Representation = "Canonical -1/0/1",
+  Observed_codes = paste(codes_m101, collapse = ", ")
 )
 
-knitr::kable(
-  geno_code_table,
-  caption = "Observed genotype codes before and after transformation",
-  row.names = FALSE
+format_table(
+  canonical_code_table,
+  caption = "Observed codes in the canonical genotype matrix"
 )
-
-data.frame(
-  Quantity = "Cell differences after recoding 11/12/22 to 2/1/0",
-  Observed = genotype_mismatches
-) |>
-  knitr::kable(row.names = FALSE)
-
-rm(geno_1122, geno_1122_to_012)
-invisible(gc())
 ```
 
-The equivalence check compares the two genotype representations after mapping
-11/12/22 to 2/1/0. When this mapping agrees across all cells, subtracting one
-from the validated 0/1/2 representation produces the canonical -1/0/1 coding
-used by the genomic prediction models.
-
-To make this transformation visible, the same first six individuals and ten
-markers shown above are displayed again in the canonical -1/0/1 coding.
+To make the transformation concrete, the first six individuals and first ten
+markers are shown below in the canonical representation.
 
 ```{r canonical-genotype-preview}
 canonical_genotype_preview <- data.frame(
@@ -343,19 +443,21 @@ canonical_genotype_preview <- data.frame(
 )
 names(canonical_genotype_preview)[-1] <- paste0("M", seq_len(10))
 
-knitr::kable(
+format_table(
   canonical_genotype_preview,
-  caption = "First six individuals and first ten markers in canonical -1/0/1 coding",
-  table.attr = WIDE_TABLE_ATTR,
-  row.names = FALSE
+  caption = "First six individuals and first ten markers in canonical -1/0/1 coding"
 )
+
+rm(geno_1122, geno_1122_to_012)
+invisible(gc())
 ```
 
-Compared with the preceding 0/1/2 preview, every genotype value is shifted by
-one unit: `0 -> -1`, `1 -> 0`, and `2 -> 1`. The biological genotype calls do
-not change; only the numerical coding used by the prediction models changes.
+Compared with the original 0/1/2 representation, every genotype value is
+shifted by one unit: `0 -> -1`, `1 -> 0`, and `2 -> 1`. The biological genotype
+calls remain unchanged; only the numerical representation used by the
+prediction models changes.
 
-# Genetic map
+## 5. Genetic map
 
 The genetic-map file is parsed next to recover linkage-group membership,
 marker identity, and map position. The resulting summary is used to verify the
@@ -403,18 +505,20 @@ rownames(map_summary) <- NULL
 n_duplicate_marker_names <- sum(duplicated(genetic_map$Marker))
 ```
 
+### 5.1 Map structure and marker positions
+
 The parsed map is summarized below so the positional structure used by the QTL
 and LD analyses is visible to the reader.
 
 ```{r genetic-map-summary}
-knitr::kable(
+format_table(
   map_summary,
   digits = 3,
   caption = "Canonical genetic-map structure",
   row.names = FALSE
 )
 
-knitr::kable(
+format_table(
   data.frame(
     Quantity = c("Map markers", "Linkage groups", "Duplicate marker names"),
     Observed = c(
@@ -433,7 +537,7 @@ The map contains 10 linkage groups with 401 markers per group. Every group spans
 names are unique, so the map provides an unambiguous positional reference for
 the analyses that follow.
 
-# Simulation control file
+## 6. Simulation scenarios
 
 The control file defines the six simulated scenarios. The code below reads each
 scenario block, extracts the prespecified metadata and QTL list, and preserves
@@ -507,6 +611,8 @@ for (i in seq_along(scenario_start)) {
 control_table <- do.call(rbind, control_rows)
 ```
 
+### 6.1 Scenario parameters
+
 The parsed scenario parameters are displayed separately from the loading logic.
 
 ```{r simulation-control-summary}
@@ -518,14 +624,14 @@ control_display <- control_table[
   )
 ]
 
-knitr::kable(
+format_table(
   control_display,
   digits = 4,
   caption = "Simulation-scenario parameters used downstream",
   row.names = FALSE
 )
 
-knitr::kable(
+format_table(
   data.frame(
     Scenario = paste0("C", seq_along(qtl_lists)),
     QTL_in_file = vapply(qtl_lists, length, integer(1)),
@@ -542,7 +648,7 @@ in pairs from 0.7 to 0.5 and then 0.3, while `gmd = 0.5`, `Model = 2`, and
 complexity gradient rather than a factorial design in which QTL number and
 heritability vary independently.
 
-# QTL positions
+### 6.2 QTL positions and distribution
 
 The QTL indices recorded in the control file are now mapped back to linkage
 groups and genetic positions. This step checks whether all selected loci are
@@ -594,17 +700,17 @@ qtl_observed <- data.frame(
   )
 )
 
-knitr::kable(
+format_table(
   qtl_observed,
   caption = "Observed QTL indices by scenario",
   row.names = FALSE
 )
-knitr::kable(
+format_table(
   qtl_by_lg,
   caption = "Number of QTL per linkage group",
   row.names = FALSE
 )
-knitr::kable(
+format_table(
   qtl_overlap,
   caption = "Number of shared QTL indices between simulation scenarios"
 )
@@ -617,12 +723,63 @@ simulation design, not a marker-filtering result.
 QTL overlap between scenarios is reported as a property of the simulation
 design. Overlap is not treated as evidence of data corruption.
 
-# Phenotypic and true genetic values
+### 6.3 Scenario interpretation
+
+The six scenarios constitute a **complexity gradient**, rather than a complete
+factorial experiment between QTL number and heritability.
+
+The nominal scenarios are:
+
+```{r scenario-design}
+scenario_design <- control_table[
+  ,
+  c(
+    "Scenario",
+    "QTL_N",
+    "H2_nominal",
+    "gmd",
+    "Model",
+    "Constant"
+  )
+]
+
+format_table(
+  scenario_design,
+  digits = 3,
+  caption =
+    "Joint C1-C6 simulation-complexity gradient",
+  row.names = FALSE
+)
+```
+
+Direct comparisons of QTL-number complexity while nominal heritability is held
+constant are therefore naturally defined within the following pairs:
+
+- C1 versus C2 at nominal \(H^2 = 0.7\);
+- C3 versus C4 at nominal \(H^2 = 0.5\);
+- C5 versus C6 at nominal \(H^2 = 0.3\).
+
+Across all six scenarios simultaneously, QTL number increases while nominal
+heritability decreases. Consequently, a global trend across C1-C6 must not be
+interpreted as an isolated causal effect of QTL number or heritability.
+
+The simulator control file records `Model = 2` for all six scenarios. This
+numeric field is retained here as part of the data provenance, but its
+biological meaning is not inferred from the code value alone in this audit.
+The downstream GBLUP-ADE benchmark is a separate prespecified modeling choice:
+its additive, dominance, and epistatic components are defined and justified in
+the GBLUP module rather than being established solely by `Model = 2`.
+
+
+
+## 7. Phenotypic and genetic signal
 
 Row order is the canonical individual identifier because the simulation files
 do not contain an explicit individual-ID column. All phenotype, true genetic
 value, and genotype matrices therefore must contain exactly the same 1,000
 rows.
+
+### 7.1 Scenario-level signal and realized heritability
 
 The scenario summary is displayed in two complementary tables. The first
 emphasizes the simulated signal and realized heritability; the second reports
@@ -693,17 +850,16 @@ scenario_diagnostics_display <- scenario_display[
   )
 ]
 
-knitr::kable(
+format_table(
   scenario_signal_display,
   digits = 4,
   caption = "Phenotypic and true-genetic signal by simulation scenario",
   row.names = FALSE
 )
-knitr::kable(
+format_table(
   scenario_diagnostics_display,
   digits = 4,
   caption = "Dispersion and residual diagnostics by simulation scenario",
-  table.attr = WIDE_TABLE_ATTR,
   row.names = FALSE
 )
 ```
@@ -717,7 +873,9 @@ These quantities document the realized signal in each simulated scenario;
 because QTL number and nominal heritability change together across the complete
 C1--C6 gradient, they are not interpreted as isolated causal effects.
 
-# Genotype quality control
+## 8. Genotype diagnostics
+
+### 8.1 Marker and individual diagnostics
 
 This section checks whether the simulated genotype matrix has the structural
 properties required for the downstream genomic analyses. The diagnostics have
@@ -779,13 +937,13 @@ marker_qc_summary <- data.frame(
   )
 )
 
-knitr::kable(
+format_table(
   geno_frequency_table,
   digits = 6,
   caption = "Observed 0/1/2 genotype proportions and F2 expectation",
   row.names = FALSE
 )
-knitr::kable(
+format_table(
   marker_qc_summary,
   digits = 6,
   caption = "Marker and individual quality-control summary",
@@ -802,7 +960,9 @@ The genotype matrix contains `r missing_genotypes` missing cells,
 profile used downstream; any non-blocking feature remains explicit in the audit
 rather than being silently removed.
 
-# Parental genotypes
+## 9. Parental and map references
+
+### 9.1 Parental genotypes
 
 The parental file is read separately from the F2 progeny matrix. The objective
 is to confirm the expected parental contrast and linkage-group organization
@@ -864,7 +1024,7 @@ parent_summary <- data.frame(
   )
 )
 
-knitr::kable(
+format_table(
   parent_summary,
   caption =
     "Parental contrast underlying the simulated F2 population",
@@ -876,7 +1036,7 @@ Both parents are represented across all 10 linkage groups. Parent 1 is fixed
 for marker state 1 and parent 2 for marker state 0, providing the contrasting
 parental configuration from which the simulated F2 segregation is generated.
 
-# Serialized map reference
+### 9.2 Serialized map reference
 
 The serialized `map.rds` object is retained as part of the original simulation
 dataset and is checked independently from the text map. Its readability and
@@ -893,16 +1053,18 @@ map_rds_info <- data.frame(
     if (is.null(names(map_rds))) "No names" else paste(head(names(map_rds), 20), collapse = ", ")
   )
 )
-knitr::kable(map_rds_info, caption = "Serialized map object")
+format_table(map_rds_info, caption = "Serialized map object")
 ```
 
-# Linkage disequilibrium
+## 10. Linkage disequilibrium
 
 Linkage disequilibrium (LD) is used here to describe how strongly marker
 genotypes remain associated as genetic-map distance increases. For each marker
 pair, the audit uses \(r^2\), the squared correlation between their standardized
 0/1/2 genotype codings. Larger values indicate stronger marker association,
 whereas values closer to zero indicate weaker association.
+
+### 10.1 LD comparisons
 
 The analysis separates two complementary comparisons:
 
@@ -1071,8 +1233,7 @@ interchromosomal_ld <- data.frame(
   Median_r2 = median(inter_r2)
 )
 
-
-knitr::kable(
+format_table(
   ld_summary,
   digits = 5,
   caption =
@@ -1080,7 +1241,7 @@ knitr::kable(
   row.names = FALSE
 )
 
-knitr::kable(
+format_table(
   interchromosomal_ld,
   digits = 5,
   caption =
@@ -1106,60 +1267,14 @@ rm(geno_scaled)
 invisible(gc())
 ```
 
+### 10.2 LD interpretation
+
 The LD audit distinguishes the expected short-to-medium distance decay from
 the behavior observed at the longest intrachromosomal distances. If LD remains
 substantially elevated at 100-200 cM relative to the interchromosomal
 reference, this remains visible in the LD table and does not alter or
 filter the genotype matrix; it documents a feature that should be considered
 when interpreting the simulator's recombination process.
-
-# Interpretation of the simulation scenarios
-
-The six scenarios constitute a **complexity gradient**, rather than a complete
-factorial experiment between QTL number and heritability.
-
-The nominal scenarios are:
-
-```{r scenario-design}
-scenario_design <- control_table[
-  ,
-  c(
-    "Scenario",
-    "QTL_N",
-    "H2_nominal",
-    "gmd",
-    "Model",
-    "Constant"
-  )
-]
-
-knitr::kable(
-  scenario_design,
-  digits = 3,
-  caption =
-    "Joint C1-C6 simulation-complexity gradient",
-  row.names = FALSE
-)
-```
-
-Direct comparisons of QTL-number complexity while nominal heritability is held
-constant are therefore naturally defined within the following pairs:
-
-- C1 versus C2 at nominal \(H^2 = 0.7\);
-- C3 versus C4 at nominal \(H^2 = 0.5\);
-- C5 versus C6 at nominal \(H^2 = 0.3\).
-
-Across all six scenarios simultaneously, QTL number increases while nominal
-heritability decreases. Consequently, a global trend across C1-C6 must not be
-interpreted as an isolated causal effect of QTL number or heritability.
-
-The simulator control file records `Model = 2` for all six scenarios. This
-numeric field is retained here as part of the data provenance, but its
-biological meaning is not inferred from the code value alone in this audit.
-The downstream GBLUP-ADE benchmark is a separate prespecified modeling choice:
-its additive, dominance, and epistatic components are defined and justified in
-the GBLUP module rather than being established solely by `Model = 2`.
-
 
 ```{r audit-output-contract, include=FALSE}
 compat_status <- function(condition, failure = "BLOCKED", success = "PASS") {
@@ -1346,7 +1461,7 @@ audit_log <- audit_log[order(audit_log$Status), , drop = FALSE]
 rownames(audit_log) <- NULL
 ```
 
-# Audit summary
+## 11. Audit summary
 
 The individual audit checks are retained in the exported CSV artifact. The
 tutorial summarizes their final counts and classification before creating the
@@ -1385,7 +1500,7 @@ audit_overview <- data.frame(
   stringsAsFactors = FALSE
 )
 
-knitr::kable(
+format_table(
   audit_overview,
   caption = "Observed summary of the simulated-data audit",
   row.names = FALSE
@@ -1396,7 +1511,7 @@ The table above collects the principal observed quantities used to interpret the
 simulated dataset. Features that require scientific interpretation are discussed
 in the section where they arise rather than converted into execution guards.
 
-# Canonical preprocessed object
+## 12. Canonical preprocessed object
 
 The canonical preprocessed object is generated from the data and summaries shown above. The saved `preprocessed_simulated_common.rds` acts as the
 shared data contract for the downstream validation and modeling modules, so
@@ -1497,15 +1612,7 @@ data contract passed to the validation module and, from there, to both parallel
 modeling branches. The detailed CSV audit files remain available for
 reproducibility and maintenance without occupying the main scientific narrative.
 
-# Navigation
+## 13. Navigation
 
 [Home](index.html) | [Next: Validation design](simulated_data_validation.html)
 
-# Reproducibility information
-
-`sessionInfo()` records the R version, platform, and loaded packages used to
-render this tutorial.
-
-```{r session-info}
-sessionInfo()
-```
