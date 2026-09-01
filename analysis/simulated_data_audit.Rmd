@@ -673,18 +673,19 @@ scenario_summary <- data.frame(
   CV_empirical_pct = 100 * apply(phenotype, 2, sd) / colMeans(phenotype),
   CV_metadata = control_table$CV_metadata
 )
-scenario_summary$H2_difference <-
-  scenario_summary$H2_realized - scenario_summary$H2_nominal
-scenario_summary$CV_difference <-
-  scenario_summary$CV_empirical_pct - scenario_summary$CV_metadata
+scenario_display <- transform(
+  scenario_summary,
+  H2_difference = H2_realized - H2_nominal,
+  CV_difference = CV_empirical_pct - CV_metadata
+)
 
-scenario_signal_display <- scenario_summary[
+scenario_signal_display <- scenario_display[
   , c(
     "Scenario", "QTL_N", "H2_nominal", "H2_realized",
     "H2_difference", "Phenotype_mean", "Genetic_mean", "Cor_P_G"
   )
 ]
-scenario_diagnostics_display <- scenario_summary[
+scenario_diagnostics_display <- scenario_display[
   , c(
     "Scenario", "Phenotype_sd", "Genetic_sd", "Residual_mean",
     "Residual_sd", "Cor_G_E", "VarG_over_VarP",
