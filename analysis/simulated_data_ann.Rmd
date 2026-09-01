@@ -7,7 +7,9 @@ site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
     toc: true
+    toc_depth: 3
     toc_float: true
+    code_download: true
     code_folding: show
 editor_options:
   chunk_output_type: console
@@ -83,26 +85,27 @@ knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  cache = FALSE
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
 )
-options(stringsAsFactors = FALSE)
 
+options(stringsAsFactors = FALSE)
+```
+
+```{r legacy-table-formatting, include=FALSE}
+# Temporary compatibility helper retained until the table-formatting stage.
 WIDE_TABLE_ATTR <- paste(
   'style="display:block;',
   'overflow-x:auto;',
   'white-space:nowrap;',
   'width:100%;"'
 )
+```
 
-
+```{r execution-mode}
 PROJECT_ROOT <- "."
-
-project_path <- function(...) {
-  file.path(PROJECT_ROOT, ...)
-}
-
-
-SEED_GLOBAL <- 20260821L
+project_path <- function(...) file.path(PROJECT_ROOT, ...)
 
 RUN_ANN_TUNING <- identical(
   Sys.getenv("RUN_ANN_TUNING", "0"),
@@ -114,6 +117,7 @@ RUN_ANN <- identical(
 )
 ANN_RUNTIME_REQUIRED <- RUN_ANN_TUNING || RUN_ANN
 
+# Legacy/auxiliary execution flags are retained unchanged for compatibility.
 ANN_TUNING_FORCE <- identical(
   Sys.getenv("ANN_TUNING_FORCE", "0"),
   "1"
@@ -126,117 +130,6 @@ ANN_TUNING_PILOT_TASK <- Sys.getenv(
   "ANN_TUNING_PILOT_TASK",
   "C1_R01_F01"
 )
-
-MAX_EPOCHS <- 2000L
-# Compatibility token only: preserves the exact config_id of the completed
-# ANN_TUNING_CANONICAL_V1 run. It does not control final refit length.
-TUNING_V1_COMPATIBILITY_TOKEN <- 2000L
-PATIENCE <- 25L
-MIN_DELTA <- 1e-6
-EARLY_VALIDATION_FRACTION <- 0.15
-DROPOUT <- 0
-
-ARCHITECTURES <- list(
-  `2` = c(2L),
-  `4` = c(4L),
-  `8` = c(8L),
-  `16` = c(16L),
-  `32` = c(32L),
-  `8-4` = c(8L, 4L),
-  `16-8` = c(16L, 8L),
-  `32-16` = c(32L, 16L),
-  `64-32` = c(64L, 32L)
-)
-
-LEARNING_RATES <- c(
-  1.25e-4,
-  2.5e-4,
-  5e-4,
-  1e-3
-)
-
-L1_VALUES <- c(
-  1e-5,
-  1e-4,
-  1e-3,
-  1e-2,
-  3e-2,
-  1e-1
-)
-
-L2_VALUES <- c(
-  1e-5,
-  1e-4,
-  1e-3,
-  1e-2
-)
-
-# Full Cartesian grid for the simultaneous L1+L2 model.
-# Both coefficients are strictly positive in ANN_L1_L2.
-L1_L2_GRID <- expand.grid(
-  L1 = L1_VALUES,
-  L2 = L2_VALUES,
-  KEEP.OUT.ATTRS = FALSE,
-  stringsAsFactors = FALSE
-)
-
-MODEL_LEVELS <- c(
-  "ANN_0",
-  "ANN_L1",
-  "ANN_L2",
-  "ANN_L1_L2"
-)
-
-DATA_FILE <- project_path("output", "simulated", "audit", "preprocessed_simulated_common.rds")
-CV_FILE <- project_path("output", "simulated", "validation", "simulated_cv_design.rds")
-DATA_AUDIT_FILE <- project_path("output", "simulated", "audit", "simulated_audit_summary.csv")
-CV_AUDIT_FILE <- project_path("output", "simulated", "validation", "simulated_cv_design_audit.csv")
-
-CHECKPOINT_DIR <- project_path(".local", "checkpoints", "canonical", "ann_tuning")
-
-OUTPUT_STEM <- if (ANN_TUNING_PILOT) {
-  project_path(".local", "pilot", "ann", "tuning", "simulated_ann_tuning_pilot")
-} else {
-  project_path("output", "simulated", "ann", "tuning", "simulated_ann_tuning")
-}
-
-CANDIDATE_RDS <- paste0(OUTPUT_STEM, "_candidate_summary.rds")
-FOLD_RDS <- paste0(OUTPUT_STEM, "_fold_results.rds")
-SELECTED_RDS <- paste0(OUTPUT_STEM, "_selected_configurations.rds")
-RUN_RDS <- paste0(OUTPUT_STEM, "_run_metadata.rds")
-MANIFEST_RDS <- paste0(OUTPUT_STEM, "_manifest.rds")
-
-CANDIDATE_CSV <- paste0(OUTPUT_STEM, "_candidate_summary.csv")
-FOLD_CSV <- paste0(OUTPUT_STEM, "_fold_results.csv")
-SELECTED_CSV <- paste0(OUTPUT_STEM, "_selected_configurations.csv")
-MANIFEST_CSV <- paste0(OUTPUT_STEM, "_manifest.csv")
-
-ANN_TUNING_CONFIG_ID <- paste(
-  "ANN_TUNING_CANONICAL_V1",
-  paste(names(ARCHITECTURES), collapse = "-"),
-  paste(LEARNING_RATES, collapse = "-"),
-  paste(L1_VALUES, collapse = "-"),
-  paste(L2_VALUES, collapse = "-"),
-  MAX_EPOCHS,
-  PATIENCE,
-  MIN_DELTA,
-  EARLY_VALIDATION_FRACTION,
-  TUNING_V1_COMPATIBILITY_TOKEN,
-  sep = "__"
-)
-
-if (RUN_ANN_TUNING) {
-  dir.create(
-    CHECKPOINT_DIR,
-    recursive = TRUE,
-    showWarnings = FALSE
-  )
-  dir.create(
-    dirname(CANDIDATE_RDS),
-    recursive = TRUE,
-    showWarnings = FALSE
-  )
-}
 ```
 
 ```{r packages}
@@ -281,18 +174,14 @@ if (ANN_RUNTIME_REQUIRED) {
 }
 
 environment_table <- data.frame(
-  Item = c(
-    "torch version", "CUDA available", "device", "MAX_EPOCHS",
-    "TUNING_V1_COMPATIBILITY_TOKEN", "patience",
-    "minimum improvement", "early-validation fraction", "dropout"
-  ),
-  Value = c(
-    torch_version_display, cuda_display, device_display,
-    MAX_EPOCHS, TUNING_V1_COMPATIBILITY_TOKEN, PATIENCE,
-    MIN_DELTA, EARLY_VALIDATION_FRACTION, DROPOUT
-  )
+  Item = c("torch version", "CUDA available", "device"),
+  Value = c(torch_version_display, cuda_display, device_display)
 )
-knitr::kable(environment_table, caption = "Fixed ANN computational protocol")
+
+knitr::kable(
+  environment_table,
+  caption = "ANN computational environment"
+)
 ```
 
 # Canonical ANN parameter values
@@ -302,7 +191,14 @@ workflow are defined explicitly below. These objects are referenced by the
 candidate-grid, training, tuning, and final-fitting chunks that follow.
 
 ```{r ann-parameter-values}
+SEED_GLOBAL <- 20260821L
+
 MAX_EPOCHS <- 2000L
+
+# Compatibility token only: preserves the exact config_id of the completed
+# ANN_TUNING_CANONICAL_V1 run. It does not control final refit length.
+TUNING_V1_COMPATIBILITY_TOKEN <- 2000L
+
 PATIENCE <- 25L
 MIN_DELTA <- 1e-6
 EARLY_VALIDATION_FRACTION <- 0.15
@@ -361,6 +257,73 @@ MODEL_LEVELS <- c(
 There are nine candidate architectures and four learning rates for the shared
 structure search. `ANN_L1` evaluates six L1 values, `ANN_L2` evaluates four L2
 values, and `ANN_L1_L2` evaluates the 24 positive L1 × L2 combinations.
+
+```{r ann-paths-and-config}
+DATA_FILE <- project_path(
+  "output", "simulated", "audit", "preprocessed_simulated_common.rds"
+)
+CV_FILE <- project_path(
+  "output", "simulated", "validation", "simulated_cv_design.rds"
+)
+DATA_AUDIT_FILE <- project_path(
+  "output", "simulated", "audit", "simulated_audit_summary.csv"
+)
+CV_AUDIT_FILE <- project_path(
+  "output", "simulated", "validation", "simulated_cv_design_audit.csv"
+)
+
+CHECKPOINT_DIR <- project_path(
+  ".local", "checkpoints", "canonical", "ann_tuning"
+)
+
+OUTPUT_STEM <- if (ANN_TUNING_PILOT) {
+  project_path(
+    ".local", "pilot", "ann", "tuning", "simulated_ann_tuning_pilot"
+  )
+} else {
+  project_path(
+    "output", "simulated", "ann", "tuning", "simulated_ann_tuning"
+  )
+}
+
+CANDIDATE_RDS <- paste0(OUTPUT_STEM, "_candidate_summary.rds")
+FOLD_RDS <- paste0(OUTPUT_STEM, "_fold_results.rds")
+SELECTED_RDS <- paste0(OUTPUT_STEM, "_selected_configurations.rds")
+RUN_RDS <- paste0(OUTPUT_STEM, "_run_metadata.rds")
+MANIFEST_RDS <- paste0(OUTPUT_STEM, "_manifest.rds")
+
+CANDIDATE_CSV <- paste0(OUTPUT_STEM, "_candidate_summary.csv")
+FOLD_CSV <- paste0(OUTPUT_STEM, "_fold_results.csv")
+SELECTED_CSV <- paste0(OUTPUT_STEM, "_selected_configurations.csv")
+MANIFEST_CSV <- paste0(OUTPUT_STEM, "_manifest.csv")
+
+ANN_TUNING_CONFIG_ID <- paste(
+  "ANN_TUNING_CANONICAL_V1",
+  paste(names(ARCHITECTURES), collapse = "-"),
+  paste(LEARNING_RATES, collapse = "-"),
+  paste(L1_VALUES, collapse = "-"),
+  paste(L2_VALUES, collapse = "-"),
+  MAX_EPOCHS,
+  PATIENCE,
+  MIN_DELTA,
+  EARLY_VALIDATION_FRACTION,
+  TUNING_V1_COMPATIBILITY_TOKEN,
+  sep = "__"
+)
+
+if (RUN_ANN_TUNING) {
+  dir.create(
+    CHECKPOINT_DIR,
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+  dir.create(
+    dirname(CANDIDATE_RDS),
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+}
+```
 
 # Canonical inputs
 
