@@ -770,8 +770,6 @@ The downstream GBLUP-ADE benchmark is a separate prespecified modeling choice:
 its additive, dominance, and epistatic components are defined and justified in
 the GBLUP module rather than being established solely by `Model = 2`.
 
-
-
 ## 7. Phenotypic and genetic signal
 
 Row order is the canonical individual identifier because the simulation files
@@ -1056,6 +1054,11 @@ map_rds_info <- data.frame(
 format_table(map_rds_info, caption = "Serialized map object")
 ```
 
+The serialized map object provides an independent representation of the genetic
+map and is retained as a provenance and integrity reference. The text-derived
+`genetic_map` remains the positional object used for the QTL and LD summaries
+in this module.
+
 ## 10. Linkage disequilibrium
 
 Linkage disequilibrium (LD) is used here to describe how strongly marker
@@ -1086,12 +1089,14 @@ itself as evidence of corrupted data, and it does not cause markers to be
 removed from the canonical genotype matrix.
 
 ```{r linkage-disequilibrium, fig.cap="Linkage disequilibrium decay across fixed within-linkage-group map distances. Points and the connecting line show mean within-linkage-group r-squared; the dashed horizontal line shows the mean interchromosomal r-squared estimated from 5,000 randomly sampled marker pairs from different linkage groups."}
+# Standardize marker genotypes before calculating correlations.
 geno_scaled <- scale(
   geno_012,
   center = TRUE,
   scale = TRUE
 )
 
+# Calculate r-squared for selected marker pairs.
 pair_r2 <- function(
   i,
   j,
@@ -1141,6 +1146,7 @@ ld_rows <- vector(
   length(ld_distances)
 )
 
+# Summarize LD at each prespecified map distance.
 for (d in seq_along(ld_distances)) {
   distance <- ld_distances[d]
   r2_all <- numeric()
@@ -1187,6 +1193,7 @@ ld_summary <- do.call(
   ld_rows
 )
 
+# Build a reproducible interchromosomal LD reference.
 set.seed(SEED_GLOBAL + 101L)
 
 n_inter_pairs <- 5000L
@@ -1602,8 +1609,7 @@ saveRDS(
 cat(
   "Canonical object written to:",
   file.path(output_dir, "preprocessed_simulated_common.rds"),
-  "
-"
+  "\n"
 )
 ```
 
@@ -1615,4 +1621,3 @@ reproducibility and maintenance without occupying the main scientific narrative.
 ## 13. Navigation
 
 [Home](index.html) | [Next: Validation design](simulated_data_validation.html)
-
