@@ -2639,10 +2639,11 @@ penalty coefficient reached the edge of its prespecified grid. These counts are
 reported as search-space diagnostics, not as a reason to enlarge the grid after
 observing the results.
 
-# From tuning to final fitting
+## 13. Final model fitting
 
 Nested tuning returns one architecture, learning rate, and applicable penalty
-coefficient(s) for each `Scenario × outer split × ANN variant`.
+coefficient(s) for each `Scenario × outer split × ANN variant`. Final fitting
+then uses those choices without reopening the hyperparameter search.
 
 The final stage follows one fixed sequence:
 
@@ -2657,18 +2658,10 @@ The 3000-epoch value is a **safety ceiling**, not the final training length.
 Outer-assessment phenotypes and true genetic values are excluded from both
 hyperparameter selection and `Best_epoch` selection.
 
-| Final-fitting item | Canonical rule |
-|---|---|
-| Hyperparameters | inherited from nested tuning |
-| Epoch-selection sample | 800 outer-analysis individuals only |
-| Safety ceiling | 3000 epochs |
-| Final refit | all 800 outer-analysis individuals |
-| Final training length | exactly `Best_epoch` |
-| Final assessment | untouched 200 individuals |
+### 13.1 Final fitting contract
 
-The complete final-fitting code is shown below. The table above provides the
-conceptual contract first; the subsequent functions and loop implement that
-contract for all 600 model-by-task fits.
+The contract below makes the separation between tuning, epoch selection, final
+refitting, and held-out assessment explicit.
 
 ```{r final-ann-contract}
 FINAL_EPOCH_MAX_EPOCHS <- 3000L
@@ -2746,7 +2739,7 @@ final_contract <- data.frame(
   stringsAsFactors = FALSE
 )
 
-knitr::kable(
+format_table(
   final_contract,
   caption =
     "Canonical final ANN contract",
@@ -2759,9 +2752,17 @@ set is excluded from tuning and epoch selection, and true genetic values are
 used only after prediction for evaluation. `Best_epoch` is therefore selected
 without access to either final assessment target.
 
-<!-- Source section: final-fit helper functions -->
+### 13.2 Best-epoch selection
 
-```{r final-ann-functions}
+`select_final_epoch()` uses only the current 800-individual outer-analysis set.
+That set is divided deterministically into fitting and early-validation
+subsets. Scaling is fitted on the fitting subset, and early stopping is allowed
+to search up to `FINAL_EPOCH_MAX_EPOCHS = 3000`.
+
+The best early-validation checkpoint determines `Best_epoch`. The outer
+assessment set is not used in this decision.
+
+```{r final-epoch-selection-functions}
 final_bias <- function(
   predicted,
   observed
@@ -3081,7 +3082,19 @@ select_final_epoch <- function(
       )
   )
 }
+```
 
+### 13.3 Refit on all outer-analysis individuals
+
+After `Best_epoch` has been selected, `train_final_fixed()` reinitializes the
+network and re-estimates marker and phenotype scaling from **all 800
+outer-analysis individuals**. The network is then trained for exactly the
+selected `Best_epoch`.
+
+No early stopping is applied during this refit: the selected epoch count is
+already fixed before the 200 outer-assessment individuals are predicted.
+
+```{r final-fixed-refit-function}
 train_final_fixed <- function(
   train_ids,
   assessment_ids,
@@ -3240,7 +3253,12 @@ train_final_fixed <- function(
 }
 ```
 
-<!-- Source section: final outer-CV tasks -->
+### 13.4 Held-out predictions
+
+The 150 final tasks reuse the same frozen outer splits and task identifiers used
+during tuning. Each task is fitted for all four ANN variants, producing
+**600 model-by-task fits**. Every fitted model predicts the same 200 untouched
+outer-assessment individuals for its task.
 
 ```{r final-ann-tasks}
 outer_map <- unique(
@@ -3295,7 +3313,7 @@ final_task_table$TaskID <- paste(
 
 rownames(final_task_table) <- NULL
 
-knitr::kable(
+format_table(
   head(final_task_table, 15),
   caption =
     "First 15 canonical ANN final tasks",
@@ -3304,11 +3322,13 @@ knitr::kable(
 ```
 
 Each row is one `Scenario × outer split` final-prediction task. The four ANN
-variants reuse the same `TaskID`, so the final stage contains
-**150 tasks × 4 variants = 600 model fits**, each evaluated on the same 200
-outer-assessment individuals.
+variants reuse the same `TaskID`. The final loop below first selects
+`Best_epoch`, then refits the corresponding model on all 800 outer-analysis
+individuals, and only afterward predicts the 200 outer-assessment individuals.
 
-<!-- Source section: final fitting and outer prediction -->
+True genetic values and observed phenotypes from the outer assessment are
+accessed only after prediction, when the held-out evaluation metrics are
+constructed.
 
 ```{r run-final-ann, eval=RUN_ANN}
 dir.create(
