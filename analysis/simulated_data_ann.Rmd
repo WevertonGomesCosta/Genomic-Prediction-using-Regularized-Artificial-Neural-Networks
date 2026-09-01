@@ -1613,7 +1613,13 @@ choose_candidate <- function(x) {
 }
 ```
 
-# Outer-task table
+## 11. Hyperparameter tuning
+
+Nested tuning uses the frozen validation design from M02. The outer assessment
+set is not predicted anywhere in this stage; it remains reserved for final
+model evaluation after hyperparameter and epoch selection are complete.
+
+### 11.1 Frozen outer tasks
 
 The six scenarios share the same 25 frozen outer splits, producing 150
 `Scenario × outer split` tuning tasks.
@@ -1682,7 +1688,7 @@ EXPECTED_FOLD_ROWS <-
   EXPECTED_TASKS *
   INNER_FITS_PER_TASK
 
-knitr::kable(
+format_table(
   head(task_table, 15),
   caption =
     "First 15 canonical ANN tuning tasks",
@@ -1696,9 +1702,31 @@ Each row represents one `Scenario × Repetition × Fold` combination. The same
 `TaskID` is used for all four ANN variants, which ensures that their selected
 regularization settings are compared within the same frozen outer task.
 
-# Canonical nested tuning
+### 11.2 Architecture and learning rate
 
-This section evaluates only inner-CV candidates. It never predicts the outer
+For each outer task, the 36 architecture-by-learning-rate combinations are
+evaluated with `ANN_0`. The deterministic candidate ranking described in
+Section 10 selects one shared architecture and one shared learning rate.
+
+### 11.3 L1
+
+With architecture and learning rate fixed, `ANN_L1` evaluates the six
+prespecified positive L1 coefficients. No additional architecture search is
+performed for the L1-regularized model.
+
+### 11.4 L2
+
+`ANN_L2` reuses the same selected architecture and learning rate and evaluates
+only the four prespecified positive L2 coefficients.
+
+### 11.5 L1 + L2
+
+`ANN_L1_L2` also reuses the shared architecture and learning rate, evaluating
+the complete 6 x 4 positive L1-by-L2 grid. This produces 24 combined-penalty
+candidates.
+
+The chunk below implements all four tuning stages for the 150 frozen outer
+tasks. It evaluates only inner-CV candidates and never predicts the outer
 assessment set.
 
 ```{r run-tuning, eval=RUN_ANN_TUNING}
@@ -2224,11 +2252,11 @@ write.csv(
 )
 ```
 
-# Canonical tuning results
+## 12. Selected configurations
 
-The selected configurations and tuning diagnostics below are generated from
-the canonical saved tuning outputs. Their sizes are displayed directly before
-the selected hyperparameters are summarized and interpreted.
+The reader-facing summaries below use the canonical saved tuning outputs. This
+allows the page to be rebuilt without rerunning the 42,000 inner candidate-fold
+fits while preserving the exact configurations selected by the canonical run.
 
 ```{r saved-integrity}
 selected_configurations <- readRDS(SELECTED_RDS)
@@ -2245,21 +2273,20 @@ tuning_output_summary <- data.frame(
     nrow(selected_configurations), nrow(candidate_summary), nrow(fold_results)
   )
 )
-knitr::kable(
+format_table(
   tuning_output_summary,
   caption = "Observed size of the canonical ANN tuning outputs",
   row.names = FALSE
 )
 ```
 
-# Selected configurations
+### 12.1 Architecture and learning-rate frequencies
 
-The summaries below show how often the 150 outer tasks selected each shared
-architecture and learning rate, followed by the selected penalty values for the
-regularized variants. A small configuration sample then illustrates the
-task-level selections without reproducing all 600 rows.
+Architecture and learning rate are shared by all four ANN variants within each
+outer task. Their selection frequencies therefore summarize the structural
+choices made before any model-specific penalty tuning.
 
-```{r selected-summary}
+```{r selected-structure-summary}
 task_level <- unique(
   selected_configurations[
     ,
@@ -2303,6 +2330,27 @@ learning_rate_frequency <- as.data.frame(
 names(learning_rate_frequency)[2] <-
   "Selected_tasks"
 
+format_table(
+  architecture_frequency,
+  caption =
+    "Selected shared architecture across the 150 outer tasks",
+  row.names = FALSE
+)
+format_table(
+  learning_rate_frequency,
+  caption =
+    "Selected shared learning rate across the 150 outer tasks",
+  row.names = FALSE
+)
+```
+
+### 12.2 Penalty selections
+
+The regularized variants subsequently select only their applicable L1 and/or L2
+coefficients. The frequency tables show how often each penalty value is selected,
+and the final table gives a small task-level sample of the canonical choices.
+
+```{r selected-penalty-summary}
 l1_frequency <- selected_configurations[
   selected_configurations$Model %in%
     c("ANN_L1", "ANN_L1_L2"),
@@ -2329,26 +2377,14 @@ l2_frequency <- aggregate(
   FUN = sum
 )
 
-knitr::kable(
-  architecture_frequency,
-  caption =
-    "Selected shared architecture across the 150 outer tasks",
-  row.names = FALSE
-)
-knitr::kable(
-  learning_rate_frequency,
-  caption =
-    "Selected shared learning rate across the 150 outer tasks",
-  row.names = FALSE
-)
-knitr::kable(
+format_table(
   l1_frequency,
   digits = 6,
   caption =
     "Selected L1 coefficients by regularized ANN variant",
   row.names = FALSE
 )
-knitr::kable(
+format_table(
   l2_frequency,
   digits = 6,
   caption =
@@ -2384,19 +2420,18 @@ selected_display <- head(
   20
 )
 
-knitr::kable(
+format_table(
   selected_display,
   digits = 6,
   caption =
     "First 20 selected canonical ANN configurations",
-  table.attr = WIDE_TABLE_ATTR,
   row.names = FALSE
 )
 ```
 
-The selection frequencies summarize how often each architecture, learning rate, and penalty coefficient is preferred across the frozen outer tasks. Because architecture and learning rate are shared by the four ANN variants within each task, differences among `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2` are not produced by giving the regularized variants a different structural search space.
+Because architecture and learning rate are shared by the four ANN variants within each task, differences among `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2` are not produced by giving the regularized variants a different structural search space.
 
-# Optimization diagnostics
+### 12.3 Optimization diagnostics
 
 These diagnostics describe how the fixed early-stopping protocol behaved over
 the canonical tuning fits. They do not enter candidate ranking and do not
@@ -2483,7 +2518,7 @@ optimization_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 
-knitr::kable(
+format_table(
   optimization_summary,
   caption =
     "Canonical ANN tuning optimization diagnostics",
@@ -2497,16 +2532,15 @@ Of the `r nrow(fold_results)` inner candidate-fold fits,
 ceiling. The median best epoch shows where the best early-validation checkpoint
 typically occurred; these diagnostics are not used to rank candidates.
 
-# Boundary description
+### 12.4 Search-boundary diagnostics
 
-Boundary occupancy is reported descriptively because the upper architecture
-`64-32` is a deliberate methodological cap. Selection of `64-32` indicates that
-the bounded search space was active for those tasks, but it does not trigger
-post hoc enlargement of the canonical grid.
+Boundary occupancy is reported descriptively because `64-32` and the extreme
+learning-rate and penalty values are deliberate limits of the prespecified
+search space. Reaching one of these limits identifies where the bounded search
+was active; it does not trigger post-hoc enlargement of the canonical grid.
 
-Consequently, boundary occupancy is treated as a limitation of the prespecified
-canonical comparison rather than as justification for extending the search
-space after observing the results.
+These frequencies are therefore interpreted as search-space diagnostics and as
+a limitation of the prespecified comparison, not as a new tuning rule.
 
 ```{r boundary-description}
 task_level <- unique(
@@ -2589,7 +2623,7 @@ boundary_table$Proportion <-
   boundary_table$Selected /
   boundary_table$Denominator
 
-knitr::kable(
+format_table(
   boundary_table,
   digits = 4,
   caption =
