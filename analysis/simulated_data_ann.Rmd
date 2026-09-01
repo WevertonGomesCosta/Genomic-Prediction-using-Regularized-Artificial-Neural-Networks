@@ -804,18 +804,38 @@ fits across the 150 scenario-by-split tasks. Architecture and learning rate are
 selected using `ANN_0` and then held common across all four ANN variants within
 each task, so their subsequent contrast isolates the L1/L2 penalty choice.
 
-# Within-fold preprocessing
+## 7. Data preprocessing
 
-For every inner fit, marker means and standard deviations are estimated only
-from the fitting subset. Those same parameters are then applied to the
-corresponding early-validation and inner-assessment individuals. Phenotypes are
-standardized from the fitting subset in the same way, and predictions are
-returned to the original phenotype scale before calculating performance
-metrics. Markers with effectively zero fitting-set variance receive unit scale
-to avoid numerical division by zero.
+Preprocessing is estimated independently inside each fitting subset. The same
+fitted transformation is then applied to the corresponding early-validation and
+assessment observations. This ordering prevents validation information from
+influencing the parameters used to train the network.
 
-This ordering prevents validation or assessment observations from influencing
-the preprocessing parameters used to fit the network.
+### 7.1 Marker standardization
+
+For each fit, marker means and standard deviations are estimated only from the
+current fitting individuals. The fitted center and scale are subsequently
+applied unchanged to early-validation and assessment individuals.
+
+Markers with effectively zero fitting-set variance receive unit scale. This
+avoids numerical division by zero without introducing information from outside
+the fitting subset.
+
+### 7.2 Response standardization
+
+Phenotypes are centered and scaled using only the fitting subset. Network
+predictions are transformed back to the original phenotype scale before RMSE,
+correlation, and MAE are calculated.
+
+### 7.3 Early-validation split
+
+The early-validation subset is drawn deterministically from the current
+analysis sample using a prespecified seed and fraction. It is distinct from the
+frozen inner-assessment fold, which remains untouched until candidate
+prediction.
+
+The helper functions below implement these transformations and retain the
+historical metric aliases required by the result-building code.
 
 ```{r support-functions}
 correlation <- function(predicted, observed) {
@@ -936,9 +956,9 @@ unscale_y <- function(y, scaler) {
 }
 ```
 
-# Shared ANN implementation
+## 8. Neural-network definition
 
-## Network objects
+### 8.1 Hidden layers and ReLU
 
 For a standardized marker vector \(\mathbf{x}\), each hidden layer applies a
 linear transformation followed by ReLU activation:
@@ -949,17 +969,33 @@ linear transformation followed by ReLU activation:
 (\mathbf{W}_{\ell}\mathbf{h}^{(\ell-1)}+\mathbf{b}_{\ell}).
 \]
 
-| Symbol | Meaning |
-|---|---|
-| \(\mathbf{x}\) | standardized marker vector |
-| \(\mathbf{W}\) | layer weights |
-| \(\mathbf{b}\) | layer biases |
-| \(\mathbf{h}\) | hidden-layer activations |
-| \(\hat{y}\) | network prediction |
+The symbols used in the network equations have the following roles:
 
-The output layer is linear because the response is continuous.
+```{r network-symbols}
+network_symbols <- data.frame(
+  Symbol = c("x", "W", "b", "h", "y-hat"),
+  Meaning = c(
+    "Standardized marker vector.",
+    "Layer weights.",
+    "Layer biases.",
+    "Hidden-layer activations.",
+    "Network prediction."
+  ),
+  stringsAsFactors = FALSE
+)
 
-## Loss and regularization
+format_table(
+  network_symbols,
+  caption = "Symbols used in the ANN definition"
+)
+```
+
+### 8.2 Linear output
+
+The output layer is linear because the response is continuous. No output
+activation is applied after the last linear transformation.
+
+### 8.3 L1 and L2 penalties
 
 Training minimizes
 
@@ -979,9 +1015,8 @@ The response is standardized from the fitting subset during optimization and
 predictions are transformed back to the original phenotype scale before
 performance metrics are calculated.
 
-## Representative 64-32 network
-
-The largest architecture in the prespecified catalog can be written directly as:
+The largest `64-32` architecture in the prespecified catalog illustrates
+the same hidden-layer and linear-output structure used throughout the search:
 
 ```{r ann-forward-example, eval=FALSE}
 model <- nn_module(
@@ -1100,21 +1135,18 @@ clone_state <- function(model) {
 }
 ```
 
-# Inner-CV training
+## 9. Inner-CV training
 
-The inner analysis set is divided deterministically into:
+For every frozen inner fold, the inner-analysis individuals are divided
+deterministically into a fitting subset and an early-validation subset. The
+frozen inner-assessment individuals remain untouched until the candidate has
+been trained and its best checkpoint restored.
 
-- a fitting subset;
-- an early-validation subset.
+### 9.1 One optimization step
 
-The frozen inner assessment set remains untouched until prediction of that
-candidate. Preprocessing is estimated from the fitting subset only.
-
-Early stopping is an optimization mechanism. Its epoch diagnostics are saved
-but excluded from the tuning rule.
-
-The core optimization step itself is simple: predict the fitting subset,
-calculate MSE plus the selected penalty, backpropagate, and update the weights.
+Each epoch predicts the fitting subset, calculates mean squared error plus the
+selected weight penalty, backpropagates the loss, and updates the network with
+Adam.
 
 ```{r ann-optimization-step, eval=FALSE}
 optimizer$zero_grad()
@@ -1134,10 +1166,14 @@ loss$backward()
 optimizer$step()
 ```
 
-The complete helper shown next applies the fitting-set scalers, monitors the
-early-validation loss, restores the best epoch, and predicts the untouched
-inner-assessment fold. The only conditionals retained are the ones that define
-the early-stopping algorithm itself.
+### 9.2 Complete candidate training
+
+The complete helper shown next applies the fitting-set scalers, trains the
+candidate, monitors early-validation loss, restores the best checkpoint, and
+predicts the untouched inner-assessment fold.
+
+The conditionals inside this function are part of the ANN optimization
+algorithm itself rather than defensive execution guards.
 
 ```{r training-functions}
 prepare_bundle <- function(
@@ -1392,7 +1428,27 @@ train_inner_candidate <- function(
 }
 ```
 
-# Candidate evaluation and selection
+### 9.3 Early stopping
+
+Within `train_inner_candidate()`, an improvement requires the current
+early-validation loss to be at least `MIN_DELTA` below the best loss observed so
+far. An improved epoch replaces the stored checkpoint and resets the stale-epoch
+counter.
+
+Training stops when `stale_epochs >= PATIENCE`. The stored best checkpoint is
+then restored before the untouched inner-assessment fold is predicted. Thus,
+the epoch at which training stops and the epoch retained for prediction are not
+necessarily the same.
+
+Early-stopping diagnostics are saved for optimization assessment but do not
+participate in candidate ranking.
+
+
+## 10. Candidate evaluation and ranking
+
+Each candidate is fitted independently in the four frozen inner folds. The
+candidate-level summary averages the held-out inner-assessment metrics across
+those four fits.
 
 Candidate ranking is deterministic and does **not** include epoch information.
 
