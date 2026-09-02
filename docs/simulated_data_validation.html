@@ -11,7 +11,7 @@
 
 <meta name="author" content="Weverton Gomes da Costa" />
 
-<meta name="date" content="2026-09-01" />
+<meta name="date" content="2026-09-02" />
 
 <title>Simulated data validation design</title>
 
@@ -36,6 +36,7 @@
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
 <link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -169,6 +170,11 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 </script>
 
 
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
 
 
 
@@ -484,6 +490,8 @@ div.tocify {
 <ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
 <li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
 <li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+<li role="separator" class="divider"></li>
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
 </ul>
 </div>
 
@@ -491,7 +499,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Simulated data validation design</h1>
 <h4 class="author">Weverton Gomes da Costa</h4>
-<h4 class="date">2026-09-01</h4>
+<h4 class="date">2026-09-02</h4>
 
 </div>
 
@@ -520,7 +528,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-09-01
+<strong>Last updated:</strong> 2026-09-02
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -652,15 +660,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree0366de4d8d2e6fdf12e4a716eba140c2528b4c94targetblank0366de4a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree4d4e2c37c4ee4263dbcc02327157c835d688696atargetblank4d4e2c3a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/0366de4d8d2e6fdf12e4a716eba140c2528b4c94" target="_blank">0366de4</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/4d4e2c37c4ee4263dbcc02327157c835d688696a" target="_blank">4d4e2c3</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree0366de4d8d2e6fdf12e4a716eba140c2528b4c94targetblank0366de4a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree4d4e2c37c4ee4263dbcc02327157c835d688696atargetblank4d4e2c3a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -670,7 +678,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/0366de4d8d2e6fdf12e4a716eba140c2528b4c94" target="_blank">0366de4</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/4d4e2c37c4ee4263dbcc02327157c835d688696a" target="_blank">4d4e2c3</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -687,6 +695,7 @@ were generated:
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
+    Ignored:    .github/
     Ignored:    .local/
     Ignored:    code/legacy/
     Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica (1).xlsx
@@ -707,9 +716,8 @@ Ignored files:
     Ignored:    data/dados_reais/pos_geno_real.rds
     Ignored:    renv/library/
 
-Unstaged changes:
-    Modified:   output/simulated/audit/preprocessed_simulated_common.rds
-    Modified:   output/simulated/audit/simulated_scenario_summary.csv
+Untracked files:
+    Untracked:  integrated_output_hashes_before.txt
 
 </code></pre>
 <p>
@@ -755,6 +763,57 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/63c1f3fe371d4710b183f16b4054d8ca881d7182/docs/simulated_data_validation.html" target="_blank">63c1f3f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-09-01
+</td>
+<td>
+Rebuild M02 after editorial revision
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/c6443143c973acebd7f31d65479278a63ccf16c8/analysis/simulated_data_validation.Rmd" target="_blank">c644314</a>
+</td>
+<td>
+Weverton Gomes da Costa
+</td>
+<td>
+2026-09-01
+</td>
+<td>
+Refine M02 validation design tutorial
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/217e7780665447a23e1bb6b72c5c026cd88c2b9f/docs/simulated_data_validation.html" target="_blank">217e778</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-09-01
+</td>
+<td>
+Complete reader-first didactic cleanup
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1017,8 +1076,8 @@ refactor: establish canonical simulated genomic prediction workflow
 </div>
 </div>
 </div>
-<div id="purpose" class="section level1">
-<h1>Purpose</h1>
+<div id="objective" class="section level2">
+<h2>1. Objective</h2>
 <p>This analysis freezes the validation design used by all genomic
 prediction models fitted to the simulated dataset.</p>
 <p>The design is created <strong>before model fitting</strong> and is
@@ -1038,8 +1097,8 @@ scenarios.</li>
 evaluation. The inner folds are reserved for ANN hyperparameter tuning.
 True simulated genetic values are never used to generate partitions or
 tune models.</p>
-<div id="how-to-read-the-validation-design" class="section level2">
-<h2>How to read the validation design</h2>
+<div id="how-to-read-this-module" class="section level3">
+<h3>1.1 How to read this module</h3>
 <p>The validation scheme separates model development from final
 predictive evaluation. An <strong>analysis set</strong> contains the
 individuals available for fitting or tuning, whereas the corresponding
@@ -1052,1214 +1111,1974 @@ be inspected from the displayed objects rather than inferred from
 boolean checks.</p>
 </div>
 </div>
-<div id="validation-parameters" class="section level1">
-<h1>Validation parameters</h1>
-<p>The complete nested design is controlled by four explicit values.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20260821</span><span class="dt">L</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>N_OUTER_REPEATS <span class="ot">&lt;-</span> <span class="dv">5</span><span class="dt">L</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>N_OUTER_FOLDS <span class="ot">&lt;-</span> <span class="dv">5</span><span class="dt">L</span></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>N_INNER_FOLDS <span class="ot">&lt;-</span> <span class="dv">4</span><span class="dt">L</span></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>validation_parameters <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>  <span class="at">Parameter =</span> <span class="fu">c</span>(</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>    <span class="st">&quot;Global seed&quot;</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>    <span class="st">&quot;Outer repetitions&quot;</span>,</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>    <span class="st">&quot;Outer folds per repetition&quot;</span>,</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>    <span class="st">&quot;Inner folds per outer split&quot;</span></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>  ),</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>    SEED_GLOBAL,</span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>    N_OUTER_REPEATS,</span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>    N_OUTER_FOLDS,</span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>    N_INNER_FOLDS</span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>  ),</span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>  <span class="at">Role =</span> <span class="fu">c</span>(</span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>    <span class="st">&quot;reproducible partition generation&quot;</span>,</span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>    <span class="st">&quot;repeat held-out evaluation&quot;</span>,</span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a>    <span class="st">&quot;define outer assessment sets&quot;</span>,</span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>    <span class="st">&quot;compare ANN candidates inside outer analysis&quot;</span></span>
-<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a>  )</span>
-<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a>)</span>
-<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a>  validation_parameters,</span>
-<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a>  <span class="at">caption =</span></span>
-<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a>    <span class="st">&quot;Canonical nested cross-validation parameters&quot;</span>,</span>
-<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a>)</span></code></pre></div>
-<table>
-<caption>Canonical nested cross-validation parameters</caption>
-<colgroup>
-<col width="34%" />
-<col width="10%" />
-<col width="54%" />
-</colgroup>
+<div id="packages-inputs-and-validation-parameters"
+class="section level2">
+<h2>2. Packages, inputs, and validation parameters</h2>
+<div id="package-used" class="section level3">
+<h3>2.1 Package used</h3>
+<p>This module uses base R to construct the nested cross-validation
+partitions and <code>knitr</code> to format the tables presented in the
+tutorial.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(knitr) <span class="co"># Format tables and R Markdown output.</span></span></code></pre></div>
+</div>
+<div id="input-and-output-paths" class="section level3">
+<h3>2.2 Input and output paths</h3>
+<p>The validation module reads the canonical object produced by the
+data-audit module and stores the frozen cross-validation design in a
+dedicated output directory.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>PROJECT_ROOT <span class="ot">&lt;-</span> <span class="st">&quot;.&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>project_path <span class="ot">&lt;-</span> <span class="cf">function</span>(...) <span class="fu">file.path</span>(PROJECT_ROOT, ...)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>input_file <span class="ot">&lt;-</span> <span class="fu">project_path</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;audit&quot;</span>, <span class="st">&quot;preprocessed_simulated_common.rds&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>output_dir <span class="ot">&lt;-</span> <span class="fu">project_path</span>(<span class="st">&quot;output&quot;</span>, <span class="st">&quot;simulated&quot;</span>, <span class="st">&quot;validation&quot;</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">dir.create</span>(output_dir, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+</div>
+<div id="cross-validation-parameters" class="section level3">
+<h3>2.3 Cross-validation parameters</h3>
+<p>The complete nested design is controlled by four explicit values.
+These values are fixed before model fitting and are reused by all
+prediction methods.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20260821</span><span class="dt">L</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>N_OUTER_REPEATS <span class="ot">&lt;-</span> <span class="dv">5</span><span class="dt">L</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>N_OUTER_FOLDS <span class="ot">&lt;-</span> <span class="dv">5</span><span class="dt">L</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>N_INNER_FOLDS <span class="ot">&lt;-</span> <span class="dv">4</span><span class="dt">L</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>validation_parameters <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">Parameter =</span> <span class="fu">c</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>    <span class="st">&quot;Global seed&quot;</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>    <span class="st">&quot;Outer repetitions&quot;</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    <span class="st">&quot;Outer folds per repetition&quot;</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>    <span class="st">&quot;Inner folds per outer split&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  ),</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>    SEED_GLOBAL,</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>    N_OUTER_REPEATS,</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>    N_OUTER_FOLDS,</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>    N_INNER_FOLDS</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  ),</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>  <span class="at">Role =</span> <span class="fu">c</span>(</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>    <span class="st">&quot;reproducible partition generation&quot;</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>    <span class="st">&quot;repeat held-out evaluation&quot;</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>    <span class="st">&quot;define outer assessment sets&quot;</span>,</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>    <span class="st">&quot;compare ANN candidates inside outer analysis&quot;</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>  )</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>)</span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="fu">format_table</span>(</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>  validation_parameters,</span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Canonical nested cross-validation parameters&quot;</span>,</span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>)</span></code></pre></div>
+<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">
+<table class="table table-striped table-hover table-bordered" style="width:100%; margin-bottom:0;">
+<caption>
+Canonical nested cross-validation parameters
+</caption>
 <thead>
-<tr class="header">
-<th align="left">Parameter</th>
-<th align="right">Value</th>
-<th align="left">Role</th>
+<tr>
+<th style="text-align:left;">
+Parameter
+</th>
+<th style="text-align:right;">
+Value
+</th>
+<th style="text-align:left;">
+Role
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="left">Global seed</td>
-<td align="right">20260821</td>
-<td align="left">reproducible partition generation</td>
+<tr>
+<td style="text-align:left;">
+Global seed
+</td>
+<td style="text-align:right;">
+20260821
+</td>
+<td style="text-align:left;">
+reproducible partition generation
+</td>
 </tr>
-<tr class="even">
-<td align="left">Outer repetitions</td>
-<td align="right">5</td>
-<td align="left">repeat held-out evaluation</td>
+<tr>
+<td style="text-align:left;">
+Outer repetitions
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+repeat held-out evaluation
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Outer folds per repetition</td>
-<td align="right">5</td>
-<td align="left">define outer assessment sets</td>
+<tr>
+<td style="text-align:left;">
+Outer folds per repetition
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+define outer assessment sets
+</td>
 </tr>
-<tr class="even">
-<td align="left">Inner folds per outer split</td>
-<td align="right">4</td>
-<td align="left">compare ANN candidates inside outer analysis</td>
+<tr>
+<td style="text-align:left;">
+Inner folds per outer split
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+compare ANN candidates inside outer analysis
+</td>
 </tr>
 </tbody>
 </table>
-<p>The same global seed is combined with the repetition and fold
-identifiers so every partition can be regenerated exactly.</p>
-<div id="balanced-fold-assignment" class="section level2">
-<h2>Balanced fold assignment</h2>
-<p>The helper below randomizes the supplied IDs with
-<code>sample()</code> and then cycles through the fold labels with
-<code>rep()</code>. Sorting by ID at the end changes only the
-display/order of the assignment table, not the randomized fold
-membership.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>balanced_fold_assignment <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  ids,</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  k,</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  seed</span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>) {</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="fu">set.seed</span>(seed)</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  shuffled_ids <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    ids,</span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>    <span class="at">size =</span> <span class="fu">length</span>(ids),</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>    <span class="at">replace =</span> <span class="cn">FALSE</span></span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  )</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a></span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  assigned_folds <span class="ot">&lt;-</span> <span class="fu">rep</span>(</span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>    <span class="fu">seq_len</span>(k),</span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>    <span class="at">length.out =</span> <span class="fu">length</span>(ids)</span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>  )</span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a></span>
-<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>    <span class="at">ID =</span> shuffled_ids,</span>
-<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>    <span class="at">Fold =</span> assigned_folds,</span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>  )</span>
-<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>  out <span class="ot">&lt;-</span> out[</span>
-<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>    <span class="fu">order</span>(out<span class="sc">$</span>ID),</span>
-<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>    ,</span>
-<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>    drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
-<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>  ]</span>
-<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a></span>
-<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a>  <span class="fu">rownames</span>(out) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a>  out</span>
-<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a>}</span></code></pre></div>
-<p>For 1,000 individuals and five outer folds, this produces 200
-assessment individuals per fold. Applied to an 800-individual
-outer-analysis set with four inner folds, it produces 200
-inner-assessment individuals per fold.</p>
+</div>
+<p>The same global seed is combined with repetition and fold identifiers
+so every partition can be regenerated exactly.</p>
 </div>
 </div>
-<div id="canonical-data-prerequisite" class="section level1">
-<h1>Canonical data prerequisite</h1>
+<div id="individual-universe" class="section level2">
+<h2>3. Individual universe</h2>
+<div id="canonical-input-object" class="section level3">
+<h3>3.1 Canonical input object</h3>
 <p>The validation design is built from the canonical simulated-data
-object created in the preceding module.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>simulated_common <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(input_file)</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>canonical_components <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">Component =</span> <span class="fu">c</span>(<span class="st">&quot;phenotype&quot;</span>, <span class="st">&quot;true_genetic_value&quot;</span>, <span class="st">&quot;genotype_m101&quot;</span>),</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">Rows =</span> <span class="fu">c</span>(</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="fu">nrow</span>(simulated_common<span class="sc">$</span>phenotype),</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>    <span class="fu">nrow</span>(simulated_common<span class="sc">$</span>true_genetic_value),</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="fu">nrow</span>(simulated_common<span class="sc">$</span>genotype_m101)</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  ),</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">Columns =</span> <span class="fu">c</span>(</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    <span class="fu">ncol</span>(simulated_common<span class="sc">$</span>phenotype),</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>    <span class="fu">ncol</span>(simulated_common<span class="sc">$</span>true_genetic_value),</span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>    <span class="fu">ncol</span>(simulated_common<span class="sc">$</span>genotype_m101)</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  )</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>)</span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  canonical_components,</span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Canonical objects used to construct the validation design&quot;</span>,</span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>)</span></code></pre></div>
-<table>
-<caption>Canonical objects used to construct the validation
-design</caption>
+object created in the preceding module. The dimensions shown below make
+explicit which aligned objects share the same individual rows before any
+partition is generated.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>simulated_common <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(input_file)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>canonical_components <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">Component =</span> <span class="fu">c</span>(<span class="st">&quot;phenotype&quot;</span>, <span class="st">&quot;true_genetic_value&quot;</span>, <span class="st">&quot;genotype_m101&quot;</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">Rows =</span> <span class="fu">c</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="fu">nrow</span>(simulated_common<span class="sc">$</span>phenotype),</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    <span class="fu">nrow</span>(simulated_common<span class="sc">$</span>true_genetic_value),</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>    <span class="fu">nrow</span>(simulated_common<span class="sc">$</span>genotype_m101)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  ),</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="at">Columns =</span> <span class="fu">c</span>(</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>    <span class="fu">ncol</span>(simulated_common<span class="sc">$</span>phenotype),</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>    <span class="fu">ncol</span>(simulated_common<span class="sc">$</span>true_genetic_value),</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>    <span class="fu">ncol</span>(simulated_common<span class="sc">$</span>genotype_m101)</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  )</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>)</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="fu">format_table</span>(</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>  canonical_components,</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Canonical objects used to construct the validation design&quot;</span>,</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>)</span></code></pre></div>
+<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">
+<table class="table table-striped table-hover table-bordered" style="width:100%; margin-bottom:0;">
+<caption>
+Canonical objects used to construct the validation design
+</caption>
 <thead>
-<tr class="header">
-<th align="left">Component</th>
-<th align="right">Rows</th>
-<th align="right">Columns</th>
+<tr>
+<th style="text-align:left;">
+Component
+</th>
+<th style="text-align:right;">
+Rows
+</th>
+<th style="text-align:right;">
+Columns
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="left">phenotype</td>
-<td align="right">1000</td>
-<td align="right">6</td>
+<tr>
+<td style="text-align:left;">
+phenotype
+</td>
+<td style="text-align:right;">
+1000
+</td>
+<td style="text-align:right;">
+6
+</td>
 </tr>
-<tr class="even">
-<td align="left">true_genetic_value</td>
-<td align="right">1000</td>
-<td align="right">6</td>
+<tr>
+<td style="text-align:left;">
+true_genetic_value
+</td>
+<td style="text-align:right;">
+1000
+</td>
+<td style="text-align:right;">
+6
+</td>
 </tr>
-<tr class="odd">
-<td align="left">genotype_m101</td>
-<td align="right">1000</td>
-<td align="right">4010</td>
+<tr>
+<td style="text-align:left;">
+genotype_m101
+</td>
+<td style="text-align:right;">
+1000
+</td>
+<td style="text-align:right;">
+4010
+</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div id="individual-universe" class="section level1">
-<h1>Individual universe</h1>
+<p>All three canonical objects contain the same 1,000 individual rows.
+Phenotype and true genetic value contain six scenario columns, whereas
+the genotype matrix contains the 4,010 audited markers.</p>
+</div>
+<div id="individuals-used-for-partitioning" class="section level3">
+<h3>3.2 Individuals used for partitioning</h3>
 <p>Partitions are generated from the 1,000 canonical row identifiers
 only. No phenotype, true genetic value, scenario label, or model
 information is used to define the partitions. Alignment with the
 canonical phenotype, true-genetic- value, and genotype matrices is
 verified internally before the folds are built.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>ids <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(simulated_common<span class="sc">$</span>metadata<span class="sc">$</span>row_identifier)</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>individual_universe <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">Quantity =</span> <span class="fu">c</span>(</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="st">&quot;Individuals used to generate folds&quot;</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="st">&quot;First row identifier&quot;</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    <span class="st">&quot;Last row identifier&quot;</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  ),</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">Observed =</span> <span class="fu">c</span>(<span class="fu">length</span>(ids), <span class="fu">min</span>(ids), <span class="fu">max</span>(ids))</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>)</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  individual_universe,</span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Individual universe used for fold generation&quot;</span>,</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>)</span></code></pre></div>
-<table>
-<caption>Individual universe used for fold generation</caption>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>ids <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(simulated_common<span class="sc">$</span>metadata<span class="sc">$</span>row_identifier)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>individual_universe <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">Quantity =</span> <span class="fu">c</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>    <span class="st">&quot;Individuals used to generate folds&quot;</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>    <span class="st">&quot;First row identifier&quot;</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>    <span class="st">&quot;Last row identifier&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  ),</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">Observed =</span> <span class="fu">c</span>(<span class="fu">length</span>(ids), <span class="fu">min</span>(ids), <span class="fu">max</span>(ids))</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>)</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="fu">format_table</span>(</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  individual_universe,</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Individual universe used for fold generation&quot;</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>)</span></code></pre></div>
+<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">
+<table class="table table-striped table-hover table-bordered" style="width:100%; margin-bottom:0;">
+<caption>
+Individual universe used for fold generation
+</caption>
 <thead>
-<tr class="header">
-<th align="left">Quantity</th>
-<th align="right">Observed</th>
+<tr>
+<th style="text-align:left;">
+Quantity
+</th>
+<th style="text-align:right;">
+Observed
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="left">Individuals used to generate folds</td>
-<td align="right">1000</td>
+<tr>
+<td style="text-align:left;">
+Individuals used to generate folds
+</td>
+<td style="text-align:right;">
+1000
+</td>
 </tr>
-<tr class="even">
-<td align="left">First row identifier</td>
-<td align="right">1</td>
+<tr>
+<td style="text-align:left;">
+First row identifier
+</td>
+<td style="text-align:right;">
+1
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Last row identifier</td>
-<td align="right">1000</td>
+<tr>
+<td style="text-align:left;">
+Last row identifier
+</td>
+<td style="text-align:right;">
+1000
+</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div id="outer-repeated-cross-validation" class="section level1">
-<h1>Outer repeated cross-validation</h1>
-<p>For each repetition, <code>sample()</code> randomly permutes the
-1,000 canonical individual IDs using a deterministic seed.
-<code>rep()</code> then assigns the shuffled IDs across five fold labels
-as evenly as possible. Because 1,000 is exactly divisible by five, every
-outer assessment fold contains 200 individuals and the remaining 800
-form its outer analysis set.</p>
-<p>The same procedure is repeated five times with different
-deterministic seeds, producing 25 outer train–test comparisons while
+<p>The partitioning universe therefore consists only of row identifiers
+1-1,000. The response variables remain outside the fold-generation
+procedure.</p>
+</div>
+</div>
+<div id="outer-repeated-cross-validation" class="section level2">
+<h2>4. Outer repeated cross-validation</h2>
+<div id="balanced-fold-assignment" class="section level3">
+<h3>4.1 Balanced fold assignment</h3>
+<p>The helper below randomizes the supplied IDs with
+<code>sample()</code> and then cycles through the fold labels with
+<code>rep()</code>. Sorting by ID at the end changes only the
+display/order of the assignment table, not the randomized fold
+membership.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>balanced_fold_assignment <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  ids,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  k,</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  seed</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>) {</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="fu">set.seed</span>(seed)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  shuffled_ids <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>    ids,</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>    <span class="at">size =</span> <span class="fu">length</span>(ids),</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>    <span class="at">replace =</span> <span class="cn">FALSE</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  )</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>  assigned_folds <span class="ot">&lt;-</span> <span class="fu">rep</span>(</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>    <span class="fu">seq_len</span>(k),</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>    <span class="at">length.out =</span> <span class="fu">length</span>(ids)</span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>  )</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>    <span class="at">ID =</span> shuffled_ids,</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>    <span class="at">Fold =</span> assigned_folds,</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>  )</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>  out <span class="ot">&lt;-</span> out[</span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>    <span class="fu">order</span>(out<span class="sc">$</span>ID),</span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>    ,</span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>    drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>  ]</span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>  <span class="fu">rownames</span>(out) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>  out</span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>}</span></code></pre></div>
+<p>For 1,000 individuals and five outer folds, this produces 200
+assessment individuals per fold. Applied to an 800-individual
+outer-analysis set with four inner folds, it produces 200
+inner-assessment individuals per fold.</p>
+</div>
+<div id="outer-partition-sizes" class="section level3">
+<h3>4.2 Outer partition sizes</h3>
+<p>For each repetition, the 1,000 canonical IDs are assigned to five
+folds using a deterministic seed derived from the global seed. Five
+repetitions therefore produce 25 outer train-test comparisons while
 preserving exact reproducibility.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>outer_assignments <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  rbind,</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="fu">seq_len</span>(N_OUTER_REPEATS), <span class="cf">function</span>(rep_id) {</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>    assignment <span class="ot">&lt;-</span> <span class="fu">balanced_fold_assignment</span>(</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>      <span class="at">ids =</span> ids,</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>      <span class="at">k =</span> N_OUTER_FOLDS,</span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>      <span class="at">seed =</span> SEED_GLOBAL <span class="sc">+</span> rep_id</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>    )</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>      <span class="at">Repetition =</span> rep_id,</span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>      <span class="at">ID =</span> assignment<span class="sc">$</span>ID,</span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>      <span class="at">OuterFold =</span> assignment<span class="sc">$</span>Fold,</span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>    )</span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  })</span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>)</span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="fu">rownames</span>(outer_assignments) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>outer_assignments<span class="sc">$</span>SplitID <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(</span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>  <span class="st">&quot;R%02d_F%02d&quot;</span>,</span>
-<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>  outer_assignments<span class="sc">$</span>Repetition,</span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>  outer_assignments<span class="sc">$</span>OuterFold</span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>)</span>
-<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a></span>
-<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>outer_sizes <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
-<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>  ID <span class="sc">~</span> Repetition <span class="sc">+</span> OuterFold <span class="sc">+</span> SplitID,</span>
-<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a>  <span class="at">data =</span> outer_assignments,</span>
-<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>  <span class="at">FUN =</span> length</span>
-<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>)</span>
-<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="fu">names</span>(outer_sizes)[<span class="fu">names</span>(outer_sizes) <span class="sc">==</span> <span class="st">&quot;ID&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;Assessment_N&quot;</span></span>
-<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>outer_sizes<span class="sc">$</span>Analysis_N <span class="ot">&lt;-</span> <span class="fu">length</span>(ids) <span class="sc">-</span> outer_sizes<span class="sc">$</span>Assessment_N</span>
-<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a></span>
-<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a>  outer_sizes,</span>
-<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Outer repeated cross-validation split sizes&quot;</span>,</span>
-<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a>)</span></code></pre></div>
-<table>
-<caption>Outer repeated cross-validation split sizes</caption>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Generate one balanced five-fold assignment for each outer repetition.</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>outer_assignments <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  rbind,</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="fu">seq_len</span>(N_OUTER_REPEATS), <span class="cf">function</span>(rep_id) {</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>    assignment <span class="ot">&lt;-</span> <span class="fu">balanced_fold_assignment</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>      <span class="at">ids =</span> ids,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>      <span class="at">k =</span> N_OUTER_FOLDS,</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>      <span class="at">seed =</span> SEED_GLOBAL <span class="sc">+</span> rep_id</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>    )</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>      <span class="at">Repetition =</span> rep_id,</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>      <span class="at">ID =</span> assignment<span class="sc">$</span>ID,</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>      <span class="at">OuterFold =</span> assignment<span class="sc">$</span>Fold,</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>    )</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  })</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>)</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="fu">rownames</span>(outer_assignments) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>outer_assignments<span class="sc">$</span>SplitID <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  <span class="st">&quot;R%02d_F%02d&quot;</span>,</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  outer_assignments<span class="sc">$</span>Repetition,</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>  outer_assignments<span class="sc">$</span>OuterFold</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>)</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co"># Summarize analysis and assessment sample sizes for all 25 outer splits.</span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>outer_sizes <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>  ID <span class="sc">~</span> Repetition <span class="sc">+</span> OuterFold <span class="sc">+</span> SplitID,</span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>  <span class="at">data =</span> outer_assignments,</span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>  <span class="at">FUN =</span> length</span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>)</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="fu">names</span>(outer_sizes)[<span class="fu">names</span>(outer_sizes) <span class="sc">==</span> <span class="st">&quot;ID&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;Assessment_N&quot;</span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>outer_sizes<span class="sc">$</span>Analysis_N <span class="ot">&lt;-</span> <span class="fu">length</span>(ids) <span class="sc">-</span> outer_sizes<span class="sc">$</span>Assessment_N</span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="fu">format_table</span>(</span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>  outer_sizes,</span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Outer repeated cross-validation split sizes&quot;</span>,</span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>)</span></code></pre></div>
+<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">
+<table class="table table-striped table-hover table-bordered" style="width:100%; margin-bottom:0;">
+<caption>
+Outer repeated cross-validation split sizes
+</caption>
 <thead>
-<tr class="header">
-<th align="right">Repetition</th>
-<th align="right">OuterFold</th>
-<th align="left">SplitID</th>
-<th align="right">Assessment_N</th>
-<th align="right">Analysis_N</th>
+<tr>
+<th style="text-align:right;">
+Repetition
+</th>
+<th style="text-align:right;">
+OuterFold
+</th>
+<th style="text-align:left;">
+SplitID
+</th>
+<th style="text-align:right;">
+Assessment_N
+</th>
+<th style="text-align:right;">
+Analysis_N
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="left">R01_F01</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+R01_F01
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">1</td>
-<td align="right">2</td>
-<td align="left">R01_F02</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+R01_F02
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">3</td>
-<td align="left">R01_F03</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+R01_F03
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">1</td>
-<td align="right">4</td>
-<td align="left">R01_F04</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+R01_F04
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">5</td>
-<td align="left">R01_F05</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+R01_F05
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">1</td>
-<td align="left">R02_F01</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+R02_F01
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">2</td>
-<td align="right">2</td>
-<td align="left">R02_F02</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+R02_F02
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">3</td>
-<td align="left">R02_F03</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+R02_F03
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">2</td>
-<td align="right">4</td>
-<td align="left">R02_F04</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+R02_F04
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">5</td>
-<td align="left">R02_F05</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+R02_F05
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">3</td>
-<td align="right">1</td>
-<td align="left">R03_F01</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+R03_F01
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">3</td>
-<td align="right">2</td>
-<td align="left">R03_F02</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+R03_F02
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">3</td>
-<td align="right">3</td>
-<td align="left">R03_F03</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+R03_F03
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">3</td>
-<td align="right">4</td>
-<td align="left">R03_F04</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+R03_F04
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">3</td>
-<td align="right">5</td>
-<td align="left">R03_F05</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+R03_F05
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">4</td>
-<td align="right">1</td>
-<td align="left">R04_F01</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+R04_F01
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">4</td>
-<td align="right">2</td>
-<td align="left">R04_F02</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+R04_F02
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">4</td>
-<td align="right">3</td>
-<td align="left">R04_F03</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+R04_F03
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">4</td>
-<td align="right">4</td>
-<td align="left">R04_F04</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+R04_F04
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">4</td>
-<td align="right">5</td>
-<td align="left">R04_F05</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+R04_F05
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">5</td>
-<td align="right">1</td>
-<td align="left">R05_F01</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+R05_F01
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">5</td>
-<td align="right">2</td>
-<td align="left">R05_F02</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+R05_F02
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">5</td>
-<td align="right">3</td>
-<td align="left">R05_F03</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+R05_F03
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="right">5</td>
-<td align="right">4</td>
-<td align="left">R05_F04</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+R05_F04
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="right">5</td>
-<td align="right">5</td>
-<td align="left">R05_F05</td>
-<td align="right">200</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+R05_F05
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
 </tbody>
 </table>
-<p>Every one of the 25 outer splits therefore contains <strong>800
-analysis</strong> and <strong>200 assessment</strong> individuals. The
-five repetitions use distinct randomized assignments, while every
+</div>
+<p>Every one of the 25 outer splits contains <strong>800
+analysis</strong> and <strong>200 assessment</strong> individuals. Each
 individual appears exactly once in an assessment fold within each
 repetition.</p>
 </div>
-<div id="explicit-outer-split-objects" class="section level1">
-<h1>Explicit outer split objects</h1>
-<p>The assignment table is then converted into explicit analysis and
-assessment ID sets for each outer split. For a given split,
-<code>setdiff()</code> removes the 200 assessment IDs from the
-1,000-individual universe, leaving the corresponding 800-individual
-analysis set. This representation is the object consumed by the modeling
-modules.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>outer_split_ids <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(outer_assignments<span class="sc">$</span>SplitID))</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>outer_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(outer_split_ids)),</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  outer_split_ids</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>)</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="cf">for</span> (split_id <span class="cf">in</span> outer_split_ids) {</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  assessment_ids <span class="ot">&lt;-</span> outer_assignments<span class="sc">$</span>ID[</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>    outer_assignments<span class="sc">$</span>SplitID <span class="sc">==</span> split_id</span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  ]</span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  analysis_ids <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(ids, assessment_ids)</span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  outer_splits[[split_id]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>    <span class="at">split_id =</span> split_id,</span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>    <span class="at">analysis_ids =</span> <span class="fu">sort</span>(analysis_ids),</span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>    <span class="at">assessment_ids =</span> <span class="fu">sort</span>(assessment_ids)</span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>  )</span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>}</span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a></span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>example_outer_split <span class="ot">&lt;-</span> outer_splits[[<span class="dv">1</span>]]</span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>outer_object_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>  <span class="at">Component =</span> <span class="fu">c</span>(<span class="st">&quot;analysis_ids&quot;</span>, <span class="st">&quot;assessment_ids&quot;</span>, <span class="st">&quot;overlap&quot;</span>),</span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>  <span class="at">N =</span> <span class="fu">c</span>(</span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>    <span class="fu">length</span>(example_outer_split<span class="sc">$</span>analysis_ids),</span>
-<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>    <span class="fu">length</span>(example_outer_split<span class="sc">$</span>assessment_ids),</span>
-<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">intersect</span>(</span>
-<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>      example_outer_split<span class="sc">$</span>analysis_ids,</span>
-<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>      example_outer_split<span class="sc">$</span>assessment_ids</span>
-<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>    ))</span>
-<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>  ),</span>
-<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>  <span class="at">First_IDs =</span> <span class="fu">c</span>(</span>
-<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>    <span class="fu">paste</span>(<span class="fu">head</span>(example_outer_split<span class="sc">$</span>analysis_ids, <span class="dv">6</span>), <span class="at">collapse =</span> <span class="st">&quot;, &quot;</span>),</span>
-<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>    <span class="fu">paste</span>(<span class="fu">head</span>(example_outer_split<span class="sc">$</span>assessment_ids, <span class="dv">6</span>), <span class="at">collapse =</span> <span class="st">&quot;, &quot;</span>),</span>
-<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>    <span class="st">&quot;-&quot;</span></span>
-<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>  )</span>
-<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>)</span>
-<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>  outer_object_summary,</span>
-<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(<span class="st">&quot;Structure of outer split&quot;</span>, example_outer_split<span class="sc">$</span>split_id),</span>
-<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a>)</span></code></pre></div>
-<table>
-<caption>Structure of outer split R01_F01</caption>
+<div id="explicit-analysis-and-assessment-sets" class="section level3">
+<h3>4.3 Explicit analysis and assessment sets</h3>
+<p>The assignment table is converted into explicit analysis and
+assessment ID sets for each outer split. <code>setdiff()</code> removes
+the 200 assessment IDs from the full individual universe, leaving the
+corresponding 800-individual analysis set.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>outer_split_ids <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(outer_assignments<span class="sc">$</span>SplitID))</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>outer_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(outer_split_ids)),</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  outer_split_ids</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>)</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co"># Store the analysis and assessment IDs consumed by the modeling modules.</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="cf">for</span> (split_id <span class="cf">in</span> outer_split_ids) {</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  assessment_ids <span class="ot">&lt;-</span> outer_assignments<span class="sc">$</span>ID[</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    outer_assignments<span class="sc">$</span>SplitID <span class="sc">==</span> split_id</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  ]</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  analysis_ids <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(ids, assessment_ids)</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>  outer_splits[[split_id]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    <span class="at">split_id =</span> split_id,</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    <span class="at">analysis_ids =</span> <span class="fu">sort</span>(analysis_ids),</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    <span class="at">assessment_ids =</span> <span class="fu">sort</span>(assessment_ids)</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>  )</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>}</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>example_outer_split <span class="ot">&lt;-</span> outer_splits[[<span class="dv">1</span>]]</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>outer_object_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  <span class="at">Component =</span> <span class="fu">c</span>(<span class="st">&quot;analysis_ids&quot;</span>, <span class="st">&quot;assessment_ids&quot;</span>, <span class="st">&quot;overlap&quot;</span>),</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>  <span class="at">N =</span> <span class="fu">c</span>(</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>    <span class="fu">length</span>(example_outer_split<span class="sc">$</span>analysis_ids),</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>    <span class="fu">length</span>(example_outer_split<span class="sc">$</span>assessment_ids),</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">intersect</span>(</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>      example_outer_split<span class="sc">$</span>analysis_ids,</span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>      example_outer_split<span class="sc">$</span>assessment_ids</span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>    ))</span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>  ),</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>  <span class="at">First_IDs =</span> <span class="fu">c</span>(</span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>    <span class="fu">paste</span>(<span class="fu">head</span>(example_outer_split<span class="sc">$</span>analysis_ids, <span class="dv">6</span>), <span class="at">collapse =</span> <span class="st">&quot;, &quot;</span>),</span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>    <span class="fu">paste</span>(<span class="fu">head</span>(example_outer_split<span class="sc">$</span>assessment_ids, <span class="dv">6</span>), <span class="at">collapse =</span> <span class="st">&quot;, &quot;</span>),</span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>    <span class="st">&quot;-&quot;</span></span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>  )</span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>)</span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a></span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a><span class="fu">format_table</span>(</span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>  outer_object_summary,</span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(<span class="st">&quot;Structure of outer split&quot;</span>, example_outer_split<span class="sc">$</span>split_id),</span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>)</span></code></pre></div>
+<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">
+<table class="table table-striped table-hover table-bordered" style="width:100%; margin-bottom:0;">
+<caption>
+Structure of outer split R01_F01
+</caption>
 <thead>
-<tr class="header">
-<th align="left">Component</th>
-<th align="right">N</th>
-<th align="left">First_IDs</th>
+<tr>
+<th style="text-align:left;">
+Component
+</th>
+<th style="text-align:right;">
+N
+</th>
+<th style="text-align:left;">
+First_IDs
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="left">analysis_ids</td>
-<td align="right">800</td>
-<td align="left">1, 2, 3, 4, 5, 6</td>
+<tr>
+<td style="text-align:left;">
+analysis_ids
+</td>
+<td style="text-align:right;">
+800
+</td>
+<td style="text-align:left;">
+1, 2, 3, 4, 5, 6
+</td>
 </tr>
-<tr class="even">
-<td align="left">assessment_ids</td>
-<td align="right">200</td>
-<td align="left">13, 16, 23, 25, 27, 28</td>
+<tr>
+<td style="text-align:left;">
+assessment_ids
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:left;">
+13, 16, 23, 25, 27, 28
+</td>
 </tr>
-<tr class="odd">
-<td align="left">overlap</td>
-<td align="right">0</td>
-<td align="left">-</td>
+<tr>
+<td style="text-align:left;">
+overlap
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
 </tr>
 </tbody>
 </table>
-<p>Each explicit split object therefore stores the 800 IDs available to
-model development and the 200 IDs reserved for final assessment.
-<code>setdiff()</code> makes the two sets disjoint while preserving
-complete coverage of the 1,000 individuals.</p>
-</div>
-<div id="nested-inner-folds" class="section level1">
-<h1>Nested inner folds</h1>
+</div></li>
+</ul>
+<p>The example split makes the contract concrete: 800 IDs are available
+to model development, 200 are reserved for final assessment, and their
+overlap is zero. The same structure is stored for every outer split.</p>
+<div id="nested-inner-cross-validation" class="section level2">
+<h2>5. Nested inner cross-validation</h2>
+<div id="inner-partition-generation" class="section level3">
+<h3>5.1 Inner partition generation</h3>
 <p>Each outer analysis set is partitioned again for ANN hyperparameter
 selection. Within a given outer split, one inner fold acts as the
 assessment subset and the remaining inner individuals form the analysis
-subset. The operation <code>setdiff()</code> constructs the analysis IDs
-by removing the current assessment IDs, which makes the two sets
-disjoint by construction.</p>
+subset. The outer assessment set never participates in this
+operation.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>inner_assignments_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(outer_splits))</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">names</span>(inner_assignments_list) <span class="ot">&lt;-</span> <span class="fu">names</span>(outer_splits)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>inner_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(outer_splits)),</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="fu">names</span>(outer_splits)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>)</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co"># Generate four inner folds separately inside each outer analysis set.</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="cf">for</span> (split_id <span class="cf">in</span> <span class="fu">names</span>(outer_splits)) {</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  outer_split <span class="ot">&lt;-</span> outer_splits[[split_id]]</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  split_tokens <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(<span class="fu">sub</span>(<span class="st">&quot;^R&quot;</span>, <span class="st">&quot;&quot;</span>, split_id), <span class="st">&quot;_F&quot;</span>)[[<span class="dv">1</span>]]</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  rep_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(split_tokens[<span class="dv">1</span>])</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  outer_fold <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(split_tokens[<span class="dv">2</span>])</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  inner_seed <span class="ot">&lt;-</span> SEED_GLOBAL <span class="sc">+</span> <span class="dv">100000</span><span class="dt">L</span> <span class="sc">+</span> rep_id <span class="sc">*</span> <span class="dv">100</span><span class="dt">L</span> <span class="sc">+</span> outer_fold</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>  assignment <span class="ot">&lt;-</span> <span class="fu">balanced_fold_assignment</span>(</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>    <span class="at">ids =</span> outer_split<span class="sc">$</span>analysis_ids,</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>    <span class="at">k =</span> N_INNER_FOLDS,</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>    <span class="at">seed =</span> inner_seed</span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>  )</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>  inner_assignments_list[[split_id]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>    <span class="at">SplitID =</span> split_id,</span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>    <span class="at">Repetition =</span> rep_id,</span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>    <span class="at">OuterFold =</span> outer_fold,</span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>    <span class="at">ID =</span> assignment<span class="sc">$</span>ID,</span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>    <span class="at">InnerFold =</span> assignment<span class="sc">$</span>Fold,</span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>  )</span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a></span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>  current_inner_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>    <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, N_INNER_FOLDS),</span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">&quot;I&quot;</span>, <span class="fu">seq_len</span>(N_INNER_FOLDS))</span>
+<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a>  )</span>
+<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a></span>
+<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>  <span class="co"># Convert each inner fold into explicit analysis and assessment ID sets.</span></span>
+<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a>  <span class="cf">for</span> (inner_fold <span class="cf">in</span> <span class="fu">seq_len</span>(N_INNER_FOLDS)) {</span>
+<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a>    inner_assessment_ids <span class="ot">&lt;-</span> assignment<span class="sc">$</span>ID[assignment<span class="sc">$</span>Fold <span class="sc">==</span> inner_fold]</span>
+<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a>    inner_analysis_ids <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(</span>
+<span id="cb9-40"><a href="#cb9-40" tabindex="-1"></a>      outer_split<span class="sc">$</span>analysis_ids,</span>
+<span id="cb9-41"><a href="#cb9-41" tabindex="-1"></a>      inner_assessment_ids</span>
+<span id="cb9-42"><a href="#cb9-42" tabindex="-1"></a>    )</span>
+<span id="cb9-43"><a href="#cb9-43" tabindex="-1"></a>    current_inner_splits[[<span class="fu">paste0</span>(<span class="st">&quot;I&quot;</span>, inner_fold)]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb9-44"><a href="#cb9-44" tabindex="-1"></a>      <span class="at">split_id =</span> split_id,</span>
+<span id="cb9-45"><a href="#cb9-45" tabindex="-1"></a>      <span class="at">inner_fold =</span> inner_fold,</span>
+<span id="cb9-46"><a href="#cb9-46" tabindex="-1"></a>      <span class="at">analysis_ids =</span> <span class="fu">sort</span>(inner_analysis_ids),</span>
+<span id="cb9-47"><a href="#cb9-47" tabindex="-1"></a>      <span class="at">assessment_ids =</span> <span class="fu">sort</span>(inner_assessment_ids)</span>
+<span id="cb9-48"><a href="#cb9-48" tabindex="-1"></a>    )</span>
+<span id="cb9-49"><a href="#cb9-49" tabindex="-1"></a>  }</span>
+<span id="cb9-50"><a href="#cb9-50" tabindex="-1"></a>  inner_splits[[split_id]] <span class="ot">&lt;-</span> current_inner_splits</span>
+<span id="cb9-51"><a href="#cb9-51" tabindex="-1"></a>}</span>
+<span id="cb9-52"><a href="#cb9-52" tabindex="-1"></a></span>
+<span id="cb9-53"><a href="#cb9-53" tabindex="-1"></a>inner_assignments <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, inner_assignments_list)</span>
+<span id="cb9-54"><a href="#cb9-54" tabindex="-1"></a><span class="fu">rownames</span>(inner_assignments) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb9-55"><a href="#cb9-55" tabindex="-1"></a>inner_sizes <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb9-56"><a href="#cb9-56" tabindex="-1"></a>  ID <span class="sc">~</span> SplitID <span class="sc">+</span> Repetition <span class="sc">+</span> OuterFold <span class="sc">+</span> InnerFold,</span>
+<span id="cb9-57"><a href="#cb9-57" tabindex="-1"></a>  <span class="at">data =</span> inner_assignments,</span>
+<span id="cb9-58"><a href="#cb9-58" tabindex="-1"></a>  <span class="at">FUN =</span> length</span>
+<span id="cb9-59"><a href="#cb9-59" tabindex="-1"></a>)</span>
+<span id="cb9-60"><a href="#cb9-60" tabindex="-1"></a><span class="fu">names</span>(inner_sizes)[<span class="fu">names</span>(inner_sizes) <span class="sc">==</span> <span class="st">&quot;ID&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;Assessment_N&quot;</span></span>
+<span id="cb9-61"><a href="#cb9-61" tabindex="-1"></a>inner_sizes<span class="sc">$</span>Analysis_N <span class="ot">&lt;-</span> <span class="dv">800</span><span class="dt">L</span> <span class="sc">-</span> inner_sizes<span class="sc">$</span>Assessment_N</span></code></pre></div>
+</div>
+<div id="inner-analysis-and-assessment-sizes" class="section level3">
+<h3>5.2 Inner analysis and assessment sizes</h3>
 <p>With 800 individuals in each outer analysis set and four inner folds,
 every inner assessment set contains 200 individuals and every inner
-analysis set contains 600.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>inner_assignments_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(outer_splits))</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">names</span>(inner_assignments_list) <span class="ot">&lt;-</span> <span class="fu">names</span>(outer_splits)</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>inner_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(outer_splits)),</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="fu">names</span>(outer_splits)</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>)</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="cf">for</span> (split_id <span class="cf">in</span> <span class="fu">names</span>(outer_splits)) {</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  outer_split <span class="ot">&lt;-</span> outer_splits[[split_id]]</span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  split_tokens <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(<span class="fu">sub</span>(<span class="st">&quot;^R&quot;</span>, <span class="st">&quot;&quot;</span>, split_id), <span class="st">&quot;_F&quot;</span>)[[<span class="dv">1</span>]]</span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  rep_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(split_tokens[<span class="dv">1</span>])</span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  outer_fold <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(split_tokens[<span class="dv">2</span>])</span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  inner_seed <span class="ot">&lt;-</span> SEED_GLOBAL <span class="sc">+</span> <span class="dv">100000</span><span class="dt">L</span> <span class="sc">+</span> rep_id <span class="sc">*</span> <span class="dv">100</span><span class="dt">L</span> <span class="sc">+</span> outer_fold</span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  assignment <span class="ot">&lt;-</span> <span class="fu">balanced_fold_assignment</span>(</span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>    <span class="at">ids =</span> outer_split<span class="sc">$</span>analysis_ids,</span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>    <span class="at">k =</span> N_INNER_FOLDS,</span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>    <span class="at">seed =</span> inner_seed</span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>  )</span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  inner_assignments_list[[split_id]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>    <span class="at">SplitID =</span> split_id,</span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>    <span class="at">Repetition =</span> rep_id,</span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>    <span class="at">OuterFold =</span> outer_fold,</span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>    <span class="at">ID =</span> assignment<span class="sc">$</span>ID,</span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>    <span class="at">InnerFold =</span> assignment<span class="sc">$</span>Fold,</span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>  )</span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a></span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>  current_inner_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>    <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, N_INNER_FOLDS),</span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">&quot;I&quot;</span>, <span class="fu">seq_len</span>(N_INNER_FOLDS))</span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>  )</span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a></span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>  <span class="cf">for</span> (inner_fold <span class="cf">in</span> <span class="fu">seq_len</span>(N_INNER_FOLDS)) {</span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>    inner_assessment_ids <span class="ot">&lt;-</span> assignment<span class="sc">$</span>ID[assignment<span class="sc">$</span>Fold <span class="sc">==</span> inner_fold]</span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a>    inner_analysis_ids <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(</span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>      outer_split<span class="sc">$</span>analysis_ids,</span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>      inner_assessment_ids</span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>    )</span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a>    current_inner_splits[[<span class="fu">paste0</span>(<span class="st">&quot;I&quot;</span>, inner_fold)]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>      <span class="at">split_id =</span> split_id,</span>
-<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>      <span class="at">inner_fold =</span> inner_fold,</span>
-<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a>      <span class="at">analysis_ids =</span> <span class="fu">sort</span>(inner_analysis_ids),</span>
-<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a>      <span class="at">assessment_ids =</span> <span class="fu">sort</span>(inner_assessment_ids)</span>
-<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a>    )</span>
-<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>  }</span>
-<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>  inner_splits[[split_id]] <span class="ot">&lt;-</span> current_inner_splits</span>
-<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a>}</span>
-<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a></span>
-<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>inner_assignments <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, inner_assignments_list)</span>
-<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a><span class="fu">rownames</span>(inner_assignments) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a>inner_sizes <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
-<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a>  ID <span class="sc">~</span> SplitID <span class="sc">+</span> Repetition <span class="sc">+</span> OuterFold <span class="sc">+</span> InnerFold,</span>
-<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a>  <span class="at">data =</span> inner_assignments,</span>
-<span id="cb7-56"><a href="#cb7-56" tabindex="-1"></a>  <span class="at">FUN =</span> length</span>
-<span id="cb7-57"><a href="#cb7-57" tabindex="-1"></a>)</span>
-<span id="cb7-58"><a href="#cb7-58" tabindex="-1"></a><span class="fu">names</span>(inner_sizes)[<span class="fu">names</span>(inner_sizes) <span class="sc">==</span> <span class="st">&quot;ID&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;Assessment_N&quot;</span></span>
-<span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a>inner_sizes<span class="sc">$</span>Analysis_N <span class="ot">&lt;-</span> <span class="dv">800</span><span class="dt">L</span> <span class="sc">-</span> inner_sizes<span class="sc">$</span>Assessment_N</span>
-<span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a></span>
-<span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a>  <span class="fu">head</span>(inner_sizes, <span class="dv">20</span>),</span>
-<span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;First 20 nested inner split sizes&quot;</span>,</span>
-<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a>)</span></code></pre></div>
-<table>
-<caption>First 20 nested inner split sizes</caption>
+analysis set contains 600. The first 20 inner splits are displayed below
+as a compact sample of the complete 100-split design.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">format_table</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="fu">head</span>(inner_sizes, <span class="dv">20</span>),</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;First 20 nested inner split sizes&quot;</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>)</span></code></pre></div>
+<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">
+<table class="table table-striped table-hover table-bordered" style="width:100%; margin-bottom:0;">
+<caption>
+First 20 nested inner split sizes
+</caption>
 <thead>
-<tr class="header">
-<th align="left">SplitID</th>
-<th align="right">Repetition</th>
-<th align="right">OuterFold</th>
-<th align="right">InnerFold</th>
-<th align="right">Assessment_N</th>
-<th align="right">Analysis_N</th>
+<tr>
+<th style="text-align:left;">
+SplitID
+</th>
+<th style="text-align:right;">
+Repetition
+</th>
+<th style="text-align:right;">
+OuterFold
+</th>
+<th style="text-align:right;">
+InnerFold
+</th>
+<th style="text-align:right;">
+Assessment_N
+</th>
+<th style="text-align:right;">
+Analysis_N
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="left">R01_F01</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R01_F01
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R02_F01</td>
-<td align="right">2</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R02_F01
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">R03_F01</td>
-<td align="right">3</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R03_F01
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R04_F01</td>
-<td align="right">4</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R04_F01
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">R05_F01</td>
-<td align="right">5</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R05_F01
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R01_F02</td>
-<td align="right">1</td>
-<td align="right">2</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R01_F02
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">R02_F02</td>
-<td align="right">2</td>
-<td align="right">2</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R02_F02
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R03_F02</td>
-<td align="right">3</td>
-<td align="right">2</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R03_F02
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">R04_F02</td>
-<td align="right">4</td>
-<td align="right">2</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R04_F02
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R05_F02</td>
-<td align="right">5</td>
-<td align="right">2</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R05_F02
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">R01_F03</td>
-<td align="right">1</td>
-<td align="right">3</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R01_F03
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R02_F03</td>
-<td align="right">2</td>
-<td align="right">3</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R02_F03
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">R03_F03</td>
-<td align="right">3</td>
-<td align="right">3</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R03_F03
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R04_F03</td>
-<td align="right">4</td>
-<td align="right">3</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R04_F03
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">R05_F03</td>
-<td align="right">5</td>
-<td align="right">3</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R05_F03
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R01_F04</td>
-<td align="right">1</td>
-<td align="right">4</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R01_F04
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">R02_F04</td>
-<td align="right">2</td>
-<td align="right">4</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R02_F04
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R03_F04</td>
-<td align="right">3</td>
-<td align="right">4</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R03_F04
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">R04_F04</td>
-<td align="right">4</td>
-<td align="right">4</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R04_F04
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="even">
-<td align="left">R05_F04</td>
-<td align="right">5</td>
-<td align="right">4</td>
-<td align="right">1</td>
-<td align="right">200</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+R05_F04
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
 </tbody>
 </table>
+</div>
 <p>Every inner split contains <strong>600 analysis</strong> and
 <strong>200 assessment</strong> individuals. The 200 inner-assessment
 individuals are used only to compare ANN candidates inside the
 corresponding 800-individual outer-analysis set; they are not part of
 the early-validation subset used to train a candidate.</p>
 </div>
-<div id="scenario-and-model-independence" class="section level1">
-<h1>Scenario and model independence</h1>
-<p>The split object contains no scenario, phenotype, true genetic value,
-or model information. The same partitions are therefore reused for C1-C6
-and for every prediction method. The table below makes the
-fold-generation inputs explicit.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>partition_information <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">Information =</span> <span class="fu">c</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>    <span class="st">&quot;Individual ID&quot;</span>, <span class="st">&quot;Deterministic seed&quot;</span>, <span class="st">&quot;Scenario&quot;</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    <span class="st">&quot;Phenotype&quot;</span>, <span class="st">&quot;True genetic value&quot;</span>, <span class="st">&quot;Model&quot;</span></span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  ),</span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">Used_to_generate_folds =</span> <span class="fu">c</span>(<span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>, <span class="cn">FALSE</span>, <span class="cn">FALSE</span>, <span class="cn">FALSE</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>)</span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  partition_information,</span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Information used to generate the frozen validation partitions&quot;</span>,</span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>)</span></code></pre></div>
-<table>
-<caption>Information used to generate the frozen validation
-partitions</caption>
+</div>
+<div id="independence-of-the-partitions" class="section level2">
+<h2>6. Independence of the partitions</h2>
+<div id="information-used" class="section level3">
+<h3>6.1 Information used</h3>
+<p>The fold-generation inputs are intentionally minimal. Only the
+canonical individual identifiers and deterministic seeds participate in
+partitioning.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>partition_information <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">Information =</span> <span class="fu">c</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>    <span class="st">&quot;Individual ID&quot;</span>, <span class="st">&quot;Deterministic seed&quot;</span>, <span class="st">&quot;Scenario&quot;</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>    <span class="st">&quot;Phenotype&quot;</span>, <span class="st">&quot;True genetic value&quot;</span>, <span class="st">&quot;Model&quot;</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  ),</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="at">Partition_role =</span> <span class="fu">c</span>(</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>    <span class="st">&quot;Used&quot;</span>, <span class="st">&quot;Used&quot;</span>, <span class="st">&quot;Not used&quot;</span>, <span class="st">&quot;Not used&quot;</span>, <span class="st">&quot;Not used&quot;</span>, <span class="st">&quot;Not used&quot;</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  )</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>)</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="fu">format_table</span>(</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>  partition_information,</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Information used to generate the frozen validation partitions&quot;</span>,</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>)</span></code></pre></div>
+<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">
+<table class="table table-striped table-hover table-bordered" style="width:100%; margin-bottom:0;">
+<caption>
+Information used to generate the frozen validation partitions
+</caption>
 <thead>
-<tr class="header">
-<th align="left">Information</th>
-<th align="left">Used_to_generate_folds</th>
+<tr>
+<th style="text-align:left;">
+Information
+</th>
+<th style="text-align:left;">
+Partition_role
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="left">Individual ID</td>
-<td align="left">TRUE</td>
+<tr>
+<td style="text-align:left;">
+Individual ID
+</td>
+<td style="text-align:left;">
+Used
+</td>
 </tr>
-<tr class="even">
-<td align="left">Deterministic seed</td>
-<td align="left">TRUE</td>
+<tr>
+<td style="text-align:left;">
+Deterministic seed
+</td>
+<td style="text-align:left;">
+Used
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Scenario</td>
-<td align="left">FALSE</td>
+<tr>
+<td style="text-align:left;">
+Scenario
+</td>
+<td style="text-align:left;">
+Not used
+</td>
 </tr>
-<tr class="even">
-<td align="left">Phenotype</td>
-<td align="left">FALSE</td>
+<tr>
+<td style="text-align:left;">
+Phenotype
+</td>
+<td style="text-align:left;">
+Not used
+</td>
 </tr>
-<tr class="odd">
-<td align="left">True genetic value</td>
-<td align="left">FALSE</td>
+<tr>
+<td style="text-align:left;">
+True genetic value
+</td>
+<td style="text-align:left;">
+Not used
+</td>
 </tr>
-<tr class="even">
-<td align="left">Model</td>
-<td align="left">FALSE</td>
+<tr>
+<td style="text-align:left;">
+Model
+</td>
+<td style="text-align:left;">
+Not used
+</td>
 </tr>
 </tbody>
 </table>
-<p>No response variable participates in fold generation. This is the
-core reason the same frozen partitions can be reused fairly by GBLUP-ADE
-and all four ANN variants.</p>
 </div>
-<div id="validation-contract" class="section level1">
-<h1>Validation contract</h1>
-<div id="outer-evaluation" class="section level2">
-<h2>Outer evaluation</h2>
+</div>
+<div id="information-excluded" class="section level3">
+<h3>6.2 Information excluded</h3>
+<p>Scenario labels, phenotype values, true simulated genetic values, and
+model identity do not participate in fold generation. The same frozen
+partitions can therefore be reused fairly by GBLUP-ADE and every ANN
+variant.</p>
+<p>In particular, true genetic values are retained in the canonical data
+object only for held-out predictive evaluation. They never enter
+partitioning, ANN hyperparameter tuning, or training-duration
+selection.</p>
+</div>
+</div>
+<div id="frozen-validation-design" class="section level2">
+<h2>7. Frozen validation design</h2>
+<div id="validation-contract" class="section level3">
+<h3>7.1 Validation contract</h3>
+<p>The frozen design establishes three levels of separation:</p>
 <ul>
-<li>Five repetitions of five outer folds produce <strong>25 outer
-splits</strong>.</li>
-<li>Each split contains 800 analysis and 200 assessment
-individuals.</li>
-<li>Outer assessment data remain untouched until the final prediction
-step.</li>
+<li><strong>Outer evaluation:</strong> five repetitions of five outer
+folds produce 25 outer splits, each with 800 analysis and 200 untouched
+assessment individuals.</li>
+<li><strong>Inner ANN tuning:</strong> each 800-individual
+outer-analysis set is divided into four inner folds, each with 600
+analysis and 200 inner-assessment individuals. ANN architecture,
+learning rate, L1, and L2 are selected only within these inner splits;
+early validation is drawn only from the current inner-analysis
+subset.</li>
+<li><strong>Final evaluation:</strong> the same outer splits are used
+for C1-C6 and every prediction method. Primary true-G and secondary
+phenotype metrics are calculated only after the final model predicts the
+untouched outer-assessment individuals.</li>
 </ul>
 </div>
-<div id="inner-ann-tuning" class="section level2">
-<h2>Inner ANN tuning</h2>
-<ul>
-<li>Each 800-individual outer-analysis set is divided into four inner
-folds.</li>
-<li>Each inner split contains 600 analysis and 200 inner-assessment
-individuals.</li>
-<li>ANN architecture, learning rate, L1, and L2 are selected only within
-these inner splits; early validation is drawn only from the current
-inner-analysis subset.</li>
-</ul>
-</div>
-<div id="final-evaluation" class="section level2">
-<h2>Final evaluation</h2>
-<ul>
-<li>The same outer splits are used for C1-C6 and every prediction
-method.</li>
-<li>True genetic values never enter partitioning, tuning, or epoch
-selection.</li>
-<li>Primary true-G and secondary phenotype metrics are calculated only
-after the final model has predicted the untouched outer-assessment
-individuals.</li>
-</ul>
-</div>
-</div>
-<div id="design-summary" class="section level1">
-<h1>Design summary</h1>
+<div id="design-summary" class="section level3">
+<h3>7.2 Design summary</h3>
 <p>The complete nested design can now be summarized independently of any
 prediction model. These counts define the sample sizes and number of
 repeated comparisons used by both modeling branches.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>design_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>    <span class="st">&quot;Individuals&quot;</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>    <span class="st">&quot;Scenarios&quot;</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>    <span class="st">&quot;Outer repetitions&quot;</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>    <span class="st">&quot;Outer folds per repetition&quot;</span>,</span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>    <span class="st">&quot;Total outer splits&quot;</span>,</span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>    <span class="st">&quot;Outer analysis N&quot;</span>,</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>    <span class="st">&quot;Outer assessment N&quot;</span>,</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>    <span class="st">&quot;Inner folds per outer split&quot;</span>,</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>    <span class="st">&quot;Total inner splits&quot;</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>    <span class="st">&quot;Inner analysis N&quot;</span>,</span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>    <span class="st">&quot;Inner assessment N&quot;</span>,</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>    <span class="st">&quot;Global seed&quot;</span></span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>  ),</span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>    <span class="fu">length</span>(ids),</span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>    simulated_common<span class="sc">$</span>metadata<span class="sc">$</span>n_scenarios,</span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>    N_OUTER_REPEATS,</span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>    N_OUTER_FOLDS,</span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>    N_OUTER_REPEATS <span class="sc">*</span> N_OUTER_FOLDS,</span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>    <span class="dv">800</span>,</span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>    <span class="dv">200</span>,</span>
-<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>    N_INNER_FOLDS,</span>
-<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>    N_OUTER_REPEATS <span class="sc">*</span> N_OUTER_FOLDS <span class="sc">*</span> N_INNER_FOLDS,</span>
-<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>    <span class="dv">600</span>,</span>
-<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>    <span class="dv">200</span>,</span>
-<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>    SEED_GLOBAL</span>
-<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>  )</span>
-<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>)</span>
-<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a></span>
-<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a>  design_summary,</span>
-<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Frozen simulated-data validation design&quot;</span>,</span>
-<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>)</span></code></pre></div>
-<table>
-<caption>Frozen simulated-data validation design</caption>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>design_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>    <span class="st">&quot;Individuals&quot;</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    <span class="st">&quot;Scenarios&quot;</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>    <span class="st">&quot;Outer repetitions&quot;</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>    <span class="st">&quot;Outer folds per repetition&quot;</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>    <span class="st">&quot;Total outer splits&quot;</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>    <span class="st">&quot;Outer analysis N&quot;</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>    <span class="st">&quot;Outer assessment N&quot;</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>    <span class="st">&quot;Inner folds per outer split&quot;</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>    <span class="st">&quot;Total inner splits&quot;</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>    <span class="st">&quot;Inner analysis N&quot;</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>    <span class="st">&quot;Inner assessment N&quot;</span>,</span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>    <span class="st">&quot;Global seed&quot;</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>  ),</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>    <span class="fu">length</span>(ids),</span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>    simulated_common<span class="sc">$</span>metadata<span class="sc">$</span>n_scenarios,</span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>    N_OUTER_REPEATS,</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>    N_OUTER_FOLDS,</span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a>    N_OUTER_REPEATS <span class="sc">*</span> N_OUTER_FOLDS,</span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>    <span class="dv">800</span>,</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>    <span class="dv">200</span>,</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>    N_INNER_FOLDS,</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>    N_OUTER_REPEATS <span class="sc">*</span> N_OUTER_FOLDS <span class="sc">*</span> N_INNER_FOLDS,</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>    <span class="dv">600</span>,</span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>    <span class="dv">200</span>,</span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>    SEED_GLOBAL</span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>  )</span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>)</span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a></span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a><span class="fu">format_table</span>(</span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>  design_summary,</span>
+<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Frozen simulated-data validation design&quot;</span>,</span>
+<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a>)</span></code></pre></div>
+<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">
+<table class="table table-striped table-hover table-bordered" style="width:100%; margin-bottom:0;">
+<caption>
+Frozen simulated-data validation design
+</caption>
 <thead>
-<tr class="header">
-<th align="left">Item</th>
-<th align="right">Value</th>
+<tr>
+<th style="text-align:left;">
+Item
+</th>
+<th style="text-align:right;">
+Value
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="left">Individuals</td>
-<td align="right">1000</td>
+<tr>
+<td style="text-align:left;">
+Individuals
+</td>
+<td style="text-align:right;">
+1000
+</td>
 </tr>
-<tr class="even">
-<td align="left">Scenarios</td>
-<td align="right">6</td>
+<tr>
+<td style="text-align:left;">
+Scenarios
+</td>
+<td style="text-align:right;">
+6
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Outer repetitions</td>
-<td align="right">5</td>
+<tr>
+<td style="text-align:left;">
+Outer repetitions
+</td>
+<td style="text-align:right;">
+5
+</td>
 </tr>
-<tr class="even">
-<td align="left">Outer folds per repetition</td>
-<td align="right">5</td>
+<tr>
+<td style="text-align:left;">
+Outer folds per repetition
+</td>
+<td style="text-align:right;">
+5
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Total outer splits</td>
-<td align="right">25</td>
+<tr>
+<td style="text-align:left;">
+Total outer splits
+</td>
+<td style="text-align:right;">
+25
+</td>
 </tr>
-<tr class="even">
-<td align="left">Outer analysis N</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:left;">
+Outer analysis N
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Outer assessment N</td>
-<td align="right">200</td>
+<tr>
+<td style="text-align:left;">
+Outer assessment N
+</td>
+<td style="text-align:right;">
+200
+</td>
 </tr>
-<tr class="even">
-<td align="left">Inner folds per outer split</td>
-<td align="right">4</td>
+<tr>
+<td style="text-align:left;">
+Inner folds per outer split
+</td>
+<td style="text-align:right;">
+4
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Total inner splits</td>
-<td align="right">100</td>
+<tr>
+<td style="text-align:left;">
+Total inner splits
+</td>
+<td style="text-align:right;">
+100
+</td>
 </tr>
-<tr class="even">
-<td align="left">Inner analysis N</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+Inner analysis N
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Inner assessment N</td>
-<td align="right">200</td>
+<tr>
+<td style="text-align:left;">
+Inner assessment N
+</td>
+<td style="text-align:right;">
+200
+</td>
 </tr>
-<tr class="even">
-<td align="left">Global seed</td>
-<td align="right">20260821</td>
+<tr>
+<td style="text-align:left;">
+Global seed
+</td>
+<td style="text-align:right;">
+20260821
+</td>
 </tr>
 </tbody>
 </table>
+</div>
 <p>The frozen object therefore contains 25 outer evaluations and 100
 inner split definitions. These partitions are generated once and reused
 across all six scenarios and all prediction methods.</p>
 </div>
-<div id="observed-validation-structure" class="section level1">
-<h1>Observed validation structure</h1>
+<div id="observed-validation-structure" class="section level3">
+<h3>7.3 Observed validation structure</h3>
 <p>The detailed checklist is retained in the exported validation
-artifact. The tutorial summarizes the status counts and final
-classification before saving the frozen design.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>outer_overlap <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">vapply</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  outer_splits,</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="cf">function</span>(x) <span class="fu">length</span>(<span class="fu">intersect</span>(x<span class="sc">$</span>analysis_ids, x<span class="sc">$</span>assessment_ids)),</span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="fu">integer</span>(<span class="dv">1</span>)</span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>))</span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>inner_overlap <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">unlist</span>(<span class="fu">lapply</span>(</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  inner_splits,</span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>  <span class="cf">function</span>(split) <span class="fu">vapply</span>(</span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>    split,</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>    <span class="cf">function</span>(x) <span class="fu">length</span>(<span class="fu">intersect</span>(x<span class="sc">$</span>analysis_ids, x<span class="sc">$</span>assessment_ids)),</span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>    <span class="fu">integer</span>(<span class="dv">1</span>)</span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>  )</span>
-<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>)))</span>
-<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a></span>
-<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>validation_observed <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>  <span class="at">Quantity =</span> <span class="fu">c</span>(</span>
-<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>    <span class="st">&quot;Outer assignment rows&quot;</span>, <span class="st">&quot;Outer splits&quot;</span>, <span class="st">&quot;Outer analysis N&quot;</span>,</span>
-<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>    <span class="st">&quot;Outer assessment N&quot;</span>, <span class="st">&quot;Maximum outer overlap&quot;</span>,</span>
-<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>    <span class="st">&quot;Inner assignment rows&quot;</span>, <span class="st">&quot;Inner splits&quot;</span>, <span class="st">&quot;Inner analysis N&quot;</span>,</span>
-<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>    <span class="st">&quot;Inner assessment N&quot;</span>, <span class="st">&quot;Maximum inner overlap&quot;</span></span>
-<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>  ),</span>
-<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>  <span class="at">Observed =</span> <span class="fu">c</span>(</span>
-<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>    <span class="fu">nrow</span>(outer_assignments),</span>
-<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>    <span class="fu">length</span>(outer_splits),</span>
-<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>    <span class="fu">unique</span>(outer_sizes<span class="sc">$</span>Analysis_N),</span>
-<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>    <span class="fu">unique</span>(outer_sizes<span class="sc">$</span>Assessment_N),</span>
-<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>    outer_overlap,</span>
-<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a>    <span class="fu">nrow</span>(inner_assignments),</span>
-<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>    <span class="fu">sum</span>(<span class="fu">vapply</span>(inner_splits, length, <span class="fu">integer</span>(<span class="dv">1</span>))),</span>
-<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>    <span class="fu">unique</span>(inner_sizes<span class="sc">$</span>Analysis_N),</span>
-<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>    <span class="fu">unique</span>(inner_sizes<span class="sc">$</span>Assessment_N),</span>
-<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a>    inner_overlap</span>
-<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>  )</span>
-<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a>)</span>
-<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a>  validation_observed,</span>
-<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Observed structure of the frozen nested cross-validation design&quot;</span>,</span>
-<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a>)</span></code></pre></div>
-<table>
-<caption>Observed structure of the frozen nested cross-validation
-design</caption>
+artifact. The tutorial summarizes the partition sizes and overlap before
+saving the frozen design.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>outer_overlap <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">vapply</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  outer_splits,</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="cf">function</span>(x) <span class="fu">length</span>(<span class="fu">intersect</span>(x<span class="sc">$</span>analysis_ids, x<span class="sc">$</span>assessment_ids)),</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="fu">integer</span>(<span class="dv">1</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>))</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>inner_overlap <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">unlist</span>(<span class="fu">lapply</span>(</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  inner_splits,</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  <span class="cf">function</span>(split) <span class="fu">vapply</span>(</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>    split,</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>    <span class="cf">function</span>(x) <span class="fu">length</span>(<span class="fu">intersect</span>(x<span class="sc">$</span>analysis_ids, x<span class="sc">$</span>assessment_ids)),</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>    <span class="fu">integer</span>(<span class="dv">1</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>  )</span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>)))</span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>validation_observed <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>  <span class="at">Quantity =</span> <span class="fu">c</span>(</span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>    <span class="st">&quot;Outer assignment rows&quot;</span>, <span class="st">&quot;Outer splits&quot;</span>, <span class="st">&quot;Outer analysis N&quot;</span>,</span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a>    <span class="st">&quot;Outer assessment N&quot;</span>, <span class="st">&quot;Maximum outer overlap&quot;</span>,</span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a>    <span class="st">&quot;Inner assignment rows&quot;</span>, <span class="st">&quot;Inner splits&quot;</span>, <span class="st">&quot;Inner analysis N&quot;</span>,</span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a>    <span class="st">&quot;Inner assessment N&quot;</span>, <span class="st">&quot;Maximum inner overlap&quot;</span></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a>  ),</span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a>  <span class="at">Observed =</span> <span class="fu">c</span>(</span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a>    <span class="fu">nrow</span>(outer_assignments),</span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a>    <span class="fu">length</span>(outer_splits),</span>
+<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a>    <span class="fu">unique</span>(outer_sizes<span class="sc">$</span>Analysis_N),</span>
+<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a>    <span class="fu">unique</span>(outer_sizes<span class="sc">$</span>Assessment_N),</span>
+<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a>    outer_overlap,</span>
+<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a>    <span class="fu">nrow</span>(inner_assignments),</span>
+<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a>    <span class="fu">sum</span>(<span class="fu">vapply</span>(inner_splits, length, <span class="fu">integer</span>(<span class="dv">1</span>))),</span>
+<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a>    <span class="fu">unique</span>(inner_sizes<span class="sc">$</span>Analysis_N),</span>
+<span id="cb13-31"><a href="#cb13-31" tabindex="-1"></a>    <span class="fu">unique</span>(inner_sizes<span class="sc">$</span>Assessment_N),</span>
+<span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a>    inner_overlap</span>
+<span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a>  )</span>
+<span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a>)</span>
+<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a></span>
+<span id="cb13-36"><a href="#cb13-36" tabindex="-1"></a><span class="fu">format_table</span>(</span>
+<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a>  validation_observed,</span>
+<span id="cb13-38"><a href="#cb13-38" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">&quot;Observed structure of the frozen nested cross-validation design&quot;</span>,</span>
+<span id="cb13-39"><a href="#cb13-39" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb13-40"><a href="#cb13-40" tabindex="-1"></a>)</span></code></pre></div>
+<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">
+<table class="table table-striped table-hover table-bordered" style="width:100%; margin-bottom:0;">
+<caption>
+Observed structure of the frozen nested cross-validation design
+</caption>
 <thead>
-<tr class="header">
-<th align="left">Quantity</th>
-<th align="right">Observed</th>
+<tr>
+<th style="text-align:left;">
+Quantity
+</th>
+<th style="text-align:right;">
+Observed
+</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
-<td align="left">Outer assignment rows</td>
-<td align="right">5000</td>
+<tr>
+<td style="text-align:left;">
+Outer assignment rows
+</td>
+<td style="text-align:right;">
+5000
+</td>
 </tr>
-<tr class="even">
-<td align="left">Outer splits</td>
-<td align="right">25</td>
+<tr>
+<td style="text-align:left;">
+Outer splits
+</td>
+<td style="text-align:right;">
+25
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Outer analysis N</td>
-<td align="right">800</td>
+<tr>
+<td style="text-align:left;">
+Outer analysis N
+</td>
+<td style="text-align:right;">
+800
+</td>
 </tr>
-<tr class="even">
-<td align="left">Outer assessment N</td>
-<td align="right">200</td>
+<tr>
+<td style="text-align:left;">
+Outer assessment N
+</td>
+<td style="text-align:right;">
+200
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Maximum outer overlap</td>
-<td align="right">0</td>
+<tr>
+<td style="text-align:left;">
+Maximum outer overlap
+</td>
+<td style="text-align:right;">
+0
+</td>
 </tr>
-<tr class="even">
-<td align="left">Inner assignment rows</td>
-<td align="right">20000</td>
+<tr>
+<td style="text-align:left;">
+Inner assignment rows
+</td>
+<td style="text-align:right;">
+20000
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Inner splits</td>
-<td align="right">100</td>
+<tr>
+<td style="text-align:left;">
+Inner splits
+</td>
+<td style="text-align:right;">
+100
+</td>
 </tr>
-<tr class="even">
-<td align="left">Inner analysis N</td>
-<td align="right">600</td>
+<tr>
+<td style="text-align:left;">
+Inner analysis N
+</td>
+<td style="text-align:right;">
+600
+</td>
 </tr>
-<tr class="odd">
-<td align="left">Inner assessment N</td>
-<td align="right">200</td>
+<tr>
+<td style="text-align:left;">
+Inner assessment N
+</td>
+<td style="text-align:right;">
+200
+</td>
 </tr>
-<tr class="even">
-<td align="left">Maximum inner overlap</td>
-<td align="right">0</td>
+<tr>
+<td style="text-align:left;">
+Maximum inner overlap
+</td>
+<td style="text-align:right;">
+0
+</td>
 </tr>
 </tbody>
 </table>
-<p>The table above shows the sizes and overlap of the frozen outer and
-inner partitions before they are saved for the modeling modules.</p>
 </div>
-<div id="frozen-validation-object" class="section level1">
-<h1>Frozen validation object</h1>
-<p>The design is stored after its observed partition structure has been
-displayed. The saved object contains the outer and inner assignments
-together with their explicit analysis/assessment ID sets and is the
-single validation contract consumed by GBLUP-ADE and ANN.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">write.csv</span>(</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  validation_log,</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_design_audit.csv&quot;</span>),</span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>)</span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="fu">write.csv</span>(</span>
-<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  outer_assignments,</span>
-<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_outer_assignments.csv&quot;</span>),</span>
-<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>)</span>
-<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="fu">write.csv</span>(</span>
-<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>  inner_assignments,</span>
-<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_inner_assignments.csv&quot;</span>),</span>
-<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>)</span>
-<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a><span class="fu">write.csv</span>(</span>
-<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>  design_summary,</span>
-<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_design_summary.csv&quot;</span>),</span>
-<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>)</span>
-<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a></span>
-<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>cv_design <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>  <span class="at">metadata =</span> <span class="fu">list</span>(</span>
-<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a>    <span class="at">dataset =</span> <span class="st">&quot;simulated&quot;</span>,</span>
-<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a>    <span class="at">seed_global =</span> SEED_GLOBAL,</span>
-<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a>    <span class="at">n_individuals =</span> <span class="fu">length</span>(ids),</span>
-<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a>    <span class="at">n_scenarios =</span> simulated_common<span class="sc">$</span>metadata<span class="sc">$</span>n_scenarios,</span>
-<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a>    <span class="at">outer_repetitions =</span> N_OUTER_REPEATS,</span>
-<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a>    <span class="at">outer_folds =</span> N_OUTER_FOLDS,</span>
-<span id="cb11-30"><a href="#cb11-30" tabindex="-1"></a>    <span class="at">inner_folds =</span> N_INNER_FOLDS,</span>
-<span id="cb11-31"><a href="#cb11-31" tabindex="-1"></a>    <span class="at">outer_analysis_n =</span> <span class="dv">800</span><span class="dt">L</span>,</span>
-<span id="cb11-32"><a href="#cb11-32" tabindex="-1"></a>    <span class="at">outer_assessment_n =</span> <span class="dv">200</span><span class="dt">L</span>,</span>
-<span id="cb11-33"><a href="#cb11-33" tabindex="-1"></a>    <span class="at">inner_analysis_n =</span> <span class="dv">600</span><span class="dt">L</span>,</span>
-<span id="cb11-34"><a href="#cb11-34" tabindex="-1"></a>    <span class="at">inner_assessment_n =</span> <span class="dv">200</span><span class="dt">L</span>,</span>
-<span id="cb11-35"><a href="#cb11-35" tabindex="-1"></a>    <span class="at">scenario_independent =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb11-36"><a href="#cb11-36" tabindex="-1"></a>    <span class="at">model_independent =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb11-37"><a href="#cb11-37" tabindex="-1"></a>    <span class="at">phenotype_used_for_partitioning =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb11-38"><a href="#cb11-38" tabindex="-1"></a>    <span class="at">true_genetic_value_used_for_partitioning =</span> <span class="cn">FALSE</span></span>
-<span id="cb11-39"><a href="#cb11-39" tabindex="-1"></a>  ),</span>
-<span id="cb11-40"><a href="#cb11-40" tabindex="-1"></a>  <span class="at">outer_assignments =</span> outer_assignments,</span>
-<span id="cb11-41"><a href="#cb11-41" tabindex="-1"></a>  <span class="at">outer_splits =</span> outer_splits,</span>
-<span id="cb11-42"><a href="#cb11-42" tabindex="-1"></a>  <span class="at">inner_assignments =</span> inner_assignments,</span>
-<span id="cb11-43"><a href="#cb11-43" tabindex="-1"></a>  <span class="at">inner_splits =</span> inner_splits,</span>
-<span id="cb11-44"><a href="#cb11-44" tabindex="-1"></a>  <span class="at">audit =</span> validation_log</span>
-<span id="cb11-45"><a href="#cb11-45" tabindex="-1"></a>)</span>
-<span id="cb11-46"><a href="#cb11-46" tabindex="-1"></a></span>
-<span id="cb11-47"><a href="#cb11-47" tabindex="-1"></a><span class="fu">saveRDS</span>(</span>
-<span id="cb11-48"><a href="#cb11-48" tabindex="-1"></a>  cv_design,</span>
-<span id="cb11-49"><a href="#cb11-49" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_design.rds&quot;</span>),</span>
-<span id="cb11-50"><a href="#cb11-50" tabindex="-1"></a>  <span class="at">compress =</span> <span class="st">&quot;gzip&quot;</span></span>
-<span id="cb11-51"><a href="#cb11-51" tabindex="-1"></a>)</span>
-<span id="cb11-52"><a href="#cb11-52" tabindex="-1"></a><span class="fu">cat</span>(</span>
-<span id="cb11-53"><a href="#cb11-53" tabindex="-1"></a>  <span class="st">&quot;Frozen validation design written to:&quot;</span>,</span>
-<span id="cb11-54"><a href="#cb11-54" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_design.rds&quot;</span>),</span>
-<span id="cb11-55"><a href="#cb11-55" tabindex="-1"></a>  <span class="st">&quot;</span></span>
-<span id="cb11-56"><a href="#cb11-56" tabindex="-1"></a><span class="st">&quot;</span></span>
-<span id="cb11-57"><a href="#cb11-57" tabindex="-1"></a>)</span></code></pre></div>
+<p>The observed structure confirms the intended 25 outer splits and 100
+inner splits, with zero overlap between analysis and assessment sets at
+both levels.</p>
+</div>
+</div>
+<div id="output-object" class="section level2">
+<h2>8. Output object</h2>
+<p>The design is stored only after its observed partition structure has
+been summarized. The saved object contains the outer and inner
+assignments together with their explicit analysis/assessment ID sets and
+is the single validation contract consumed by GBLUP-ADE and ANN.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">write.csv</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  validation_log,</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_design_audit.csv&quot;</span>),</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>)</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="fu">write.csv</span>(</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>  outer_assignments,</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_outer_assignments.csv&quot;</span>),</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>)</span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a><span class="fu">write.csv</span>(</span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>  inner_assignments,</span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_inner_assignments.csv&quot;</span>),</span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>)</span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a><span class="fu">write.csv</span>(</span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a>  design_summary,</span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_design_summary.csv&quot;</span>),</span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a>)</span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a></span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a>cv_design <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a>  <span class="at">metadata =</span> <span class="fu">list</span>(</span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a>    <span class="at">dataset =</span> <span class="st">&quot;simulated&quot;</span>,</span>
+<span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a>    <span class="at">seed_global =</span> SEED_GLOBAL,</span>
+<span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a>    <span class="at">n_individuals =</span> <span class="fu">length</span>(ids),</span>
+<span id="cb14-27"><a href="#cb14-27" tabindex="-1"></a>    <span class="at">n_scenarios =</span> simulated_common<span class="sc">$</span>metadata<span class="sc">$</span>n_scenarios,</span>
+<span id="cb14-28"><a href="#cb14-28" tabindex="-1"></a>    <span class="at">outer_repetitions =</span> N_OUTER_REPEATS,</span>
+<span id="cb14-29"><a href="#cb14-29" tabindex="-1"></a>    <span class="at">outer_folds =</span> N_OUTER_FOLDS,</span>
+<span id="cb14-30"><a href="#cb14-30" tabindex="-1"></a>    <span class="at">inner_folds =</span> N_INNER_FOLDS,</span>
+<span id="cb14-31"><a href="#cb14-31" tabindex="-1"></a>    <span class="at">outer_analysis_n =</span> <span class="dv">800</span><span class="dt">L</span>,</span>
+<span id="cb14-32"><a href="#cb14-32" tabindex="-1"></a>    <span class="at">outer_assessment_n =</span> <span class="dv">200</span><span class="dt">L</span>,</span>
+<span id="cb14-33"><a href="#cb14-33" tabindex="-1"></a>    <span class="at">inner_analysis_n =</span> <span class="dv">600</span><span class="dt">L</span>,</span>
+<span id="cb14-34"><a href="#cb14-34" tabindex="-1"></a>    <span class="at">inner_assessment_n =</span> <span class="dv">200</span><span class="dt">L</span>,</span>
+<span id="cb14-35"><a href="#cb14-35" tabindex="-1"></a>    <span class="at">scenario_independent =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb14-36"><a href="#cb14-36" tabindex="-1"></a>    <span class="at">model_independent =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb14-37"><a href="#cb14-37" tabindex="-1"></a>    <span class="at">phenotype_used_for_partitioning =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb14-38"><a href="#cb14-38" tabindex="-1"></a>    <span class="at">true_genetic_value_used_for_partitioning =</span> <span class="cn">FALSE</span></span>
+<span id="cb14-39"><a href="#cb14-39" tabindex="-1"></a>  ),</span>
+<span id="cb14-40"><a href="#cb14-40" tabindex="-1"></a>  <span class="at">outer_assignments =</span> outer_assignments,</span>
+<span id="cb14-41"><a href="#cb14-41" tabindex="-1"></a>  <span class="at">outer_splits =</span> outer_splits,</span>
+<span id="cb14-42"><a href="#cb14-42" tabindex="-1"></a>  <span class="at">inner_assignments =</span> inner_assignments,</span>
+<span id="cb14-43"><a href="#cb14-43" tabindex="-1"></a>  <span class="at">inner_splits =</span> inner_splits,</span>
+<span id="cb14-44"><a href="#cb14-44" tabindex="-1"></a>  <span class="at">audit =</span> validation_log</span>
+<span id="cb14-45"><a href="#cb14-45" tabindex="-1"></a>)</span>
+<span id="cb14-46"><a href="#cb14-46" tabindex="-1"></a></span>
+<span id="cb14-47"><a href="#cb14-47" tabindex="-1"></a><span class="fu">saveRDS</span>(</span>
+<span id="cb14-48"><a href="#cb14-48" tabindex="-1"></a>  cv_design,</span>
+<span id="cb14-49"><a href="#cb14-49" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_design.rds&quot;</span>),</span>
+<span id="cb14-50"><a href="#cb14-50" tabindex="-1"></a>  <span class="at">compress =</span> <span class="st">&quot;gzip&quot;</span></span>
+<span id="cb14-51"><a href="#cb14-51" tabindex="-1"></a>)</span>
+<span id="cb14-52"><a href="#cb14-52" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb14-53"><a href="#cb14-53" tabindex="-1"></a>  <span class="st">&quot;Frozen validation design written to:&quot;</span>,</span>
+<span id="cb14-54"><a href="#cb14-54" tabindex="-1"></a>  <span class="fu">file.path</span>(output_dir, <span class="st">&quot;simulated_cv_design.rds&quot;</span>),</span>
+<span id="cb14-55"><a href="#cb14-55" tabindex="-1"></a>  <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb14-56"><a href="#cb14-56" tabindex="-1"></a>)</span></code></pre></div>
 <pre><code>Frozen validation design written to: ./output/simulated/validation/simulated_cv_design.rds </code></pre>
 <p>The detailed assignment tables and validation audit remain available
 as versioned outputs for reproducibility and maintenance, while the
 modeling modules consume <code>simulated_cv_design.rds</code>
 directly.</p>
 </div>
-<div id="navigation" class="section level1">
-<h1>Navigation</h1>
+<div id="navigation" class="section level2">
+<h2>9. Navigation</h2>
 <p><a href="simulated_data_audit.html">Previous: Data audit</a> | <a
 href="simulated_data_gblup.html">GBLUP-ADE</a> | <a
 href="simulated_data_ann.html">Regularized ANN</a></p>
-</div>
-<div id="reproducibility-information" class="section level1">
-<h1>Reproducibility information</h1>
-<p><code>sessionInfo()</code> records the R version, platform, and
-loaded packages used to render this tutorial.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
-<pre><code>R version 4.5.1 (2025-06-13 ucrt)
-Platform: x86_64-w64-mingw32/x64
-Running under: Windows 11 x64 (build 26200)
-
-Matrix products: default
-  LAPACK version 3.12.1
-
-locale:
-[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
-[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
-[5] LC_TIME=Portuguese_Brazil.utf8    
-
-time zone: America/Sao_Paulo
-tzcode source: internal
-
-attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
-
-other attached packages:
-[1] workflowr_1.7.2
-
-loaded via a namespace (and not attached):
- [1] vctrs_0.7.1       httr_1.4.7        cli_3.6.5         knitr_1.50       
- [5] rlang_1.1.7       xfun_0.54         stringi_1.8.7     otel_0.2.0       
- [9] processx_3.8.6    promises_1.5.0    jsonlite_2.0.0    glue_1.8.0       
-[13] rprojroot_2.1.1   git2r_0.36.2      htmltools_0.5.9   httpuv_1.6.16    
-[17] ps_1.9.1          sass_0.4.10       rmarkdown_2.30    jquerylib_0.1.4  
-[21] tibble_3.3.0      evaluate_1.0.5    fastmap_1.2.0     yaml_2.3.12      
-[25] lifecycle_1.0.5   whisker_0.4.1     stringr_1.6.0     compiler_4.5.1   
-[29] fs_1.6.6          pkgconfig_2.0.3   Rcpp_1.1.2        rstudioapi_0.17.1
-[33] later_1.4.4       digest_0.6.39     R6_2.6.1          pillar_1.11.1    
-[37] callr_3.7.6       magrittr_2.0.4    bslib_0.9.0       tools_4.5.1      
-[41] cachem_1.1.0      getPass_0.2-4    </code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -2268,7 +3087,7 @@ Session information
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26200)
@@ -2285,15 +3104,15 @@ time zone: America/Sao_Paulo
 tzcode source: internal
 
 attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base     
+[1] stats     graphics  grDevices datasets  utils     methods   base     
 
 other attached packages:
-[1] workflowr_1.7.2
+[1] knitr_1.50      workflowr_1.7.2
 
 loaded via a namespace (and not attached):
- [1] vctrs_0.7.1       httr_1.4.7        cli_3.6.5         knitr_1.50       
- [5] rlang_1.1.7       xfun_0.54         stringi_1.8.7     otel_0.2.0       
- [9] processx_3.8.6    promises_1.5.0    jsonlite_2.0.0    glue_1.8.0       
+ [1] vctrs_0.7.1       httr_1.4.7        cli_3.6.5         rlang_1.1.7      
+ [5] xfun_0.54         stringi_1.8.7     otel_0.2.0        processx_3.8.6   
+ [9] renv_1.1.8        promises_1.5.0    jsonlite_2.0.0    glue_1.8.0       
 [13] rprojroot_2.1.1   git2r_0.36.2      htmltools_0.5.9   httpuv_1.6.16    
 [17] ps_1.9.1          sass_0.4.10       rmarkdown_2.30    jquerylib_0.1.4  
 [21] tibble_3.3.0      evaluate_1.0.5    fastmap_1.2.0     yaml_2.3.12      
@@ -2309,7 +3128,11 @@ loaded via a namespace (and not attached):
 </div>
 </div>
 </div>
+</div>
+</div>
+</div>
 
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlNpbXVsYXRlZCBkYXRhIHZhbGlkYXRpb24gZGVzaWduIg0KYXV0aG9yOg0KICAtIFdldmVydG9uIEdvbWVzIGRhIENvc3RhDQpkYXRlOiAiYHIgU3lzLkRhdGUoKWAiDQpzaXRlOiB3b3JrZmxvd3I6OndmbG93X3NpdGUNCm91dHB1dDoNCiAgd29ya2Zsb3dyOjp3Zmxvd19odG1sOg0KICAgIHRvYzogdHJ1ZQ0KICAgIHRvY19kZXB0aDogMw0KICAgIHRvY19mbG9hdDogdHJ1ZQ0KICAgIGNvZGVfZG93bmxvYWQ6IHRydWUNCiAgICBjb2RlX2ZvbGRpbmc6IHNob3cNCmVkaXRvcl9vcHRpb25zOg0KICBjaHVua19vdXRwdXRfdHlwZTogY29uc29sZQ0KLS0tDQoNCiMjIDEuIE9iamVjdGl2ZQ0KDQpUaGlzIGFuYWx5c2lzIGZyZWV6ZXMgdGhlIHZhbGlkYXRpb24gZGVzaWduIHVzZWQgYnkgYWxsIGdlbm9taWMgcHJlZGljdGlvbg0KbW9kZWxzIGZpdHRlZCB0byB0aGUgc2ltdWxhdGVkIGRhdGFzZXQuDQoNClRoZSBkZXNpZ24gaXMgY3JlYXRlZCAqKmJlZm9yZSBtb2RlbCBmaXR0aW5nKiogYW5kIGlzIGluZGVwZW5kZW50IG9mIHBoZW5vdHlwZSwNCnRydWUgZ2VuZXRpYyB2YWx1ZSwgc2NlbmFyaW8sIGFuZCBtb2RlbC4gQ29uc2VxdWVudGx5LCBHQkxVUC1BREUgYW5kIGFsbCBBTk4NCnZhcmlhbnRzIGFyZSBldmFsdWF0ZWQgb24gZXhhY3RseSB0aGUgc2FtZSBvdXRlciBhc3Nlc3NtZW50IGluZGl2aWR1YWxzLg0KDQpUaGUgY2Fub25pY2FsIGRlc2lnbiB1c2VzOg0KDQotIDUgb3V0ZXIgZm9sZHM7DQotIDUgb3V0ZXIgcmVwZXRpdGlvbnM7DQotIDQgaW5uZXIgZm9sZHMgd2l0aGluIGVhY2ggb3V0ZXIgYW5hbHlzaXMgc2V0Ow0KLSBkZXRlcm1pbmlzdGljIHNlZWRzIGRlcml2ZWQgZnJvbSB0aGUgcHJvamVjdC13aWRlIHNlZWQ7DQotIHRoZSBzYW1lIG91dGVyIGFuZCBpbm5lciBwYXJ0aXRpb25zIGZvciBhbGwgc2l4IHNpbXVsYXRpb24gc2NlbmFyaW9zLg0KDQpUaGUgb3V0ZXIgYXNzZXNzbWVudCBzZXRzIGFyZSByZXNlcnZlZCBleGNsdXNpdmVseSBmb3IgZmluYWwgbW9kZWwgZXZhbHVhdGlvbi4NClRoZSBpbm5lciBmb2xkcyBhcmUgcmVzZXJ2ZWQgZm9yIEFOTiBoeXBlcnBhcmFtZXRlciB0dW5pbmcuIFRydWUgc2ltdWxhdGVkDQpnZW5ldGljIHZhbHVlcyBhcmUgbmV2ZXIgdXNlZCB0byBnZW5lcmF0ZSBwYXJ0aXRpb25zIG9yIHR1bmUgbW9kZWxzLg0KDQpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0NCmtuaXRyOjpvcHRzX2NodW5rJHNldCgNCiAgZWNobyA9IFRSVUUsDQogIHdhcm5pbmcgPSBGQUxTRSwNCiAgbWVzc2FnZSA9IEZBTFNFLA0KICBjYWNoZSA9IEZBTFNFLA0KICBmaWcuYWxpZ24gPSAiY2VudGVyIiwNCiAgb3V0LndpZHRoID0gIjEwMCUiDQopDQoNCm9wdGlvbnMoc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFKQ0KYGBgDQoNCiMjIyAxLjEgSG93IHRvIHJlYWQgdGhpcyBtb2R1bGUNCg0KVGhlIHZhbGlkYXRpb24gc2NoZW1lIHNlcGFyYXRlcyBtb2RlbCBkZXZlbG9wbWVudCBmcm9tIGZpbmFsIHByZWRpY3RpdmUNCmV2YWx1YXRpb24uIEFuICoqYW5hbHlzaXMgc2V0KiogY29udGFpbnMgdGhlIGluZGl2aWR1YWxzIGF2YWlsYWJsZSBmb3IgZml0dGluZw0Kb3IgdHVuaW5nLCB3aGVyZWFzIHRoZSBjb3JyZXNwb25kaW5nICoqYXNzZXNzbWVudCBzZXQqKiByZW1haW5zIGhlbGQgb3V0IGZvcg0KZXZhbHVhdGlvbiBhdCB0aGF0IGxldmVsIG9mIGNyb3NzLXZhbGlkYXRpb24uIE91dGVyIGFzc2Vzc21lbnQgaW5kaXZpZHVhbHMgYXJlDQp0aGVyZWZvcmUgbmV2ZXIgdXNlZCB0byBjaG9vc2UgQU5OIGh5cGVycGFyYW1ldGVycyBvciB0cmFpbmluZyBkdXJhdGlvbi4NCg0KVGhlIHNlY3Rpb25zIGJlbG93IHNob3cgdGhlIGluZGl2aWR1YWwgdW5pdmVyc2UsIHBhcnRpdGlvbiBzaXplcywgb3ZlcmxhcCwgYW5kDQpjb3ZlcmFnZSBkaXJlY3RseS4gVGhlIHZhbGlkYXRpb24gc3RydWN0dXJlIGNhbiB0aGVyZWZvcmUgYmUgaW5zcGVjdGVkIGZyb20gdGhlDQpkaXNwbGF5ZWQgb2JqZWN0cyByYXRoZXIgdGhhbiBpbmZlcnJlZCBmcm9tIGJvb2xlYW4gY2hlY2tzLg0KDQojIyAyLiBQYWNrYWdlcywgaW5wdXRzLCBhbmQgdmFsaWRhdGlvbiBwYXJhbWV0ZXJzDQoNCiMjIyAyLjEgUGFja2FnZSB1c2VkDQoNClRoaXMgbW9kdWxlIHVzZXMgYmFzZSBSIHRvIGNvbnN0cnVjdCB0aGUgbmVzdGVkIGNyb3NzLXZhbGlkYXRpb24gcGFydGl0aW9ucyBhbmQNCmBrbml0cmAgdG8gZm9ybWF0IHRoZSB0YWJsZXMgcHJlc2VudGVkIGluIHRoZSB0dXRvcmlhbC4NCg0KYGBge3IgcGFja2FnZXMsIHdhcm5pbmc9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9DQpsaWJyYXJ5KGtuaXRyKSAjIEZvcm1hdCB0YWJsZXMgYW5kIFIgTWFya2Rvd24gb3V0cHV0Lg0KYGBgDQoNCmBgYHtyIHRhYmxlLWZvcm1hdHRpbmcsIGluY2x1ZGU9RkFMU0V9DQpmb3JtYXRfdGFibGUgPC0gZnVuY3Rpb24oDQogIHgsDQogIGNhcHRpb24gPSBOVUxMLA0KICBkaWdpdHMgPSBnZXRPcHRpb24oImRpZ2l0cyIpLA0KICByb3cubmFtZXMgPSBOQSwNCiAgLi4uDQopIHsNCiAgdGFibGUgPC0ga25pdHI6OmthYmxlKA0KICAgIHgsDQogICAgZm9ybWF0ID0gImh0bWwiLA0KICAgIGNhcHRpb24gPSBjYXB0aW9uLA0KICAgIGRpZ2l0cyA9IGRpZ2l0cywNCiAgICByb3cubmFtZXMgPSByb3cubmFtZXMsDQogICAgdGFibGUuYXR0ciA9IHBhc3RlMCgNCiAgICAgICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCIgJywNCiAgICAgICdzdHlsZT0id2lkdGg6MTAwJTsgbWFyZ2luLWJvdHRvbTowOyInDQogICAgKSwNCiAgICAuLi4NCiAgKQ0KDQogIGtuaXRyOjphc2lzX291dHB1dCgNCiAgICBwYXN0ZTAoDQogICAgICAnPGRpdiBzdHlsZT0id2lkdGg6MTAwJTsgb3ZlcmZsb3cteDphdXRvOyBtYXJnaW4tYm90dG9tOjEuMjVyZW07Ij4nLA0KICAgICAgdGFibGUsDQogICAgICAnPC9kaXY+Jw0KICAgICkNCiAgKQ0KfQ0KYGBgDQoNCiMjIyAyLjIgSW5wdXQgYW5kIG91dHB1dCBwYXRocw0KDQpUaGUgdmFsaWRhdGlvbiBtb2R1bGUgcmVhZHMgdGhlIGNhbm9uaWNhbCBvYmplY3QgcHJvZHVjZWQgYnkgdGhlIGRhdGEtYXVkaXQNCm1vZHVsZSBhbmQgc3RvcmVzIHRoZSBmcm96ZW4gY3Jvc3MtdmFsaWRhdGlvbiBkZXNpZ24gaW4gYSBkZWRpY2F0ZWQgb3V0cHV0DQpkaXJlY3RvcnkuDQoNCmBgYHtyIHBhdGhzfQ0KUFJPSkVDVF9ST09UIDwtICIuIg0KcHJvamVjdF9wYXRoIDwtIGZ1bmN0aW9uKC4uLikgZmlsZS5wYXRoKFBST0pFQ1RfUk9PVCwgLi4uKQ0KDQppbnB1dF9maWxlIDwtIHByb2plY3RfcGF0aCgNCiAgIm91dHB1dCIsICJzaW11bGF0ZWQiLCAiYXVkaXQiLCAicHJlcHJvY2Vzc2VkX3NpbXVsYXRlZF9jb21tb24ucmRzIg0KKQ0Kb3V0cHV0X2RpciA8LSBwcm9qZWN0X3BhdGgoIm91dHB1dCIsICJzaW11bGF0ZWQiLCAidmFsaWRhdGlvbiIpDQpkaXIuY3JlYXRlKG91dHB1dF9kaXIsIHNob3dXYXJuaW5ncyA9IEZBTFNFLCByZWN1cnNpdmUgPSBUUlVFKQ0KYGBgDQoNCiMjIyAyLjMgQ3Jvc3MtdmFsaWRhdGlvbiBwYXJhbWV0ZXJzDQoNClRoZSBjb21wbGV0ZSBuZXN0ZWQgZGVzaWduIGlzIGNvbnRyb2xsZWQgYnkgZm91ciBleHBsaWNpdCB2YWx1ZXMuIFRoZXNlIHZhbHVlcw0KYXJlIGZpeGVkIGJlZm9yZSBtb2RlbCBmaXR0aW5nIGFuZCBhcmUgcmV1c2VkIGJ5IGFsbCBwcmVkaWN0aW9uIG1ldGhvZHMuDQoNCmBgYHtyIHZhbGlkYXRpb24tcGFyYW1ldGVyc30NClNFRURfR0xPQkFMIDwtIDIwMjYwODIxTA0KTl9PVVRFUl9SRVBFQVRTIDwtIDVMDQpOX09VVEVSX0ZPTERTIDwtIDVMDQpOX0lOTkVSX0ZPTERTIDwtIDRMDQoNCnZhbGlkYXRpb25fcGFyYW1ldGVycyA8LSBkYXRhLmZyYW1lKA0KICBQYXJhbWV0ZXIgPSBjKA0KICAgICJHbG9iYWwgc2VlZCIsDQogICAgIk91dGVyIHJlcGV0aXRpb25zIiwNCiAgICAiT3V0ZXIgZm9sZHMgcGVyIHJlcGV0aXRpb24iLA0KICAgICJJbm5lciBmb2xkcyBwZXIgb3V0ZXIgc3BsaXQiDQogICksDQogIFZhbHVlID0gYygNCiAgICBTRUVEX0dMT0JBTCwNCiAgICBOX09VVEVSX1JFUEVBVFMsDQogICAgTl9PVVRFUl9GT0xEUywNCiAgICBOX0lOTkVSX0ZPTERTDQogICksDQogIFJvbGUgPSBjKA0KICAgICJyZXByb2R1Y2libGUgcGFydGl0aW9uIGdlbmVyYXRpb24iLA0KICAgICJyZXBlYXQgaGVsZC1vdXQgZXZhbHVhdGlvbiIsDQogICAgImRlZmluZSBvdXRlciBhc3Nlc3NtZW50IHNldHMiLA0KICAgICJjb21wYXJlIEFOTiBjYW5kaWRhdGVzIGluc2lkZSBvdXRlciBhbmFseXNpcyINCiAgKQ0KKQ0KDQpmb3JtYXRfdGFibGUoDQogIHZhbGlkYXRpb25fcGFyYW1ldGVycywNCiAgY2FwdGlvbiA9ICJDYW5vbmljYWwgbmVzdGVkIGNyb3NzLXZhbGlkYXRpb24gcGFyYW1ldGVycyIsDQogIHJvdy5uYW1lcyA9IEZBTFNFDQopDQpgYGANCg0KVGhlIHNhbWUgZ2xvYmFsIHNlZWQgaXMgY29tYmluZWQgd2l0aCByZXBldGl0aW9uIGFuZCBmb2xkIGlkZW50aWZpZXJzIHNvIGV2ZXJ5DQpwYXJ0aXRpb24gY2FuIGJlIHJlZ2VuZXJhdGVkIGV4YWN0bHkuDQoNCiMjIDMuIEluZGl2aWR1YWwgdW5pdmVyc2UNCg0KIyMjIDMuMSBDYW5vbmljYWwgaW5wdXQgb2JqZWN0DQoNClRoZSB2YWxpZGF0aW9uIGRlc2lnbiBpcyBidWlsdCBmcm9tIHRoZSBjYW5vbmljYWwgc2ltdWxhdGVkLWRhdGEgb2JqZWN0IGNyZWF0ZWQNCmluIHRoZSBwcmVjZWRpbmcgbW9kdWxlLiBUaGUgZGltZW5zaW9ucyBzaG93biBiZWxvdyBtYWtlIGV4cGxpY2l0IHdoaWNoIGFsaWduZWQNCm9iamVjdHMgc2hhcmUgdGhlIHNhbWUgaW5kaXZpZHVhbCByb3dzIGJlZm9yZSBhbnkgcGFydGl0aW9uIGlzIGdlbmVyYXRlZC4NCg0KYGBge3IgcHJlcmVxdWlzaXRlc30NCnNpbXVsYXRlZF9jb21tb24gPC0gcmVhZFJEUyhpbnB1dF9maWxlKQ0KY2Fub25pY2FsX2NvbXBvbmVudHMgPC0gZGF0YS5mcmFtZSgNCiAgQ29tcG9uZW50ID0gYygicGhlbm90eXBlIiwgInRydWVfZ2VuZXRpY192YWx1ZSIsICJnZW5vdHlwZV9tMTAxIiksDQogIFJvd3MgPSBjKA0KICAgIG5yb3coc2ltdWxhdGVkX2NvbW1vbiRwaGVub3R5cGUpLA0KICAgIG5yb3coc2ltdWxhdGVkX2NvbW1vbiR0cnVlX2dlbmV0aWNfdmFsdWUpLA0KICAgIG5yb3coc2ltdWxhdGVkX2NvbW1vbiRnZW5vdHlwZV9tMTAxKQ0KICApLA0KICBDb2x1bW5zID0gYygNCiAgICBuY29sKHNpbXVsYXRlZF9jb21tb24kcGhlbm90eXBlKSwNCiAgICBuY29sKHNpbXVsYXRlZF9jb21tb24kdHJ1ZV9nZW5ldGljX3ZhbHVlKSwNCiAgICBuY29sKHNpbXVsYXRlZF9jb21tb24kZ2Vub3R5cGVfbTEwMSkNCiAgKQ0KKQ0KDQpmb3JtYXRfdGFibGUoDQogIGNhbm9uaWNhbF9jb21wb25lbnRzLA0KICBjYXB0aW9uID0gIkNhbm9uaWNhbCBvYmplY3RzIHVzZWQgdG8gY29uc3RydWN0IHRoZSB2YWxpZGF0aW9uIGRlc2lnbiIsDQogIHJvdy5uYW1lcyA9IEZBTFNFDQopDQpgYGANCg0KQWxsIHRocmVlIGNhbm9uaWNhbCBvYmplY3RzIGNvbnRhaW4gdGhlIHNhbWUgMSwwMDAgaW5kaXZpZHVhbCByb3dzLiBQaGVub3R5cGUNCmFuZCB0cnVlIGdlbmV0aWMgdmFsdWUgY29udGFpbiBzaXggc2NlbmFyaW8gY29sdW1ucywgd2hlcmVhcyB0aGUgZ2Vub3R5cGUNCm1hdHJpeCBjb250YWlucyB0aGUgNCwwMTAgYXVkaXRlZCBtYXJrZXJzLg0KDQojIyMgMy4yIEluZGl2aWR1YWxzIHVzZWQgZm9yIHBhcnRpdGlvbmluZw0KDQpQYXJ0aXRpb25zIGFyZSBnZW5lcmF0ZWQgZnJvbSB0aGUgMSwwMDAgY2Fub25pY2FsIHJvdyBpZGVudGlmaWVycyBvbmx5LiBObw0KcGhlbm90eXBlLCB0cnVlIGdlbmV0aWMgdmFsdWUsIHNjZW5hcmlvIGxhYmVsLCBvciBtb2RlbCBpbmZvcm1hdGlvbiBpcyB1c2VkIHRvDQpkZWZpbmUgdGhlIHBhcnRpdGlvbnMuIEFsaWdubWVudCB3aXRoIHRoZSBjYW5vbmljYWwgcGhlbm90eXBlLCB0cnVlLWdlbmV0aWMtDQp2YWx1ZSwgYW5kIGdlbm90eXBlIG1hdHJpY2VzIGlzIHZlcmlmaWVkIGludGVybmFsbHkgYmVmb3JlIHRoZSBmb2xkcyBhcmUgYnVpbHQuDQoNCmBgYHtyIGluZGl2aWR1YWwtdW5pdmVyc2V9DQppZHMgPC0gYXMuaW50ZWdlcihzaW11bGF0ZWRfY29tbW9uJG1ldGFkYXRhJHJvd19pZGVudGlmaWVyKQ0KaW5kaXZpZHVhbF91bml2ZXJzZSA8LSBkYXRhLmZyYW1lKA0KICBRdWFudGl0eSA9IGMoDQogICAgIkluZGl2aWR1YWxzIHVzZWQgdG8gZ2VuZXJhdGUgZm9sZHMiLA0KICAgICJGaXJzdCByb3cgaWRlbnRpZmllciIsDQogICAgIkxhc3Qgcm93IGlkZW50aWZpZXIiDQogICksDQogIE9ic2VydmVkID0gYyhsZW5ndGgoaWRzKSwgbWluKGlkcyksIG1heChpZHMpKQ0KKQ0KDQpmb3JtYXRfdGFibGUoDQogIGluZGl2aWR1YWxfdW5pdmVyc2UsDQogIGNhcHRpb24gPSAiSW5kaXZpZHVhbCB1bml2ZXJzZSB1c2VkIGZvciBmb2xkIGdlbmVyYXRpb24iLA0KICByb3cubmFtZXMgPSBGQUxTRQ0KKQ0KYGBgDQoNClRoZSBwYXJ0aXRpb25pbmcgdW5pdmVyc2UgdGhlcmVmb3JlIGNvbnNpc3RzIG9ubHkgb2Ygcm93IGlkZW50aWZpZXJzIDEtMSwwMDAuDQpUaGUgcmVzcG9uc2UgdmFyaWFibGVzIHJlbWFpbiBvdXRzaWRlIHRoZSBmb2xkLWdlbmVyYXRpb24gcHJvY2VkdXJlLg0KDQojIyA0LiBPdXRlciByZXBlYXRlZCBjcm9zcy12YWxpZGF0aW9uDQoNCiMjIyA0LjEgQmFsYW5jZWQgZm9sZCBhc3NpZ25tZW50DQoNClRoZSBoZWxwZXIgYmVsb3cgcmFuZG9taXplcyB0aGUgc3VwcGxpZWQgSURzIHdpdGggYHNhbXBsZSgpYCBhbmQgdGhlbiBjeWNsZXMNCnRocm91Z2ggdGhlIGZvbGQgbGFiZWxzIHdpdGggYHJlcCgpYC4gU29ydGluZyBieSBJRCBhdCB0aGUgZW5kIGNoYW5nZXMgb25seSB0aGUNCmRpc3BsYXkvb3JkZXIgb2YgdGhlIGFzc2lnbm1lbnQgdGFibGUsIG5vdCB0aGUgcmFuZG9taXplZCBmb2xkIG1lbWJlcnNoaXAuDQoNCmBgYHtyIGJhbGFuY2VkLWZvbGQtYXNzaWdubWVudH0NCmJhbGFuY2VkX2ZvbGRfYXNzaWdubWVudCA8LSBmdW5jdGlvbigNCiAgaWRzLA0KICBrLA0KICBzZWVkDQopIHsNCiAgc2V0LnNlZWQoc2VlZCkNCg0KICBzaHVmZmxlZF9pZHMgPC0gc2FtcGxlKA0KICAgIGlkcywNCiAgICBzaXplID0gbGVuZ3RoKGlkcyksDQogICAgcmVwbGFjZSA9IEZBTFNFDQogICkNCg0KICBhc3NpZ25lZF9mb2xkcyA8LSByZXAoDQogICAgc2VxX2xlbihrKSwNCiAgICBsZW5ndGgub3V0ID0gbGVuZ3RoKGlkcykNCiAgKQ0KDQogIG91dCA8LSBkYXRhLmZyYW1lKA0KICAgIElEID0gc2h1ZmZsZWRfaWRzLA0KICAgIEZvbGQgPSBhc3NpZ25lZF9mb2xkcywNCiAgICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UNCiAgKQ0KDQogIG91dCA8LSBvdXRbDQogICAgb3JkZXIob3V0JElEKSwNCiAgICAsDQogICAgZHJvcCA9IEZBTFNFDQogIF0NCg0KICByb3duYW1lcyhvdXQpIDwtIE5VTEwNCiAgb3V0DQp9DQpgYGANCg0KRm9yIDEsMDAwIGluZGl2aWR1YWxzIGFuZCBmaXZlIG91dGVyIGZvbGRzLCB0aGlzIHByb2R1Y2VzIDIwMCBhc3Nlc3NtZW50DQppbmRpdmlkdWFscyBwZXIgZm9sZC4gQXBwbGllZCB0byBhbiA4MDAtaW5kaXZpZHVhbCBvdXRlci1hbmFseXNpcyBzZXQgd2l0aCBmb3VyDQppbm5lciBmb2xkcywgaXQgcHJvZHVjZXMgMjAwIGlubmVyLWFzc2Vzc21lbnQgaW5kaXZpZHVhbHMgcGVyIGZvbGQuDQoNCiMjIyA0LjIgT3V0ZXIgcGFydGl0aW9uIHNpemVzDQoNCkZvciBlYWNoIHJlcGV0aXRpb24sIHRoZSAxLDAwMCBjYW5vbmljYWwgSURzIGFyZSBhc3NpZ25lZCB0byBmaXZlIGZvbGRzIHVzaW5nIGENCmRldGVybWluaXN0aWMgc2VlZCBkZXJpdmVkIGZyb20gdGhlIGdsb2JhbCBzZWVkLiBGaXZlIHJlcGV0aXRpb25zIHRoZXJlZm9yZQ0KcHJvZHVjZSAyNSBvdXRlciB0cmFpbi10ZXN0IGNvbXBhcmlzb25zIHdoaWxlIHByZXNlcnZpbmcgZXhhY3QgcmVwcm9kdWNpYmlsaXR5Lg0KDQpgYGB7ciBvdXRlci1mb2xkc30NCiMgR2VuZXJhdGUgb25lIGJhbGFuY2VkIGZpdmUtZm9sZCBhc3NpZ25tZW50IGZvciBlYWNoIG91dGVyIHJlcGV0aXRpb24uDQpvdXRlcl9hc3NpZ25tZW50cyA8LSBkby5jYWxsKA0KICByYmluZCwNCiAgbGFwcGx5KHNlcV9sZW4oTl9PVVRFUl9SRVBFQVRTKSwgZnVuY3Rpb24ocmVwX2lkKSB7DQogICAgYXNzaWdubWVudCA8LSBiYWxhbmNlZF9mb2xkX2Fzc2lnbm1lbnQoDQogICAgICBpZHMgPSBpZHMsDQogICAgICBrID0gTl9PVVRFUl9GT0xEUywNCiAgICAgIHNlZWQgPSBTRUVEX0dMT0JBTCArIHJlcF9pZA0KICAgICkNCiAgICBkYXRhLmZyYW1lKA0KICAgICAgUmVwZXRpdGlvbiA9IHJlcF9pZCwNCiAgICAgIElEID0gYXNzaWdubWVudCRJRCwNCiAgICAgIE91dGVyRm9sZCA9IGFzc2lnbm1lbnQkRm9sZCwNCiAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQ0KICAgICkNCiAgfSkNCikNCnJvd25hbWVzKG91dGVyX2Fzc2lnbm1lbnRzKSA8LSBOVUxMDQpvdXRlcl9hc3NpZ25tZW50cyRTcGxpdElEIDwtIHNwcmludGYoDQogICJSJTAyZF9GJTAyZCIsDQogIG91dGVyX2Fzc2lnbm1lbnRzJFJlcGV0aXRpb24sDQogIG91dGVyX2Fzc2lnbm1lbnRzJE91dGVyRm9sZA0KKQ0KDQojIFN1bW1hcml6ZSBhbmFseXNpcyBhbmQgYXNzZXNzbWVudCBzYW1wbGUgc2l6ZXMgZm9yIGFsbCAyNSBvdXRlciBzcGxpdHMuDQpvdXRlcl9zaXplcyA8LSBhZ2dyZWdhdGUoDQogIElEIH4gUmVwZXRpdGlvbiArIE91dGVyRm9sZCArIFNwbGl0SUQsDQogIGRhdGEgPSBvdXRlcl9hc3NpZ25tZW50cywNCiAgRlVOID0gbGVuZ3RoDQopDQpuYW1lcyhvdXRlcl9zaXplcylbbmFtZXMob3V0ZXJfc2l6ZXMpID09ICJJRCJdIDwtICJBc3Nlc3NtZW50X04iDQpvdXRlcl9zaXplcyRBbmFseXNpc19OIDwtIGxlbmd0aChpZHMpIC0gb3V0ZXJfc2l6ZXMkQXNzZXNzbWVudF9ODQoNCmZvcm1hdF90YWJsZSgNCiAgb3V0ZXJfc2l6ZXMsDQogIGNhcHRpb24gPSAiT3V0ZXIgcmVwZWF0ZWQgY3Jvc3MtdmFsaWRhdGlvbiBzcGxpdCBzaXplcyIsDQogIHJvdy5uYW1lcyA9IEZBTFNFDQopDQpgYGANCg0KRXZlcnkgb25lIG9mIHRoZSAyNSBvdXRlciBzcGxpdHMgY29udGFpbnMgKio4MDAgYW5hbHlzaXMqKiBhbmQgKioyMDAgYXNzZXNzbWVudCoqDQppbmRpdmlkdWFscy4gRWFjaCBpbmRpdmlkdWFsIGFwcGVhcnMgZXhhY3RseSBvbmNlIGluIGFuIGFzc2Vzc21lbnQgZm9sZCB3aXRoaW4NCmVhY2ggcmVwZXRpdGlvbi4NCg0KIyMjIDQuMyBFeHBsaWNpdCBhbmFseXNpcyBhbmQgYXNzZXNzbWVudCBzZXRzDQoNClRoZSBhc3NpZ25tZW50IHRhYmxlIGlzIGNvbnZlcnRlZCBpbnRvIGV4cGxpY2l0IGFuYWx5c2lzIGFuZCBhc3Nlc3NtZW50IElEIHNldHMNCmZvciBlYWNoIG91dGVyIHNwbGl0LiBgc2V0ZGlmZigpYCByZW1vdmVzIHRoZSAyMDAgYXNzZXNzbWVudCBJRHMgZnJvbSB0aGUgZnVsbA0KaW5kaXZpZHVhbCB1bml2ZXJzZSwgbGVhdmluZyB0aGUgY29ycmVzcG9uZGluZyA4MDAtaW5kaXZpZHVhbCBhbmFseXNpcyBzZXQuDQoNCmBgYHtyIG91dGVyLXNwbGl0LW9iamVjdHN9DQpvdXRlcl9zcGxpdF9pZHMgPC0gc29ydCh1bmlxdWUob3V0ZXJfYXNzaWdubWVudHMkU3BsaXRJRCkpDQpvdXRlcl9zcGxpdHMgPC0gc2V0TmFtZXMoDQogIHZlY3RvcigibGlzdCIsIGxlbmd0aChvdXRlcl9zcGxpdF9pZHMpKSwNCiAgb3V0ZXJfc3BsaXRfaWRzDQopDQoNCiMgU3RvcmUgdGhlIGFuYWx5c2lzIGFuZCBhc3Nlc3NtZW50IElEcyBjb25zdW1lZCBieSB0aGUgbW9kZWxpbmcgbW9kdWxlcy4NCmZvciAoc3BsaXRfaWQgaW4gb3V0ZXJfc3BsaXRfaWRzKSB7DQogIGFzc2Vzc21lbnRfaWRzIDwtIG91dGVyX2Fzc2lnbm1lbnRzJElEWw0KICAgIG91dGVyX2Fzc2lnbm1lbnRzJFNwbGl0SUQgPT0gc3BsaXRfaWQNCiAgXQ0KICBhbmFseXNpc19pZHMgPC0gc2V0ZGlmZihpZHMsIGFzc2Vzc21lbnRfaWRzKQ0KICBvdXRlcl9zcGxpdHNbW3NwbGl0X2lkXV0gPC0gbGlzdCgNCiAgICBzcGxpdF9pZCA9IHNwbGl0X2lkLA0KICAgIGFuYWx5c2lzX2lkcyA9IHNvcnQoYW5hbHlzaXNfaWRzKSwNCiAgICBhc3Nlc3NtZW50X2lkcyA9IHNvcnQoYXNzZXNzbWVudF9pZHMpDQogICkNCn0NCg0KZXhhbXBsZV9vdXRlcl9zcGxpdCA8LSBvdXRlcl9zcGxpdHNbWzFdXQ0Kb3V0ZXJfb2JqZWN0X3N1bW1hcnkgPC0gZGF0YS5mcmFtZSgNCiAgQ29tcG9uZW50ID0gYygiYW5hbHlzaXNfaWRzIiwgImFzc2Vzc21lbnRfaWRzIiwgIm92ZXJsYXAiKSwNCiAgTiA9IGMoDQogICAgbGVuZ3RoKGV4YW1wbGVfb3V0ZXJfc3BsaXQkYW5hbHlzaXNfaWRzKSwNCiAgICBsZW5ndGgoZXhhbXBsZV9vdXRlcl9zcGxpdCRhc3Nlc3NtZW50X2lkcyksDQogICAgbGVuZ3RoKGludGVyc2VjdCgNCiAgICAgIGV4YW1wbGVfb3V0ZXJfc3BsaXQkYW5hbHlzaXNfaWRzLA0KICAgICAgZXhhbXBsZV9vdXRlcl9zcGxpdCRhc3Nlc3NtZW50X2lkcw0KICAgICkpDQogICksDQogIEZpcnN0X0lEcyA9IGMoDQogICAgcGFzdGUoaGVhZChleGFtcGxlX291dGVyX3NwbGl0JGFuYWx5c2lzX2lkcywgNiksIGNvbGxhcHNlID0gIiwgIiksDQogICAgcGFzdGUoaGVhZChleGFtcGxlX291dGVyX3NwbGl0JGFzc2Vzc21lbnRfaWRzLCA2KSwgY29sbGFwc2UgPSAiLCAiKSwNCiAgICAiLSINCiAgKQ0KKQ0KDQpmb3JtYXRfdGFibGUoDQogIG91dGVyX29iamVjdF9zdW1tYXJ5LA0KICBjYXB0aW9uID0gcGFzdGUoIlN0cnVjdHVyZSBvZiBvdXRlciBzcGxpdCIsIGV4YW1wbGVfb3V0ZXJfc3BsaXQkc3BsaXRfaWQpLA0KICByb3cubmFtZXMgPSBGQUxTRQ0KKQ0KYGBgDQoNClRoZSBleGFtcGxlIHNwbGl0IG1ha2VzIHRoZSBjb250cmFjdCBjb25jcmV0ZTogODAwIElEcyBhcmUgYXZhaWxhYmxlIHRvIG1vZGVsDQpkZXZlbG9wbWVudCwgMjAwIGFyZSByZXNlcnZlZCBmb3IgZmluYWwgYXNzZXNzbWVudCwgYW5kIHRoZWlyIG92ZXJsYXAgaXMgemVyby4NClRoZSBzYW1lIHN0cnVjdHVyZSBpcyBzdG9yZWQgZm9yIGV2ZXJ5IG91dGVyIHNwbGl0Lg0KDQojIyA1LiBOZXN0ZWQgaW5uZXIgY3Jvc3MtdmFsaWRhdGlvbg0KDQojIyMgNS4xIElubmVyIHBhcnRpdGlvbiBnZW5lcmF0aW9uDQoNCkVhY2ggb3V0ZXIgYW5hbHlzaXMgc2V0IGlzIHBhcnRpdGlvbmVkIGFnYWluIGZvciBBTk4gaHlwZXJwYXJhbWV0ZXIgc2VsZWN0aW9uLg0KV2l0aGluIGEgZ2l2ZW4gb3V0ZXIgc3BsaXQsIG9uZSBpbm5lciBmb2xkIGFjdHMgYXMgdGhlIGFzc2Vzc21lbnQgc3Vic2V0IGFuZCB0aGUNCnJlbWFpbmluZyBpbm5lciBpbmRpdmlkdWFscyBmb3JtIHRoZSBhbmFseXNpcyBzdWJzZXQuIFRoZSBvdXRlciBhc3Nlc3NtZW50IHNldA0KbmV2ZXIgcGFydGljaXBhdGVzIGluIHRoaXMgb3BlcmF0aW9uLg0KDQpgYGB7ciBpbm5lci1mb2xkc30NCmlubmVyX2Fzc2lnbm1lbnRzX2xpc3QgPC0gdmVjdG9yKCJsaXN0IiwgbGVuZ3RoKG91dGVyX3NwbGl0cykpDQpuYW1lcyhpbm5lcl9hc3NpZ25tZW50c19saXN0KSA8LSBuYW1lcyhvdXRlcl9zcGxpdHMpDQppbm5lcl9zcGxpdHMgPC0gc2V0TmFtZXMoDQogIHZlY3RvcigibGlzdCIsIGxlbmd0aChvdXRlcl9zcGxpdHMpKSwNCiAgbmFtZXMob3V0ZXJfc3BsaXRzKQ0KKQ0KDQojIEdlbmVyYXRlIGZvdXIgaW5uZXIgZm9sZHMgc2VwYXJhdGVseSBpbnNpZGUgZWFjaCBvdXRlciBhbmFseXNpcyBzZXQuDQpmb3IgKHNwbGl0X2lkIGluIG5hbWVzKG91dGVyX3NwbGl0cykpIHsNCiAgb3V0ZXJfc3BsaXQgPC0gb3V0ZXJfc3BsaXRzW1tzcGxpdF9pZF1dDQogIHNwbGl0X3Rva2VucyA8LSBzdHJzcGxpdChzdWIoIl5SIiwgIiIsIHNwbGl0X2lkKSwgIl9GIilbWzFdXQ0KICByZXBfaWQgPC0gYXMuaW50ZWdlcihzcGxpdF90b2tlbnNbMV0pDQogIG91dGVyX2ZvbGQgPC0gYXMuaW50ZWdlcihzcGxpdF90b2tlbnNbMl0pDQogIGlubmVyX3NlZWQgPC0gU0VFRF9HTE9CQUwgKyAxMDAwMDBMICsgcmVwX2lkICogMTAwTCArIG91dGVyX2ZvbGQNCg0KICBhc3NpZ25tZW50IDwtIGJhbGFuY2VkX2ZvbGRfYXNzaWdubWVudCgNCiAgICBpZHMgPSBvdXRlcl9zcGxpdCRhbmFseXNpc19pZHMsDQogICAgayA9IE5fSU5ORVJfRk9MRFMsDQogICAgc2VlZCA9IGlubmVyX3NlZWQNCiAgKQ0KDQogIGlubmVyX2Fzc2lnbm1lbnRzX2xpc3RbW3NwbGl0X2lkXV0gPC0gZGF0YS5mcmFtZSgNCiAgICBTcGxpdElEID0gc3BsaXRfaWQsDQogICAgUmVwZXRpdGlvbiA9IHJlcF9pZCwNCiAgICBPdXRlckZvbGQgPSBvdXRlcl9mb2xkLA0KICAgIElEID0gYXNzaWdubWVudCRJRCwNCiAgICBJbm5lckZvbGQgPSBhc3NpZ25tZW50JEZvbGQsDQogICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFDQogICkNCg0KICBjdXJyZW50X2lubmVyX3NwbGl0cyA8LSBzZXROYW1lcygNCiAgICB2ZWN0b3IoImxpc3QiLCBOX0lOTkVSX0ZPTERTKSwNCiAgICBwYXN0ZTAoIkkiLCBzZXFfbGVuKE5fSU5ORVJfRk9MRFMpKQ0KICApDQoNCiAgIyBDb252ZXJ0IGVhY2ggaW5uZXIgZm9sZCBpbnRvIGV4cGxpY2l0IGFuYWx5c2lzIGFuZCBhc3Nlc3NtZW50IElEIHNldHMuDQogIGZvciAoaW5uZXJfZm9sZCBpbiBzZXFfbGVuKE5fSU5ORVJfRk9MRFMpKSB7DQogICAgaW5uZXJfYXNzZXNzbWVudF9pZHMgPC0gYXNzaWdubWVudCRJRFthc3NpZ25tZW50JEZvbGQgPT0gaW5uZXJfZm9sZF0NCiAgICBpbm5lcl9hbmFseXNpc19pZHMgPC0gc2V0ZGlmZigNCiAgICAgIG91dGVyX3NwbGl0JGFuYWx5c2lzX2lkcywNCiAgICAgIGlubmVyX2Fzc2Vzc21lbnRfaWRzDQogICAgKQ0KICAgIGN1cnJlbnRfaW5uZXJfc3BsaXRzW1twYXN0ZTAoIkkiLCBpbm5lcl9mb2xkKV1dIDwtIGxpc3QoDQogICAgICBzcGxpdF9pZCA9IHNwbGl0X2lkLA0KICAgICAgaW5uZXJfZm9sZCA9IGlubmVyX2ZvbGQsDQogICAgICBhbmFseXNpc19pZHMgPSBzb3J0KGlubmVyX2FuYWx5c2lzX2lkcyksDQogICAgICBhc3Nlc3NtZW50X2lkcyA9IHNvcnQoaW5uZXJfYXNzZXNzbWVudF9pZHMpDQogICAgKQ0KICB9DQogIGlubmVyX3NwbGl0c1tbc3BsaXRfaWRdXSA8LSBjdXJyZW50X2lubmVyX3NwbGl0cw0KfQ0KDQppbm5lcl9hc3NpZ25tZW50cyA8LSBkby5jYWxsKHJiaW5kLCBpbm5lcl9hc3NpZ25tZW50c19saXN0KQ0Kcm93bmFtZXMoaW5uZXJfYXNzaWdubWVudHMpIDwtIE5VTEwNCmlubmVyX3NpemVzIDwtIGFnZ3JlZ2F0ZSgNCiAgSUQgfiBTcGxpdElEICsgUmVwZXRpdGlvbiArIE91dGVyRm9sZCArIElubmVyRm9sZCwNCiAgZGF0YSA9IGlubmVyX2Fzc2lnbm1lbnRzLA0KICBGVU4gPSBsZW5ndGgNCikNCm5hbWVzKGlubmVyX3NpemVzKVtuYW1lcyhpbm5lcl9zaXplcykgPT0gIklEIl0gPC0gIkFzc2Vzc21lbnRfTiINCmlubmVyX3NpemVzJEFuYWx5c2lzX04gPC0gODAwTCAtIGlubmVyX3NpemVzJEFzc2Vzc21lbnRfTg0KYGBgDQoNCiMjIyA1LjIgSW5uZXIgYW5hbHlzaXMgYW5kIGFzc2Vzc21lbnQgc2l6ZXMNCg0KV2l0aCA4MDAgaW5kaXZpZHVhbHMgaW4gZWFjaCBvdXRlciBhbmFseXNpcyBzZXQgYW5kIGZvdXIgaW5uZXIgZm9sZHMsIGV2ZXJ5DQppbm5lciBhc3Nlc3NtZW50IHNldCBjb250YWlucyAyMDAgaW5kaXZpZHVhbHMgYW5kIGV2ZXJ5IGlubmVyIGFuYWx5c2lzIHNldA0KY29udGFpbnMgNjAwLiBUaGUgZmlyc3QgMjAgaW5uZXIgc3BsaXRzIGFyZSBkaXNwbGF5ZWQgYmVsb3cgYXMgYSBjb21wYWN0IHNhbXBsZQ0Kb2YgdGhlIGNvbXBsZXRlIDEwMC1zcGxpdCBkZXNpZ24uDQoNCmBgYHtyIGlubmVyLXNpemVzfQ0KZm9ybWF0X3RhYmxlKA0KICBoZWFkKGlubmVyX3NpemVzLCAyMCksDQogIGNhcHRpb24gPSAiRmlyc3QgMjAgbmVzdGVkIGlubmVyIHNwbGl0IHNpemVzIiwNCiAgcm93Lm5hbWVzID0gRkFMU0UNCikNCmBgYA0KDQpFdmVyeSBpbm5lciBzcGxpdCBjb250YWlucyAqKjYwMCBhbmFseXNpcyoqIGFuZCAqKjIwMCBhc3Nlc3NtZW50KiogaW5kaXZpZHVhbHMuDQpUaGUgMjAwIGlubmVyLWFzc2Vzc21lbnQgaW5kaXZpZHVhbHMgYXJlIHVzZWQgb25seSB0byBjb21wYXJlIEFOTiBjYW5kaWRhdGVzDQppbnNpZGUgdGhlIGNvcnJlc3BvbmRpbmcgODAwLWluZGl2aWR1YWwgb3V0ZXItYW5hbHlzaXMgc2V0OyB0aGV5IGFyZSBub3QgcGFydA0Kb2YgdGhlIGVhcmx5LXZhbGlkYXRpb24gc3Vic2V0IHVzZWQgdG8gdHJhaW4gYSBjYW5kaWRhdGUuDQoNCiMjIDYuIEluZGVwZW5kZW5jZSBvZiB0aGUgcGFydGl0aW9ucw0KDQojIyMgNi4xIEluZm9ybWF0aW9uIHVzZWQNCg0KVGhlIGZvbGQtZ2VuZXJhdGlvbiBpbnB1dHMgYXJlIGludGVudGlvbmFsbHkgbWluaW1hbC4gT25seSB0aGUgY2Fub25pY2FsDQppbmRpdmlkdWFsIGlkZW50aWZpZXJzIGFuZCBkZXRlcm1pbmlzdGljIHNlZWRzIHBhcnRpY2lwYXRlIGluIHBhcnRpdGlvbmluZy4NCg0KYGBge3IgaW5kZXBlbmRlbmNlLWNvbnRyYWN0fQ0KcGFydGl0aW9uX2luZm9ybWF0aW9uIDwtIGRhdGEuZnJhbWUoDQogIEluZm9ybWF0aW9uID0gYygNCiAgICAiSW5kaXZpZHVhbCBJRCIsICJEZXRlcm1pbmlzdGljIHNlZWQiLCAiU2NlbmFyaW8iLA0KICAgICJQaGVub3R5cGUiLCAiVHJ1ZSBnZW5ldGljIHZhbHVlIiwgIk1vZGVsIg0KICApLA0KICBQYXJ0aXRpb25fcm9sZSA9IGMoDQogICAgIlVzZWQiLCAiVXNlZCIsICJOb3QgdXNlZCIsICJOb3QgdXNlZCIsICJOb3QgdXNlZCIsICJOb3QgdXNlZCINCiAgKQ0KKQ0KDQpmb3JtYXRfdGFibGUoDQogIHBhcnRpdGlvbl9pbmZvcm1hdGlvbiwNCiAgY2FwdGlvbiA9ICJJbmZvcm1hdGlvbiB1c2VkIHRvIGdlbmVyYXRlIHRoZSBmcm96ZW4gdmFsaWRhdGlvbiBwYXJ0aXRpb25zIiwNCiAgcm93Lm5hbWVzID0gRkFMU0UNCikNCmBgYA0KDQojIyMgNi4yIEluZm9ybWF0aW9uIGV4Y2x1ZGVkDQoNClNjZW5hcmlvIGxhYmVscywgcGhlbm90eXBlIHZhbHVlcywgdHJ1ZSBzaW11bGF0ZWQgZ2VuZXRpYyB2YWx1ZXMsIGFuZCBtb2RlbA0KaWRlbnRpdHkgZG8gbm90IHBhcnRpY2lwYXRlIGluIGZvbGQgZ2VuZXJhdGlvbi4gVGhlIHNhbWUgZnJvemVuIHBhcnRpdGlvbnMgY2FuDQp0aGVyZWZvcmUgYmUgcmV1c2VkIGZhaXJseSBieSBHQkxVUC1BREUgYW5kIGV2ZXJ5IEFOTiB2YXJpYW50Lg0KDQpJbiBwYXJ0aWN1bGFyLCB0cnVlIGdlbmV0aWMgdmFsdWVzIGFyZSByZXRhaW5lZCBpbiB0aGUgY2Fub25pY2FsIGRhdGEgb2JqZWN0DQpvbmx5IGZvciBoZWxkLW91dCBwcmVkaWN0aXZlIGV2YWx1YXRpb24uIFRoZXkgbmV2ZXIgZW50ZXIgcGFydGl0aW9uaW5nLCBBTk4NCmh5cGVycGFyYW1ldGVyIHR1bmluZywgb3IgdHJhaW5pbmctZHVyYXRpb24gc2VsZWN0aW9uLg0KDQojIyA3LiBGcm96ZW4gdmFsaWRhdGlvbiBkZXNpZ24NCg0KIyMjIDcuMSBWYWxpZGF0aW9uIGNvbnRyYWN0DQoNClRoZSBmcm96ZW4gZGVzaWduIGVzdGFibGlzaGVzIHRocmVlIGxldmVscyBvZiBzZXBhcmF0aW9uOg0KDQotICoqT3V0ZXIgZXZhbHVhdGlvbjoqKiBmaXZlIHJlcGV0aXRpb25zIG9mIGZpdmUgb3V0ZXIgZm9sZHMgcHJvZHVjZSAyNSBvdXRlcg0KICBzcGxpdHMsIGVhY2ggd2l0aCA4MDAgYW5hbHlzaXMgYW5kIDIwMCB1bnRvdWNoZWQgYXNzZXNzbWVudCBpbmRpdmlkdWFscy4NCi0gKipJbm5lciBBTk4gdHVuaW5nOioqIGVhY2ggODAwLWluZGl2aWR1YWwgb3V0ZXItYW5hbHlzaXMgc2V0IGlzIGRpdmlkZWQgaW50bw0KICBmb3VyIGlubmVyIGZvbGRzLCBlYWNoIHdpdGggNjAwIGFuYWx5c2lzIGFuZCAyMDAgaW5uZXItYXNzZXNzbWVudCBpbmRpdmlkdWFscy4NCiAgQU5OIGFyY2hpdGVjdHVyZSwgbGVhcm5pbmcgcmF0ZSwgTDEsIGFuZCBMMiBhcmUgc2VsZWN0ZWQgb25seSB3aXRoaW4gdGhlc2UNCiAgaW5uZXIgc3BsaXRzOyBlYXJseSB2YWxpZGF0aW9uIGlzIGRyYXduIG9ubHkgZnJvbSB0aGUgY3VycmVudCBpbm5lci1hbmFseXNpcw0KICBzdWJzZXQuDQotICoqRmluYWwgZXZhbHVhdGlvbjoqKiB0aGUgc2FtZSBvdXRlciBzcGxpdHMgYXJlIHVzZWQgZm9yIEMxLUM2IGFuZCBldmVyeQ0KICBwcmVkaWN0aW9uIG1ldGhvZC4gUHJpbWFyeSB0cnVlLUcgYW5kIHNlY29uZGFyeSBwaGVub3R5cGUgbWV0cmljcyBhcmUNCiAgY2FsY3VsYXRlZCBvbmx5IGFmdGVyIHRoZSBmaW5hbCBtb2RlbCBwcmVkaWN0cyB0aGUgdW50b3VjaGVkIG91dGVyLWFzc2Vzc21lbnQNCiAgaW5kaXZpZHVhbHMuDQoNCiMjIyA3LjIgRGVzaWduIHN1bW1hcnkNCg0KVGhlIGNvbXBsZXRlIG5lc3RlZCBkZXNpZ24gY2FuIG5vdyBiZSBzdW1tYXJpemVkIGluZGVwZW5kZW50bHkgb2YgYW55DQpwcmVkaWN0aW9uIG1vZGVsLiBUaGVzZSBjb3VudHMgZGVmaW5lIHRoZSBzYW1wbGUgc2l6ZXMgYW5kIG51bWJlciBvZiByZXBlYXRlZA0KY29tcGFyaXNvbnMgdXNlZCBieSBib3RoIG1vZGVsaW5nIGJyYW5jaGVzLg0KDQpgYGB7ciBkZXNpZ24tc3VtbWFyeX0NCmRlc2lnbl9zdW1tYXJ5IDwtIGRhdGEuZnJhbWUoDQogIEl0ZW0gPSBjKA0KICAgICJJbmRpdmlkdWFscyIsDQogICAgIlNjZW5hcmlvcyIsDQogICAgIk91dGVyIHJlcGV0aXRpb25zIiwNCiAgICAiT3V0ZXIgZm9sZHMgcGVyIHJlcGV0aXRpb24iLA0KICAgICJUb3RhbCBvdXRlciBzcGxpdHMiLA0KICAgICJPdXRlciBhbmFseXNpcyBOIiwNCiAgICAiT3V0ZXIgYXNzZXNzbWVudCBOIiwNCiAgICAiSW5uZXIgZm9sZHMgcGVyIG91dGVyIHNwbGl0IiwNCiAgICAiVG90YWwgaW5uZXIgc3BsaXRzIiwNCiAgICAiSW5uZXIgYW5hbHlzaXMgTiIsDQogICAgIklubmVyIGFzc2Vzc21lbnQgTiIsDQogICAgIkdsb2JhbCBzZWVkIg0KICApLA0KICBWYWx1ZSA9IGMoDQogICAgbGVuZ3RoKGlkcyksDQogICAgc2ltdWxhdGVkX2NvbW1vbiRtZXRhZGF0YSRuX3NjZW5hcmlvcywNCiAgICBOX09VVEVSX1JFUEVBVFMsDQogICAgTl9PVVRFUl9GT0xEUywNCiAgICBOX09VVEVSX1JFUEVBVFMgKiBOX09VVEVSX0ZPTERTLA0KICAgIDgwMCwNCiAgICAyMDAsDQogICAgTl9JTk5FUl9GT0xEUywNCiAgICBOX09VVEVSX1JFUEVBVFMgKiBOX09VVEVSX0ZPTERTICogTl9JTk5FUl9GT0xEUywNCiAgICA2MDAsDQogICAgMjAwLA0KICAgIFNFRURfR0xPQkFMDQogICkNCikNCg0KZm9ybWF0X3RhYmxlKA0KICBkZXNpZ25fc3VtbWFyeSwNCiAgY2FwdGlvbiA9ICJGcm96ZW4gc2ltdWxhdGVkLWRhdGEgdmFsaWRhdGlvbiBkZXNpZ24iLA0KICByb3cubmFtZXMgPSBGQUxTRQ0KKQ0KYGBgDQoNClRoZSBmcm96ZW4gb2JqZWN0IHRoZXJlZm9yZSBjb250YWlucyAyNSBvdXRlciBldmFsdWF0aW9ucyBhbmQNCmByIE5fT1VURVJfUkVQRUFUUyAqIE5fT1VURVJfRk9MRFMgKiBOX0lOTkVSX0ZPTERTYCBpbm5lciBzcGxpdCBkZWZpbml0aW9ucy4NClRoZXNlIHBhcnRpdGlvbnMgYXJlIGdlbmVyYXRlZCBvbmNlIGFuZCByZXVzZWQgYWNyb3NzIGFsbCBzaXggc2NlbmFyaW9zIGFuZCBhbGwNCnByZWRpY3Rpb24gbWV0aG9kcy4NCg0KYGBge3IgdmFsaWRhdGlvbi1vdXRwdXQtY29udHJhY3QsIGluY2x1ZGU9RkFMU0V9DQpjb21wYXRfY2hlY2tfc3RhdHVzIDwtIGZ1bmN0aW9uKGNvbmRpdGlvbiwgZmFpbHVyZSA9ICJCTE9DS0VEIiwgc3VjY2VzcyA9ICJQQVNTIikgew0KICBjKGZhaWx1cmUsIHN1Y2Nlc3MpWzFMICsgYXMuaW50ZWdlcihpc1RSVUUoY29uZGl0aW9uKSldDQp9DQoNCnZhbGlkYXRpb25fbG9nIDwtIGRhdGEuZnJhbWUoDQogIENoZWNrID0gY2hhcmFjdGVyKCksIFN0YXR1cyA9IGNoYXJhY3RlcigpLCBEZXRhaWxzID0gY2hhcmFjdGVyKCksDQogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQ0KKQ0KYWRkX2NvbXBhdF9jaGVjayA8LSBmdW5jdGlvbihjaGVjaywgc3RhdHVzLCBkZXRhaWxzKSB7DQogIHZhbGlkYXRpb25fbG9nIDw8LSByYmluZCgNCiAgICB2YWxpZGF0aW9uX2xvZywNCiAgICBkYXRhLmZyYW1lKENoZWNrID0gY2hlY2ssIFN0YXR1cyA9IHN0YXR1cywgRGV0YWlscyA9IGFzLmNoYXJhY3RlcihkZXRhaWxzKSwgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFKQ0KICApDQogIGludmlzaWJsZShOVUxMKQ0KfQ0KDQphdWRpdF9maWxlIDwtIHByb2plY3RfcGF0aCgib3V0cHV0IiwgInNpbXVsYXRlZCIsICJhdWRpdCIsICJzaW11bGF0ZWRfYXVkaXRfc3VtbWFyeS5jc3YiKQ0KcmVxdWlyZWRfZmlsZXMgPC0gYyhpbnB1dF9maWxlLCBhdWRpdF9maWxlKQ0KZmlsZXNfZXhpc3QgPC0gZmlsZS5leGlzdHMocmVxdWlyZWRfZmlsZXMpDQphdWRpdF9zdW1tYXJ5IDwtIHJlYWQuY3N2KGF1ZGl0X2ZpbGUsIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRSkNCm5fYmxvY2tlZF9hdWRpdCA8LSBzdW0oYXVkaXRfc3VtbWFyeSRTdGF0dXMgPT0gIkJMT0NLRUQiLCBuYS5ybSA9IFRSVUUpDQpyZXF1aXJlZF9jb21wb25lbnRzIDwtIGMoIm1ldGFkYXRhIiwgInBoZW5vdHlwZSIsICJ0cnVlX2dlbmV0aWNfdmFsdWUiLCAiZ2Vub3R5cGVfbTEwMSIpDQpjb21wb25lbnRzX29rIDwtIGFsbChyZXF1aXJlZF9jb21wb25lbnRzICVpbiUgbmFtZXMoc2ltdWxhdGVkX2NvbW1vbikpDQppbmRpdmlkdWFsX3VuaXZlcnNlX29rIDwtDQogIGxlbmd0aChpZHMpID09IDEwMDBMICYmICFhbnlEdXBsaWNhdGVkKGlkcykgJiYNCiAgaWRlbnRpY2FsKHNvcnQoaWRzKSwgc2VxX2xlbigxMDAwTCkpICYmDQogIG5yb3coc2ltdWxhdGVkX2NvbW1vbiRwaGVub3R5cGUpID09IGxlbmd0aChpZHMpICYmDQogIG5yb3coc2ltdWxhdGVkX2NvbW1vbiR0cnVlX2dlbmV0aWNfdmFsdWUpID09IGxlbmd0aChpZHMpICYmDQogIG5yb3coc2ltdWxhdGVkX2NvbW1vbiRnZW5vdHlwZV9tMTAxKSA9PSBsZW5ndGgoaWRzKQ0KDQpvdXRlcl9yb3dfY291bnRfb2sgPC0gbnJvdyhvdXRlcl9hc3NpZ25tZW50cykgPT0gbGVuZ3RoKGlkcykgKiBOX09VVEVSX1JFUEVBVFMNCm91dGVyX29uY2VfcGVyX3JlcGVhdCA8LSBhbGwodGFibGUob3V0ZXJfYXNzaWdubWVudHMkUmVwZXRpdGlvbiwgb3V0ZXJfYXNzaWdubWVudHMkSUQpID09IDFMKQ0Kb3V0ZXJfYmFsYW5jZWQgPC0gYWxsKG91dGVyX3NpemVzJEFzc2Vzc21lbnRfTiA9PSAyMDBMICYgb3V0ZXJfc2l6ZXMkQW5hbHlzaXNfTiA9PSA4MDBMKQ0Kb3V0ZXJfcGF0dGVybnMgPC0gZG8uY2FsbChyYmluZCwgbGFwcGx5KHNlcV9sZW4oTl9PVVRFUl9SRVBFQVRTKSwgZnVuY3Rpb24ocmVwX2lkKSB7DQogIHggPC0gb3V0ZXJfYXNzaWdubWVudHNbb3V0ZXJfYXNzaWdubWVudHMkUmVwZXRpdGlvbiA9PSByZXBfaWQsIGMoIklEIiwgIk91dGVyRm9sZCIpXQ0KICB4IDwtIHhbb3JkZXIoeCRJRCksIF0NCiAgeCRPdXRlckZvbGQNCn0pKQ0KdW5pcXVlX3JlcGV0aXRpb25fcGF0dGVybnMgPC0gIWFueUR1cGxpY2F0ZWQoYXMuZGF0YS5mcmFtZShvdXRlcl9wYXR0ZXJucykpDQphc3Nlc3NtZW50X2ZyZXF1ZW5jeV9vayA8LSBhbGwodGFibGUob3V0ZXJfYXNzaWdubWVudHMkSUQpID09IE5fT1VURVJfUkVQRUFUUykNCm91dGVyX3NwbGl0X2ludGVncml0eSA8LSBhbGwodmFwcGx5KG91dGVyX3NwbGl0cywgZnVuY3Rpb24oeCkgew0KICBsZW5ndGgoeCRhbmFseXNpc19pZHMpID09IDgwMEwgJiYgbGVuZ3RoKHgkYXNzZXNzbWVudF9pZHMpID09IDIwMEwgJiYNCiAgbGVuZ3RoKGludGVyc2VjdCh4JGFuYWx5c2lzX2lkcywgeCRhc3Nlc3NtZW50X2lkcykpID09IDBMICYmDQogIGlkZW50aWNhbChzb3J0KGMoeCRhbmFseXNpc19pZHMsIHgkYXNzZXNzbWVudF9pZHMpKSwgc29ydChpZHMpKQ0KfSwgbG9naWNhbCgxKSkpDQoNCmlubmVyX3Jvd19jb3VudF9vayA8LSBucm93KGlubmVyX2Fzc2lnbm1lbnRzKSA9PSBsZW5ndGgob3V0ZXJfc3BsaXRzKSAqIDgwMEwNCmlubmVyX2JhbGFuY2VkIDwtIGFsbChpbm5lcl9zaXplcyRBc3Nlc3NtZW50X04gPT0gMjAwTCAmIGlubmVyX3NpemVzJEFuYWx5c2lzX04gPT0gNjAwTCkNCmlubmVyX2Fzc2lnbm1lbnRfaW50ZWdyaXR5IDwtIGFsbCh2YXBwbHkobmFtZXMob3V0ZXJfc3BsaXRzKSwgZnVuY3Rpb24oc3BsaXRfaWQpIHsNCiAgeCA8LSBpbm5lcl9hc3NpZ25tZW50c1tpbm5lcl9hc3NpZ25tZW50cyRTcGxpdElEID09IHNwbGl0X2lkLCBdDQogIG91dGVyX2FuYWx5c2lzX2lkcyA8LSBvdXRlcl9zcGxpdHNbW3NwbGl0X2lkXV0kYW5hbHlzaXNfaWRzDQogIG5yb3coeCkgPT0gODAwTCAmJiAhYW55RHVwbGljYXRlZCh4JElEKSAmJg0KICBpZGVudGljYWwoc29ydCh4JElEKSwgc29ydChvdXRlcl9hbmFseXNpc19pZHMpKSAmJg0KICBpZGVudGljYWwoc29ydCh1bmlxdWUoeCRJbm5lckZvbGQpKSwgc2VxX2xlbihOX0lOTkVSX0ZPTERTKSkNCn0sIGxvZ2ljYWwoMSkpKQ0KaW5uZXJfc3BsaXRfaW50ZWdyaXR5IDwtIGFsbCh2YXBwbHkobmFtZXMoaW5uZXJfc3BsaXRzKSwgZnVuY3Rpb24oc3BsaXRfaWQpIHsNCiAgb3V0ZXJfYW5hbHlzaXNfaWRzIDwtIG91dGVyX3NwbGl0c1tbc3BsaXRfaWRdXSRhbmFseXNpc19pZHMNCiAgYWxsKHZhcHBseShpbm5lcl9zcGxpdHNbW3NwbGl0X2lkXV0sIGZ1bmN0aW9uKHgpIHsNCiAgICBsZW5ndGgoeCRhbmFseXNpc19pZHMpID09IDYwMEwgJiYgbGVuZ3RoKHgkYXNzZXNzbWVudF9pZHMpID09IDIwMEwgJiYNCiAgICBsZW5ndGgoaW50ZXJzZWN0KHgkYW5hbHlzaXNfaWRzLCB4JGFzc2Vzc21lbnRfaWRzKSkgPT0gMEwgJiYNCiAgICBpZGVudGljYWwoc29ydChjKHgkYW5hbHlzaXNfaWRzLCB4JGFzc2Vzc21lbnRfaWRzKSksIHNvcnQob3V0ZXJfYW5hbHlzaXNfaWRzKSkNCiAgfSwgbG9naWNhbCgxKSkpDQp9LCBsb2dpY2FsKDEpKSkNCnNwbGl0X3ZhcmlhYmxlcyA8LSB1bmlxdWUoYyhuYW1lcyhvdXRlcl9hc3NpZ25tZW50cyksIG5hbWVzKGlubmVyX2Fzc2lnbm1lbnRzKSkpDQpmb3JiaWRkZW5fc3BsaXRfZmllbGRzIDwtIGMoIlNjZW5hcmlvIiwgIlBoZW5vdHlwZSIsICJPYnNlcnZlZCIsICJUcnVlR2VuZXRpY1ZhbHVlIiwgIk1vZGVsIikNCnNwbGl0X2luZGVwZW5kZW5jZV9vayA8LSAhYW55KGZvcmJpZGRlbl9zcGxpdF9maWVsZHMgJWluJSBzcGxpdF92YXJpYWJsZXMpDQoNCmFkZF9jb21wYXRfY2hlY2soIkNhbm9uaWNhbCBpbnB1dCBmaWxlcyIsIGNvbXBhdF9jaGVja19zdGF0dXMoYWxsKGZpbGVzX2V4aXN0KSksIGlmIChhbGwoZmlsZXNfZXhpc3QpKSAiQ2Fub25pY2FsIHNpbXVsYXRlZCBvYmplY3QgYW5kIGF1ZGl0IHN1bW1hcnkgYXJlIHByZXNlbnQuIiBlbHNlIHBhc3RlKCJNaXNzaW5nOiIsIHBhc3RlKHJlcXVpcmVkX2ZpbGVzWyFmaWxlc19leGlzdF0sIGNvbGxhcHNlID0gIiwgIikpKQ0KYWRkX2NvbXBhdF9jaGVjaygiU2ltdWxhdGVkLWRhdGEgYXVkaXQgcHJlcmVxdWlzaXRlIiwgY29tcGF0X2NoZWNrX3N0YXR1cyhuX2Jsb2NrZWRfYXVkaXQgPT0gMEwpLCBwYXN0ZShuX2Jsb2NrZWRfYXVkaXQsICJibG9ja2luZyBjaGVjayhzKSBpbiBzaW11bGF0ZWQtZGF0YSBhdWRpdC4iKSkNCmFkZF9jb21wYXRfY2hlY2soIkNhbm9uaWNhbCBvYmplY3QgY29tcG9uZW50cyIsIGNvbXBhdF9jaGVja19zdGF0dXMoY29tcG9uZW50c19vayksIGlmIChjb21wb25lbnRzX29rKSBwYXN0ZSgiUmVxdWlyZWQgY29tcG9uZW50cyBwcmVzZW50OiIsIHBhc3RlKHJlcXVpcmVkX2NvbXBvbmVudHMsIGNvbGxhcHNlID0gIiwgIikpIGVsc2UgcGFzdGUoIk1pc3NpbmcgY29tcG9uZW50czoiLCBwYXN0ZShzZXRkaWZmKHJlcXVpcmVkX2NvbXBvbmVudHMsIG5hbWVzKHNpbXVsYXRlZF9jb21tb24pKSwgY29sbGFwc2UgPSAiLCAiKSkpDQphZGRfY29tcGF0X2NoZWNrKCJJbmRpdmlkdWFsIHVuaXZlcnNlIiwgY29tcGF0X2NoZWNrX3N0YXR1cyhpbmRpdmlkdWFsX3VuaXZlcnNlX29rKSwgIkV4cGVjdGVkIDEwMDAgdW5pcXVlIHJvdyBpZGVudGlmaWVycyBhbGlnbmVkIHdpdGggcGhlbm90eXBlLCB0cnVlIGdlbmV0aWMgdmFsdWUsIGFuZCBnZW5vdHlwZSBtYXRyaWNlcy4iKQ0KYWRkX2NvbXBhdF9jaGVjaygiT3V0ZXIgYXNzaWdubWVudCByb3cgY291bnQiLCBjb21wYXRfY2hlY2tfc3RhdHVzKG91dGVyX3Jvd19jb3VudF9vayksIHBhc3RlKCJPYnNlcnZlZCByb3dzOiIsIG5yb3cob3V0ZXJfYXNzaWdubWVudHMpLCAiOyBleHBlY3RlZDoiLCBsZW5ndGgoaWRzKSAqIE5fT1VURVJfUkVQRUFUUykpDQphZGRfY29tcGF0X2NoZWNrKCJPbmUgb3V0ZXIgYXNzaWdubWVudCBwZXIgSUQgYW5kIHJlcGV0aXRpb24iLCBjb21wYXRfY2hlY2tfc3RhdHVzKG91dGVyX29uY2VfcGVyX3JlcGVhdCksICJFYWNoIGluZGl2aWR1YWwgbXVzdCBvY2N1ciBleGFjdGx5IG9uY2UgaW4gZXZlcnkgcmVwZXRpdGlvbi4iKQ0KYWRkX2NvbXBhdF9jaGVjaygiQmFsYW5jZWQgb3V0ZXIgZm9sZHMiLCBjb21wYXRfY2hlY2tfc3RhdHVzKG91dGVyX2JhbGFuY2VkKSwgIkV2ZXJ5IG91dGVyIHNwbGl0IG11c3QgY29udGFpbiA4MDAgYW5hbHlzaXMgYW5kIDIwMCBhc3Nlc3NtZW50IGluZGl2aWR1YWxzLiIpDQphZGRfY29tcGF0X2NoZWNrKCJEaXN0aW5jdCBvdXRlciByZXBldGl0aW9ucyIsIGNvbXBhdF9jaGVja19zdGF0dXModW5pcXVlX3JlcGV0aXRpb25fcGF0dGVybnMsIGZhaWx1cmUgPSAiV0FSTklORyIpLCBwYXN0ZSgiQWxsIiwgTl9PVVRFUl9SRVBFQVRTLCAicmVwZXRpdGlvbnMgc2hvdWxkIHVzZSBkaXN0aW5jdCBmb2xkIGFzc2lnbm1lbnRzLiIpKQ0KYWRkX2NvbXBhdF9jaGVjaygiT3V0ZXIgYXNzZXNzbWVudCBmcmVxdWVuY3kiLCBjb21wYXRfY2hlY2tfc3RhdHVzKGFzc2Vzc21lbnRfZnJlcXVlbmN5X29rKSwgcGFzdGUoIkV2ZXJ5IGluZGl2aWR1YWwgaXMgYXNzaWduZWQgdG8gb25lIGFzc2Vzc21lbnQgZm9sZCBwZXIgcmVwZXRpdGlvbiBhbmQgdGhlcmVmb3JlIGFwcGVhcnMgaW4gZXhhY3RseSIsIE5fT1VURVJfUkVQRUFUUywgIm91dGVyIGFzc2Vzc21lbnQgc2V0cy4iKSkNCmFkZF9jb21wYXRfY2hlY2soIk91dGVyIHNwbGl0IGludGVncml0eSIsIGNvbXBhdF9jaGVja19zdGF0dXMob3V0ZXJfc3BsaXRfaW50ZWdyaXR5KSwgcGFzdGUobGVuZ3RoKG91dGVyX3NwbGl0cyksICJvdXRlciBzcGxpdCBvYmplY3RzIGNoZWNrZWQgZm9yIHNpemUsIGRpc2pvaW50bmVzcywgYW5kIGNvbXBsZXRlIGNvdmVyYWdlLiIpKQ0KYWRkX2NvbXBhdF9jaGVjaygiSW5uZXIgYXNzaWdubWVudCByb3cgY291bnQiLCBjb21wYXRfY2hlY2tfc3RhdHVzKGlubmVyX3Jvd19jb3VudF9vayksIHBhc3RlKCJPYnNlcnZlZCByb3dzOiIsIG5yb3coaW5uZXJfYXNzaWdubWVudHMpLCAiOyBleHBlY3RlZDoiLCBsZW5ndGgob3V0ZXJfc3BsaXRzKSAqIDgwMEwpKQ0KYWRkX2NvbXBhdF9jaGVjaygiQmFsYW5jZWQgaW5uZXIgZm9sZHMiLCBjb21wYXRfY2hlY2tfc3RhdHVzKGlubmVyX2JhbGFuY2VkKSwgIkV2ZXJ5IGlubmVyIHNwbGl0IG11c3QgY29udGFpbiA2MDAgYW5hbHlzaXMgYW5kIDIwMCBhc3Nlc3NtZW50IGluZGl2aWR1YWxzLiIpDQphZGRfY29tcGF0X2NoZWNrKCJJbm5lciBhc3NpZ25tZW50IGludGVncml0eSIsIGNvbXBhdF9jaGVja19zdGF0dXMoaW5uZXJfYXNzaWdubWVudF9pbnRlZ3JpdHkpLCAiSW5uZXIgYXNzaWdubWVudHMgYXJlIHJlc3RyaWN0ZWQgdG8gdGhlIGNvcnJlc3BvbmRpbmcgb3V0ZXIgYW5hbHlzaXMgc2V0LiIpDQphZGRfY29tcGF0X2NoZWNrKCJJbm5lciBzcGxpdCBpbnRlZ3JpdHkiLCBjb21wYXRfY2hlY2tfc3RhdHVzKGlubmVyX3NwbGl0X2ludGVncml0eSksIHBhc3RlKGxlbmd0aChvdXRlcl9zcGxpdHMpICogTl9JTk5FUl9GT0xEUywgImlubmVyIHNwbGl0cyBjaGVja2VkIGZvciBzaXplLCBkaXNqb2ludG5lc3MsIGFuZCBjb21wbGV0ZSBvdXRlci1hbmFseXNpcyBjb3ZlcmFnZS4iKSkNCmFkZF9jb21wYXRfY2hlY2soIlNjZW5hcmlvLWluZGVwZW5kZW50IHBhcnRpdGlvbnMiLCBjb21wYXRfY2hlY2tfc3RhdHVzKHNwbGl0X2luZGVwZW5kZW5jZV9vayksICJQYXJ0aXRpb25zIGFyZSBnZW5lcmF0ZWQgZnJvbSBjYW5vbmljYWwgaW5kaXZpZHVhbCBJRHMgYW5kIGRldGVybWluaXN0aWMgc2VlZHMgb25seTsgdGhlIHNhbWUgZm9sZHMgYXJlIHJldXNlZCBmb3IgQzEtQzYgYW5kIGFsbCBtb2RlbHMuIikNCmFkZF9jb21wYXRfY2hlY2soIlRydWUgZ2VuZXRpYyB2YWx1ZSBleGNsdWRlZCBmcm9tIHBhcnRpdGlvbmluZyIsICJQQVNTIiwgIlRydWUgc2ltdWxhdGVkIGdlbmV0aWMgdmFsdWVzIGFyZSBzdG9yZWQgaW4gdGhlIGNhbm9uaWNhbCBkYXRhIG9iamVjdCBmb3IgZmluYWwgZXZhbHVhdGlvbiBvbmx5IGFuZCBhcmUgbm90IHJlZmVyZW5jZWQgd2hlbiBnZW5lcmF0aW5nIGZvbGRzLiIpDQphZGRfY29tcGF0X2NoZWNrKCJQaGVub3R5cGUgZXhjbHVkZWQgZnJvbSBwYXJ0aXRpb25pbmciLCAiUEFTUyIsICJQaGVub3R5cGVzIGFyZSBub3QgdXNlZCB0byBjb25zdHJ1Y3QgZm9sZHMuIFRoZXkgbWF5IGJlIHVzZWQgbGF0ZXIgaW5zaWRlIHRyYWluaW5nIGRhdGEgYW5kIGlubmVyLUNWIHR1bmluZywgbmV2ZXIgdG8gcmVkZWZpbmUgcGFydGl0aW9ucy4iKQ0KDQp2YWxpZGF0aW9uX2xvZyRTdGF0dXMgPC0gZmFjdG9yKHZhbGlkYXRpb25fbG9nJFN0YXR1cywgbGV2ZWxzID0gYygiQkxPQ0tFRCIsICJXQVJOSU5HIiwgIlBBU1MiKSkNCnZhbGlkYXRpb25fbG9nIDwtIHZhbGlkYXRpb25fbG9nW29yZGVyKHZhbGlkYXRpb25fbG9nJFN0YXR1cyksICwgZHJvcCA9IEZBTFNFXQ0Kcm93bmFtZXModmFsaWRhdGlvbl9sb2cpIDwtIE5VTEwNCmBgYA0KDQojIyMgNy4zIE9ic2VydmVkIHZhbGlkYXRpb24gc3RydWN0dXJlDQoNClRoZSBkZXRhaWxlZCBjaGVja2xpc3QgaXMgcmV0YWluZWQgaW4gdGhlIGV4cG9ydGVkIHZhbGlkYXRpb24gYXJ0aWZhY3QuIFRoZQ0KdHV0b3JpYWwgc3VtbWFyaXplcyB0aGUgcGFydGl0aW9uIHNpemVzIGFuZCBvdmVybGFwIGJlZm9yZSBzYXZpbmcgdGhlIGZyb3plbg0KZGVzaWduLg0KDQpgYGB7ciBmaW5hbC12YWxpZGF0aW9uLWF1ZGl0fQ0Kb3V0ZXJfb3ZlcmxhcCA8LSBtYXgodmFwcGx5KA0KICBvdXRlcl9zcGxpdHMsDQogIGZ1bmN0aW9uKHgpIGxlbmd0aChpbnRlcnNlY3QoeCRhbmFseXNpc19pZHMsIHgkYXNzZXNzbWVudF9pZHMpKSwNCiAgaW50ZWdlcigxKQ0KKSkNCmlubmVyX292ZXJsYXAgPC0gbWF4KHVubGlzdChsYXBwbHkoDQogIGlubmVyX3NwbGl0cywNCiAgZnVuY3Rpb24oc3BsaXQpIHZhcHBseSgNCiAgICBzcGxpdCwNCiAgICBmdW5jdGlvbih4KSBsZW5ndGgoaW50ZXJzZWN0KHgkYW5hbHlzaXNfaWRzLCB4JGFzc2Vzc21lbnRfaWRzKSksDQogICAgaW50ZWdlcigxKQ0KICApDQopKSkNCg0KdmFsaWRhdGlvbl9vYnNlcnZlZCA8LSBkYXRhLmZyYW1lKA0KICBRdWFudGl0eSA9IGMoDQogICAgIk91dGVyIGFzc2lnbm1lbnQgcm93cyIsICJPdXRlciBzcGxpdHMiLCAiT3V0ZXIgYW5hbHlzaXMgTiIsDQogICAgIk91dGVyIGFzc2Vzc21lbnQgTiIsICJNYXhpbXVtIG91dGVyIG92ZXJsYXAiLA0KICAgICJJbm5lciBhc3NpZ25tZW50IHJvd3MiLCAiSW5uZXIgc3BsaXRzIiwgIklubmVyIGFuYWx5c2lzIE4iLA0KICAgICJJbm5lciBhc3Nlc3NtZW50IE4iLCAiTWF4aW11bSBpbm5lciBvdmVybGFwIg0KICApLA0KICBPYnNlcnZlZCA9IGMoDQogICAgbnJvdyhvdXRlcl9hc3NpZ25tZW50cyksDQogICAgbGVuZ3RoKG91dGVyX3NwbGl0cyksDQogICAgdW5pcXVlKG91dGVyX3NpemVzJEFuYWx5c2lzX04pLA0KICAgIHVuaXF1ZShvdXRlcl9zaXplcyRBc3Nlc3NtZW50X04pLA0KICAgIG91dGVyX292ZXJsYXAsDQogICAgbnJvdyhpbm5lcl9hc3NpZ25tZW50cyksDQogICAgc3VtKHZhcHBseShpbm5lcl9zcGxpdHMsIGxlbmd0aCwgaW50ZWdlcigxKSkpLA0KICAgIHVuaXF1ZShpbm5lcl9zaXplcyRBbmFseXNpc19OKSwNCiAgICB1bmlxdWUoaW5uZXJfc2l6ZXMkQXNzZXNzbWVudF9OKSwNCiAgICBpbm5lcl9vdmVybGFwDQogICkNCikNCg0KZm9ybWF0X3RhYmxlKA0KICB2YWxpZGF0aW9uX29ic2VydmVkLA0KICBjYXB0aW9uID0gIk9ic2VydmVkIHN0cnVjdHVyZSBvZiB0aGUgZnJvemVuIG5lc3RlZCBjcm9zcy12YWxpZGF0aW9uIGRlc2lnbiIsDQogIHJvdy5uYW1lcyA9IEZBTFNFDQopDQpgYGANCg0KVGhlIG9ic2VydmVkIHN0cnVjdHVyZSBjb25maXJtcyB0aGUgaW50ZW5kZWQgMjUgb3V0ZXIgc3BsaXRzIGFuZCAxMDAgaW5uZXINCnNwbGl0cywgd2l0aCB6ZXJvIG92ZXJsYXAgYmV0d2VlbiBhbmFseXNpcyBhbmQgYXNzZXNzbWVudCBzZXRzIGF0IGJvdGggbGV2ZWxzLg0KDQojIyA4LiBPdXRwdXQgb2JqZWN0DQoNClRoZSBkZXNpZ24gaXMgc3RvcmVkIG9ubHkgYWZ0ZXIgaXRzIG9ic2VydmVkIHBhcnRpdGlvbiBzdHJ1Y3R1cmUgaGFzIGJlZW4NCnN1bW1hcml6ZWQuIFRoZSBzYXZlZCBvYmplY3QgY29udGFpbnMgdGhlIG91dGVyIGFuZCBpbm5lciBhc3NpZ25tZW50cyB0b2dldGhlcg0Kd2l0aCB0aGVpciBleHBsaWNpdCBhbmFseXNpcy9hc3Nlc3NtZW50IElEIHNldHMgYW5kIGlzIHRoZSBzaW5nbGUgdmFsaWRhdGlvbg0KY29udHJhY3QgY29uc3VtZWQgYnkgR0JMVVAtQURFIGFuZCBBTk4uDQoNCmBgYHtyIHNhdmUtdmFsaWRhdGlvbi1kZXNpZ259DQp3cml0ZS5jc3YoDQogIHZhbGlkYXRpb25fbG9nLA0KICBmaWxlLnBhdGgob3V0cHV0X2RpciwgInNpbXVsYXRlZF9jdl9kZXNpZ25fYXVkaXQuY3N2IiksDQogIHJvdy5uYW1lcyA9IEZBTFNFDQopDQp3cml0ZS5jc3YoDQogIG91dGVyX2Fzc2lnbm1lbnRzLA0KICBmaWxlLnBhdGgob3V0cHV0X2RpciwgInNpbXVsYXRlZF9jdl9vdXRlcl9hc3NpZ25tZW50cy5jc3YiKSwNCiAgcm93Lm5hbWVzID0gRkFMU0UNCikNCndyaXRlLmNzdigNCiAgaW5uZXJfYXNzaWdubWVudHMsDQogIGZpbGUucGF0aChvdXRwdXRfZGlyLCAic2ltdWxhdGVkX2N2X2lubmVyX2Fzc2lnbm1lbnRzLmNzdiIpLA0KICByb3cubmFtZXMgPSBGQUxTRQ0KKQ0Kd3JpdGUuY3N2KA0KICBkZXNpZ25fc3VtbWFyeSwNCiAgZmlsZS5wYXRoKG91dHB1dF9kaXIsICJzaW11bGF0ZWRfY3ZfZGVzaWduX3N1bW1hcnkuY3N2IiksDQogIHJvdy5uYW1lcyA9IEZBTFNFDQopDQoNCmN2X2Rlc2lnbiA8LSBsaXN0KA0KICBtZXRhZGF0YSA9IGxpc3QoDQogICAgZGF0YXNldCA9ICJzaW11bGF0ZWQiLA0KICAgIHNlZWRfZ2xvYmFsID0gU0VFRF9HTE9CQUwsDQogICAgbl9pbmRpdmlkdWFscyA9IGxlbmd0aChpZHMpLA0KICAgIG5fc2NlbmFyaW9zID0gc2ltdWxhdGVkX2NvbW1vbiRtZXRhZGF0YSRuX3NjZW5hcmlvcywNCiAgICBvdXRlcl9yZXBldGl0aW9ucyA9IE5fT1VURVJfUkVQRUFUUywNCiAgICBvdXRlcl9mb2xkcyA9IE5fT1VURVJfRk9MRFMsDQogICAgaW5uZXJfZm9sZHMgPSBOX0lOTkVSX0ZPTERTLA0KICAgIG91dGVyX2FuYWx5c2lzX24gPSA4MDBMLA0KICAgIG91dGVyX2Fzc2Vzc21lbnRfbiA9IDIwMEwsDQogICAgaW5uZXJfYW5hbHlzaXNfbiA9IDYwMEwsDQogICAgaW5uZXJfYXNzZXNzbWVudF9uID0gMjAwTCwNCiAgICBzY2VuYXJpb19pbmRlcGVuZGVudCA9IFRSVUUsDQogICAgbW9kZWxfaW5kZXBlbmRlbnQgPSBUUlVFLA0KICAgIHBoZW5vdHlwZV91c2VkX2Zvcl9wYXJ0aXRpb25pbmcgPSBGQUxTRSwNCiAgICB0cnVlX2dlbmV0aWNfdmFsdWVfdXNlZF9mb3JfcGFydGl0aW9uaW5nID0gRkFMU0UNCiAgKSwNCiAgb3V0ZXJfYXNzaWdubWVudHMgPSBvdXRlcl9hc3NpZ25tZW50cywNCiAgb3V0ZXJfc3BsaXRzID0gb3V0ZXJfc3BsaXRzLA0KICBpbm5lcl9hc3NpZ25tZW50cyA9IGlubmVyX2Fzc2lnbm1lbnRzLA0KICBpbm5lcl9zcGxpdHMgPSBpbm5lcl9zcGxpdHMsDQogIGF1ZGl0ID0gdmFsaWRhdGlvbl9sb2cNCikNCg0Kc2F2ZVJEUygNCiAgY3ZfZGVzaWduLA0KICBmaWxlLnBhdGgob3V0cHV0X2RpciwgInNpbXVsYXRlZF9jdl9kZXNpZ24ucmRzIiksDQogIGNvbXByZXNzID0gImd6aXAiDQopDQpjYXQoDQogICJGcm96ZW4gdmFsaWRhdGlvbiBkZXNpZ24gd3JpdHRlbiB0bzoiLA0KICBmaWxlLnBhdGgob3V0cHV0X2RpciwgInNpbXVsYXRlZF9jdl9kZXNpZ24ucmRzIiksDQogICJcbiINCikNCmBgYA0KDQpUaGUgZGV0YWlsZWQgYXNzaWdubWVudCB0YWJsZXMgYW5kIHZhbGlkYXRpb24gYXVkaXQgcmVtYWluIGF2YWlsYWJsZSBhcw0KdmVyc2lvbmVkIG91dHB1dHMgZm9yIHJlcHJvZHVjaWJpbGl0eSBhbmQgbWFpbnRlbmFuY2UsIHdoaWxlIHRoZSBtb2RlbGluZw0KbW9kdWxlcyBjb25zdW1lIGBzaW11bGF0ZWRfY3ZfZGVzaWduLnJkc2AgZGlyZWN0bHkuDQoNCiMjIDkuIE5hdmlnYXRpb24NCg0KW1ByZXZpb3VzOiBEYXRhIGF1ZGl0XShzaW11bGF0ZWRfZGF0YV9hdWRpdC5odG1sKSB8IFtHQkxVUC1BREVdKHNpbXVsYXRlZF9kYXRhX2dibHVwLmh0bWwpIHwgW1JlZ3VsYXJpemVkIEFOTl0oc2ltdWxhdGVkX2RhdGFfYW5uLmh0bWwpDQo=</div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
 TeX fonts only; see
@@ -2361,6 +3184,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
+  window.initializeSourceEmbed("simulated_data_validation.Rmd");
   window.initializeCodeFolding("show" === "show");
 });
 </script>

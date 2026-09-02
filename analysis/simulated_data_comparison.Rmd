@@ -8,16 +8,12 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
+    toc_depth: 3
     code_folding: show
+    code_download: true
 editor_options:
   chunk_output_type: console
 ---
-
-# Purpose
-
-This module provides the terminal comparison between GBLUP-ADE and the four ANN variants under the frozen outer-CV design. All competing methods are evaluated on identical outer-assessment individuals. Prediction of the true simulated genetic value is the primary outcome, with phenotype prediction retained as a secondary outcome.
-
-Results are summarized overall, by simulation scenario, and through task-matched ANN versus GBLUP-ADE contrasts.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -28,15 +24,70 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
+```
 
-WIDE_TABLE_ATTR <- paste(
-  'style="display:block;',
-  'overflow-x:auto;',
-  'white-space:nowrap;',
-  'width:100%;"'
-)
+```{r format-table, include=FALSE}
+format_table <- function(
+  x,
+  caption = NULL,
+  digits = getOption("digits"),
+  row.names = NA,
+  ...
+) {
+  table <- knitr::kable(
+    x,
+    format = "html",
+    caption = caption,
+    digits = digits,
+    row.names = row.names,
+    table.attr = paste0(
+      'class="table table-striped table-hover table-bordered" ',
+      'style="width:100%; margin-bottom:0;"'
+    ),
+    ...
+  )
 
+  knitr::asis_output(
+    paste0(
+      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
+      table,
+      '</div>'
+    )
+  )
+}
+```
 
+## 1. Objective
+
+This module provides the terminal comparison between GBLUP-ADE and the four ANN
+variants under the frozen outer-CV design. All competing methods are evaluated
+on identical outer-assessment individuals.
+
+Prediction of the known **true simulated genetic value** is the primary outcome.
+Prediction of the **observed phenotype** is retained as a secondary outcome.
+Results are summarized overall, by simulation scenario, and through task-matched
+ANN versus GBLUP-ADE contrasts.
+
+The module does not fit models, tune hyperparameters, or alter predictions. It
+combines the canonical outputs from M03 and M04 and verifies that the comparison
+is made on the same tasks, individuals, and evaluation targets.
+
+## 2. Packages and canonical inputs
+
+### 2.1 Packages
+
+Only `knitr` is required directly for reader-facing table presentation in this
+comparison module. The statistical summaries use base R functions.
+
+```{r packages}
+library(knitr) # Format reader-facing tables and R Markdown output.
+```
+
+The paths below identify the frozen GBLUP-ADE and ANN results consumed by this
+module, together with the versioned comparison tables that may be regenerated
+explicitly when `WRITE_COMPARISON_OUTPUTS=1`.
+
+```{r comparison-paths}
 PROJECT_ROOT <- "."
 project_path <- function(...) file.path(PROJECT_ROOT, ...)
 
@@ -87,37 +138,25 @@ metrics <- c(
   "Phenotype_R2"
 )
 
-higher_better <- c(
-  "Genetic_Correlation",
-  "Genetic_R2",
-  "Phenotype_Correlation",
-  "Phenotype_R2"
+expected_ann_models <- c(
+  "ANN_0",
+  "ANN_L1",
+  "ANN_L2",
+  "ANN_L1_L2"
 )
-lower_better <- c(
-  "Genetic_RMSE",
-  "Genetic_MAE",
-  "Phenotype_RMSE",
-  "Phenotype_MAE"
-)
-zero_target <- c("Genetic_Bias", "Phenotype_Bias")
-one_target <- c("Genetic_Slope", "Phenotype_Slope")
-
-expected_ann_models <- c("ANN_0", "ANN_L1", "ANN_L2", "ANN_L1_L2")
 ```
 
-# Canonical inputs
+### 2.2 GBLUP-ADE results
 
-This terminal comparison consumes the finalized outputs from the two parallel
-modeling branches. From the GBLUP-ADE module it reads the 150 task-level result
-rows and 30,000 held-out predictions; from the ANN module it reads the 600
-task-by-model result rows and 120,000 held-out predictions for the four ANN
-variants.
+The GBLUP-ADE branch contributes one result row for each of the 150 frozen outer
+tasks and one held-out prediction for each of the 200 assessment individuals in
+each task.
 
-These inputs are compared under the same frozen outer-CV design established
-upstream. This module does not fit predictive models, tune hyperparameters,
-select training duration, or modify the held-out predictions. Its role is to
-verify cross-method compatibility and then summarize performance on matched
-tasks and matched outer-assessment individuals.
+### 2.3 ANN results
+
+The ANN branch contributes the same 150 outer tasks for each of four ANN
+variants, yielding 600 task-by-model result rows and 120,000 held-out
+predictions.
 
 ```{r load-canonical-inputs}
 gr <- readRDS(GBLUP_RESULTS_RDS)
@@ -132,18 +171,23 @@ input_rows <- data.frame(
   ),
   Rows = c(nrow(gr), nrow(gp), nrow(ar), nrow(ap))
 )
-knitr::kable(
+format_table(
   input_rows,
   caption = "Canonical model-comparison inputs",
   row.names = FALSE
 )
 ```
 
-# Compatibility audit
+The displayed row counts provide the first check that the comparison consumes
+the finalized outputs from both modeling branches rather than refitting either
+method.
 
-The result-level audit verifies the frozen task design. The prediction-level
-audit independently verifies that the actual held-out individuals, observed
-phenotypes, and true simulated genetic values are identical across methods.
+## 3. Fair-comparison contract
+
+The comparison is meaningful only if all methods use the same frozen
+outer-assessment design. The audit below therefore verifies the task structure,
+assessment sample sizes, and equality of the two evaluation targets before any
+performance summary is interpreted.
 
 ```{r compatibility-audit}
 comparison_keys <- c(
@@ -196,13 +240,41 @@ target_match <- aggregate(
   data = paired_targets,
   FUN = max
 )
+```
 
-knitr::kable(
+### 3.1 Matched tasks
+
+Each model must contribute the same frozen set of 150 `Scenario × outer split`
+tasks. The table also reports the number of held-out predictions and the
+assessment size observed within each task.
+
+```{r comparison-task-structure}
+format_table(
   model_structure,
   caption = "Observed task and assessment structure by model",
   row.names = FALSE
 )
-knitr::kable(
+```
+
+### 3.2 Matched assessment individuals
+
+The prediction-level merge uses
+`Scenario + Repetition + Fold + SplitID + TaskID + ID`. Consequently, agreement
+of the paired targets is evaluated only after the same assessment individual has
+been aligned across GBLUP-ADE and each ANN variant.
+
+### 3.3 Phenotype agreement
+
+For each ANN variant, the maximum absolute difference between its held-out
+phenotype and the matched GBLUP-ADE phenotype should be zero.
+
+### 3.4 True-G agreement
+
+The same check is performed for the known simulated genetic value, which is the
+primary target of this study.
+
+```{r comparison-target-agreement}
+format_table(
   target_match,
   digits = 12,
   caption = "Maximum paired target difference relative to GBLUP-ADE",
@@ -210,8 +282,8 @@ knitr::kable(
 )
 ```
 
-The tables above expose the task counts, assessment counts, and paired target
-differences directly. The compact summary below restates those observed values.
+The compact contract below summarizes all four observed pairing properties in a
+single table.
 
 ```{r compatibility-summary}
 comparison_contract <- data.frame(
@@ -234,7 +306,7 @@ comparison_contract <- data.frame(
     max(target_match$TrueG_difference)
   )
 )
-knitr::kable(
+format_table(
   comparison_contract,
   caption = "Observed contract for the task-matched model comparison",
   row.names = FALSE
@@ -242,35 +314,39 @@ knitr::kable(
 ```
 
 These quantities describe the pairing structure rather than predictive
-performance. They show directly that the subsequent summaries use matched tasks,
-individuals, and evaluation targets.
+performance. They establish that the subsequent summaries compare matched tasks,
+matched assessment individuals, and identical evaluation targets.
 
-# Interpretation of calibration metrics
+## 4. Evaluation metrics
 
 The same metric definitions are applied separately to prediction of the true
 simulated genetic value and to prediction of the observed phenotype.
 
-- **Bias** is the mean prediction error, calculated as
-  \(\operatorname{mean}(\text{prediction} - \text{target})\). A positive value
-  indicates average overprediction, a negative value indicates average
-  underprediction, and zero is the calibration target.
-- **Slope** is the coefficient of the prediction term in the regression
-  `lm(target ~ prediction)`. A value near one indicates appropriate
-  proportional scaling of predictions relative to the target. Slope alone is
-  not a complete calibration assessment because the regression intercept also
-  contributes to calibration.
-- **R-squared** is calculated as \(1 - SSE/SST\), using prediction errors
-  relative to the target mean. It is therefore not defined here as squared
-  correlation. For genuinely held-out predictions it can be negative when the
-  predictions perform worse, in squared-error terms, than using the target
-  mean as a reference.
+### 4.1 Prediction metrics
 
-Correlation, RMSE, and MAE describe complementary aspects of predictive
-agreement, while Bias and Slope provide calibration diagnostics. No single
-metric is interpreted as establishing universal model superiority.
+- **Correlation** describes linear agreement between prediction and target.
+- **RMSE** and **MAE** summarize prediction error on the original target scale.
+- **R-squared** is calculated as \(1-SSE/SST\), using prediction errors relative
+  to the target mean. It is not defined here as squared correlation and can be
+  negative for genuinely held-out predictions.
 
-The comparison code groups the metrics according to the direction of a better
-value or the calibration target.
+### 4.2 Calibration metrics
+
+- **Bias** is the mean prediction error,
+  \(\operatorname{mean}(\text{prediction}-\text{target})\). Zero is the
+  calibration target.
+- **Slope** is the prediction coefficient in `lm(target ~ prediction)`. A value
+  near one indicates appropriate proportional scaling, although the regression
+  intercept also contributes to calibration.
+
+Correlation, error metrics, and calibration diagnostics answer complementary
+questions. No single metric is interpreted as establishing universal model
+superiority.
+
+### 4.3 Direction of improvement
+
+For paired ANN-versus-GBLUP comparisons, each metric is assigned either a
+direction of improvement or a calibration target.
 
 ```{r comparison-metric-rules}
 higher_better <- c(
@@ -310,7 +386,7 @@ metric_rule_table <- data.frame(
   stringsAsFactors = FALSE
 )
 
-knitr::kable(
+format_table(
   metric_rule_table,
   caption =
     "Direction or calibration target used in paired model comparisons",
@@ -322,14 +398,14 @@ For `higher`, larger values are preferred; for `lower`, smaller values are
 preferred. Bias is evaluated by distance from zero and slope by distance from
 one.
 
-# Overall model performance
+## 5. Overall model performance
 
 Overall performance is shown separately for the two evaluation targets so that
 the primary simulated-data criterion is not visually mixed with the secondary
 phenotype criterion. Both summaries average the same 150 matched outer-CV tasks
 per model.
 
-```{r overall-comparison}
+```{r overall-comparison-calculations}
 analysis_cols <- c(
   "Scenario", "Repetition", "Fold", "SplitID", "TaskID", "Model", metrics
 )
@@ -367,15 +443,30 @@ overall_phenotype_display[-1] <- lapply(
   round,
   4
 )
+```
 
-knitr::kable(
+### 5.1 True genetic value
+
+The primary summary compares each model with the known simulated genetic value.
+Higher correlation and \(R^2\), together with lower RMSE and MAE, indicate better
+held-out recovery of the genetic signal.
+
+```{r overall-genetic-performance}
+format_table(
   overall_genetic_display,
   caption =
     "Primary overall performance against true genetic value",
   row.names = FALSE
 )
+```
 
-knitr::kable(
+### 5.2 Phenotype
+
+The secondary summary evaluates the same held-out predictions against the
+observed phenotype, which also contains non-genetic variation.
+
+```{r overall-phenotype-performance}
+format_table(
   overall_phenotype_display,
   caption =
     "Secondary overall performance against observed phenotype",
@@ -427,7 +518,7 @@ correlation (`r sprintf("%.4f", best_ann_now$Genetic_Correlation)`). These
 statements describe the evaluated model and search space; they do not establish
 universal superiority.
 
-# Performance by simulation scenario
+## 6. Performance by scenario
 
 The next table asks whether the overall ranking persists across the six
 prespecified simulation scenarios. Only the primary genetic-value metrics are
@@ -453,7 +544,7 @@ scenario_display[, -(1:2)] <- lapply(
   4
 )
 
-knitr::kable(
+format_table(
   scenario_display,
   caption =
     "Primary genetic-value prediction metrics by scenario",
@@ -512,18 +603,20 @@ sequence is interpreted as performance across the prespecified joint simulation
 gradient, not as an isolated causal effect of QTL number or nominal
 heritability.
 
-# Paired ANN versus GBLUP-ADE comparison
+## 7. Task-matched ANN vs GBLUP-ADE comparison
 
-For the three primary genetic-value metrics, the paired advantage is especially
-simple:
+### 7.1 Overall task-matched contrasts
+
+For the three primary genetic-value metrics, the paired advantage is defined so
+that a positive value always favors the ANN variant:
 
 - **Correlation advantage** = ANN correlation - GBLUP-ADE correlation.
 - **RMSE advantage** = GBLUP-ADE RMSE - ANN RMSE.
 - **\(R^2\) advantage** = ANN \(R^2\) - GBLUP-ADE \(R^2\).
 
-Thus, a positive value always favors the ANN variant. The same convention is
-extended to MAE, bias, slope, and the secondary phenotype metrics by comparing
-the appropriate direction or distance from the calibration target.
+The same convention is extended to MAE, bias, slope, and the secondary phenotype
+metrics by comparing the appropriate direction or distance from the calibration
+target.
 
 ```{r paired-comparison}
 performance_advantage <- function(
@@ -603,13 +696,12 @@ paired_primary[, 3:5] <- lapply(
   4
 )
 
-knitr::kable(
+format_table(
   paired_primary,
   caption = paste(
     "Paired ANN versus GBLUP-ADE comparison for the primary",
     "genetic-value metrics"
   ),
-  table.attr = WIDE_TABLE_ATTR,
   row.names = FALSE
 )
 ```
@@ -620,9 +712,9 @@ predictive wins under directly matched test samples. These counts are
 descriptive summaries of repeated cross-validation and are not treated as
 independent replicates for a naive fold-level significance test.
 
-# Paired comparison by scenario
+### 7.2 By simulation scenario
 
-To localize the paired pattern, genetic-correlation advantage is then summarized
+To localize the paired pattern, genetic-correlation advantage is summarized
 within each scenario over its 25 matched outer tasks. Positive values favor the
 ANN variant and negative values favor GBLUP-ADE.
 
@@ -676,7 +768,7 @@ paired_scenario_primary$Mean_advantage <- round(
   4
 )
 
-knitr::kable(
+format_table(
   paired_scenario_primary,
   caption = paste(
     "Paired genetic-correlation advantage by scenario.",
@@ -693,6 +785,53 @@ values favor GBLUP-ADE. Together with the scenario means above, these paired
 summaries provide a task-matched description of how consistently the methods
 differ.
 
+## 8. Regularization effects among ANN models
+
+The overall comparison can also be read within the ANN branch alone. Restricting
+the primary genetic-value summary to the four neural-network variants isolates
+the effect associated with the prespecified L1 and L2 regularization choices,
+without changing the architecture and learning-rate search contract established
+in M04.
+
+```{r ann-regularization-summary}
+ann_regularization_display <- overall[
+  match(expected_ann_models, overall$Model),
+  c(
+    "Model",
+    "Genetic_Correlation",
+    "Genetic_RMSE",
+    "Genetic_MAE",
+    "Genetic_R2"
+  ),
+  drop = FALSE
+]
+
+ann_regularization_display[-1] <- lapply(
+  ann_regularization_display[-1],
+  round,
+  4
+)
+
+format_table(
+  ann_regularization_display,
+  caption = "Overall primary genetic-value performance among ANN variants",
+  row.names = FALSE
+)
+```
+
+The regularized ANN results show that the main improvement relative to `ANN_0`
+is associated with the L1 component. `ANN_L1_L2` has the strongest overall ANN
+averages by a very small margin over `ANN_L1`, whereas `ANN_L2` remains close to
+the unregularized network. This is an interpretation of the evaluated bounded
+search space, not a claim about all possible ANN regularization settings.
+
+## 9. Versioned comparison outputs
+
+The four canonical comparison tables are versioned under
+`output/simulated/comparison/`. They are rewritten only when
+`WRITE_COMPARISON_OUTPUTS=1`; the normal tutorial render leaves the stored
+scientific outputs unchanged.
+
 ```{r write-comparison-outputs, eval=WRITE_COMPARISON_OUTPUTS}
 dir.create(COMPARISON_DIR, recursive = TRUE, showWarnings = FALSE)
 write.csv(overall, OVERALL_CSV, row.names = FALSE)
@@ -700,6 +839,8 @@ write.csv(scenario_summary, SCENARIO_CSV, row.names = FALSE)
 write.csv(paired, PAIRED_CSV, row.names = FALSE)
 write.csv(paired_scenario, PAIRED_SCENARIO_CSV, row.names = FALSE)
 ```
+
+The following table reports the comparison files already available for reuse.
 
 ```{r verify-comparison-outputs}
 canonical_files <- c(
@@ -710,14 +851,14 @@ output_files <- data.frame(
   Exists = file.exists(canonical_files),
   Size_KB = round(file.info(canonical_files)$size / 1024, 1)
 )
-knitr::kable(
+format_table(
   output_files,
   caption = "Versioned comparison tables available for reuse",
   row.names = FALSE
 )
 ```
 
-# Overall conclusion
+## 10. Overall scientific conclusion
 
 Within the prespecified canonical model and ANN architecture search space,
 GBLUP-ADE provides the strongest overall predictive performance and leads the
@@ -729,15 +870,6 @@ These results support a specific conclusion for the frozen design evaluated
 here; they do not establish a universal ranking between genomic mixed models
 and all possible neural-network architectures.
 
-# Navigation
+## 11. Navigation
 
 [GBLUP-ADE](simulated_data_gblup.html) | [Regularized ANN](simulated_data_ann.html) | [Home](index.html)
-
-# Reproducibility information
-
-`sessionInfo()` records the R version, platform, and loaded packages used to
-render this terminal comparison tutorial.
-
-```{r session-info}
-sessionInfo()
-```

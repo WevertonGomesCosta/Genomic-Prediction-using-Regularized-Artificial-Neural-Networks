@@ -7,102 +7,222 @@ site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
     toc: true
+    toc_depth: 3
     toc_float: true
+    code_download: true
     code_folding: show
 editor_options:
   chunk_output_type: console
 ---
 
-# Purpose
+## 1. Objective
 
 This module is the **canonical ANN workflow** for the simulated genomic-data
 branch. ANN hyperparameter tuning and final outer-CV fitting are internal
-stages of one modeling method, parallel to GBLUP in the public pipeline.
+stages of one modeling method, parallel to GBLUP-ADE in the public pipeline.
 
 The four variants are `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2`
 (displayed as **ANN-L1+L2**). They use the same multilayer perceptron and differ
-only in L1/L2 weight penalties.
-
-# Tuning contract
-
-The four ANN variants use the same multilayer perceptron. They differ only in
-the L1 and L2 coefficients applied to the network weights.
-
-## Tuned hyperparameters
-
-| Hyperparameter | Role |
-|---|---|
-| Architecture | number of hidden units/layers |
-| Learning rate | Adam step size |
-| L1 coefficient | strength of absolute-weight penalty |
-| L2 coefficient | strength of squared-weight penalty |
-
-Architecture and learning rate are selected once per outer task with `ANN_0`
-and then shared by all four ANN variants. The regularized variants subsequently
-select only their penalty coefficient(s).
-
-## Fixed optimization controls
-
-| Control | Canonical value |
-|---|---:|
-| Activation | ReLU |
-| Optimizer | Adam |
-| Dropout | 0 |
-| Maximum tuning epochs | 2000 |
-| Patience | 25 |
-| Minimum improvement (`min_delta`) | \(10^{-6}\) |
-| Early-validation fraction | 0.15 |
-
-These values control **how** a candidate is optimized; they are not additional
-hyperparameters in the scientific comparison.
-
-## Early stopping
-
-An epoch is one complete pass through the current fitting observations.
-Early stopping monitors loss on a separate early-validation subset drawn only
-from the current analysis sample. Training stops after 25 consecutive epochs
-without an improvement of at least \(10^{-6}\).
-
-The 2000-epoch value is therefore a convergence ceiling, not a fixed training
-length. Epoch diagnostics are excluded from candidate ranking.
-
-# Architecture range
-
-The canonical architecture catalog defines a bounded small-to-moderate
-feed-forward network search space. The candidate hidden-layer structures are
-`2`, `4`, `8`, `16`, `32`, `8-4`, `16-8`, `32-16`, and `64-32`.
-
-The `64-32` architecture is the prespecified upper bound of the canonical
-search space. Consequently, all ANN results and the subsequent comparison with
-GBLUP-ADE are interpreted **within the prespecified canonical model/architecture
-search space**, rather than as a comparison against every possible neural-network
-architecture.
+only in the L1 and L2 penalties applied to network weights.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  cache = FALSE
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
 )
+
 options(stringsAsFactors = FALSE)
+```
 
-WIDE_TABLE_ATTR <- paste(
-  'style="display:block;',
-  'overflow-x:auto;',
-  'white-space:nowrap;',
-  'width:100%;"'
+```{r table-formatting, include=FALSE}
+format_table <- function(
+  x,
+  caption = NULL,
+  digits = getOption("digits"),
+  row.names = NA,
+  ...
+) {
+  table <- knitr::kable(
+    x,
+    format = "html",
+    caption = caption,
+    digits = digits,
+    row.names = row.names,
+    table.attr = paste0(
+      'class="table table-striped table-hover table-bordered" ',
+      'style="width:100%; margin-bottom:0;"'
+    ),
+    ...
+  )
+
+  knitr::asis_output(
+    paste0(
+      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
+      table,
+      '</div>'
+    )
+  )
+}
+```
+
+### 1.1 How to read this module
+
+The module separates three stages that must not be conflated:
+
+1. **nested tuning**, which uses only the frozen inner cross-validation folds;
+2. **epoch selection**, which uses only the 800 outer-analysis individuals;
+3. **final refitting and assessment**, which refits on all 800 outer-analysis
+   individuals and predicts the untouched 200 outer-assessment individuals.
+
+True simulated genetic values are not used in tuning or epoch selection. They
+are accessed only after held-out predictions have been generated, as the
+primary target for evaluating recovery of the simulated genetic signal.
+
+## 2. ANN variants and tuning strategy
+
+### 2.1 Models compared
+
+All four ANN variants use the same feed-forward network definition. Their only
+difference is the regularization applied to the network weights.
+
+```{r ann-variants}
+ann_variants <- data.frame(
+  Model = c("ANN_0", "ANN_L1", "ANN_L2", "ANN_L1_L2"),
+  L1 = c("No", "Yes", "No", "Yes"),
+  L2 = c("No", "No", "Yes", "Yes"),
+  Interpretation = c(
+    "Unregularized reference ANN.",
+    "ANN with L1 weight regularization.",
+    "ANN with L2 weight regularization.",
+    "ANN with simultaneous L1 and L2 weight regularization."
+  ),
+  stringsAsFactors = FALSE
 )
 
+format_table(
+  ann_variants,
+  caption = "ANN variants compared in the canonical workflow"
+)
+```
 
+### 2.2 Tuned hyperparameters
+
+Architecture and learning rate are selected once per outer task using `ANN_0`
+and are then shared by all four variants. After that shared structural choice,
+the regularized variants tune only the penalty coefficient or coefficients that
+define their model.
+
+```{r tuned-hyperparameters}
+tuned_hyperparameters <- data.frame(
+  Hyperparameter = c(
+    "Architecture",
+    "Learning rate",
+    "L1 coefficient",
+    "L2 coefficient"
+  ),
+  Role = c(
+    "Number and size of hidden layers.",
+    "Adam optimization step size.",
+    "Strength of absolute-weight regularization.",
+    "Strength of squared-weight regularization."
+  ),
+  Selection = c(
+    "Selected with ANN_0 and shared across all variants.",
+    "Selected with ANN_0 and shared across all variants.",
+    "Selected only for ANN_L1 and ANN_L1_L2.",
+    "Selected only for ANN_L2 and ANN_L1_L2."
+  ),
+  stringsAsFactors = FALSE
+)
+
+format_table(
+  tuned_hyperparameters,
+  caption = "Hyperparameters considered in ANN tuning"
+)
+```
+
+### 2.3 Fixed optimization controls
+
+ReLU activation, Adam optimization, zero dropout, the tuning epoch ceiling,
+patience, minimum improvement, and early-validation fraction are fixed
+optimization controls. They determine **how** each candidate is optimized and
+are not additional dimensions of the scientific hyperparameter search.
+
+```{r fixed-optimization-controls}
+fixed_optimization_controls <- data.frame(
+  Control = c(
+    "Activation",
+    "Optimizer",
+    "Dropout",
+    "Maximum tuning epochs",
+    "Patience",
+    "Minimum improvement (min_delta)",
+    "Early-validation fraction"
+  ),
+  Canonical_value = c(
+    "ReLU",
+    "Adam",
+    "0",
+    "2000",
+    "25",
+    "1e-6",
+    "0.15"
+  ),
+  stringsAsFactors = FALSE
+)
+
+format_table(
+  fixed_optimization_controls,
+  caption = "Fixed ANN optimization controls"
+)
+```
+
+### 2.4 Early stopping
+
+An epoch is one complete pass through the current fitting observations. During
+candidate training, loss is monitored on a separate early-validation subset
+drawn only from the current analysis sample.
+
+Training stops after 25 consecutive epochs without an improvement of at least
+\(10^{-6}\). The 2000-epoch value is therefore a convergence ceiling, not a
+fixed training length. Epoch diagnostics are retained for optimization
+diagnostics but are excluded from candidate ranking.
+
+### 2.5 Bounded architecture search
+
+The canonical architecture catalog is deliberately bounded to
+small-to-moderate feed-forward networks. Its upper boundary is `64-32`.
+
+Selection of a boundary architecture is interpreted as evidence that the
+prespecified search space was active for that task. It does not trigger a
+post-hoc enlargement of the canonical search space. Consequently, ANN versus
+GBLUP-ADE conclusions apply to this prespecified ANN search space, not to every
+possible neural-network architecture.
+
+## 3. Packages and computational environment
+
+### 3.1 Packages
+
+`knitr` formats the reader-facing tables. `torch` is initialized only when
+tuning or final ANN fitting is explicitly requested; saved-output renders do not
+require a new ANN runtime.
+
+```{r packages-base, warning=FALSE, message=FALSE}
+library(knitr) # Format reader-facing tables and R Markdown output.
+```
+
+### 3.2 Execution mode
+
+ANN tuning and final fitting are opt-in computational stages. With both runtime
+flags disabled, the page is rebuilt from the canonical saved outputs.
+
+```{r execution-mode}
 PROJECT_ROOT <- "."
-
-project_path <- function(...) {
-  file.path(PROJECT_ROOT, ...)
-}
-
-
-SEED_GLOBAL <- 20260821L
+project_path <- function(...) file.path(PROJECT_ROOT, ...)
 
 RUN_ANN_TUNING <- identical(
   Sys.getenv("RUN_ANN_TUNING", "0"),
@@ -114,6 +234,7 @@ RUN_ANN <- identical(
 )
 ANN_RUNTIME_REQUIRED <- RUN_ANN_TUNING || RUN_ANN
 
+# Legacy/auxiliary execution flags are retained unchanged for compatibility.
 ANN_TUNING_FORCE <- identical(
   Sys.getenv("ANN_TUNING_FORCE", "0"),
   "1"
@@ -127,10 +248,285 @@ ANN_TUNING_PILOT_TASK <- Sys.getenv(
   "C1_R01_F01"
 )
 
+execution_mode <- data.frame(
+  Item = c(
+    "Run nested tuning",
+    "Run final ANN fitting",
+    "ANN runtime required"
+  ),
+  Value = c(
+    RUN_ANN_TUNING,
+    RUN_ANN,
+    ANN_RUNTIME_REQUIRED
+  ),
+  stringsAsFactors = FALSE
+)
+
+format_table(
+  execution_mode,
+  caption = "ANN execution mode for the current render"
+)
+```
+
+The auxiliary `ANN_TUNING_FORCE`, `ANN_TUNING_PILOT`, and
+`ANN_TUNING_PILOT_TASK` flags are retained unchanged for compatibility. Their
+historical behavior is not redefined in this editorial stage.
+
+### 3.3 CPU/CUDA device
+
+When an ANN runtime is requested, `torch` detects CUDA availability and selects
+the requested `ANN_DEVICE` (`cpu`, `cuda`, or automatic selection). With saved
+outputs only, the runtime remains uninitialized.
+
+```{r packages-device, warning=FALSE, message=FALSE}
+if (ANN_RUNTIME_REQUIRED) {
+  suppressPackageStartupMessages(library(torch))
+  cuda_available <- torch::cuda_is_available()
+  requested_device <- tolower(Sys.getenv("ANN_DEVICE", "auto"))
+
+  ANN_DEVICE_LABEL <- if (requested_device == "cuda") {
+    "cuda"
+  } else if (requested_device == "cpu") {
+    "cpu"
+  } else if (cuda_available) {
+    "cuda"
+  } else {
+    "cpu"
+  }
+
+  ANN_DEVICE <- torch::torch_device(ANN_DEVICE_LABEL)
+
+  sync_device <- function() {
+    if (ANN_DEVICE_LABEL == "cuda") torch::cuda_synchronize()
+    invisible(NULL)
+  }
+
+  set_ann_seed <- function(seed) {
+    set.seed(as.integer(seed))
+    torch::torch_manual_seed(as.integer(seed))
+    invisible(NULL)
+  }
+
+  torch_version_display <- as.character(packageVersion("torch"))
+  cuda_display <- cuda_available
+  device_display <- ANN_DEVICE_LABEL
+} else {
+  cuda_available <- NA
+  ANN_DEVICE_LABEL <- "not initialized (saved-output render)"
+  ANN_DEVICE <- NULL
+  sync_device <- function() invisible(NULL)
+  set_ann_seed <- function(seed) invisible(seed)
+  torch_version_display <- "not initialized (saved-output render)"
+  cuda_display <- "not initialized (saved-output render)"
+  device_display <- ANN_DEVICE_LABEL
+}
+
+environment_table <- data.frame(
+  Item = c("torch version", "CUDA available", "device"),
+  Value = c(torch_version_display, cuda_display, device_display),
+  stringsAsFactors = FALSE
+)
+
+format_table(
+  environment_table,
+  caption = "ANN computational environment"
+)
+```
+
+## 4. Canonical inputs and outputs
+
+### 4.1 Input files
+
+The ANN branch consumes the audited common simulated-data object and the frozen
+nested validation design produced by the preceding modules. The two audit CSV
+files are retained as provenance references for those upstream contracts.
+
+```{r ann-input-paths}
+DATA_FILE <- project_path(
+  "output", "simulated", "audit", "preprocessed_simulated_common.rds"
+)
+CV_FILE <- project_path(
+  "output", "simulated", "validation", "simulated_cv_design.rds"
+)
+DATA_AUDIT_FILE <- project_path(
+  "output", "simulated", "audit", "simulated_audit_summary.csv"
+)
+CV_AUDIT_FILE <- project_path(
+  "output", "simulated", "validation", "simulated_cv_design_audit.csv"
+)
+
+input_files <- data.frame(
+  File = basename(c(
+    DATA_FILE,
+    CV_FILE,
+    DATA_AUDIT_FILE,
+    CV_AUDIT_FILE
+  )),
+  Role = c(
+    "Audited phenotype, genotype, true-G, and scenario objects.",
+    "Frozen outer and inner validation partitions.",
+    "Data-audit provenance record.",
+    "Validation-design provenance record."
+  ),
+  stringsAsFactors = FALSE
+)
+
+format_table(
+  input_files,
+  caption = "Canonical files available to the ANN branch"
+)
+```
+
+### 4.2 Canonical data objects
+
+The same 1,000 individuals, 4,010 markers, six scenarios, 25 outer splits, and
+100 inner splits established upstream are reused here. Small previews make the
+reader-facing inputs explicit before tuning logic is introduced.
+
+```{r inputs}
+common <- readRDS(DATA_FILE)
+cv <- readRDS(CV_FILE)
+
+phenotype <- common$phenotype
+geno <- common$genotype_m101
+ids <- seq_len(nrow(geno))
+scenario_names <- colnames(phenotype)
+
+ann_input_summary <- data.frame(
+  Object = c(
+    "Phenotype",
+    "Genotype",
+    "Outer validation splits",
+    "Inner validation splits"
+  ),
+  Rows_or_count = c(
+    nrow(phenotype),
+    nrow(geno),
+    length(cv$outer_splits),
+    sum(vapply(cv$inner_splits, length, integer(1)))
+  ),
+  Columns = c(
+    ncol(phenotype),
+    ncol(geno),
+    NA,
+    NA
+  ),
+  Role = c(
+    "Response used for ANN fitting.",
+    "Marker predictors used by all ANN variants.",
+    "Frozen final assessment partitions.",
+    "Frozen candidate-evaluation partitions."
+  ),
+  stringsAsFactors = FALSE
+)
+
+phenotype_sample <- data.frame(
+  ID = ids[1:6],
+  phenotype[1:6, , drop = FALSE],
+  check.names = FALSE
+)
+genotype_sample <- data.frame(
+  ID = ids[1:6],
+  geno[1:6, 1:10, drop = FALSE],
+  check.names = FALSE
+)
+
+format_table(
+  ann_input_summary,
+  caption = "Canonical ANN input objects"
+)
+format_table(
+  phenotype_sample,
+  digits = 4,
+  caption = "First six phenotype rows"
+)
+format_table(
+  genotype_sample,
+  caption = "First six individuals and first ten markers"
+)
+```
+
+The validation objects are reused exactly as frozen in M02. No ANN variant
+constructs its own outer or inner cross-validation partitions.
+
+### 4.3 Tuning output files
+
+Nested tuning writes task-level candidate summaries, inner-fold results,
+selected configurations, and run metadata. The canonical output stem is
+unchanged; the legacy pilot stem is retained when its existing flag is active.
+
+```{r ann-tuning-output-paths}
+CHECKPOINT_DIR <- project_path(
+  ".local", "checkpoints", "canonical", "ann_tuning"
+)
+
+OUTPUT_STEM <- if (ANN_TUNING_PILOT) {
+  project_path(
+    ".local", "pilot", "ann", "tuning", "simulated_ann_tuning_pilot"
+  )
+} else {
+  project_path(
+    "output", "simulated", "ann", "tuning", "simulated_ann_tuning"
+  )
+}
+
+CANDIDATE_RDS <- paste0(OUTPUT_STEM, "_candidate_summary.rds")
+FOLD_RDS <- paste0(OUTPUT_STEM, "_fold_results.rds")
+SELECTED_RDS <- paste0(OUTPUT_STEM, "_selected_configurations.rds")
+RUN_RDS <- paste0(OUTPUT_STEM, "_run_metadata.rds")
+MANIFEST_RDS <- paste0(OUTPUT_STEM, "_manifest.rds")
+
+CANDIDATE_CSV <- paste0(OUTPUT_STEM, "_candidate_summary.csv")
+FOLD_CSV <- paste0(OUTPUT_STEM, "_fold_results.csv")
+SELECTED_CSV <- paste0(OUTPUT_STEM, "_selected_configurations.csv")
+MANIFEST_CSV <- paste0(OUTPUT_STEM, "_manifest.csv")
+
+tuning_output_files <- data.frame(
+  File = basename(c(
+    CANDIDATE_RDS,
+    FOLD_RDS,
+    SELECTED_RDS,
+    RUN_RDS,
+    MANIFEST_RDS,
+    CANDIDATE_CSV,
+    FOLD_CSV,
+    SELECTED_CSV,
+    MANIFEST_CSV
+  )),
+  Role = c(
+    "Candidate-level tuning summaries.",
+    "Inner candidate-fold results.",
+    "Selected ANN configurations by outer task and model.",
+    "Canonical tuning run metadata.",
+    "Canonical tuning manifest.",
+    "CSV copy of candidate summaries.",
+    "CSV copy of inner candidate-fold results.",
+    "CSV copy of selected configurations.",
+    "CSV representation of the tuning manifest."
+  ),
+  stringsAsFactors = FALSE
+)
+
+format_table(
+  tuning_output_files,
+  caption = "Canonical ANN tuning output artifacts"
+)
+```
+
+## 5. ANN parameter values
+
+The scientific tuning space is defined once below and reused by candidate
+construction, inner-CV training, nested tuning, and final fitting.
+
+```{r ann-parameter-values}
+SEED_GLOBAL <- 20260821L
+
 MAX_EPOCHS <- 2000L
+
 # Compatibility token only: preserves the exact config_id of the completed
 # ANN_TUNING_CANONICAL_V1 run. It does not control final refit length.
 TUNING_V1_COMPATIBILITY_TOKEN <- 2000L
+
 PATIENCE <- 25L
 MIN_DELTA <- 1e-6
 EARLY_VALIDATION_FRACTION <- 0.15
@@ -187,30 +583,6 @@ MODEL_LEVELS <- c(
   "ANN_L1_L2"
 )
 
-DATA_FILE <- project_path("output", "simulated", "audit", "preprocessed_simulated_common.rds")
-CV_FILE <- project_path("output", "simulated", "validation", "simulated_cv_design.rds")
-DATA_AUDIT_FILE <- project_path("output", "simulated", "audit", "simulated_audit_summary.csv")
-CV_AUDIT_FILE <- project_path("output", "simulated", "validation", "simulated_cv_design_audit.csv")
-
-CHECKPOINT_DIR <- project_path(".local", "checkpoints", "canonical", "ann_tuning")
-
-OUTPUT_STEM <- if (ANN_TUNING_PILOT) {
-  project_path(".local", "pilot", "ann", "tuning", "simulated_ann_tuning_pilot")
-} else {
-  project_path("output", "simulated", "ann", "tuning", "simulated_ann_tuning")
-}
-
-CANDIDATE_RDS <- paste0(OUTPUT_STEM, "_candidate_summary.rds")
-FOLD_RDS <- paste0(OUTPUT_STEM, "_fold_results.rds")
-SELECTED_RDS <- paste0(OUTPUT_STEM, "_selected_configurations.rds")
-RUN_RDS <- paste0(OUTPUT_STEM, "_run_metadata.rds")
-MANIFEST_RDS <- paste0(OUTPUT_STEM, "_manifest.rds")
-
-CANDIDATE_CSV <- paste0(OUTPUT_STEM, "_candidate_summary.csv")
-FOLD_CSV <- paste0(OUTPUT_STEM, "_fold_results.csv")
-SELECTED_CSV <- paste0(OUTPUT_STEM, "_selected_configurations.csv")
-MANIFEST_CSV <- paste0(OUTPUT_STEM, "_manifest.csv")
-
 ANN_TUNING_CONFIG_ID <- paste(
   "ANN_TUNING_CANONICAL_V1",
   paste(names(ARCHITECTURES), collapse = "-"),
@@ -239,165 +611,93 @@ if (RUN_ANN_TUNING) {
 }
 ```
 
-```{r packages}
-if (ANN_RUNTIME_REQUIRED) {
-  suppressPackageStartupMessages(library(torch))
-  cuda_available <- torch::cuda_is_available()
-  requested_device <- tolower(Sys.getenv("ANN_DEVICE", "auto"))
+`TUNING_V1_COMPATIBILITY_TOKEN` is retained solely to preserve the historical
+`ANN_TUNING_CANONICAL_V1` configuration identifier. It does **not** determine
+the final ANN refit length.
 
-  ANN_DEVICE_LABEL <- if (requested_device == "cuda") {
-    "cuda"
-  } else if (requested_device == "cpu") {
-    "cpu"
-  } else if (cuda_available) {
-    "cuda"
-  } else {
-    "cpu"
-  }
-  ANN_DEVICE <- torch::torch_device(ANN_DEVICE_LABEL)
+### 5.1 Architectures
 
-  sync_device <- function() {
-    if (ANN_DEVICE_LABEL == "cuda") torch::cuda_synchronize()
-    invisible(NULL)
-  }
-  set_ann_seed <- function(seed) {
-    set.seed(as.integer(seed))
-    torch::torch_manual_seed(as.integer(seed))
-    invisible(NULL)
-  }
-
-  torch_version_display <- as.character(packageVersion("torch"))
-  cuda_display <- cuda_available
-  device_display <- ANN_DEVICE_LABEL
-} else {
-  cuda_available <- NA
-  ANN_DEVICE_LABEL <- "not initialized (saved-output render)"
-  ANN_DEVICE <- NULL
-  sync_device <- function() invisible(NULL)
-  set_ann_seed <- function(seed) invisible(seed)
-  torch_version_display <- "not initialized (saved-output render)"
-  cuda_display <- "not initialized (saved-output render)"
-  device_display <- ANN_DEVICE_LABEL
-}
-
-environment_table <- data.frame(
-  Item = c(
-    "torch version", "CUDA available", "device", "MAX_EPOCHS",
-    "TUNING_V1_COMPATIBILITY_TOKEN", "patience",
-    "minimum improvement", "early-validation fraction", "dropout"
+```{r architecture-values}
+architecture_table <- data.frame(
+  Architecture = names(ARCHITECTURES),
+  Hidden_layers = vapply(
+    ARCHITECTURES,
+    function(x) paste(x, collapse = " - "),
+    character(1)
   ),
-  Value = c(
-    torch_version_display, cuda_display, device_display,
-    MAX_EPOCHS, TUNING_V1_COMPATIBILITY_TOKEN, PATIENCE,
-    MIN_DELTA, EARLY_VALIDATION_FRACTION, DROPOUT
-  )
-)
-knitr::kable(environment_table, caption = "Fixed ANN computational protocol")
-```
-
-# Canonical ANN parameter values
-
-The exact search space and optimization controls used by the canonical ANN
-workflow are defined explicitly below. These objects are referenced by the
-candidate-grid, training, tuning, and final-fitting chunks that follow.
-
-```{r ann-parameter-values}
-MAX_EPOCHS <- 2000L
-PATIENCE <- 25L
-MIN_DELTA <- 1e-6
-EARLY_VALIDATION_FRACTION <- 0.15
-DROPOUT <- 0
-
-ARCHITECTURES <- list(
-  `2` = c(2L),
-  `4` = c(4L),
-  `8` = c(8L),
-  `16` = c(16L),
-  `32` = c(32L),
-  `8-4` = c(8L, 4L),
-  `16-8` = c(16L, 8L),
-  `32-16` = c(32L, 16L),
-  `64-32` = c(64L, 32L)
-)
-
-LEARNING_RATES <- c(
-  1.25e-4,
-  2.5e-4,
-  5e-4,
-  1e-3
-)
-
-L1_VALUES <- c(
-  1e-5,
-  1e-4,
-  1e-3,
-  1e-2,
-  3e-2,
-  1e-1
-)
-
-L2_VALUES <- c(
-  1e-5,
-  1e-4,
-  1e-3,
-  1e-2
-)
-
-L1_L2_GRID <- expand.grid(
-  L1 = L1_VALUES,
-  L2 = L2_VALUES,
-  KEEP.OUT.ATTRS = FALSE,
+  Number_of_hidden_layers = vapply(
+    ARCHITECTURES,
+    length,
+    integer(1)
+  ),
   stringsAsFactors = FALSE
 )
 
-MODEL_LEVELS <- c(
-  "ANN_0",
-  "ANN_L1",
-  "ANN_L2",
-  "ANN_L1_L2"
+format_table(
+  architecture_table,
+  caption = "Prespecified ANN architecture catalog"
 )
 ```
 
-There are nine candidate architectures and four learning rates for the shared
-structure search. `ANN_L1` evaluates six L1 values, `ANN_L2` evaluates four L2
-values, and `ANN_L1_L2` evaluates the 24 positive L1 × L2 combinations.
+The `64-32` architecture is the prespecified upper bound of the canonical
+search space.
 
-# Canonical inputs
+### 5.2 Learning rates
 
-This module uses the audited common preprocessing object and the frozen nested
-validation design established in the preceding modules. These fixed inputs keep
-model tuning and outer-CV evaluation aligned across all four ANN variants.
-Their dimensions and small samples are displayed directly before the tuning code so the reader can see the objects used by the network.
-
-```{r inputs}
-common <- readRDS(DATA_FILE)
-cv <- readRDS(CV_FILE)
-phenotype <- common$phenotype
-geno <- common$genotype_m101
-ids <- seq_len(nrow(geno))
-scenario_names <- colnames(phenotype)
-
-ann_input_summary <- data.frame(
-  Object = c("Phenotype", "Genotype", "Outer splits", "Inner splits"),
-  Rows_or_count = c(
-    nrow(phenotype), nrow(geno), length(cv$outer_splits),
-    sum(vapply(cv$inner_splits, length, integer(1)))
-  ),
-  Columns = c(ncol(phenotype), ncol(geno), NA, NA)
-)
-phenotype_sample <- data.frame(
-  ID = ids[1:6], phenotype[1:6, , drop = FALSE], check.names = FALSE
-)
-genotype_sample <- data.frame(
-  ID = ids[1:6], geno[1:6, 1:10, drop = FALSE], check.names = FALSE
+```{r learning-rate-values}
+learning_rate_table <- data.frame(
+  Learning_rate = LEARNING_RATES
 )
 
-knitr::kable(ann_input_summary, caption = "Canonical ANN inputs", row.names = FALSE)
-knitr::kable(phenotype_sample, digits = 4, caption = "First six phenotype rows", row.names = FALSE)
-knitr::kable(genotype_sample, caption = "First six individuals and first ten markers", row.names = FALSE)
+format_table(
+  learning_rate_table,
+  digits = 6,
+  caption = "Candidate Adam learning rates"
+)
 ```
 
-# Candidate grids
+### 5.3 L1 penalties
+
+```{r l1-values}
+l1_table <- data.frame(
+  L1 = L1_VALUES
+)
+
+format_table(
+  l1_table,
+  digits = 6,
+  caption = "Candidate L1 penalty coefficients"
+)
+```
+
+### 5.4 L2 penalties
+
+```{r l2-values}
+l2_table <- data.frame(
+  L2 = L2_VALUES
+)
+
+format_table(
+  l2_table,
+  digits = 6,
+  caption = "Candidate L2 penalty coefficients"
+)
+```
+
+### 5.5 Combined L1 + L2 grid
+
+`ANN_L1_L2` uses the full Cartesian product of the six positive L1 values and
+four positive L2 values, yielding 24 combined penalty configurations.
+
+```{r l1-l2-values}
+format_table(
+  L1_L2_GRID,
+  digits = 6,
+  caption = "Positive L1 x L2 grid for ANN-L1+L2"
+)
+```
+
+## 6. Candidate grids
 
 Architecture and learning rate are selected **once per outer task using
 `ANN_0`**. The selected structure is then shared by all four ANN variants. This
@@ -408,7 +708,7 @@ After structure selection:
 
 - `ANN_L1` tunes only L1;
 - `ANN_L2` tunes only L2;
-- `ANN_L1_L2` tunes the full positive L1 × L2 Cartesian grid.
+- `ANN_L1_L2` tunes the full positive L1 x L2 Cartesian grid.
 
 ```{r grids}
 structure_grid <- expand.grid(
@@ -460,7 +760,7 @@ grid_summary <- data.frame(
 grid_summary$Inner_fits_per_outer_task <-
   4L * grid_summary$Candidates
 
-knitr::kable(
+format_table(
   grid_summary,
   caption = "Canonical ANN tuning grid"
 )
@@ -488,20 +788,44 @@ cat(
 )
 ```
 
-The grid contains 70 candidate configurations per outer task. With four frozen inner folds, this corresponds to 280 candidate-fold fits per task and 42,000 fits across the 150 scenario-by-split tasks. Architecture and learning rate are selected using `ANN_0` and then held common across the four ANN variants within each task, so their subsequent contrast isolates the L1/L2 penalty choice.
+The grid contains 70 candidate configurations per outer task. With four frozen
+inner folds, this corresponds to 280 candidate-fold fits per task and 42,000
+fits across the 150 scenario-by-split tasks. Architecture and learning rate are
+selected using `ANN_0` and then held common across all four ANN variants within
+each task, so their subsequent contrast isolates the L1/L2 penalty choice.
 
-# Within-fold preprocessing
+## 7. Data preprocessing
 
-For every inner fit, marker means and standard deviations are estimated only
-from the fitting subset. Those same parameters are then applied to the
-corresponding early-validation and inner-assessment individuals. Phenotypes are
-standardized from the fitting subset in the same way, and predictions are
-returned to the original phenotype scale before calculating performance
-metrics. Markers with effectively zero fitting-set variance receive unit scale
-to avoid numerical division by zero.
+Preprocessing is estimated independently inside each fitting subset. The same
+fitted transformation is then applied to the corresponding early-validation and
+assessment observations. This ordering prevents validation information from
+influencing the parameters used to train the network.
 
-This ordering prevents validation or assessment observations from influencing
-the preprocessing parameters used to fit the network.
+### 7.1 Marker standardization
+
+For each fit, marker means and standard deviations are estimated only from the
+current fitting individuals. The fitted center and scale are subsequently
+applied unchanged to early-validation and assessment individuals.
+
+Markers with effectively zero fitting-set variance receive unit scale. This
+avoids numerical division by zero without introducing information from outside
+the fitting subset.
+
+### 7.2 Response standardization
+
+Phenotypes are centered and scaled using only the fitting subset. Network
+predictions are transformed back to the original phenotype scale before RMSE,
+correlation, and MAE are calculated.
+
+### 7.3 Early-validation split
+
+The early-validation subset is drawn deterministically from the current
+analysis sample using a prespecified seed and fraction. It is distinct from the
+frozen inner-assessment fold, which remains untouched until candidate
+prediction.
+
+The helper functions below implement these transformations and retain the
+historical metric aliases required by the result-building code.
 
 ```{r support-functions}
 correlation <- function(predicted, observed) {
@@ -622,9 +946,9 @@ unscale_y <- function(y, scaler) {
 }
 ```
 
-# Shared ANN implementation
+## 8. Neural-network definition
 
-## Network objects
+### 8.1 Hidden layers and ReLU
 
 For a standardized marker vector \(\mathbf{x}\), each hidden layer applies a
 linear transformation followed by ReLU activation:
@@ -635,17 +959,33 @@ linear transformation followed by ReLU activation:
 (\mathbf{W}_{\ell}\mathbf{h}^{(\ell-1)}+\mathbf{b}_{\ell}).
 \]
 
-| Symbol | Meaning |
-|---|---|
-| \(\mathbf{x}\) | standardized marker vector |
-| \(\mathbf{W}\) | layer weights |
-| \(\mathbf{b}\) | layer biases |
-| \(\mathbf{h}\) | hidden-layer activations |
-| \(\hat{y}\) | network prediction |
+The symbols used in the network equations have the following roles:
 
-The output layer is linear because the response is continuous.
+```{r network-symbols}
+network_symbols <- data.frame(
+  Symbol = c("x", "W", "b", "h", "y-hat"),
+  Meaning = c(
+    "Standardized marker vector.",
+    "Layer weights.",
+    "Layer biases.",
+    "Hidden-layer activations.",
+    "Network prediction."
+  ),
+  stringsAsFactors = FALSE
+)
 
-## Loss and regularization
+format_table(
+  network_symbols,
+  caption = "Symbols used in the ANN definition"
+)
+```
+
+### 8.2 Linear output
+
+The output layer is linear because the response is continuous. No output
+activation is applied after the last linear transformation.
+
+### 8.3 L1 and L2 penalties
 
 Training minimizes
 
@@ -665,9 +1005,8 @@ The response is standardized from the fitting subset during optimization and
 predictions are transformed back to the original phenotype scale before
 performance metrics are calculated.
 
-## Representative 64-32 network
-
-The largest architecture in the prespecified catalog can be written directly as:
+The largest `64-32` architecture in the prespecified catalog illustrates
+the same hidden-layer and linear-output structure used throughout the search:
 
 ```{r ann-forward-example, eval=FALSE}
 model <- nn_module(
@@ -786,21 +1125,18 @@ clone_state <- function(model) {
 }
 ```
 
-# Inner-CV training
+## 9. Inner-CV training
 
-The inner analysis set is divided deterministically into:
+For every frozen inner fold, the inner-analysis individuals are divided
+deterministically into a fitting subset and an early-validation subset. The
+frozen inner-assessment individuals remain untouched until the candidate has
+been trained and its best checkpoint restored.
 
-- a fitting subset;
-- an early-validation subset.
+### 9.1 One optimization step
 
-The frozen inner assessment set remains untouched until prediction of that
-candidate. Preprocessing is estimated from the fitting subset only.
-
-Early stopping is an optimization mechanism. Its epoch diagnostics are saved
-but excluded from the tuning rule.
-
-The core optimization step itself is simple: predict the fitting subset,
-calculate MSE plus the selected penalty, backpropagate, and update the weights.
+Each epoch predicts the fitting subset, calculates mean squared error plus the
+selected weight penalty, backpropagates the loss, and updates the network with
+Adam.
 
 ```{r ann-optimization-step, eval=FALSE}
 optimizer$zero_grad()
@@ -820,10 +1156,14 @@ loss$backward()
 optimizer$step()
 ```
 
-The complete helper shown next applies the fitting-set scalers, monitors the
-early-validation loss, restores the best epoch, and predicts the untouched
-inner-assessment fold. The only conditionals retained are the ones that define
-the early-stopping algorithm itself.
+### 9.2 Complete candidate training
+
+The complete helper shown next applies the fitting-set scalers, trains the
+candidate, monitors early-validation loss, restores the best checkpoint, and
+predicts the untouched inner-assessment fold.
+
+The conditionals inside this function are part of the ANN optimization
+algorithm itself rather than defensive execution guards.
 
 ```{r training-functions}
 prepare_bundle <- function(
@@ -1078,7 +1418,27 @@ train_inner_candidate <- function(
 }
 ```
 
-# Candidate evaluation and selection
+### 9.3 Early stopping
+
+Within `train_inner_candidate()`, an improvement requires the current
+early-validation loss to be at least `MIN_DELTA` below the best loss observed so
+far. An improved epoch replaces the stored checkpoint and resets the stale-epoch
+counter.
+
+Training stops when `stale_epochs >= PATIENCE`. The stored best checkpoint is
+then restored before the untouched inner-assessment fold is predicted. Thus,
+the epoch at which training stops and the epoch retained for prediction are not
+necessarily the same.
+
+Early-stopping diagnostics are saved for optimization assessment but do not
+participate in candidate ranking.
+
+
+## 10. Candidate evaluation and ranking
+
+Each candidate is fitted independently in the four frozen inner folds. The
+candidate-level summary averages the held-out inner-assessment metrics across
+those four fits.
 
 Candidate ranking is deterministic and does **not** include epoch information.
 
@@ -1243,7 +1603,13 @@ choose_candidate <- function(x) {
 }
 ```
 
-# Outer-task table
+## 11. Hyperparameter tuning
+
+Nested tuning uses the frozen validation design from M02. The outer assessment
+set is not predicted anywhere in this stage; it remains reserved for final
+model evaluation after hyperparameter and epoch selection are complete.
+
+### 11.1 Frozen outer tasks
 
 The six scenarios share the same 25 frozen outer splits, producing 150
 `Scenario × outer split` tuning tasks.
@@ -1312,7 +1678,7 @@ EXPECTED_FOLD_ROWS <-
   EXPECTED_TASKS *
   INNER_FITS_PER_TASK
 
-knitr::kable(
+format_table(
   head(task_table, 15),
   caption =
     "First 15 canonical ANN tuning tasks",
@@ -1326,9 +1692,31 @@ Each row represents one `Scenario × Repetition × Fold` combination. The same
 `TaskID` is used for all four ANN variants, which ensures that their selected
 regularization settings are compared within the same frozen outer task.
 
-# Canonical nested tuning
+### 11.2 Architecture and learning rate
 
-This section evaluates only inner-CV candidates. It never predicts the outer
+For each outer task, the 36 architecture-by-learning-rate combinations are
+evaluated with `ANN_0`. The deterministic candidate ranking described in
+Section 10 selects one shared architecture and one shared learning rate.
+
+### 11.3 L1
+
+With architecture and learning rate fixed, `ANN_L1` evaluates the six
+prespecified positive L1 coefficients. No additional architecture search is
+performed for the L1-regularized model.
+
+### 11.4 L2
+
+`ANN_L2` reuses the same selected architecture and learning rate and evaluates
+only the four prespecified positive L2 coefficients.
+
+### 11.5 L1 + L2
+
+`ANN_L1_L2` also reuses the shared architecture and learning rate, evaluating
+the complete 6 x 4 positive L1-by-L2 grid. This produces 24 combined-penalty
+candidates.
+
+The chunk below implements all four tuning stages for the 150 frozen outer
+tasks. It evaluates only inner-CV candidates and never predicts the outer
 assessment set.
 
 ```{r run-tuning, eval=RUN_ANN_TUNING}
@@ -1854,11 +2242,11 @@ write.csv(
 )
 ```
 
-# Canonical tuning results
+## 12. Selected configurations
 
-The selected configurations and tuning diagnostics below are generated from
-the canonical saved tuning outputs. Their sizes are displayed directly before
-the selected hyperparameters are summarized and interpreted.
+The reader-facing summaries below use the canonical saved tuning outputs. This
+allows the page to be rebuilt without rerunning the 42,000 inner candidate-fold
+fits while preserving the exact configurations selected by the canonical run.
 
 ```{r saved-integrity}
 selected_configurations <- readRDS(SELECTED_RDS)
@@ -1875,21 +2263,20 @@ tuning_output_summary <- data.frame(
     nrow(selected_configurations), nrow(candidate_summary), nrow(fold_results)
   )
 )
-knitr::kable(
+format_table(
   tuning_output_summary,
   caption = "Observed size of the canonical ANN tuning outputs",
   row.names = FALSE
 )
 ```
 
-# Selected configurations
+### 12.1 Architecture and learning-rate frequencies
 
-The summaries below show how often the 150 outer tasks selected each shared
-architecture and learning rate, followed by the selected penalty values for the
-regularized variants. A small configuration sample then illustrates the
-task-level selections without reproducing all 600 rows.
+Architecture and learning rate are shared by all four ANN variants within each
+outer task. Their selection frequencies therefore summarize the structural
+choices made before any model-specific penalty tuning.
 
-```{r selected-summary}
+```{r selected-structure-summary}
 task_level <- unique(
   selected_configurations[
     ,
@@ -1933,6 +2320,27 @@ learning_rate_frequency <- as.data.frame(
 names(learning_rate_frequency)[2] <-
   "Selected_tasks"
 
+format_table(
+  architecture_frequency,
+  caption =
+    "Selected shared architecture across the 150 outer tasks",
+  row.names = FALSE
+)
+format_table(
+  learning_rate_frequency,
+  caption =
+    "Selected shared learning rate across the 150 outer tasks",
+  row.names = FALSE
+)
+```
+
+### 12.2 Penalty selections
+
+The regularized variants subsequently select only their applicable L1 and/or L2
+coefficients. The frequency tables show how often each penalty value is selected,
+and the final table gives a small task-level sample of the canonical choices.
+
+```{r selected-penalty-summary}
 l1_frequency <- selected_configurations[
   selected_configurations$Model %in%
     c("ANN_L1", "ANN_L1_L2"),
@@ -1959,26 +2367,14 @@ l2_frequency <- aggregate(
   FUN = sum
 )
 
-knitr::kable(
-  architecture_frequency,
-  caption =
-    "Selected shared architecture across the 150 outer tasks",
-  row.names = FALSE
-)
-knitr::kable(
-  learning_rate_frequency,
-  caption =
-    "Selected shared learning rate across the 150 outer tasks",
-  row.names = FALSE
-)
-knitr::kable(
+format_table(
   l1_frequency,
   digits = 6,
   caption =
     "Selected L1 coefficients by regularized ANN variant",
   row.names = FALSE
 )
-knitr::kable(
+format_table(
   l2_frequency,
   digits = 6,
   caption =
@@ -2014,19 +2410,18 @@ selected_display <- head(
   20
 )
 
-knitr::kable(
+format_table(
   selected_display,
   digits = 6,
   caption =
     "First 20 selected canonical ANN configurations",
-  table.attr = WIDE_TABLE_ATTR,
   row.names = FALSE
 )
 ```
 
-The selection frequencies summarize how often each architecture, learning rate, and penalty coefficient is preferred across the frozen outer tasks. Because architecture and learning rate are shared by the four ANN variants within each task, differences among `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2` are not produced by giving the regularized variants a different structural search space.
+Because architecture and learning rate are shared by the four ANN variants within each task, differences among `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2` are not produced by giving the regularized variants a different structural search space.
 
-# Optimization diagnostics
+### 12.3 Optimization diagnostics
 
 These diagnostics describe how the fixed early-stopping protocol behaved over
 the canonical tuning fits. They do not enter candidate ranking and do not
@@ -2113,7 +2508,7 @@ optimization_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 
-knitr::kable(
+format_table(
   optimization_summary,
   caption =
     "Canonical ANN tuning optimization diagnostics",
@@ -2127,16 +2522,15 @@ Of the `r nrow(fold_results)` inner candidate-fold fits,
 ceiling. The median best epoch shows where the best early-validation checkpoint
 typically occurred; these diagnostics are not used to rank candidates.
 
-# Boundary description
+### 12.4 Search-boundary diagnostics
 
-Boundary occupancy is reported descriptively because the upper architecture
-`64-32` is a deliberate methodological cap. Selection of `64-32` indicates that
-the bounded search space was active for those tasks, but it does not trigger
-post hoc enlargement of the canonical grid.
+Boundary occupancy is reported descriptively because `64-32` and the extreme
+learning-rate and penalty values are deliberate limits of the prespecified
+search space. Reaching one of these limits identifies where the bounded search
+was active; it does not trigger post-hoc enlargement of the canonical grid.
 
-Consequently, boundary occupancy is treated as a limitation of the prespecified
-canonical comparison rather than as justification for extending the search
-space after observing the results.
+These frequencies are therefore interpreted as search-space diagnostics and as
+a limitation of the prespecified comparison, not as a new tuning rule.
 
 ```{r boundary-description}
 task_level <- unique(
@@ -2219,7 +2613,7 @@ boundary_table$Proportion <-
   boundary_table$Selected /
   boundary_table$Denominator
 
-knitr::kable(
+format_table(
   boundary_table,
   digits = 4,
   caption =
@@ -2235,10 +2629,11 @@ penalty coefficient reached the edge of its prespecified grid. These counts are
 reported as search-space diagnostics, not as a reason to enlarge the grid after
 observing the results.
 
-# From tuning to final fitting
+## 13. Final model fitting
 
 Nested tuning returns one architecture, learning rate, and applicable penalty
-coefficient(s) for each `Scenario × outer split × ANN variant`.
+coefficient(s) for each `Scenario × outer split × ANN variant`. Final fitting
+then uses those choices without reopening the hyperparameter search.
 
 The final stage follows one fixed sequence:
 
@@ -2253,18 +2648,10 @@ The 3000-epoch value is a **safety ceiling**, not the final training length.
 Outer-assessment phenotypes and true genetic values are excluded from both
 hyperparameter selection and `Best_epoch` selection.
 
-| Final-fitting item | Canonical rule |
-|---|---|
-| Hyperparameters | inherited from nested tuning |
-| Epoch-selection sample | 800 outer-analysis individuals only |
-| Safety ceiling | 3000 epochs |
-| Final refit | all 800 outer-analysis individuals |
-| Final training length | exactly `Best_epoch` |
-| Final assessment | untouched 200 individuals |
+### 13.1 Final fitting contract
 
-The complete final-fitting code is shown below. The table above provides the
-conceptual contract first; the subsequent functions and loop implement that
-contract for all 600 model-by-task fits.
+The contract below makes the separation between tuning, epoch selection, final
+refitting, and held-out assessment explicit.
 
 ```{r final-ann-contract}
 FINAL_EPOCH_MAX_EPOCHS <- 3000L
@@ -2342,7 +2729,7 @@ final_contract <- data.frame(
   stringsAsFactors = FALSE
 )
 
-knitr::kable(
+format_table(
   final_contract,
   caption =
     "Canonical final ANN contract",
@@ -2355,9 +2742,17 @@ set is excluded from tuning and epoch selection, and true genetic values are
 used only after prediction for evaluation. `Best_epoch` is therefore selected
 without access to either final assessment target.
 
-<!-- Source section: final-fit helper functions -->
+### 13.2 Best-epoch selection
 
-```{r final-ann-functions}
+`select_final_epoch()` uses only the current 800-individual outer-analysis set.
+That set is divided deterministically into fitting and early-validation
+subsets. Scaling is fitted on the fitting subset, and early stopping is allowed
+to search up to `FINAL_EPOCH_MAX_EPOCHS = 3000`.
+
+The best early-validation checkpoint determines `Best_epoch`. The outer
+assessment set is not used in this decision.
+
+```{r final-epoch-selection-functions}
 final_bias <- function(
   predicted,
   observed
@@ -2677,7 +3072,19 @@ select_final_epoch <- function(
       )
   )
 }
+```
 
+### 13.3 Refit on all outer-analysis individuals
+
+After `Best_epoch` has been selected, `train_final_fixed()` reinitializes the
+network and re-estimates marker and phenotype scaling from **all 800
+outer-analysis individuals**. The network is then trained for exactly the
+selected `Best_epoch`.
+
+No early stopping is applied during this refit: the selected epoch count is
+already fixed before the 200 outer-assessment individuals are predicted.
+
+```{r final-fixed-refit-function}
 train_final_fixed <- function(
   train_ids,
   assessment_ids,
@@ -2836,7 +3243,12 @@ train_final_fixed <- function(
 }
 ```
 
-<!-- Source section: final outer-CV tasks -->
+### 13.4 Held-out predictions
+
+The 150 final tasks reuse the same frozen outer splits and task identifiers used
+during tuning. Each task is fitted for all four ANN variants, producing
+**600 model-by-task fits**. Every fitted model predicts the same 200 untouched
+outer-assessment individuals for its task.
 
 ```{r final-ann-tasks}
 outer_map <- unique(
@@ -2891,7 +3303,7 @@ final_task_table$TaskID <- paste(
 
 rownames(final_task_table) <- NULL
 
-knitr::kable(
+format_table(
   head(final_task_table, 15),
   caption =
     "First 15 canonical ANN final tasks",
@@ -2900,11 +3312,13 @@ knitr::kable(
 ```
 
 Each row is one `Scenario × outer split` final-prediction task. The four ANN
-variants reuse the same `TaskID`, so the final stage contains
-**150 tasks × 4 variants = 600 model fits**, each evaluated on the same 200
-outer-assessment individuals.
+variants reuse the same `TaskID`. The final loop below first selects
+`Best_epoch`, then refits the corresponding model on all 800 outer-analysis
+individuals, and only afterward predicts the 200 outer-assessment individuals.
 
-<!-- Source section: final fitting and outer prediction -->
+True genetic values and observed phenotypes from the outer assessment are
+accessed only after prediction, when the held-out evaluation metrics are
+constructed.
 
 ```{r run-final-ann, eval=RUN_ANN}
 dir.create(
@@ -3395,7 +3809,7 @@ write.csv(
 )
 ```
 
-# Canonical final results
+## 14. Canonical final results
 
 The final performance tables use the canonical 600 model-task results,
 120,000 held-out predictions, and 600 epoch-selection records. These saved
@@ -3417,7 +3831,7 @@ final_output_summary <- data.frame(
     length(unique(epoch_selection$TaskID))
   )
 )
-knitr::kable(
+format_table(
   final_output_summary,
   caption = "Observed size of the canonical final ANN outputs",
   row.names = FALSE
@@ -3441,14 +3855,14 @@ a common training length; each final network was subsequently refit for its own
 selected `Best_epoch`.
 
 
-# Final ANN predictive performance
+## 15. Predictive performance
 
 Final performance is summarized separately for the two evaluation targets.
 Recovery of the known **true genetic value** is the primary simulated-data
-criterion; prediction of the **observed phenotype** is secondary. Both tables
+criterion; prediction of the **observed phenotype** is secondary. Both summaries
 average the same 25 frozen outer splits for each scenario and ANN variant.
 
-```{r final-ann-performance}
+```{r final-ann-performance-calculations}
 ok <- results[
   results$Status == "ok",
   ,
@@ -3491,8 +3905,14 @@ perf <- perf[
 ]
 
 rownames(perf) <- NULL
+```
 
-knitr::kable(
+### 15.1 True genetic value
+
+The primary evaluation compares held-out ANN predictions with the known simulated genetic value. Correlation and \(R^2\) increase with better agreement, whereas RMSE and MAE decrease with better prediction. Bias near zero and slope near one indicate better calibration.
+
+```{r final-genetic-performance}
+format_table(
   perf[
     ,
     c(
@@ -3511,11 +3931,16 @@ knitr::kable(
   digits = 4,
   caption =
     "Primary evaluation: mean outer-CV ANN performance against true genetic value",
-  table.attr = WIDE_TABLE_ATTR,
   row.names = FALSE
 )
+```
 
-knitr::kable(
+### 15.2 Phenotype
+
+The secondary evaluation compares the same held-out predictions with the observed phenotype. Because phenotype also contains non-genetic variation, this target is reported separately from recovery of the simulated genetic signal.
+
+```{r final-phenotype-performance}
+format_table(
   perf[
     ,
     c(
@@ -3534,10 +3959,15 @@ knitr::kable(
   digits = 4,
   caption =
     "Secondary evaluation: mean outer-CV ANN performance against observed phenotype",
-  table.attr = WIDE_TABLE_ATTR,
   row.names = FALSE
 )
+```
 
+### 15.3 Interpretation among ANN variants
+
+The overall summary below averages the primary genetic-value metrics across all scenarios and outer splits for each ANN variant.
+
+```{r final-ann-overall-summary}
 overall_ann <- aggregate(
   cbind(
     Genetic_Correlation,
@@ -3562,6 +3992,12 @@ overall_ann <- overall_ann[
   ,
   drop = FALSE
 ]
+
+format_table(
+  overall_ann,
+  digits = 4,
+  caption = "Overall ANN performance against true genetic value"
+)
 ```
 
 Across all outer-CV tasks, ANN-L1+L2 has the highest mean genetic
@@ -3579,12 +4015,6 @@ Thus, within the prespecified canonical model/architecture search space, the
 observable regularization gain is driven mainly by the L1 component. The formal
 comparison with GBLUP-ADE is presented in the next module.
 
-# Navigation
+## 16. Navigation
 
 [Previous: Validation design](simulated_data_validation.html) | [Parallel branch: GBLUP-ADE](simulated_data_gblup.html) | [Next: Model comparison](simulated_data_comparison.html)
-
-# Reproducibility information
-
-```{r session-info}
-sessionInfo()
-```
