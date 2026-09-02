@@ -215,16 +215,6 @@ require a new ANN runtime.
 library(knitr) # Format reader-facing tables and R Markdown output.
 ```
 
-```{r legacy-table-formatting, include=FALSE}
-# Temporary compatibility helper retained until later M04 table stages.
-WIDE_TABLE_ATTR <- paste(
-  'style="display:block;',
-  'overflow-x:auto;',
-  'white-space:nowrap;',
-  'width:100%;"'
-)
-```
-
 ### 3.2 Execution mode
 
 ANN tuning and final fitting are opt-in computational stages. With both runtime
@@ -3819,7 +3809,7 @@ write.csv(
 )
 ```
 
-# Canonical final results
+## 14. Canonical final results
 
 The final performance tables use the canonical 600 model-task results,
 120,000 held-out predictions, and 600 epoch-selection records. These saved
@@ -3841,7 +3831,7 @@ final_output_summary <- data.frame(
     length(unique(epoch_selection$TaskID))
   )
 )
-knitr::kable(
+format_table(
   final_output_summary,
   caption = "Observed size of the canonical final ANN outputs",
   row.names = FALSE
@@ -3865,14 +3855,14 @@ a common training length; each final network was subsequently refit for its own
 selected `Best_epoch`.
 
 
-# Final ANN predictive performance
+## 15. Predictive performance
 
 Final performance is summarized separately for the two evaluation targets.
 Recovery of the known **true genetic value** is the primary simulated-data
-criterion; prediction of the **observed phenotype** is secondary. Both tables
+criterion; prediction of the **observed phenotype** is secondary. Both summaries
 average the same 25 frozen outer splits for each scenario and ANN variant.
 
-```{r final-ann-performance}
+```{r final-ann-performance-calculations}
 ok <- results[
   results$Status == "ok",
   ,
@@ -3915,8 +3905,14 @@ perf <- perf[
 ]
 
 rownames(perf) <- NULL
+```
 
-knitr::kable(
+### 15.1 True genetic value
+
+The primary evaluation compares held-out ANN predictions with the known simulated genetic value. Correlation and \(R^2\) increase with better agreement, whereas RMSE and MAE decrease with better prediction. Bias near zero and slope near one indicate better calibration.
+
+```{r final-genetic-performance}
+format_table(
   perf[
     ,
     c(
@@ -3935,11 +3931,16 @@ knitr::kable(
   digits = 4,
   caption =
     "Primary evaluation: mean outer-CV ANN performance against true genetic value",
-  table.attr = WIDE_TABLE_ATTR,
   row.names = FALSE
 )
+```
 
-knitr::kable(
+### 15.2 Phenotype
+
+The secondary evaluation compares the same held-out predictions with the observed phenotype. Because phenotype also contains non-genetic variation, this target is reported separately from recovery of the simulated genetic signal.
+
+```{r final-phenotype-performance}
+format_table(
   perf[
     ,
     c(
@@ -3958,10 +3959,15 @@ knitr::kable(
   digits = 4,
   caption =
     "Secondary evaluation: mean outer-CV ANN performance against observed phenotype",
-  table.attr = WIDE_TABLE_ATTR,
   row.names = FALSE
 )
+```
 
+### 15.3 Interpretation among ANN variants
+
+The overall summary below averages the primary genetic-value metrics across all scenarios and outer splits for each ANN variant.
+
+```{r final-ann-overall-summary}
 overall_ann <- aggregate(
   cbind(
     Genetic_Correlation,
@@ -3986,6 +3992,12 @@ overall_ann <- overall_ann[
   ,
   drop = FALSE
 ]
+
+format_table(
+  overall_ann,
+  digits = 4,
+  caption = "Overall ANN performance against true genetic value"
+)
 ```
 
 Across all outer-CV tasks, ANN-L1+L2 has the highest mean genetic
@@ -4003,12 +4015,6 @@ Thus, within the prespecified canonical model/architecture search space, the
 observable regularization gain is driven mainly by the L1 component. The formal
 comparison with GBLUP-ADE is presented in the next module.
 
-# Navigation
+## 16. Navigation
 
 [Previous: Validation design](simulated_data_validation.html) | [Parallel branch: GBLUP-ADE](simulated_data_gblup.html) | [Next: Model comparison](simulated_data_comparison.html)
-
-# Reproducibility information
-
-```{r session-info}
-sessionInfo()
-```
