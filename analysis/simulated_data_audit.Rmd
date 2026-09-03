@@ -17,19 +17,23 @@ editor_options:
 
 ## 1. Purpose
 
-This module introduces the simulated genomic data used throughout the prediction
-workflow and prepares the objects required by the later modules. The data were
-generated with the **GENES** software, developed for experimental statistics and
-quantitative genetics (Cruz, 2013, 2016).
+This module introduces the simulated genomic data used throughout the genomic
+prediction workflow and prepares the common objects required by the later
+modules. The population was generated with the **GENES** software, which
+provides tools for experimental statistics, quantitative genetics, and genetic
+simulation (Cruz, 2013, 2016).
 
-The analysis follows the information in the same order in which a reader needs
-it: phenotypic values, true genetic values, genotypes, the genetic map, the
-simulation settings, QTL positions, the genetic signal, genotype properties,
-parental genotypes, and linkage disequilibrium (LD).
+The sections follow the same sequence in which the data are used analytically.
+We first inspect the phenotypic and true genetic values, then orient and recode
+the marker matrix, reconstruct the genetic map, recover the six simulation
+scenarios and their QTL, describe the genetic signal and genotype properties,
+inspect the parental genotypes, and finally characterize linkage
+disequilibrium (LD). This order allows the reader to see where each object comes
+from before it is used in a calculation.
 
-The goal here is to understand the simulated population and create one shared
-data object for the prediction analyses. No genomic prediction model is fitted
-in this module.
+No genomic prediction model is fitted in this module. Its role is to document
+the simulated population clearly and create one shared data object that is used
+unchanged by the validation, GBLUP-ADE, ANN, and model-comparison modules.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -54,25 +58,32 @@ dir.create(
 
 ### 2.1 Packages
 
-Only three packages are needed. The comments beside each package indicate its
-role in the document.
+The analysis uses three packages, each for a distinct reader-facing task.
+`knitr` converts compact R objects into formatted HTML tables so that dimensions,
+scenario settings, and numerical summaries can be read directly in the page.
+`ggplot2` constructs the distribution plots, genetic-map diagrams, segregation
+comparison, and LD curve. `ggthemes` supplies `theme_gdocs()` and the Google Docs
+color scales, giving the figures a consistent visual design across the module.
 
 ```{r packages, warning=FALSE, message=FALSE}
-library(knitr)     # Format the tables shown to the reader.
-library(ggplot2)   # Build all figures in this module.
-library(ggthemes)  # Apply the Google Docs theme and color scales.
+library(knitr)     # Format data summaries as readable HTML tables.
+library(ggplot2)   # Construct the statistical and genomic figures.
+library(ggthemes)  # Apply the Google Docs theme and matching color scales.
 ```
 
-All figures use `theme_gdocs()` together with `scale_fill_gdocs()` or
-`scale_color_gdocs()` when a grouping variable is represented by color. A
-300-dpi TIFF copy of every figure is also saved in
-`output/simulated/m01/figures/`.
+Every figure displayed in the page uses `theme_gdocs()` and a Google Docs color
+or fill scale whenever groups are distinguished visually. A publication-quality
+TIFF copy is also written to `output/simulated/m01/figures/`; the saving commands
+are placed in hidden chunks so they do not interrupt the explanatory code shown
+to the reader.
 
 ### 2.2 Random seed
 
-The simulated data themselves are fixed. A seed is used only when 5,000 marker
-pairs from different linkage groups are sampled later to provide an LD
-reference.
+The phenotype, true genetic values, genotypes, genetic map, and scenario
+definitions are fixed inputs and therefore do not depend on a random seed.
+Random sampling is required only when 5,000 pairs of markers from different
+linkage groups are drawn later to obtain a background LD reference. Setting the
+seed here makes that one stochastic step reproducible.
 
 ```{r random-seed}
 SEED_GLOBAL <- 20260821L
@@ -81,18 +92,21 @@ set.seed(SEED_GLOBAL)
 
 ## 3. Phenotypic and true genetic values
 
-The first two files contain the quantities that define the prediction target.
-Rows correspond to the same 1,000 simulated individuals, while the six columns
-correspond to scenarios C1-C6.
+The first two GENES files contain the two response-related quantities used in
+the project. Both matrices have the same 1,000 individuals in rows and six
+simulation scenarios in columns. They must remain aligned by row because the
+phenotype is used for fitting whereas the true genetic value is reserved for
+evaluating predictions.
 
 ### 3.1 Phenotypic values
 
-We first read the phenotypic values. A boxplot is useful here because it shows
-the center, spread, and possible extreme values of each scenario immediately
-after the file is loaded.
+The phenotypic matrix contains the observed response available to a prediction
+model. After reading the file, we label the six columns C1-C6 and reshape a copy
+only for plotting. The boxplots summarize center, dispersion, and possible
+extreme values without changing the matrix used later in the analysis.
 
 ```{r phenotype, fig.cap="Distribution of phenotypic values across the six simulation scenarios."}
-# Read the phenotype matrix: individuals in rows and scenarios in columns.
+# Read phenotypes with individuals in rows and scenarios in columns.
 phenotype <- as.matrix(
   read.table(
     "data/dados_simulados/DG#gen_F2_Vfen.txt",
@@ -102,7 +116,7 @@ phenotype <- as.matrix(
 
 colnames(phenotype) <- paste0("C", 1:6)
 
-# Convert the matrix to long format only for plotting.
+# Reshape only a plotting copy; the original matrix remains unchanged.
 phenotype_long <- stack(as.data.frame(phenotype))
 names(phenotype_long) <- c("Phenotype", "Scenario")
 
@@ -126,7 +140,9 @@ p_phenotype <- ggplot(
   theme_gdocs()
 
 print(p_phenotype)
+```
 
+```{r save-phenotype-tiff, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/phenotype_distribution.tiff",
   plot = p_phenotype,
@@ -140,18 +156,25 @@ ggsave(
 ```
 
 The file contains `r nrow(phenotype)` individuals and
-`r ncol(phenotype)` scenarios. These phenotypic values are the responses
-available to the prediction models within each training set.
+`r ncol(phenotype)` scenarios. These are the responses that become available to
+the model only when an individual belongs to the corresponding analysis set in
+the validation design.
 
 ### 3.2 True genetic values
 
-The true genetic values are read separately because they play a different role.
-They are not used to create validation partitions or to fit the prediction
-models. Instead, they provide the known simulated genetic signal against which
-predictions can later be evaluated.
+Because the population is simulated, the underlying genetic value of each
+individual is known. These values are **not** used to create validation
+partitions, tune models, or fit the final prediction equations. They are retained
+as an external target for evaluating how closely predictions recover the
+simulated genetic signal in held-out individuals.
+
+The code below reads the matrix, keeps the same C1-C6 column labels, and produces
+the corresponding distribution plot. Comparing this figure with the phenotype
+figure helps the reader distinguish variation in the genetic component from
+variation in the observed response.
 
 ```{r true-genetic-values, fig.cap="Distribution of true genetic values across the six simulation scenarios."}
-# Read the true simulated genetic values.
+# Read the known genetic values generated by GENES.
 true_genetic_value <- as.matrix(
   read.table(
     "data/dados_simulados/DG#gen_F2_Vgen.dat",
@@ -161,7 +184,7 @@ true_genetic_value <- as.matrix(
 
 colnames(true_genetic_value) <- paste0("C", 1:6)
 
-# Reshape only for the reader-facing figure.
+# Reshape a copy only for the reader-facing figure.
 true_g_long <- stack(as.data.frame(true_genetic_value))
 names(true_g_long) <- c("True_genetic_value", "Scenario")
 
@@ -185,7 +208,9 @@ p_true_g <- ggplot(
   theme_gdocs()
 
 print(p_true_g)
+```
 
+```{r save-true-genetic-value-tiff, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/true_genetic_value_distribution.tiff",
   plot = p_true_g,
@@ -198,24 +223,27 @@ ggsave(
 )
 ```
 
-The matrix has the same `r nrow(true_genetic_value)` individuals and six
-scenarios as the phenotype matrix.
+The matrix contains the same `r nrow(true_genetic_value)` individuals and six
+scenarios as the phenotype matrix, preserving row-by-row correspondence between
+the observed response and the known simulated genetic component.
 
 ## 4. Genotypic data
 
 ### 4.1 Genotype matrix
 
-The GENES genotype file stores markers in rows and individuals in columns. We
-transpose it once so that each row represents one individual, which is the
-orientation used by the later prediction modules.
+The GENES genotype file is organized with markers in rows and individuals in
+columns. The prediction workflow uses the opposite orientation, so the matrix is
+transposed once at reading time. From that point onward, every row represents an
+individual and every column represents a marker.
 
-A boxplot is not informative for a marker matrix because the values are discrete
-genotype calls. Instead, the table below shows an actual sample of individuals
-and markers. The selected markers are distributed across the complete matrix so
-that the reader can see the original `0/1/2` coding directly.
+A boxplot would hide the discrete structure of a marker matrix. Instead, the
+table below displays actual genotype calls for ten individuals and twelve
+markers spread across the full set of 4,010 markers. This makes the matrix
+orientation and the original `0/1/2` coding visible before any recoding is
+performed.
 
 ```{r genotype-sample}
-# Read the marker matrix and orient it as individuals x markers.
+# Read the GENES marker file and orient it as individuals x markers.
 geno_012 <- t(
   as.matrix(
     read.table(
@@ -225,7 +253,7 @@ geno_012 <- t(
   )
 )
 
-# Select twelve markers spread across the 4,010-marker matrix.
+# Select markers distributed from the beginning to the end of the matrix.
 marker_sample <- unique(
   round(
     seq(
@@ -236,7 +264,7 @@ marker_sample <- unique(
   )
 )
 
-# Display the first ten individuals for those markers.
+# Show a small real sample while retaining the complete matrix for analysis.
 genotype_sample <- data.frame(
   Individual = 1:10,
   geno_012[
@@ -252,21 +280,23 @@ names(genotype_sample)[-1] <- paste0("M", marker_sample)
 genotype_sample |>
   knitr::kable(
     format = "html",
-    caption = "Sample of the genotype matrix using 10 individuals and 12 markers distributed across the genome",
+    caption = "Sample of 10 individuals and 12 markers distributed across the genotype matrix",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
 
 The complete matrix contains `r nrow(geno_012)` individuals and
-`r ncol(geno_012)` markers. The observed genotype states are
-`r paste(sort(unique(as.vector(geno_012))), collapse = ", ")`.
+`r ncol(geno_012)` markers. The observed states are
+`r paste(sort(unique(as.vector(geno_012))), collapse = ", ")`, which correspond
+to the three genotype classes generated for the F2 population.
 
 ### 4.2 Genotype coding used in the prediction models
 
-For model fitting, the same genotype calls are shifted from `0/1/2` to
-`-1/0/1`. This changes only their numerical representation; it does not change
-the individuals, markers, or genotype states.
+The later prediction models use the same genotype calls centered on zero.
+Subtracting one converts `0/1/2` to `-1/0/1`; no individual or marker is removed
+and no biological genotype call is changed. The small table makes the
+transformation explicit before the recoded matrix is saved for downstream use.
 
 ```{r genotype-coding}
 geno_m101 <- geno_012 - 1L
@@ -283,17 +313,20 @@ data.frame(
   )
 ```
 
-The transformation is therefore `0 -> -1`, `1 -> 0`, and `2 -> 1`.
+Thus, `0 -> -1`, `1 -> 0`, and `2 -> 1`. The transformation changes the
+numerical scale only.
 
 ## 5. Genetic map
 
-The genetic map is read directly from the GENES text file. The first 12 lines
-describe the map as a whole, whereas the marker-level records begin on line 13.
-Each marker record identifies its linkage group and its position in
-centimorgans (cM).
+The genetic map provides the physical organization needed to interpret markers
+and QTL. The first 12 lines of the GENES file describe the map globally; the
+marker-level records begin on line 13. For each marker we recover the linkage
+group, its order within that group, its marker name, and its position in
+centimorgans (cM). A global marker index is then added so the QTL indices from
+the scenario file can be matched directly to this map.
 
 ```{r genetic-map-data}
-# Read the marker-level portion of the GENES map file.
+# Read the marker-level portion of the GENES genetic-map file.
 genetic_map <- read.table(
   "data/dados_simulados/genoma.txt",
   header = FALSE,
@@ -315,11 +348,12 @@ names(genetic_map) <- c(
   "Position_cM"
 )
 
-# Keep the variables required for plotting and later QTL matching.
+# Convert the map fields used in numerical calculations.
 genetic_map$LG <- as.integer(genetic_map$LG)
 genetic_map$Marker_within_LG <- as.integer(genetic_map$Marker_within_LG)
 genetic_map$Position_cM <- as.numeric(genetic_map$Position_cM)
 genetic_map$Global_marker <- seq_len(nrow(genetic_map))
+
 genetic_map$LG_label <- factor(
   paste0("LG", genetic_map$LG),
   levels = paste0("LG", 1:10)
@@ -328,8 +362,12 @@ genetic_map$LG_label <- factor(
 map_summary <- data.frame(
   Linkage_group = paste0("LG", 1:10),
   Markers = as.integer(table(genetic_map$LG)),
-  Start_cM = as.numeric(tapply(genetic_map$Position_cM, genetic_map$LG, min)),
-  End_cM = as.numeric(tapply(genetic_map$Position_cM, genetic_map$LG, max))
+  Start_cM = as.numeric(
+    tapply(genetic_map$Position_cM, genetic_map$LG, min)
+  ),
+  End_cM = as.numeric(
+    tapply(genetic_map$Position_cM, genetic_map$LG, max)
+  )
 )
 
 map_summary |>
@@ -341,18 +379,19 @@ map_summary |>
   )
 ```
 
-The map contains 10 linkage groups with 401 markers in each group. Positions
-range from 0 to 200 cM with 0.5-cM spacing, giving 4,010 markers in total. The
-QTL are added to this map after the scenario file is read in the next section.
+The map contains 10 linkage groups, each with 401 markers spanning 0-200 cM at
+0.5-cM intervals. The complete map therefore contains 4,010 markers. In the
+next section, the QTL indices defined by GENES are matched to these positions so
+that the linkage groups can be represented as chromosome-like structures rather
+than as simple vertical lines.
 
 ## 6. Simulation settings and QTL architecture
 
 ### 6.1 GENES software and genetic model
 
-The six scenarios were generated with the **GENES** software (Cruz, 2013,
-2016). The control file identifies the simulation model as `Model = 2`. Using
-the model expression supplied with the simulation, the phenotype of individual
-\(i\) is represented as
+The six scenarios were generated with **GENES** (Cruz, 2013, 2016). The control
+file identifies the genetic model as `Model = 2`. Using the expression supplied
+with the simulation, the phenotype of individual \(i\) is represented by
 
 \[
 Y_i =
@@ -362,35 +401,34 @@ Y_i =
 \varepsilon_i .
 \]
 
-where:
+In this expression, \(Y_i\) is the simulated phenotype of individual \(i\),
+\(\mu\) is the overall mean, \(\sum_j a_j\) represents contributions associated
+with loci, the double sum represents pairwise interaction contributions between
+loci, and \(\varepsilon_i\) is the residual component. The equation describes
+how the simulated data were generated; it is distinct from the prediction
+models fitted in later modules.
 
-- \(Y_i\) is the simulated phenotype of individual \(i\);
-- \(\mu\) is the overall mean;
-- \(\sum_j a_j\) represents the contributions associated with loci;
-- \(\sum_j\sum_{j'}\alpha_j\alpha_{j'}\) represents pairwise interaction
-  contributions between loci;
-- \(\varepsilon_i\) is the residual effect.
+### 6.2 Scenario settings and QTL positions
 
-This equation describes the model used to generate the simulated data. It
-should not be confused with the GBLUP-ADE or ANN models fitted in later
-modules.
+The GENES control file contains six repeated blocks corresponding to scenarios
+C1-C6. Within each block the fields occur in a fixed order. The code therefore
+reads the required values directly from those positions, including the number
+of selected QTL, their marker indices, the heritability specified for the
+scenario, the genetic model, and the other simulation settings.
 
-### 6.2 Scenario settings
-
-The GENES control file contains six repeated blocks, one for each scenario.
-Because the fields occur in a fixed order, we read the required values directly
-from their positions in each block. This keeps the code linear and makes the
-connection between the file and the table below explicit.
+After the six blocks are read, each QTL index is matched to the genetic map from
+Section 5. This provides its linkage group and position in cM. The same matched
+table is used both for the figures and for the object saved for later modules.
 
 ```{r simulation-scenarios}
-# Read the six scenario blocks from the GENES control file.
+# Read the six scenario blocks written by GENES.
 control_raw <- readLines(
   "data/dados_simulados/controlegenetico#1.dat",
   warn = FALSE,
   encoding = "latin1"
 )
 
-# Normalize accented text only so the fixed field positions can be read safely.
+# Transliterate accented text so the fixed block positions are read consistently.
 control_ascii <- iconv(
   control_raw,
   from = "latin1",
@@ -421,16 +459,22 @@ qtl_lists <- vector(
   length(scenario_start)
 )
 
-# Recover the values stored in each scenario block.
+# Recover the settings and QTL indices scenario by scenario.
 for (i in seq_along(scenario_start)) {
 
   s <- scenario_start[i]
 
-  control_table$Variable[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s])))
-  control_table$Total_loci[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 1])))
-  control_table$QTL_N[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 2])))
+  control_table$Variable[i] <- as.numeric(
+    trimws(sub("^[^,]*,", "", control_ascii[s]))
+  )
+  control_table$Total_loci[i] <- as.numeric(
+    trimws(sub("^[^,]*,", "", control_ascii[s + 1]))
+  )
+  control_table$QTL_N[i] <- as.numeric(
+    trimws(sub("^[^,]*,", "", control_ascii[s + 2]))
+  )
 
-  # QTL entries are marker indices, so they are stored as integers.
+  # QTL values are marker indices and are therefore kept as integers.
   qtl_lists[[i]] <- as.integer(
     scan(
       text = control_ascii[s + 3],
@@ -439,44 +483,27 @@ for (i in seq_along(scenario_start)) {
     )
   )
 
-  control_table$gmd[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 5])))
-  control_table$Model[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 6])))
-  control_table$H2_nominal[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 7])))
-  control_table$Constant[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 8])))
-  control_table$Scale[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 9])))
-  control_table$CV_setting[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 10])))
+  control_table$gmd[i] <- as.numeric(
+    trimws(sub("^[^,]*,", "", control_ascii[s + 5]))
+  )
+  control_table$Model[i] <- as.numeric(
+    trimws(sub("^[^,]*,", "", control_ascii[s + 6]))
+  )
+  control_table$H2_nominal[i] <- as.numeric(
+    trimws(sub("^[^,]*,", "", control_ascii[s + 7]))
+  )
+  control_table$Constant[i] <- as.numeric(
+    trimws(sub("^[^,]*,", "", control_ascii[s + 8]))
+  )
+  control_table$Scale[i] <- as.numeric(
+    trimws(sub("^[^,]*,", "", control_ascii[s + 9]))
+  )
+  control_table$CV_setting[i] <- as.numeric(
+    trimws(sub("^[^,]*,", "", control_ascii[s + 10]))
+  )
 }
 
-control_table |>
-  knitr::kable(
-    format = "html",
-    digits = 3,
-    caption = "Settings used to generate the six simulation scenarios in GENES",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
-```
-
-The number of QTL increases from 8 in C1 to 480 in C6. The specified
-heritability is 0.7 in C1-C2, 0.5 in C3-C4, and 0.3 in C5-C6. The values
-`gmd = 0.5`, `Model = 2`, `Constant = 100`, `Scale = 1`, and `CV = 12` are
-fixed across scenarios.
-
-The six scenarios therefore form a joint complexity gradient: QTL number
-increases while the specified heritability decreases across the sequence. These
-two characteristics should consequently be interpreted together rather than as
-independent factors.
-
-### 6.3 QTL positions on the genetic map
-
-The QTL entries in the control file are marker indices. We match each index to
-the previously read genetic map to recover its linkage group and position in
-cM. The first figure combines the 4,010-marker map with all QTL positions used
-across the six scenarios. Gray marks represent the marker grid, while colored
-points identify positions that act as QTL in at least one scenario.
-
-```{r genetic-map-qtl, fig.cap="Genetic map of the 4,010 markers with the simulated QTL positions. Colored points identify positions used as QTL in at least one scenario; LG9 and LG10 contain no simulated QTL."}
-# Match every QTL index to its linkage group and map position.
+# Match each QTL index to its linkage group and map position.
 qtl_rows <- data.frame(
   Scenario = character(),
   QTL_index = integer(),
@@ -504,63 +531,101 @@ qtl_rows$LG_label <- factor(
   levels = paste0("LG", 1:10)
 )
 
-# Keep each QTL position only once for the combined map.
-qtl_union <- unique(
-  qtl_rows[
-    ,
-    c("LG", "Position_cM", "LG_label")
-  ]
-)
+control_table |>
+  knitr::kable(
+    format = "html",
+    digits = 3,
+    caption = "Settings used to generate the six simulation scenarios in GENES",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
 
-map_axes <- data.frame(
+The number of simulated QTL increases from 8 in C1 to 480 in C6, while the
+specified heritability changes from 0.7 in C1-C2 to 0.5 in C3-C4 and 0.3 in
+C5-C6. The remaining settings shown in the table are constant across scenarios.
+The scenarios therefore become genetically more polygenic as the number of QTL
+increases, while the specified heritability decreases across the same sequence.
+
+To make the map biologically easier to read, each linkage group is represented
+below as a chromosome-like colored body extending from 0 to 200 cM. Short white
+ticks indicate every tenth marker; showing a subset of marker ticks avoids
+turning 401 positions per linkage group into a visually solid band. Every QTL
+position used in at least one scenario is retained and drawn as a diamond on
+top of the corresponding linkage group.
+
+LG9 and LG10 are deliberately different from LG1-LG8: GENES placed no QTL in
+those two groups. They therefore provide genomic regions with markers but no
+true simulated QTL signal, which is useful when later evaluating whether a
+method prioritizes regions that actually contain simulated QTL.
+
+```{r genetic-map-qtl, fig.cap="Chromosome-like representation of the ten linkage groups. Colored bodies represent linkage groups, white ticks show a regular subset of marker positions, and diamonds identify positions used as QTL in at least one scenario. LG9 and LG10 contain no simulated QTL."}
+# Create one chromosome-like body for each linkage group.
+chromosome_map <- data.frame(
+  LG = 1:10,
   LG_label = factor(
     paste0("LG", 1:10),
     levels = paste0("LG", 1:10)
   ),
-  Start = 0,
-  End = 200
+  Start_cM = 0,
+  End_cM = 200
+)
+
+# Show every tenth marker as a readable tick on the chromosome body.
+marker_ticks <- genetic_map[
+  genetic_map$Marker_within_LG %% 10 == 1,
+  c("LG", "LG_label", "Position_cM")
+]
+
+# A QTL position appearing in several scenarios is drawn once in the combined map.
+qtl_union <- unique(
+  qtl_rows[
+    ,
+    c("LG", "LG_label", "Position_cM")
+  ]
 )
 
 p_genetic_map <- ggplot() +
   geom_segment(
-    data = map_axes,
+    data = chromosome_map,
     aes(
       x = LG_label,
       xend = LG_label,
-      y = Start,
-      yend = End,
+      y = Start_cM,
+      yend = End_cM,
       color = LG_label
     ),
-    linewidth = 1.3,
+    linewidth = 12,
+    lineend = "round",
     show.legend = FALSE
   ) +
   geom_point(
-    data = genetic_map,
+    data = marker_ticks,
     aes(
       x = LG_label,
       y = Position_cM
     ),
-    shape = "_",
-    size = 1.4,
-    color = "grey70"
+    shape = 95,
+    size = 4.2,
+    color = "white",
+    alpha = 0.85
   ) +
   geom_point(
     data = qtl_union,
     aes(
       x = LG_label,
-      y = Position_cM,
-      fill = LG_label
+      y = Position_cM
     ),
-    shape = 21,
-    size = 2.2,
+    shape = 23,
+    size = 2.4,
+    fill = "white",
     color = "black",
-    stroke = 0.25,
-    show.legend = FALSE
+    stroke = 0.45
   ) +
   scale_color_gdocs() +
-  scale_fill_gdocs() +
   scale_y_reverse(
-    breaks = seq(0, 200, 50)
+    breaks = seq(0, 200, 25),
+    expand = expansion(mult = c(0.035, 0.035))
   ) +
   labs(
     x = "Linkage group",
@@ -569,7 +634,9 @@ p_genetic_map <- ggplot() +
   theme_gdocs()
 
 print(p_genetic_map)
+```
 
+```{r save-genetic-map-tiff, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/genetic_map_with_qtl.tiff",
   plot = p_genetic_map,
@@ -582,21 +649,14 @@ ggsave(
 )
 ```
 
-The absence of colored QTL points in **LG9 and LG10 is intentional**. These two
-linkage groups were simulated without QTL so that they provide genomic regions
-where a method should not find a true simulated QTL signal. They are therefore
-useful reference groups when evaluating whether a methodology prioritizes the
-regions that actually contain simulated QTL.
+The combined map shows where QTL can occur, but the six scenarios differ
+substantially in QTL number. The next figure keeps the same linkage-group scale
+and displays each scenario separately. This makes the increasing QTL density
+from C1 to C6 visible while also confirming that LG9 and LG10 remain without
+QTL in every scenario.
 
-### 6.4 QTL distribution across scenarios
-
-The combined map shows the overall QTL architecture, but it does not show how
-the number of QTL changes from C1 to C6. The faceted figure below therefore
-displays each scenario separately while retaining the same linkage-group
-layout and color scheme.
-
-```{r qtl-map, fig.cap="Positions of the simulated QTL across linkage groups for each scenario. LG9 and LG10 were intentionally simulated without QTL and remain empty in every panel."}
-# Create the ten linkage-group axes in every scenario panel.
+```{r qtl-map, fig.cap="Positions of simulated QTL in each scenario. The linkage-group color scheme is constant across panels; LG9 and LG10 remain without QTL in all six scenarios."}
+# Draw a chromosome-like body for every linkage group in every panel.
 qtl_reference <- expand.grid(
   Scenario = paste0("C", 1:6),
   LG_label = paste0("LG", 1:10),
@@ -608,8 +668,8 @@ qtl_reference$LG_label <- factor(
   levels = paste0("LG", 1:10)
 )
 
-qtl_reference$Start <- 0
-qtl_reference$End <- 200
+qtl_reference$Start_cM <- 0
+qtl_reference$End_cM <- 200
 
 p_qtl <- ggplot() +
   geom_segment(
@@ -617,32 +677,31 @@ p_qtl <- ggplot() +
     aes(
       x = LG_label,
       xend = LG_label,
-      y = Start,
-      yend = End,
+      y = Start_cM,
+      yend = End_cM,
       color = LG_label
     ),
-    linewidth = 0.8,
+    linewidth = 3.6,
+    lineend = "round",
     show.legend = FALSE
   ) +
   geom_point(
     data = qtl_rows,
     aes(
       x = LG_label,
-      y = Position_cM,
-      fill = LG_label
+      y = Position_cM
     ),
     shape = 21,
-    size = 1.5,
+    size = 1.6,
+    fill = "white",
     color = "black",
-    stroke = 0.2,
-    show.legend = FALSE
+    stroke = 0.25
   ) +
   facet_wrap(
     ~Scenario,
     ncol = 2
   ) +
   scale_color_gdocs() +
-  scale_fill_gdocs() +
   scale_y_reverse(
     breaks = seq(0, 200, 50)
   ) +
@@ -659,7 +718,9 @@ p_qtl <- ggplot() +
   )
 
 print(p_qtl)
+```
 
+```{r save-qtl-map-tiff, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/qtl_positions_by_scenario.tiff",
   plot = p_qtl,
@@ -672,8 +733,9 @@ ggsave(
 )
 ```
 
-The increasing point density from C1 to C6 reflects the scenario design rather
-than a plotting artifact. LG9 and LG10 remain without QTL in all panels.
+The exact counts behind the figure are useful when comparing scenarios. The
+table below counts QTL by linkage group and makes the zeros in LG9 and LG10
+explicit rather than relying only on visual inspection.
 
 ```{r qtl-counts}
 qtl_table <- table(
@@ -699,22 +761,20 @@ qtl_by_lg |>
   )
 ```
 
-The table provides the exact QTL counts behind the figure and makes the zeros
-for LG9 and LG10 explicit.
-
 ## 7. Phenotypic and genetic signal
 
-The simulated phenotype can be separated into its known genetic component and
-the remaining component:
+Because the simulation provides both phenotype \(Y\) and true genetic value
+\(G\), the remaining component can be calculated directly as
 
 \[
 E = Y - G.
 \]
 
-Using these quantities, we calculate the phenotype-genetic correlation,
-genetic-residual correlation, realized heritability, and basic summaries for
-each scenario. These values describe how much genetic signal is present in the
-data that the prediction methods will later analyze.
+The following calculations describe how strongly the phenotype reflects the
+known genetic signal in each scenario. We calculate the phenotype-genetic
+correlation, the genetic-residual correlation, realized heritability, and basic
+location and dispersion summaries. These quantities help explain why prediction
+difficulty changes among scenarios before any model is fitted.
 
 ```{r phenotypic-genetic-signal}
 scenario_names <- paste0("C", 1:6)
@@ -725,7 +785,7 @@ cor_g_e <- numeric(6)
 h2_realized <- numeric(6)
 var_g_over_var_p <- numeric(6)
 
-# Calculate the genetic-signal summaries scenario by scenario.
+# Calculate the signal summaries separately for each simulation scenario.
 for (j in 1:6) {
 
   cor_p_g[j] <- cor(
@@ -745,7 +805,7 @@ for (j in 1:6) {
   var_g_over_var_p[j] <- vg / var(phenotype[, j])
 }
 
-# Gather the quantities used for interpretation and later saving.
+# Gather the quantities required for interpretation and later reuse.
 scenario_summary <- data.frame(
   Scenario = scenario_names,
   QTL_N = control_table$QTL_N,
@@ -788,16 +848,17 @@ scenario_summary[
 
 The phenotype-true-genetic-value correlation ranges from
 `r sprintf("%.3f", min(scenario_summary$Cor_P_G))` to
-`r sprintf("%.3f", max(scenario_summary$Cor_P_G))`, showing that the six
-scenarios differ in the strength of the genetic signal available for
-prediction.
+`r sprintf("%.3f", max(scenario_summary$Cor_P_G))`. This variation shows that
+the six scenarios do not contain the same amount of recoverable genetic signal,
+which is important context for the model comparisons made later.
 
 ### 7.1 Specified and realized heritability
 
-The heritability entered in GENES is a simulation setting. The realized
-heritability is calculated from the genetic and residual variances observed in
-the finite simulated population. Comparing them shows how closely each
-generated scenario reflects the value specified during simulation.
+The heritability specified in GENES is a parameter used when generating a
+scenario. Realized heritability is instead calculated from the genetic and
+residual variances actually observed in this finite simulated population.
+Comparing both values shows how closely each generated sample reflects its
+specified setting without redefining the scenario itself.
 
 ```{r heritability-comparison, fig.cap="Heritability specified in GENES and realized heritability in the generated population."}
 heritability_plot <- rbind(
@@ -842,7 +903,9 @@ p_heritability <- ggplot(
   theme_gdocs()
 
 print(p_heritability)
+```
 
+```{r save-heritability-tiff, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/heritability_specified_vs_realized.tiff",
   plot = p_heritability,
@@ -859,16 +922,15 @@ The absolute differences for C1-C6 are
 `r paste(sprintf("%.4f", abs(h2_difference)), collapse = ", ")`. The largest
 difference occurs in
 `r scenario_summary$Scenario[which.max(abs(h2_difference))]`, with an absolute
-difference of `r sprintf("%.4f", max(abs(h2_difference)))`. These differences
-describe the generated population and do not redefine the six scenarios.
+difference of `r sprintf("%.4f", max(abs(h2_difference)))`.
 
 ### 7.2 GENES CV setting and empirical phenotype CV
 
-The control file records `CV = 12` for every scenario. We compare that value
-with the coefficient of variation calculated directly from the generated
-phenotypic values. This distinction is useful because the value supplied during
-simulation does not have to equal the empirical value in one finite simulated
-sample.
+GENES records `CV = 12` for all six scenarios. The empirical phenotype CV is a
+different quantity: it is calculated after simulation from the standard
+deviation and mean of the generated phenotype. Showing both values prevents the
+input setting from being mistaken for a descriptive statistic calculated from
+this particular finite population.
 
 ```{r cv-comparison, fig.cap="CV specified in GENES and empirical coefficient of variation calculated from the simulated phenotypes."}
 cv_plot <- rbind(
@@ -913,7 +975,9 @@ p_cv <- ggplot(
   theme_gdocs()
 
 print(p_cv)
+```
 
+```{r save-cv-tiff, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/cv_genes_vs_empirical.tiff",
   plot = p_cv,
@@ -928,21 +992,21 @@ ggsave(
 
 The empirical phenotype CV values are
 `r paste(sprintf("%.2f", scenario_summary$CV_empirical_pct), collapse = ", ")`%.
-Their differences from the value entered in GENES are
+Their differences from the GENES setting are
 `r paste(sprintf("%.2f", cv_difference), collapse = ", ")` percentage points.
-The value from the control file is therefore treated as a simulation setting,
-while the empirical CV is calculated from the generated phenotype matrix.
+The two quantities are therefore retained and interpreted separately.
 
 ## 8. Genotype properties
 
 ### 8.1 F2 segregation
 
-An F2 population generated from two contrasting homozygous parents is expected
-to approach a `1:2:1` distribution for the three genotype classes. We compare
-that expectation with all genotype calls in the simulated marker matrix.
+The two simulated parents are contrasting homozygotes, so an F2 population is
+expected to approach a `1:2:1` segregation for the three genotype classes. The
+next calculation uses every genotype call in the 1,000 x 4,010 matrix to compare
+the observed proportions with the theoretical values 0.25, 0.50, and 0.25.
 
 ```{r genotype-segregation, fig.cap="Observed genotype proportions compared with the expected 1:2:1 segregation of an F2 population."}
-# Calculate the overall observed frequencies of genotype classes 0, 1, and 2.
+# Calculate the observed frequency of each genotype state.
 geno_frequency <- prop.table(
   table(
     factor(
@@ -985,7 +1049,9 @@ p_segregation <- ggplot(
   theme_gdocs()
 
 print(p_segregation)
+```
 
+```{r save-genotype-segregation-tiff, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/f2_genotype_proportions.tiff",
   plot = p_segregation,
@@ -998,24 +1064,30 @@ ggsave(
 )
 ```
 
-The observed proportions can be compared directly with 0.25, 0.50, and 0.25.
-This provides a simple population-level description of segregation before the
-markers are used by the prediction models.
+The observed proportions can be compared directly with the expected F2
+proportions. This verifies that the genotype matrix has the segregation pattern
+expected from the simulated cross before the markers enter prediction models.
 
-### 8.2 Marker and individual checks
+### 8.2 Marker and individual properties
 
-We next summarize properties that help the reader understand the matrix:
-missing calls, repeated genotype profiles, monomorphic markers, minor allele
-frequency (MAF), and heterozygosity. These values describe the simulated data;
-they are not used here to construct a generic filtering procedure.
+Several additional summaries describe the marker matrix from complementary
+angles. Missing cells identify absent genotype calls; duplicated rows identify
+individuals with identical complete marker profiles; duplicated columns identify
+markers with identical profiles; monomorphic markers have no genotype
+variation; minor allele frequency (MAF) describes allele balance; and
+heterozygosity records the proportion of heterozygous individuals at each
+marker.
+
+These quantities are descriptive here. They are not used to construct a generic
+filtering rule or to remove markers automatically.
 
 ```{r genotype-checks}
-# Count missing values and repeated rows or columns.
+# Count missing data and repeated complete genotype profiles.
 missing_genotypes <- sum(is.na(geno_012))
 duplicate_individuals <- sum(duplicated(geno_012, MARGIN = 1))
 duplicate_markers <- sum(duplicated(geno_012, MARGIN = 2))
 
-# Calculate allele-frequency and heterozygosity summaries marker by marker.
+# Summarize marker-level allele frequency, MAF, heterozygosity, and variance.
 allele_frequency <- colMeans(geno_012) / 2
 maf <- pmin(allele_frequency, 1 - allele_frequency)
 heterozygosity <- colMeans(geno_012 == 1)
@@ -1059,18 +1131,19 @@ marker_summary |>
   )
 ```
 
-The genotype matrix is subsequently passed to the prediction workflow with the
-same individuals and markers.
+The complete genotype matrix is retained for downstream prediction with the same
+individuals and markers described above.
 
 ## 9. Parental genotypes
 
-The parental file describes the two contrasting parents used by GENES to
-generate the F2 population. We read the parent identifier, linkage group,
-number of markers, and marker states so that the population structure can be
-connected to its simulated origin.
+The parental file connects the simulated F2 population to the two homozygous
+parents from which it was generated. Each parent is represented once for every
+linkage group. We read the parent identifier, linkage-group identifier, reported
+number of markers, and the 401 marker states so the origin of the three F2
+genotype classes can be checked directly.
 
 ```{r parental-genotypes}
-# Read the two parental genotypes across the ten linkage groups.
+# Read the parental records across the ten linkage groups.
 parents <- as.matrix(
   read.table(
     "data/dados_simulados/genoma_pais.txt",
@@ -1083,7 +1156,7 @@ parent_lg <- parents[, 2]
 parent_nmarkers <- parents[, 3]
 parent_genotypes <- parents[, 5:405, drop = FALSE]
 
-# Summarize the linkage groups and fixed state represented by each parent.
+# Summarize the linkage-group coverage and fixed marker state of each parent.
 parent_summary <- data.frame(
   Parent = c(1, 2),
   Linkage_groups = c(
@@ -1091,8 +1164,24 @@ parent_summary <- data.frame(
     length(unique(parent_lg[parent_id == 2]))
   ),
   Marker_state = c(
-    unique(as.vector(parent_genotypes[parent_id == 1, , drop = FALSE]))[1],
-    unique(as.vector(parent_genotypes[parent_id == 2, , drop = FALSE]))[1]
+    unique(
+      as.vector(
+        parent_genotypes[
+          parent_id == 1,
+          ,
+          drop = FALSE
+        ]
+      )
+    )[1],
+    unique(
+      as.vector(
+        parent_genotypes[
+          parent_id == 2,
+          ,
+          drop = FALSE
+        ]
+      )
+    )[1]
   )
 )
 
@@ -1106,32 +1195,39 @@ parent_summary |>
 ```
 
 Both parents occur in all 10 linkage groups. Parent 1 is fixed for marker state
-1 and parent 2 for marker state 0, providing the contrasting parental states
+1 and parent 2 for marker state 0, providing the contrasting homozygous states
 from which the F2 genotypes were generated.
 
 ## 10. Linkage disequilibrium
 
-Linkage disequilibrium is summarized with \(r^2\), the squared correlation
-between marker genotypes. We calculate \(r^2\) for marker pairs from the same
-linkage group at several genetic distances and compare those values with marker
-pairs drawn from different linkage groups.
+Linkage disequilibrium (LD) describes non-random association between marker
+genotypes. Here it is summarized by \(r^2\), the squared correlation between
+pairs of marker columns.
 
-### 10.1 LD decay with map distance
+Two types of marker pairs are compared. **Within-linkage-group pairs** contain
+two markers from the same linkage group. Because both markers lie on the same
+genetic map, their separation can be expressed in cM and the change in LD with
+distance can be studied directly. **Between-linkage-group pairs** contain
+markers from different linkage groups. They do not share a within-group map
+distance, so they are used here as a background reference for association
+between markers that are not on the same linkage group.
 
-The map has a regular spacing of 0.5 cM, so each requested distance can be
-translated directly into a marker shift. For example, 10 cM corresponds to 20
-marker intervals. Within each linkage group we pair markers separated by the
-requested shift, calculate their correlations across the 1,000 individuals,
-square the correlations, and summarize the resulting \(r^2\) values.
+The genetic map has 0.5-cM marker spacing. Therefore a requested distance can be
+translated directly into a number of marker intervals: 10 cM, for example,
+corresponds to 20 intervals. For each requested distance we pair markers within
+each linkage group, calculate their genotype correlations across all
+individuals, square those correlations, and summarize the resulting \(r^2\)
+values. Separately, 5,000 pairs drawn from different linkage groups provide the
+between-group reference.
 
-The evaluated distances range from 0.5 to 200 cM. A conventional continuous
-x-axis compresses the short distances, making the first points and labels hard
-to read. The figure therefore shows the nine evaluated distances as **ordered
-categories with equal visual spacing**. The calculations still use their true
-numeric distances in cM.
+The evaluated distances are 0.5, 1, 2.5, 5, 10, 25, 50, 100, and 200 cM. A
+continuous x-axis compresses the short distances severely, so the displayed
+curve uses these distances as ordered categories with equal visual spacing.
+This changes only the figure layout; every LD calculation still uses the true
+distance in cM.
 
-```{r linkage-disequilibrium, fig.cap="Linkage disequilibrium decay across the evaluated map distances. Distances are shown at equal visual spacing for readability; the dashed line represents the mean r-squared from 5,000 marker pairs belonging to different linkage groups."}
-# Standardize each marker once so correlations can be calculated efficiently.
+```{r linkage-disequilibrium, fig.cap="LD across the evaluated within-linkage-group distances. The dashed line is the mean r-squared from 5,000 marker pairs drawn from different linkage groups. Distances are equally spaced on the displayed x-axis for readability, but calculations use the true distances in cM."}
+# Standardize markers once so correlations can be calculated efficiently.
 geno_scaled <- scale(geno_012)
 
 ld_distances <- c(
@@ -1153,7 +1249,7 @@ ld_summary <- data.frame(
   Median_r2 = NA_real_
 )
 
-# Calculate within-linkage-group LD at each requested map distance.
+# Calculate LD for marker pairs separated by each distance within each LG.
 for (d in seq_along(ld_distances)) {
 
   marker_shift <- as.integer(ld_distances[d] / 0.5)
@@ -1184,7 +1280,7 @@ for (d in seq_along(ld_distances)) {
   ld_summary$Median_r2[d] <- median(r2_all)
 }
 
-# Sample marker pairs from different linkage groups for a background reference.
+# Draw marker pairs from different LGs for the background LD reference.
 set.seed(SEED_GLOBAL + 101L)
 
 n_inter_pairs <- 5000L
@@ -1203,6 +1299,7 @@ inter_j <- sample(
 
 same_lg <- genetic_map$LG[inter_i] == genetic_map$LG[inter_j]
 
+# Resample only second markers that accidentally fall in the same LG.
 while (any(same_lg)) {
 
   inter_j[same_lg] <- sample(
@@ -1228,7 +1325,7 @@ interchromosomal_ld <- data.frame(
   Median_r2 = median(inter_r2)
 )
 
-# Use ordered labels so the short-distance points remain legible.
+# Convert distances to ordered labels only for the figure.
 ld_plot_data <- ld_summary
 ld_plot_data$Distance_label <- factor(
   as.character(ld_plot_data$Distance_cM),
@@ -1251,10 +1348,10 @@ p_ld <- ggplot(
   )
 ) +
   geom_line(
-    linewidth = 0.8
+    linewidth = 0.9
   ) +
   geom_point(
-    size = 2.5
+    size = 2.8
   ) +
   geom_hline(
     data = ld_reference_plot,
@@ -1263,18 +1360,20 @@ p_ld <- ggplot(
       color = Type
     ),
     linetype = "dashed",
-    linewidth = 0.8
+    linewidth = 0.9
   ) +
   scale_color_gdocs() +
   labs(
-    x = "Map distance (cM)",
+    x = "Map distance within linkage group (cM)",
     y = expression(mean(r^2)),
     color = NULL
   ) +
   theme_gdocs()
 
 print(p_ld)
+```
 
+```{r save-ld-tiff, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/ld_decay.tiff",
   plot = p_ld,
@@ -1287,9 +1386,11 @@ ggsave(
 )
 ```
 
-The figure emphasizes the observed pattern rather than the unequal numerical
-spacing between distances. The exact distances and numerical summaries remain
-available in the table below.
+The exact numerical summaries are shown below so that the equal visual spacing
+used in the figure cannot be confused with equal genetic distances. The first
+table reports LD for pairs from the same linkage group at each map distance;
+the second reports the background reference calculated from pairs belonging to
+different linkage groups.
 
 ```{r linkage-disequilibrium-table}
 ld_summary |>
@@ -1311,33 +1412,29 @@ interchromosomal_ld |>
   )
 ```
 
-### 10.2 Interpretation of the LD pattern
-
-The observed LD decreases strongly as map distance increases. Mean \(r^2\)
-declines from
+The observed pattern shows the expected strong decline over short and
+intermediate distances. Mean \(r^2\) decreases from
 `r sprintf("%.4f", ld_summary$Mean_r2[ld_summary$Distance_cM == 0.5])` at
 0.5 cM to
 `r sprintf("%.4f", ld_summary$Mean_r2[ld_summary$Distance_cM == 50])` at
-50 cM.
+50 cM. At 100 and 200 cM the means are
+`r sprintf("%.4f", ld_summary$Mean_r2[ld_summary$Distance_cM == 100])` and
+`r sprintf("%.4f", ld_summary$Mean_r2[ld_summary$Distance_cM == 200])`,
+respectively, whereas the mean for markers from different linkage groups is
+`r sprintf("%.5f", interchromosomal_ld$Mean_r2)`.
 
-At longer distances, mean \(r^2\) remains
-`r sprintf("%.4f", ld_summary$Mean_r2[ld_summary$Distance_cM == 100])` at
-100 cM and
-`r sprintf("%.4f", ld_summary$Mean_r2[ld_summary$Distance_cM == 200])` at
-200 cM, compared with
-`r sprintf("%.5f", interchromosomal_ld$Mean_r2)` for marker pairs from
-different linkage groups.
-
-The persistence of greater LD at 100-200 cM than between linkage groups is
-therefore a property of the simulated recombination structure. It should be
-kept in mind when genomic regions and prediction results are interpreted, but
-it is not used here as a reason to remove markers.
+The fact that long-distance pairs from the same linkage group retain greater
+association than the between-group reference is a property of this simulated
+recombination structure. It is documented for interpretation and is not used to
+remove markers.
 
 ## 11. Summary of the simulated data
 
-The main quantities obtained above are collected in one compact table so that
-the reader can verify the dimensions and basic properties of the data before
-moving to the validation design.
+The table below gathers the main structural quantities established in the
+previous sections. It provides a compact checkpoint before the workflow moves
+to validation design: population size, marker number, scenario number, linkage
+group structure, missingness, repeated profiles, marker variation, MAF, and the
+background LD level.
 
 ```{r data-summary}
 data_overview <- data.frame(
@@ -1359,7 +1456,10 @@ data_overview <- data.frame(
     ncol(geno_012),
     ncol(phenotype),
     length(unique(genetic_map$LG)),
-    paste(unique(as.integer(table(genetic_map$LG))), collapse = ", "),
+    paste(
+      unique(as.integer(table(genetic_map$LG))),
+      collapse = ", "
+    ),
     missing_genotypes,
     duplicate_individuals,
     duplicate_markers,
@@ -1379,10 +1479,9 @@ data_overview |>
   )
 ```
 
-The table summarizes what was observed in the simulated population. The
-scientific interpretation of heritability, CV, QTL distribution, and LD remains
-in the corresponding sections rather than being reduced to generic pass/fail
-messages.
+The summary reports what is present in the simulated population; the detailed
+interpretation of QTL architecture, heritability, CV, and LD remains in the
+sections where each quantity is introduced.
 
 ```{r data-check-output, include=FALSE}
 dim_ok <-
@@ -1514,15 +1613,24 @@ data_check_log <- data.frame(
   Details = c(
     "Expected: phenotype 1000 x 6, true genetic values 1000 x 6, genotype 1000 x 4010.",
     "Phenotypic and true genetic values must be finite.",
-    paste("Observed:", paste(sort(unique(as.vector(geno_012))), collapse = ", ")),
-    paste("Observed:", paste(sort(unique(as.vector(geno_m101))), collapse = ", ")),
+    paste(
+      "Observed:",
+      paste(sort(unique(as.vector(geno_012))), collapse = ", ")
+    ),
+    paste(
+      "Observed:",
+      paste(sort(unique(as.vector(geno_m101))), collapse = ", ")
+    ),
     "Expected: 10 linkage groups, 401 markers per group, 0-200 cM.",
     "Expected QTL counts: 8, 40, 80, 120, 240, 480; nominal H2: 0.7, 0.7, 0.5, 0.5, 0.3, 0.3; Model = 2.",
     "All QTL indices must correspond to marker positions.",
     "LG9 and LG10 were intentionally simulated without QTL.",
     "Phenotype, true genetic values, and genotypes use the same 1,000 row positions.",
     paste(missing_genotypes, "missing genotype cells."),
-    paste(duplicate_individuals, "duplicate individual genotype profiles."),
+    paste(
+      duplicate_individuals,
+      "duplicate individual genotype profiles."
+    ),
     paste(duplicate_markers, "duplicate marker profiles."),
     paste(monomorphic_markers, "monomorphic markers."),
     paste(
@@ -1538,7 +1646,13 @@ data_check_log <- data.frame(
     "Two parents x ten linkage groups, with contrasting fixed marker states.",
     paste(
       "Mean r2 at 0.5, 10 and 50 cM:",
-      paste(round(c(short_ld, medium_ld, ld_50), 4), collapse = ", "),
+      paste(
+        round(
+          c(short_ld, medium_ld, ld_50),
+          4
+        ),
+        collapse = ", "
+      ),
       "; interchromosomal mean r2:",
       round(interchromosomal_ld$Mean_r2, 5)
     )
@@ -1549,19 +1663,19 @@ data_check_log <- data.frame(
 
 ## 12. Shared data object for later modules
 
-The quantities created above are saved together so that the next modules use
-the same individuals, genotype coding, genetic map, scenario information, QTL
-positions, and LD summaries. This prevents each prediction module from
-re-reading and independently preparing the raw simulation files.
+All objects required by the later modules are saved together so validation and
+model fitting use exactly the same individuals, marker coding, genetic map,
+scenario definitions, QTL positions, and LD summaries. The phenotype remains
+the response available for fitting within an analysis set, `genotype_m101`
+contains the marker representation used by the models, and
+`true_genetic_value` remains reserved for evaluation on held-out individuals.
 
-The three quantities with different scientific roles remain explicit:
-
-- `phenotype` contains the response available for model fitting within each
-  analysis set;
-- `genotype_m101` contains the `-1/0/1` marker representation used by the
-  prediction models;
-- `true_genetic_value` is retained only for evaluating predictions on held-out
-  individuals.
+The saving step is hidden because it is an implementation detail of the
+workflow rather than a new scientific calculation shown to the reader. The
+historical column name `CV_metadata` is restored only in the saved scenario
+objects so previously versioned files and downstream code keep the same schema;
+the visible analysis consistently refers to this quantity as the GENES CV
+setting.
 
 ```{r save-shared-data, include=FALSE}
 dir.create(
@@ -1570,6 +1684,17 @@ dir.create(
   recursive = TRUE
 )
 
+# Preserve the historical saved schema without exposing that terminology above.
+control_table_saved <- control_table
+names(control_table_saved)[
+  names(control_table_saved) == "CV_setting"
+] <- "CV_metadata"
+
+scenario_summary_saved <- scenario_summary
+names(scenario_summary_saved)[
+  names(scenario_summary_saved) == "CV_setting"
+] <- "CV_metadata"
+
 write.csv(
   data_check_log,
   "output/simulated/audit/simulated_audit_summary.csv",
@@ -1577,13 +1702,21 @@ write.csv(
 )
 
 write.csv(
-  scenario_summary,
+  scenario_summary_saved,
   "output/simulated/audit/simulated_scenario_summary.csv",
   row.names = FALSE
 )
 
 write.csv(
-  qtl_rows[, c("Scenario", "QTL_index", "LG", "Position_cM")],
+  qtl_rows[
+    ,
+    c(
+      "Scenario",
+      "QTL_index",
+      "LG",
+      "Position_cM"
+    )
+  ],
   "output/simulated/audit/simulated_qtl_map.csv",
   row.names = FALSE
 )
@@ -1621,10 +1754,18 @@ simulated_common <- list(
       "Global_marker"
     )
   ],
-  scenario_control = control_table,
+  scenario_control = control_table_saved,
   qtl_lists = qtl_lists,
-  qtl_map = qtl_rows[, c("Scenario", "QTL_index", "LG", "Position_cM")],
-  scenario_summary = scenario_summary,
+  qtl_map = qtl_rows[
+    ,
+    c(
+      "Scenario",
+      "QTL_index",
+      "LG",
+      "Position_cM"
+    )
+  ],
+  scenario_summary = scenario_summary_saved,
   marker_qc = list(
     allele_frequency = allele_frequency,
     maf = maf,
@@ -1638,12 +1779,6 @@ saveRDS(
   simulated_common,
   "output/simulated/audit/preprocessed_simulated_common.rds",
   compress = "gzip"
-)
-
-cat(
-  "Shared simulated-data object written to:",
-  "output/simulated/audit/preprocessed_simulated_common.rds",
-  "\n"
 )
 ```
 
