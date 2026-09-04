@@ -1,0 +1,38 @@
+name: One-time M01 reader polish
+
+on:
+  push:
+    branches:
+      - m01-direct-reader-flow
+
+permissions:
+  contents: write
+
+jobs:
+  patch-m01:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: m01-direct-reader-flow
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply reader-polish patch
+        run: python .github/scripts/m01_reader_polish.py
+
+      - name: Commit M01 and remove temporary patch files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/scripts/m01_reader_polish.py .github/workflows/m01_reader_polish.yml
+          git add analysis/simulated_data_audit.Rmd
+          git diff --cached --check
+          git commit -m "Polish M01 structure and remove redundant QTL map"
+          git push origin HEAD:m01-direct-reader-flow
