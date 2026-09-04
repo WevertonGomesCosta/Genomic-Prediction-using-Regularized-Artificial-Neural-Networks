@@ -81,8 +81,6 @@ library(ggplot2)   # Construct the statistical and genomic figures.
 library(ggthemes)  # Apply the Google Docs theme and matching color scales.
 ```
 
-Every figure displayed in the page uses `theme_gdocs()````
-
 For figure output, two rules are applied consistently:
 
 - figures shown in the HTML use `theme_gdocs()` and Google Docs color/fill
@@ -520,15 +518,17 @@ ggsave(
 )
 ```
 
-The separation between Sections 5 and 6 is intentional:
+With the marker map defined, the simulated genetic architecture can be added
+without mixing the two levels of information:
 
-- **Section 5** establishes only the marker framework and linkage-group
-  structure;
-- **Section 6** adds QTL once, using the scenario-specific figure to compare
-  their positions and density across C1-C6.
+- **Marker framework:** Section 5 establishes LG1-LG10, marker order, and map
+  positions independently of the simulated QTL.
+- **QTL architecture:** Section 6 places the QTL from each scenario on that fixed
+  framework and compares their distribution across C1-C6.
 
-This avoids presenting the same QTL information in both a combined map and a
-scenario map.
+Keeping these layers separate lets the reader first understand where markers are
+located and then examine which of those positions were selected as QTL in each
+scenario.
 
 ## 6. Simulation settings and QTL architecture
 
@@ -787,8 +787,6 @@ ggsave(
   compression = "lzw"
 )
 ```
-
-The exact counts behind the figure are useful when comparing scenarios.```
 
 The figure gives the spatial pattern, while the table below provides the exact
 counts needed to verify it:
@@ -1091,10 +1089,17 @@ separate quantities with separate interpretations.
 
 ### 8.1 F2 segregation
 
-The two simulated parents are contrasting homozygotes, so an F2 population is
-expected to approach a `1:2:1` segregation for the three genotype classes. The
-next calculation uses every genotype call in the 1,000 x 4,010 matrix to compare
-the observed proportions with the theoretical values 0.25, 0.50, and 0.25.
+The expected segregation follows directly from the simulated cross:
+
+- **Parental contrast:** the two parents are homozygous for opposite marker
+  states.
+- **F2 expectation:** the three genotype classes should occur approximately in
+  the ratio `1:2:1`, corresponding to proportions 0.25, 0.50, and 0.25.
+- **Observed comparison:** all genotype calls in the 1,000 x 4,010 matrix are
+  used to calculate the realized class proportions.
+
+The figure therefore compares the complete simulated marker matrix with the
+theoretical segregation expected for an F2 population.
 
 ```{r genotype-segregation, fig.cap="Observed genotype proportions compared with the expected 1:2:1 segregation of an F2 population."}
 # Calculate the observed frequency of each genotype state.
@@ -1500,8 +1505,6 @@ ggsave(
   compression = "lzw"
 )
 ```
-
-The exact numerical summaries are shown below```
 
 The figure summarizes the pattern visually; the tables below retain the exact
 numbers needed to interpret it:
