@@ -1,0 +1,38 @@
+name: One-time M01 reader-text cleanup
+
+on:
+  push:
+    branches:
+      - m01-direct-reader-flow
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup-m01:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: m01-direct-reader-flow
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply reader-text cleanup
+        run: python .github/scripts/m01_cleanup_reader_text.py
+
+      - name: Commit M01 and remove temporary cleanup files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add analysis/simulated_data_audit.Rmd
+          git rm -f .github/scripts/m01_cleanup_reader_text.py .github/workflows/m01_cleanup_reader_text.yml
+          git diff --cached --check
+          git commit -m "Clean M01 reader text and formatting residues"
+          git push origin HEAD:m01-direct-reader-flow
