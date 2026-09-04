@@ -1,5 +1,5 @@
 ---
-title: "Simulated data validation design"
+title: "Simulated data: nested validation design"
 author:
   - Weverton Gomes da Costa
 date: "`r Sys.Date()`"
@@ -15,26 +15,35 @@ editor_options:
   chunk_output_type: console
 ---
 
-## 1. Objective
+## 1. Purpose
 
-This analysis freezes the validation design used by all genomic prediction
-models fitted to the simulated dataset.
+This module defines the nested cross-validation design used by every genomic
+prediction model fitted to the simulated population. The partitions are created
+**before model fitting** so model development and final evaluation use the same
+individuals for GBLUP-ADE and all ANN variants.
 
-The design is created **before model fitting** and is independent of phenotype,
-true genetic value, scenario, and model. Consequently, GBLUP-ADE and all ANN
-variants are evaluated on exactly the same outer assessment individuals.
+The validation design has four fixed features:
 
-The canonical design uses:
+- **Repeated outer cross-validation:** 5 repetitions of 5 outer folds produce
+  25 independent model evaluations.
+- **Nested inner cross-validation:** each outer analysis set is divided into 4
+  inner folds for ANN hyperparameter selection.
+- **Common partitions:** the same outer and inner assignments are reused for all
+  six simulation scenarios and all prediction methods.
+- **Information separation:** phenotype, true genetic value, scenario, and model
+  identity do not participate in fold generation.
 
-- 5 outer folds;
-- 5 outer repetitions;
-- 4 inner folds within each outer analysis set;
-- deterministic seeds derived from the project-wide seed;
-- the same outer and inner partitions for all six simulation scenarios.
+Two terms are used throughout the module:
 
-The outer assessment sets are reserved exclusively for final model evaluation.
-The inner folds are reserved for ANN hyperparameter tuning. True simulated
-genetic values are never used to generate partitions or tune models.
+- **Analysis set:** individuals available for model development at the current
+  validation level.
+- **Assessment set:** individuals held out from that development step and used
+  only for evaluation at the same level.
+
+The distinction is especially important in nested validation. The **outer
+assessment** individuals remain untouched until final prediction, whereas the
+**inner assessment** individuals are used only to compare ANN candidates inside
+the corresponding outer analysis set.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -47,83 +56,44 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
+
+dir.create(
+  "output/simulated/m02/figures",
+  showWarnings = FALSE,
+  recursive = TRUE
+)
 ```
 
-### 1.1 How to read this module
+## 2. Packages and fixed validation settings
 
-The validation scheme separates model development from final predictive
-evaluation. An **analysis set** contains the individuals available for fitting
-or tuning, whereas the corresponding **assessment set** remains held out for
-evaluation at that level of cross-validation. Outer assessment individuals are
-therefore never used to choose ANN hyperparameters or training duration.
+### 2.1 Packages
 
-The sections below show the individual universe, partition sizes, overlap, and
-coverage directly. The validation structure can therefore be inspected from the
-displayed objects rather than inferred from boolean checks.
+Three packages are used, each for a specific reader-facing task:
 
-## 2. Packages, inputs, and validation parameters
-
-### 2.1 Package used
-
-This module uses base R to construct the nested cross-validation partitions and
-`knitr` to format the tables presented in the tutorial.
+- **`knitr`** formats the validation settings, partition sizes, and design
+  summaries as tables that can be inspected directly in the page.
+- **`ggplot2`** constructs the diagram that shows how the 1,000 individuals are
+  separated at the outer and inner validation levels.
+- **`ggthemes`** applies the same Google Docs theme and color scale adopted in
+  the preceding module so the project keeps a consistent visual style.
 
 ```{r packages, warning=FALSE, message=FALSE}
-library(knitr) # Format tables and R Markdown output.
+library(knitr)     # Format validation summaries as readable HTML tables.
+library(ggplot2)   # Draw the nested cross-validation structure.
+library(ggthemes)  # Apply the Google Docs theme and matching color scale.
 ```
 
-```{r table-formatting, include=FALSE}
-format_table <- function(
-  x,
-  caption = NULL,
-  digits = getOption("digits"),
-  row.names = NA,
-  ...
-) {
-  table <- knitr::kable(
-    x,
-    format = "html",
-    caption = caption,
-    digits = digits,
-    row.names = row.names,
-    table.attr = paste0(
-      'class="table table-striped table-hover table-bordered" ',
-      'style="width:100%; margin-bottom:0;"'
-    ),
-    ...
-  )
+### 2.2 Fixed settings
 
-  knitr::asis_output(
-    paste0(
-      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
-      table,
-      '</div>'
-    )
-  )
-}
-```
+The complete partitioning procedure is controlled by four values. They are set
+once here and then reused for every scenario and prediction method:
 
-### 2.2 Input and output paths
-
-The validation module reads the canonical object produced by the data-audit
-module and stores the frozen cross-validation design in a dedicated output
-directory.
-
-```{r paths}
-PROJECT_ROOT <- "."
-project_path <- function(...) file.path(PROJECT_ROOT, ...)
-
-input_file <- project_path(
-  "output", "simulated", "audit", "preprocessed_simulated_common.rds"
-)
-output_dir <- project_path("output", "simulated", "validation")
-dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
-```
-
-### 2.3 Cross-validation parameters
-
-The complete nested design is controlled by four explicit values. These values
-are fixed before model fitting and are reused by all prediction methods.
+- **Global seed:** makes all random assignments reproducible.
+- **Outer repetitions:** repeats the held-out evaluation five times.
+- **Outer folds:** divide the 1,000 individuals into five assessment groups per
+  repetition.
+- **Inner folds:** divide each 800-individual outer analysis set into four groups
+  for ANN tuning.
 
 ```{r validation-parameters}
 SEED_GLOBAL <- 20260821L
@@ -152,27 +122,39 @@ validation_parameters <- data.frame(
   )
 )
 
-format_table(
-  validation_parameters,
-  caption = "Canonical nested cross-validation parameters",
-  row.names = FALSE
-)
+validation_parameters |>
+  knitr::kable(
+    format = "html",
+    caption = "Fixed nested cross-validation settings",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-The same global seed is combined with repetition and fold identifiers so every
-partition can be regenerated exactly.
+The global seed is combined with repetition and fold identifiers later in the
+module. This produces distinct but exactly reproducible assignments without
+using any response or model information.
 
-## 3. Individual universe
+## 3. Individuals used to create the partitions
 
-### 3.1 Canonical input object
+The shared simulated-data object created in M01 contains the aligned phenotype,
+true genetic value, and genotype matrices. Before any fold is generated, the
+reader needs to verify which rows define the population available for
+partitioning.
 
-The validation design is built from the canonical simulated-data object created
-in the preceding module. The dimensions shown below make explicit which aligned
-objects share the same individual rows before any partition is generated.
+The next chunk therefore does three things:
 
-```{r prerequisites}
-simulated_common <- readRDS(input_file)
-canonical_components <- data.frame(
+- reads the shared object produced by M01 directly from `output/`;
+- compares the dimensions of the three aligned matrices;
+- extracts the row identifiers that will be used to construct every fold.
+
+```{r individual-universe}
+# Read the shared simulated-data object prepared in M01.
+simulated_common <- readRDS(
+  "output/simulated/audit/preprocessed_simulated_common.rds"
+)
+
+input_components <- data.frame(
   Component = c("phenotype", "true_genetic_value", "genotype_m101"),
   Rows = c(
     nrow(simulated_common$phenotype),
@@ -186,60 +168,77 @@ canonical_components <- data.frame(
   )
 )
 
-format_table(
-  canonical_components,
-  caption = "Canonical objects used to construct the validation design",
-  row.names = FALSE
-)
-```
+input_components |>
+  knitr::kable(
+    format = "html",
+    caption = "Aligned objects available before partition generation",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 
-All three canonical objects contain the same 1,000 individual rows. Phenotype
-and true genetic value contain six scenario columns, whereas the genotype
-matrix contains the 4,010 audited markers.
-
-### 3.2 Individuals used for partitioning
-
-Partitions are generated from the 1,000 canonical row identifiers only. No
-phenotype, true genetic value, scenario label, or model information is used to
-define the partitions. Alignment with the canonical phenotype, true-genetic-
-value, and genotype matrices is verified internally before the folds are built.
-
-```{r individual-universe}
+# Use only the stored row identifiers to generate the folds.
 ids <- as.integer(simulated_common$metadata$row_identifier)
+
 individual_universe <- data.frame(
   Quantity = c(
     "Individuals used to generate folds",
     "First row identifier",
     "Last row identifier"
   ),
-  Observed = c(length(ids), min(ids), max(ids))
+  Observed = c(
+    length(ids),
+    min(ids),
+    max(ids)
+  )
 )
 
-format_table(
-  individual_universe,
-  caption = "Individual universe used for fold generation",
-  row.names = FALSE
-)
+individual_universe |>
+  knitr::kable(
+    format = "html",
+    caption = "Individual universe used for partition generation",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-The partitioning universe therefore consists only of row identifiers 1-1,000.
-The response variables remain outside the fold-generation procedure.
+The displayed objects establish the partitioning universe:
 
-## 4. Outer repeated cross-validation
+- **1,000 rows** are shared by phenotype, true genetic value, and genotype data;
+- **row identifiers 1-1,000** are the only individual-level values supplied to
+  the partitioning algorithm;
+- **phenotype and true genetic value remain outside fold generation**, so the
+  partition structure cannot depend on the simulated response or its known
+  genetic component.
 
-### 4.1 Balanced fold assignment
+## 4. Repeated outer cross-validation
 
-The helper below randomizes the supplied IDs with `sample()` and then cycles
-through the fold labels with `rep()`. Sorting by ID at the end changes only the
-display/order of the assignment table, not the randomized fold membership.
+The outer level provides the final held-out evaluation. In each repetition, the
+1,000 row identifiers are shuffled reproducibly and assigned cyclically to five
+fold labels. Because 1,000 is divisible by five, every fold contains exactly 200
+individuals.
 
-```{r balanced-fold-assignment}
-balanced_fold_assignment <- function(
-  ids,
-  k,
-  seed
-) {
-  set.seed(seed)
+For a given fold:
+
+- the **200 individuals assigned to that fold** form the outer assessment set;
+- the **remaining 800 individuals** form the outer analysis set;
+- the two sets are disjoint and together recover all 1,000 individuals.
+
+### 4.1 Outer fold assignments
+
+The code below repeats the same direct assignment procedure five times. The
+seed changes with the repetition number, which gives each repetition a distinct
+assignment while preserving exact reproducibility.
+
+```{r outer-folds}
+outer_assignment_list <- vector(
+  "list",
+  N_OUTER_REPEATS
+)
+
+# Build one balanced five-fold assignment for each repetition.
+for (rep_id in seq_len(N_OUTER_REPEATS)) {
+
+  set.seed(SEED_GLOBAL + rep_id)
 
   shuffled_ids <- sample(
     ids,
@@ -248,63 +247,45 @@ balanced_fold_assignment <- function(
   )
 
   assigned_folds <- rep(
-    seq_len(k),
+    seq_len(N_OUTER_FOLDS),
     length.out = length(ids)
   )
 
-  out <- data.frame(
+  assignment <- data.frame(
     ID = shuffled_ids,
     Fold = assigned_folds,
     stringsAsFactors = FALSE
   )
 
-  out <- out[
-    order(out$ID),
+  # Sort only the displayed/stored rows; fold membership is already fixed.
+  assignment <- assignment[
+    order(assignment$ID),
     ,
     drop = FALSE
   ]
+  rownames(assignment) <- NULL
 
-  rownames(out) <- NULL
-  out
+  outer_assignment_list[[rep_id]] <- data.frame(
+    Repetition = rep_id,
+    ID = assignment$ID,
+    OuterFold = assignment$Fold,
+    stringsAsFactors = FALSE
+  )
 }
-```
 
-For 1,000 individuals and five outer folds, this produces 200 assessment
-individuals per fold. Applied to an 800-individual outer-analysis set with four
-inner folds, it produces 200 inner-assessment individuals per fold.
-
-### 4.2 Outer partition sizes
-
-For each repetition, the 1,000 canonical IDs are assigned to five folds using a
-deterministic seed derived from the global seed. Five repetitions therefore
-produce 25 outer train-test comparisons while preserving exact reproducibility.
-
-```{r outer-folds}
-# Generate one balanced five-fold assignment for each outer repetition.
 outer_assignments <- do.call(
   rbind,
-  lapply(seq_len(N_OUTER_REPEATS), function(rep_id) {
-    assignment <- balanced_fold_assignment(
-      ids = ids,
-      k = N_OUTER_FOLDS,
-      seed = SEED_GLOBAL + rep_id
-    )
-    data.frame(
-      Repetition = rep_id,
-      ID = assignment$ID,
-      OuterFold = assignment$Fold,
-      stringsAsFactors = FALSE
-    )
-  })
+  outer_assignment_list
 )
 rownames(outer_assignments) <- NULL
+
 outer_assignments$SplitID <- sprintf(
   "R%02d_F%02d",
   outer_assignments$Repetition,
   outer_assignments$OuterFold
 )
 
-# Summarize analysis and assessment sample sizes for all 25 outer splits.
+# Count the assessment and analysis individuals in every outer split.
 outer_sizes <- aggregate(
   ID ~ Repetition + OuterFold + SplitID,
   data = outer_assignments,
@@ -313,36 +294,56 @@ outer_sizes <- aggregate(
 names(outer_sizes)[names(outer_sizes) == "ID"] <- "Assessment_N"
 outer_sizes$Analysis_N <- length(ids) - outer_sizes$Assessment_N
 
-format_table(
-  outer_sizes,
-  caption = "Outer repeated cross-validation split sizes",
-  row.names = FALSE
-)
+outer_sizes |>
+  knitr::kable(
+    format = "html",
+    caption = "Sizes of the 25 outer validation splits",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-Every one of the 25 outer splits contains **800 analysis** and **200 assessment**
-individuals. Each individual appears exactly once in an assessment fold within
-each repetition.
+The outer table should be read as follows:
 
-### 4.3 Explicit analysis and assessment sets
+- **25 rows:** 5 repetitions x 5 outer folds;
+- **Assessment_N = 200:** individuals held out for final prediction in that
+  split;
+- **Analysis_N = 800:** individuals available for all model development within
+  that split;
+- **one assessment appearance per repetition:** each individual is assessed once
+  in every repetition and therefore five times across the complete outer design.
 
-The assignment table is converted into explicit analysis and assessment ID sets
-for each outer split. `setdiff()` removes the 200 assessment IDs from the full
-individual universe, leaving the corresponding 800-individual analysis set.
+### 4.2 Explicit outer analysis and assessment sets
+
+The fold assignment table identifies membership, but the modeling modules need
+explicit ID vectors. The next chunk converts every `SplitID` into a list with
+its 800 analysis IDs and 200 assessment IDs.
+
+An example from the first split is displayed so the reader can inspect both
+sizes and confirm that the overlap is zero.
 
 ```{r outer-split-objects}
-outer_split_ids <- sort(unique(outer_assignments$SplitID))
+outer_split_ids <- sort(
+  unique(outer_assignments$SplitID)
+)
+
 outer_splits <- setNames(
   vector("list", length(outer_split_ids)),
   outer_split_ids
 )
 
-# Store the analysis and assessment IDs consumed by the modeling modules.
+# Store the two ID sets consumed later by GBLUP-ADE and ANN.
 for (split_id in outer_split_ids) {
+
   assessment_ids <- outer_assignments$ID[
     outer_assignments$SplitID == split_id
   ]
-  analysis_ids <- setdiff(ids, assessment_ids)
+
+  analysis_ids <- setdiff(
+    ids,
+    assessment_ids
+  )
+
   outer_splits[[split_id]] <- list(
     split_id = split_id,
     analysis_ids = sort(analysis_ids),
@@ -351,64 +352,129 @@ for (split_id in outer_split_ids) {
 }
 
 example_outer_split <- outer_splits[[1]]
+
 outer_object_summary <- data.frame(
-  Component = c("analysis_ids", "assessment_ids", "overlap"),
+  Component = c(
+    "analysis_ids",
+    "assessment_ids",
+    "overlap"
+  ),
   N = c(
     length(example_outer_split$analysis_ids),
     length(example_outer_split$assessment_ids),
-    length(intersect(
-      example_outer_split$analysis_ids,
-      example_outer_split$assessment_ids
-    ))
+    length(
+      intersect(
+        example_outer_split$analysis_ids,
+        example_outer_split$assessment_ids
+      )
+    )
   ),
   First_IDs = c(
-    paste(head(example_outer_split$analysis_ids, 6), collapse = ", "),
-    paste(head(example_outer_split$assessment_ids, 6), collapse = ", "),
+    paste(
+      head(example_outer_split$analysis_ids, 6),
+      collapse = ", "
+    ),
+    paste(
+      head(example_outer_split$assessment_ids, 6),
+      collapse = ", "
+    ),
     "-"
   )
 )
 
-format_table(
-  outer_object_summary,
-  caption = paste("Structure of outer split", example_outer_split$split_id),
-  row.names = FALSE
-)
+outer_object_summary |>
+  knitr::kable(
+    format = "html",
+    caption = paste(
+      "Structure of outer split",
+      example_outer_split$split_id
+    ),
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-The example split makes the contract concrete: 800 IDs are available to model
-development, 200 are reserved for final assessment, and their overlap is zero.
-The same structure is stored for every outer split.
+The example makes the outer separation explicit: the 800 analysis IDs and 200
+assessment IDs do not overlap, and the same list structure is stored for all 25
+outer splits.
 
 ## 5. Nested inner cross-validation
 
-### 5.1 Inner partition generation
+The inner level is created **inside each outer analysis set**. It is used for ANN
+hyperparameter selection and therefore cannot contain any of the 200 outer
+assessment individuals.
 
-Each outer analysis set is partitioned again for ANN hyperparameter selection.
-Within a given outer split, one inner fold acts as the assessment subset and the
-remaining inner individuals form the analysis subset. The outer assessment set
-never participates in this operation.
+For each 800-individual outer analysis set:
+
+- the IDs are shuffled with a seed determined by the outer repetition and fold;
+- four balanced inner folds of 200 individuals are created;
+- one inner fold becomes the **inner assessment** set;
+- the other 600 individuals become the **inner analysis** set;
+- ANN early validation is drawn later only from the current inner analysis data,
+  not from the inner assessment or outer assessment sets.
+
+### 5.1 Inner fold assignments
+
+The code repeats this procedure for all 25 outer splits, producing 100 inner
+splits in total. The outer assessment IDs never enter the inner assignment
+operation because the starting vector is always `outer_split$analysis_ids`.
 
 ```{r inner-folds}
-inner_assignments_list <- vector("list", length(outer_splits))
+inner_assignments_list <- vector(
+  "list",
+  length(outer_splits)
+)
 names(inner_assignments_list) <- names(outer_splits)
+
 inner_splits <- setNames(
   vector("list", length(outer_splits)),
   names(outer_splits)
 )
 
-# Generate four inner folds separately inside each outer analysis set.
+# Generate four inner folds separately within each outer analysis set.
 for (split_id in names(outer_splits)) {
+
   outer_split <- outer_splits[[split_id]]
-  split_tokens <- strsplit(sub("^R", "", split_id), "_F")[[1]]
+
+  split_tokens <- strsplit(
+    sub("^R", "", split_id),
+    "_F"
+  )[[1]]
+
   rep_id <- as.integer(split_tokens[1])
   outer_fold <- as.integer(split_tokens[2])
-  inner_seed <- SEED_GLOBAL + 100000L + rep_id * 100L + outer_fold
 
-  assignment <- balanced_fold_assignment(
-    ids = outer_split$analysis_ids,
-    k = N_INNER_FOLDS,
-    seed = inner_seed
+  inner_seed <-
+    SEED_GLOBAL +
+    100000L +
+    rep_id * 100L +
+    outer_fold
+
+  set.seed(inner_seed)
+
+  shuffled_ids <- sample(
+    outer_split$analysis_ids,
+    size = length(outer_split$analysis_ids),
+    replace = FALSE
   )
+
+  assigned_folds <- rep(
+    seq_len(N_INNER_FOLDS),
+    length.out = length(outer_split$analysis_ids)
+  )
+
+  assignment <- data.frame(
+    ID = shuffled_ids,
+    Fold = assigned_folds,
+    stringsAsFactors = FALSE
+  )
+
+  assignment <- assignment[
+    order(assignment$ID),
+    ,
+    drop = FALSE
+  ]
+  rownames(assignment) <- NULL
 
   inner_assignments_list[[split_id]] <- data.frame(
     SplitID = split_id,
@@ -424,13 +490,18 @@ for (split_id in names(outer_splits)) {
     paste0("I", seq_len(N_INNER_FOLDS))
   )
 
-  # Convert each inner fold into explicit analysis and assessment ID sets.
+  # Convert every inner fold into explicit analysis and assessment ID sets.
   for (inner_fold in seq_len(N_INNER_FOLDS)) {
-    inner_assessment_ids <- assignment$ID[assignment$Fold == inner_fold]
+
+    inner_assessment_ids <- assignment$ID[
+      assignment$Fold == inner_fold
+    ]
+
     inner_analysis_ids <- setdiff(
       outer_split$analysis_ids,
       inner_assessment_ids
     )
+
     current_inner_splits[[paste0("I", inner_fold)]] <- list(
       split_id = split_id,
       inner_fold = inner_fold,
@@ -438,11 +509,16 @@ for (split_id in names(outer_splits)) {
       assessment_ids = sort(inner_assessment_ids)
     )
   }
+
   inner_splits[[split_id]] <- current_inner_splits
 }
 
-inner_assignments <- do.call(rbind, inner_assignments_list)
+inner_assignments <- do.call(
+  rbind,
+  inner_assignments_list
+)
 rownames(inner_assignments) <- NULL
+
 inner_sizes <- aggregate(
   ID ~ SplitID + Repetition + OuterFold + InnerFold,
   data = inner_assignments,
@@ -452,84 +528,186 @@ names(inner_sizes)[names(inner_sizes) == "ID"] <- "Assessment_N"
 inner_sizes$Analysis_N <- 800L - inner_sizes$Assessment_N
 ```
 
-### 5.2 Inner analysis and assessment sizes
+### 5.2 Inner split sizes
 
-With 800 individuals in each outer analysis set and four inner folds, every
-inner assessment set contains 200 individuals and every inner analysis set
-contains 600. The first 20 inner splits are displayed below as a compact sample
-of the complete 100-split design.
+Displaying all 100 rows would add little information because every split has the
+same size. The first 20 are shown as a representative sample of the stored
+design.
 
 ```{r inner-sizes}
-format_table(
-  head(inner_sizes, 20),
-  caption = "First 20 nested inner split sizes",
-  row.names = FALSE
+head(inner_sizes, 20) |>
+  knitr::kable(
+    format = "html",
+    caption = "First 20 of the 100 inner validation splits",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+The inner structure is constant across all outer splits:
+
+- **Inner analysis:** 600 individuals available for candidate development.
+- **Inner assessment:** 200 individuals used to compare ANN candidates.
+- **Outer assessment:** the remaining 200 individuals from the original
+  population are absent from inner validation and remain reserved for final
+  evaluation.
+
+### 5.3 Nested design at a glance
+
+The diagram below places the two levels on the same 1,000-individual scale. It
+shows why the outer assessment set cannot leak into ANN tuning:
+
+- the outer level separates **800 analysis** from **200 assessment** individuals;
+- the inner level subdivides only the first 800 into **600 inner analysis** and
+  **200 inner assessment** individuals;
+- the final 200 remain outside the inner process entirely.
+
+```{r nested-validation-figure, fig.cap="Nested cross-validation structure for one outer split. Inner validation is restricted to the 800 outer-analysis individuals; the 200 outer-assessment individuals remain held out."}
+validation_flow <- data.frame(
+  Level = c(
+    2, 2,
+    1, 1, 1
+  ),
+  xmin = c(
+    0, 800,
+    0, 600, 800
+  ),
+  xmax = c(
+    800, 1000,
+    600, 800, 1000
+  ),
+  Role = c(
+    "Analysis set",
+    "Assessment set",
+    "Analysis set",
+    "Assessment set",
+    "Held-out outer assessment"
+  ),
+  Label = c(
+    "Outer analysis\n800",
+    "Outer assessment\n200",
+    "Inner analysis\n600",
+    "Inner assessment\n200",
+    "Outer assessment\nnot used"
+  ),
+  stringsAsFactors = FALSE
+)
+
+p_validation <- ggplot(validation_flow) +
+  geom_rect(
+    aes(
+      xmin = xmin,
+      xmax = xmax,
+      ymin = Level - 0.30,
+      ymax = Level + 0.30,
+      fill = Role
+    ),
+    color = "white",
+    linewidth = 0.8
+  ) +
+  geom_text(
+    aes(
+      x = (xmin + xmax) / 2,
+      y = Level,
+      label = Label
+    ),
+    size = 3.6,
+    lineheight = 0.9
+  ) +
+  scale_fill_gdocs() +
+  scale_x_continuous(
+    breaks = seq(0, 1000, 200),
+    limits = c(0, 1000),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    breaks = c(1, 2),
+    labels = c("Inner level", "Outer level"),
+    limits = c(0.5, 2.5)
+  ) +
+  labs(
+    x = "Individuals represented in one outer split",
+    y = NULL,
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "bottom"
+  )
+
+print(p_validation)
+```
+
+```{r save-nested-validation-tiff, include=FALSE}
+ggsave(
+  "output/simulated/m02/figures/nested_cross_validation_design.tiff",
+  plot = p_validation,
+  device = "tiff",
+  width = 10,
+  height = 4.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
 )
 ```
 
-Every inner split contains **600 analysis** and **200 assessment** individuals.
-The 200 inner-assessment individuals are used only to compare ANN candidates
-inside the corresponding 800-individual outer-analysis set; they are not part
-of the early-validation subset used to train a candidate.
+The diagram represents one outer split, but the same hierarchy is repeated for
+all 25 outer splits. This common structure is what allows every prediction
+method to be compared under the same held-out evaluations.
 
-## 6. Independence of the partitions
+## 6. Information excluded from partition generation
 
-### 6.1 Information used
+The folds are deliberately generated from a minimal set of information. This
+prevents the partition structure from adapting to the response, the simulated
+truth, or the prediction method.
 
-The fold-generation inputs are intentionally minimal. Only the canonical
-individual identifiers and deterministic seeds participate in partitioning.
+The table distinguishes what participates in fold generation from what remains
+outside it:
 
-```{r independence-contract}
+```{r partition-information}
 partition_information <- data.frame(
   Information = c(
-    "Individual ID", "Deterministic seed", "Scenario",
-    "Phenotype", "True genetic value", "Model"
+    "Individual row identifier",
+    "Deterministic seed",
+    "Simulation scenario",
+    "Phenotype",
+    "True genetic value",
+    "Prediction model"
   ),
   Partition_role = c(
-    "Used", "Used", "Not used", "Not used", "Not used", "Not used"
+    "Used",
+    "Used",
+    "Not used",
+    "Not used",
+    "Not used",
+    "Not used"
   )
 )
 
-format_table(
-  partition_information,
-  caption = "Information used to generate the frozen validation partitions",
-  row.names = FALSE
-)
+partition_information |>
+  knitr::kable(
+    format = "html",
+    caption = "Information used and excluded when generating validation partitions",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-### 6.2 Information excluded
+This separation has direct consequences for model comparison:
 
-Scenario labels, phenotype values, true simulated genetic values, and model
-identity do not participate in fold generation. The same frozen partitions can
-therefore be reused fairly by GBLUP-ADE and every ANN variant.
+- **Scenario-independent:** C1-C6 use exactly the same individual partitions.
+- **Model-independent:** GBLUP-ADE and all ANN variants use the same outer
+  assessment individuals.
+- **Phenotype-independent:** response values do not influence who is assigned to
+  a fold.
+- **True-G-independent:** known simulated genetic values are reserved for
+  held-out evaluation and never determine partitions or ANN tuning.
 
-In particular, true genetic values are retained in the canonical data object
-only for held-out predictive evaluation. They never enter partitioning, ANN
-hyperparameter tuning, or training-duration selection.
+## 7. Validation design summary
 
-## 7. Frozen validation design
-
-### 7.1 Validation contract
-
-The frozen design establishes three levels of separation:
-
-- **Outer evaluation:** five repetitions of five outer folds produce 25 outer
-  splits, each with 800 analysis and 200 untouched assessment individuals.
-- **Inner ANN tuning:** each 800-individual outer-analysis set is divided into
-  four inner folds, each with 600 analysis and 200 inner-assessment individuals.
-  ANN architecture, learning rate, L1, and L2 are selected only within these
-  inner splits; early validation is drawn only from the current inner-analysis
-  subset.
-- **Final evaluation:** the same outer splits are used for C1-C6 and every
-  prediction method. Primary true-G and secondary phenotype metrics are
-  calculated only after the final model predicts the untouched outer-assessment
-  individuals.
-
-### 7.2 Design summary
-
-The complete nested design can now be summarized independently of any
-prediction model. These counts define the sample sizes and number of repeated
-comparisons used by both modeling branches.
+The complete structure can now be summarized without reference to any fitted
+model. These counts define the number and size of comparisons used later by both
+modeling branches.
 
 ```{r design-summary}
 design_summary <- data.frame(
@@ -563,136 +741,82 @@ design_summary <- data.frame(
   )
 )
 
-format_table(
-  design_summary,
-  caption = "Frozen simulated-data validation design",
-  row.names = FALSE
-)
+design_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Nested validation design used for the simulated data",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-The frozen object therefore contains 25 outer evaluations and
-`r N_OUTER_REPEATS * N_OUTER_FOLDS * N_INNER_FOLDS` inner split definitions.
-These partitions are generated once and reused across all six scenarios and all
-prediction methods.
+The fixed design therefore contains:
 
-```{r validation-output-contract, include=FALSE}
-compat_check_status <- function(condition, failure = "BLOCKED", success = "PASS") {
-  c(failure, success)[1L + as.integer(isTRUE(condition))]
-}
+- **25 outer evaluations** = 5 repetitions x 5 folds;
+- **100 inner splits** = 25 outer splits x 4 inner folds;
+- **800/200 outer separation** for model development and final evaluation;
+- **600/200 inner separation** inside every outer analysis set for ANN tuning.
 
-validation_log <- data.frame(
-  Check = character(), Status = character(), Details = character(),
-  stringsAsFactors = FALSE
+### 7.1 Observed sizes and overlap
+
+The next summary is calculated from the generated objects rather than from the
+settings above. It verifies that the stored partitions have the intended sizes
+and that analysis and assessment sets do not overlap.
+
+```{r observed-validation-structure}
+# Measure overlap directly from every stored outer split.
+outer_overlap_values <- integer(
+  length(outer_splits)
 )
-add_compat_check <- function(check, status, details) {
-  validation_log <<- rbind(
-    validation_log,
-    data.frame(Check = check, Status = status, Details = as.character(details), stringsAsFactors = FALSE)
+
+for (i in seq_along(outer_splits)) {
+  outer_overlap_values[i] <- length(
+    intersect(
+      outer_splits[[i]]$analysis_ids,
+      outer_splits[[i]]$assessment_ids
+    )
   )
-  invisible(NULL)
 }
 
-audit_file <- project_path("output", "simulated", "audit", "simulated_audit_summary.csv")
-required_files <- c(input_file, audit_file)
-files_exist <- file.exists(required_files)
-audit_summary <- read.csv(audit_file, stringsAsFactors = FALSE)
-n_blocked_audit <- sum(audit_summary$Status == "BLOCKED", na.rm = TRUE)
-required_components <- c("metadata", "phenotype", "true_genetic_value", "genotype_m101")
-components_ok <- all(required_components %in% names(simulated_common))
-individual_universe_ok <-
-  length(ids) == 1000L && !anyDuplicated(ids) &&
-  identical(sort(ids), seq_len(1000L)) &&
-  nrow(simulated_common$phenotype) == length(ids) &&
-  nrow(simulated_common$true_genetic_value) == length(ids) &&
-  nrow(simulated_common$genotype_m101) == length(ids)
+outer_overlap <- max(outer_overlap_values)
 
-outer_row_count_ok <- nrow(outer_assignments) == length(ids) * N_OUTER_REPEATS
-outer_once_per_repeat <- all(table(outer_assignments$Repetition, outer_assignments$ID) == 1L)
-outer_balanced <- all(outer_sizes$Assessment_N == 200L & outer_sizes$Analysis_N == 800L)
-outer_patterns <- do.call(rbind, lapply(seq_len(N_OUTER_REPEATS), function(rep_id) {
-  x <- outer_assignments[outer_assignments$Repetition == rep_id, c("ID", "OuterFold")]
-  x <- x[order(x$ID), ]
-  x$OuterFold
-}))
-unique_repetition_patterns <- !anyDuplicated(as.data.frame(outer_patterns))
-assessment_frequency_ok <- all(table(outer_assignments$ID) == N_OUTER_REPEATS)
-outer_split_integrity <- all(vapply(outer_splits, function(x) {
-  length(x$analysis_ids) == 800L && length(x$assessment_ids) == 200L &&
-  length(intersect(x$analysis_ids, x$assessment_ids)) == 0L &&
-  identical(sort(c(x$analysis_ids, x$assessment_ids)), sort(ids))
-}, logical(1)))
+# Measure overlap directly from all 100 inner splits.
+inner_overlap_values <- integer(
+  length(outer_splits) * N_INNER_FOLDS
+)
 
-inner_row_count_ok <- nrow(inner_assignments) == length(outer_splits) * 800L
-inner_balanced <- all(inner_sizes$Assessment_N == 200L & inner_sizes$Analysis_N == 600L)
-inner_assignment_integrity <- all(vapply(names(outer_splits), function(split_id) {
-  x <- inner_assignments[inner_assignments$SplitID == split_id, ]
-  outer_analysis_ids <- outer_splits[[split_id]]$analysis_ids
-  nrow(x) == 800L && !anyDuplicated(x$ID) &&
-  identical(sort(x$ID), sort(outer_analysis_ids)) &&
-  identical(sort(unique(x$InnerFold)), seq_len(N_INNER_FOLDS))
-}, logical(1)))
-inner_split_integrity <- all(vapply(names(inner_splits), function(split_id) {
-  outer_analysis_ids <- outer_splits[[split_id]]$analysis_ids
-  all(vapply(inner_splits[[split_id]], function(x) {
-    length(x$analysis_ids) == 600L && length(x$assessment_ids) == 200L &&
-    length(intersect(x$analysis_ids, x$assessment_ids)) == 0L &&
-    identical(sort(c(x$analysis_ids, x$assessment_ids)), sort(outer_analysis_ids))
-  }, logical(1)))
-}, logical(1)))
-split_variables <- unique(c(names(outer_assignments), names(inner_assignments)))
-forbidden_split_fields <- c("Scenario", "Phenotype", "Observed", "TrueGeneticValue", "Model")
-split_independence_ok <- !any(forbidden_split_fields %in% split_variables)
+position <- 1L
 
-add_compat_check("Canonical input files", compat_check_status(all(files_exist)), if (all(files_exist)) "Canonical simulated object and audit summary are present." else paste("Missing:", paste(required_files[!files_exist], collapse = ", ")))
-add_compat_check("Simulated-data audit prerequisite", compat_check_status(n_blocked_audit == 0L), paste(n_blocked_audit, "blocking check(s) in simulated-data audit."))
-add_compat_check("Canonical object components", compat_check_status(components_ok), if (components_ok) paste("Required components present:", paste(required_components, collapse = ", ")) else paste("Missing components:", paste(setdiff(required_components, names(simulated_common)), collapse = ", ")))
-add_compat_check("Individual universe", compat_check_status(individual_universe_ok), "Expected 1000 unique row identifiers aligned with phenotype, true genetic value, and genotype matrices.")
-add_compat_check("Outer assignment row count", compat_check_status(outer_row_count_ok), paste("Observed rows:", nrow(outer_assignments), "; expected:", length(ids) * N_OUTER_REPEATS))
-add_compat_check("One outer assignment per ID and repetition", compat_check_status(outer_once_per_repeat), "Each individual must occur exactly once in every repetition.")
-add_compat_check("Balanced outer folds", compat_check_status(outer_balanced), "Every outer split must contain 800 analysis and 200 assessment individuals.")
-add_compat_check("Distinct outer repetitions", compat_check_status(unique_repetition_patterns, failure = "WARNING"), paste("All", N_OUTER_REPEATS, "repetitions should use distinct fold assignments."))
-add_compat_check("Outer assessment frequency", compat_check_status(assessment_frequency_ok), paste("Every individual is assigned to one assessment fold per repetition and therefore appears in exactly", N_OUTER_REPEATS, "outer assessment sets."))
-add_compat_check("Outer split integrity", compat_check_status(outer_split_integrity), paste(length(outer_splits), "outer split objects checked for size, disjointness, and complete coverage."))
-add_compat_check("Inner assignment row count", compat_check_status(inner_row_count_ok), paste("Observed rows:", nrow(inner_assignments), "; expected:", length(outer_splits) * 800L))
-add_compat_check("Balanced inner folds", compat_check_status(inner_balanced), "Every inner split must contain 600 analysis and 200 assessment individuals.")
-add_compat_check("Inner assignment integrity", compat_check_status(inner_assignment_integrity), "Inner assignments are restricted to the corresponding outer analysis set.")
-add_compat_check("Inner split integrity", compat_check_status(inner_split_integrity), paste(length(outer_splits) * N_INNER_FOLDS, "inner splits checked for size, disjointness, and complete outer-analysis coverage."))
-add_compat_check("Scenario-independent partitions", compat_check_status(split_independence_ok), "Partitions are generated from canonical individual IDs and deterministic seeds only; the same folds are reused for C1-C6 and all models.")
-add_compat_check("True genetic value excluded from partitioning", "PASS", "True simulated genetic values are stored in the canonical data object for final evaluation only and are not referenced when generating folds.")
-add_compat_check("Phenotype excluded from partitioning", "PASS", "Phenotypes are not used to construct folds. They may be used later inside training data and inner-CV tuning, never to redefine partitions.")
+for (split_id in names(inner_splits)) {
+  for (inner_id in names(inner_splits[[split_id]])) {
 
-validation_log$Status <- factor(validation_log$Status, levels = c("BLOCKED", "WARNING", "PASS"))
-validation_log <- validation_log[order(validation_log$Status), , drop = FALSE]
-rownames(validation_log) <- NULL
-```
+    current_split <- inner_splits[[split_id]][[inner_id]]
 
-### 7.3 Observed validation structure
+    inner_overlap_values[position] <- length(
+      intersect(
+        current_split$analysis_ids,
+        current_split$assessment_ids
+      )
+    )
 
-The detailed checklist is retained in the exported validation artifact. The
-tutorial summarizes the partition sizes and overlap before saving the frozen
-design.
+    position <- position + 1L
+  }
+}
 
-```{r final-validation-audit}
-outer_overlap <- max(vapply(
-  outer_splits,
-  function(x) length(intersect(x$analysis_ids, x$assessment_ids)),
-  integer(1)
-))
-inner_overlap <- max(unlist(lapply(
-  inner_splits,
-  function(split) vapply(
-    split,
-    function(x) length(intersect(x$analysis_ids, x$assessment_ids)),
-    integer(1)
-  )
-)))
+inner_overlap <- max(inner_overlap_values)
 
 validation_observed <- data.frame(
   Quantity = c(
-    "Outer assignment rows", "Outer splits", "Outer analysis N",
-    "Outer assessment N", "Maximum outer overlap",
-    "Inner assignment rows", "Inner splits", "Inner analysis N",
-    "Inner assessment N", "Maximum inner overlap"
+    "Outer assignment rows",
+    "Outer splits",
+    "Outer analysis N",
+    "Outer assessment N",
+    "Maximum outer overlap",
+    "Inner assignment rows",
+    "Inner splits",
+    "Inner analysis N",
+    "Inner assessment N",
+    "Maximum inner overlap"
   ),
   Observed = c(
     nrow(outer_assignments),
@@ -701,52 +825,386 @@ validation_observed <- data.frame(
     unique(outer_sizes$Assessment_N),
     outer_overlap,
     nrow(inner_assignments),
-    sum(vapply(inner_splits, length, integer(1))),
+    length(outer_splits) * N_INNER_FOLDS,
     unique(inner_sizes$Analysis_N),
     unique(inner_sizes$Assessment_N),
     inner_overlap
   )
 )
 
-format_table(
-  validation_observed,
-  caption = "Observed structure of the frozen nested cross-validation design",
-  row.names = FALSE
-)
+validation_observed |>
+  knitr::kable(
+    format = "html",
+    caption = "Observed structure of the generated nested validation design",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-The observed structure confirms the intended 25 outer splits and 100 inner
-splits, with zero overlap between analysis and assessment sets at both levels.
+The observed objects confirm the intended design:
 
-## 8. Output object
+- **5,000 outer assignment rows:** 1,000 individuals x 5 repetitions;
+- **25 outer splits:** each with 800 analysis and 200 assessment individuals;
+- **20,000 inner assignment rows:** 800 individuals x 25 outer splits;
+- **100 inner splits:** each with 600 analysis and 200 assessment individuals;
+- **zero overlap:** analysis and assessment sets remain disjoint at both levels.
 
-The design is stored only after its observed partition structure has been
-summarized. The saved object contains the outer and inner assignments together
-with their explicit analysis/assessment ID sets and is the single validation
-contract consumed by GBLUP-ADE and ANN.
+```{r validation-output-checks, include=FALSE}
+# Read the preceding M01 status file only to verify that no blocking issue exists.
+required_files <- c(
+  "output/simulated/audit/preprocessed_simulated_common.rds",
+  "output/simulated/audit/simulated_audit_summary.csv"
+)
+files_exist <- file.exists(required_files)
 
-```{r save-validation-design}
+m01_check_summary <- read.csv(
+  "output/simulated/audit/simulated_audit_summary.csv",
+  stringsAsFactors = FALSE
+)
+
+n_blocked_audit <- sum(
+  m01_check_summary$Status == "BLOCKED",
+  na.rm = TRUE
+)
+
+required_components <- c(
+  "metadata",
+  "phenotype",
+  "true_genetic_value",
+  "genotype_m101"
+)
+
+components_ok <- all(
+  required_components %in% names(simulated_common)
+)
+
+individual_universe_ok <-
+  length(ids) == 1000L &&
+  !anyDuplicated(ids) &&
+  identical(sort(ids), seq_len(1000L)) &&
+  nrow(simulated_common$phenotype) == length(ids) &&
+  nrow(simulated_common$true_genetic_value) == length(ids) &&
+  nrow(simulated_common$genotype_m101) == length(ids)
+
+# Check the complete outer assignment structure.
+outer_row_count_ok <-
+  nrow(outer_assignments) == length(ids) * N_OUTER_REPEATS
+
+outer_once_per_repeat <- all(
+  table(
+    outer_assignments$Repetition,
+    outer_assignments$ID
+  ) == 1L
+)
+
+outer_balanced <- all(
+  outer_sizes$Assessment_N == 200L &
+  outer_sizes$Analysis_N == 800L
+)
+
+outer_patterns <- matrix(
+  NA_integer_,
+  nrow = N_OUTER_REPEATS,
+  ncol = length(ids)
+)
+
+for (rep_id in seq_len(N_OUTER_REPEATS)) {
+  x <- outer_assignments[
+    outer_assignments$Repetition == rep_id,
+    c("ID", "OuterFold")
+  ]
+  x <- x[order(x$ID), ]
+  outer_patterns[rep_id, ] <- x$OuterFold
+}
+
+unique_repetition_patterns <- !anyDuplicated(
+  as.data.frame(outer_patterns)
+)
+
+assessment_frequency_ok <- all(
+  table(outer_assignments$ID) == N_OUTER_REPEATS
+)
+
+outer_split_checks <- logical(
+  length(outer_splits)
+)
+
+for (i in seq_along(outer_splits)) {
+  x <- outer_splits[[i]]
+
+  outer_split_checks[i] <-
+    length(x$analysis_ids) == 800L &&
+    length(x$assessment_ids) == 200L &&
+    length(intersect(x$analysis_ids, x$assessment_ids)) == 0L &&
+    identical(
+      sort(c(x$analysis_ids, x$assessment_ids)),
+      sort(ids)
+    )
+}
+
+outer_split_integrity <- all(outer_split_checks)
+
+# Check the complete inner assignment structure.
+inner_row_count_ok <-
+  nrow(inner_assignments) == length(outer_splits) * 800L
+
+inner_balanced <- all(
+  inner_sizes$Assessment_N == 200L &
+  inner_sizes$Analysis_N == 600L
+)
+
+inner_assignment_checks <- logical(
+  length(outer_splits)
+)
+
+for (i in seq_along(outer_splits)) {
+
+  split_id <- names(outer_splits)[i]
+
+  x <- inner_assignments[
+    inner_assignments$SplitID == split_id,
+    ,
+    drop = FALSE
+  ]
+
+  outer_analysis_ids <- outer_splits[[split_id]]$analysis_ids
+
+  inner_assignment_checks[i] <-
+    nrow(x) == 800L &&
+    !anyDuplicated(x$ID) &&
+    identical(sort(x$ID), sort(outer_analysis_ids)) &&
+    identical(
+      sort(unique(x$InnerFold)),
+      seq_len(N_INNER_FOLDS)
+    )
+}
+
+inner_assignment_integrity <- all(
+  inner_assignment_checks
+)
+
+inner_split_checks <- logical(
+  length(outer_splits) * N_INNER_FOLDS
+)
+position <- 1L
+
+for (split_id in names(inner_splits)) {
+
+  outer_analysis_ids <- outer_splits[[split_id]]$analysis_ids
+
+  for (inner_id in names(inner_splits[[split_id]])) {
+
+    x <- inner_splits[[split_id]][[inner_id]]
+
+    inner_split_checks[position] <-
+      length(x$analysis_ids) == 600L &&
+      length(x$assessment_ids) == 200L &&
+      length(intersect(x$analysis_ids, x$assessment_ids)) == 0L &&
+      identical(
+        sort(c(x$analysis_ids, x$assessment_ids)),
+        sort(outer_analysis_ids)
+      )
+
+    position <- position + 1L
+  }
+}
+
+inner_split_integrity <- all(
+  inner_split_checks
+)
+
+split_variables <- unique(
+  c(
+    names(outer_assignments),
+    names(inner_assignments)
+  )
+)
+
+forbidden_split_fields <- c(
+  "Scenario",
+  "Phenotype",
+  "Observed",
+  "TrueGeneticValue",
+  "Model"
+)
+
+split_independence_ok <- !any(
+  forbidden_split_fields %in% split_variables
+)
+
+# Preserve the established output log and its historical field labels.
+validation_log <- data.frame(
+  Check = c(
+    "Canonical input files",
+    "Simulated-data audit prerequisite",
+    "Canonical object components",
+    "Individual universe",
+    "Outer assignment row count",
+    "One outer assignment per ID and repetition",
+    "Balanced outer folds",
+    "Distinct outer repetitions",
+    "Outer assessment frequency",
+    "Outer split integrity",
+    "Inner assignment row count",
+    "Balanced inner folds",
+    "Inner assignment integrity",
+    "Inner split integrity",
+    "Scenario-independent partitions",
+    "True genetic value excluded from partitioning",
+    "Phenotype excluded from partitioning"
+  ),
+  Status = c(
+    ifelse(all(files_exist), "PASS", "BLOCKED"),
+    ifelse(n_blocked_audit == 0L, "PASS", "BLOCKED"),
+    ifelse(components_ok, "PASS", "BLOCKED"),
+    ifelse(individual_universe_ok, "PASS", "BLOCKED"),
+    ifelse(outer_row_count_ok, "PASS", "BLOCKED"),
+    ifelse(outer_once_per_repeat, "PASS", "BLOCKED"),
+    ifelse(outer_balanced, "PASS", "BLOCKED"),
+    ifelse(unique_repetition_patterns, "PASS", "WARNING"),
+    ifelse(assessment_frequency_ok, "PASS", "BLOCKED"),
+    ifelse(outer_split_integrity, "PASS", "BLOCKED"),
+    ifelse(inner_row_count_ok, "PASS", "BLOCKED"),
+    ifelse(inner_balanced, "PASS", "BLOCKED"),
+    ifelse(inner_assignment_integrity, "PASS", "BLOCKED"),
+    ifelse(inner_split_integrity, "PASS", "BLOCKED"),
+    ifelse(split_independence_ok, "PASS", "BLOCKED"),
+    "PASS",
+    "PASS"
+  ),
+  Details = c(
+    if (all(files_exist)) {
+      "Canonical simulated object and audit summary are present."
+    } else {
+      paste(
+        "Missing:",
+        paste(required_files[!files_exist], collapse = ", ")
+      )
+    },
+    paste(
+      n_blocked_audit,
+      "blocking check(s) in simulated-data audit."
+    ),
+    if (components_ok) {
+      paste(
+        "Required components present:",
+        paste(required_components, collapse = ", ")
+      )
+    } else {
+      paste(
+        "Missing components:",
+        paste(
+          setdiff(required_components, names(simulated_common)),
+          collapse = ", "
+        )
+      )
+    },
+    "Expected 1000 unique row identifiers aligned with phenotype, true genetic value, and genotype matrices.",
+    paste(
+      "Observed rows:",
+      nrow(outer_assignments),
+      "; expected:",
+      length(ids) * N_OUTER_REPEATS
+    ),
+    "Each individual must occur exactly once in every repetition.",
+    "Every outer split must contain 800 analysis and 200 assessment individuals.",
+    paste(
+      "All",
+      N_OUTER_REPEATS,
+      "repetitions should use distinct fold assignments."
+    ),
+    paste(
+      "Every individual is assigned to one assessment fold per repetition and therefore appears in exactly",
+      N_OUTER_REPEATS,
+      "outer assessment sets."
+    ),
+    paste(
+      length(outer_splits),
+      "outer split objects checked for size, disjointness, and complete coverage."
+    ),
+    paste(
+      "Observed rows:",
+      nrow(inner_assignments),
+      "; expected:",
+      length(outer_splits) * 800L
+    ),
+    "Every inner split must contain 600 analysis and 200 assessment individuals.",
+    "Inner assignments are restricted to the corresponding outer analysis set.",
+    paste(
+      length(outer_splits) * N_INNER_FOLDS,
+      "inner splits checked for size, disjointness, and complete outer-analysis coverage."
+    ),
+    "Partitions are generated from canonical individual IDs and deterministic seeds only; the same folds are reused for C1-C6 and all models.",
+    "True simulated genetic values are stored in the canonical data object for final evaluation only and are not referenced when generating folds.",
+    "Phenotypes are not used to construct folds. They may be used later inside training data and inner-CV tuning, never to redefine partitions."
+  ),
+  stringsAsFactors = FALSE
+)
+
+validation_log$Status <- factor(
+  validation_log$Status,
+  levels = c(
+    "BLOCKED",
+    "WARNING",
+    "PASS"
+  )
+)
+
+validation_log <- validation_log[
+  order(validation_log$Status),
+  ,
+  drop = FALSE
+]
+rownames(validation_log) <- NULL
+```
+
+## 8. Saved validation object
+
+The modeling modules do not regenerate these partitions. Instead, the complete
+design is saved once and then read directly by GBLUP-ADE and ANN.
+
+The saved files retain:
+
+- the 5,000 outer assignment rows;
+- the 20,000 inner assignment rows;
+- the explicit analysis and assessment ID vectors for every split;
+- the fixed validation settings and the internal consistency checks.
+
+The output-writing chunk is hidden because it records already established
+objects rather than introducing a new analytical step.
+
+```{r save-validation-design, include=FALSE}
+dir.create(
+  "output/simulated/validation",
+  showWarnings = FALSE,
+  recursive = TRUE
+)
+
 write.csv(
   validation_log,
-  file.path(output_dir, "simulated_cv_design_audit.csv"),
-  row.names = FALSE
-)
-write.csv(
-  outer_assignments,
-  file.path(output_dir, "simulated_cv_outer_assignments.csv"),
-  row.names = FALSE
-)
-write.csv(
-  inner_assignments,
-  file.path(output_dir, "simulated_cv_inner_assignments.csv"),
-  row.names = FALSE
-)
-write.csv(
-  design_summary,
-  file.path(output_dir, "simulated_cv_design_summary.csv"),
+  "output/simulated/validation/simulated_cv_design_audit.csv",
   row.names = FALSE
 )
 
+write.csv(
+  outer_assignments,
+  "output/simulated/validation/simulated_cv_outer_assignments.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  inner_assignments,
+  "output/simulated/validation/simulated_cv_inner_assignments.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  design_summary,
+  "output/simulated/validation/simulated_cv_design_summary.csv",
+  row.names = FALSE
+)
+
+# Preserve the established object structure consumed by M03 and M04.
 cv_design <- list(
   metadata = list(
     dataset = "simulated",
@@ -774,20 +1232,16 @@ cv_design <- list(
 
 saveRDS(
   cv_design,
-  file.path(output_dir, "simulated_cv_design.rds"),
+  "output/simulated/validation/simulated_cv_design.rds",
   compress = "gzip"
-)
-cat(
-  "Frozen validation design written to:",
-  file.path(output_dir, "simulated_cv_design.rds"),
-  "\n"
 )
 ```
 
-The detailed assignment tables and validation audit remain available as
-versioned outputs for reproducibility and maintenance, while the modeling
-modules consume `simulated_cv_design.rds` directly.
+The resulting `simulated_cv_design.rds` is the single partition object consumed
+by the prediction modules. Keeping this object fixed ensures that differences
+between GBLUP-ADE and ANN results reflect the models rather than different
+validation samples.
 
 ## 9. Navigation
 
-[Previous: Data audit](simulated_data_audit.html) | [GBLUP-ADE](simulated_data_gblup.html) | [Regularized ANN](simulated_data_ann.html)
+[Previous: Simulated data preparation](simulated_data_audit.html) | [GBLUP-ADE](simulated_data_gblup.html) | [Regularized ANN](simulated_data_ann.html)
