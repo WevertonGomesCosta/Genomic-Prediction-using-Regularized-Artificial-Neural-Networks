@@ -23,6 +23,20 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Fix literal regex replacements
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/scripts/m01_reader_polish.py')
+          s = p.read_text(encoding='utf-8')
+          old = 'text_new, n = re.subn(pattern, replacement, text, count=1, flags=re.S)'
+          new = 'text_new, n = re.subn(pattern, lambda _m: replacement, text, count=1, flags=re.S)'
+          if old not in s:
+              raise SystemExit('regex_replace anchor not found')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
       - name: Apply reader-polish patch
         run: python .github/scripts/m01_reader_polish.py
 
