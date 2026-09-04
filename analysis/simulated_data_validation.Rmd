@@ -25,7 +25,7 @@ individuals for GBLUP-ADE and all ANN variants.
 The validation design has four fixed features:
 
 - **Repeated outer cross-validation:** 5 repetitions of 5 outer folds produce
-  25 independent model evaluations.
+  25 outer held-out evaluations.
 - **Nested inner cross-validation:** each outer analysis set is divided into 4
   inner folds for ANN hyperparameter selection.
 - **Common partitions:** the same outer and inner assignments are reused for all
@@ -695,12 +695,12 @@ partition_information |>
 
 This separation has direct consequences for model comparison:
 
-- **Scenario-independent:** C1-C6 use exactly the same individual partitions.
-- **Model-independent:** GBLUP-ADE and all ANN variants use the same outer
+- **Same across scenarios:** C1-C6 use exactly the same individual partitions.
+- **Same across models:** GBLUP-ADE and all ANN variants use the same outer
   assessment individuals.
-- **Phenotype-independent:** response values do not influence who is assigned to
+- **Phenotype not used:** response values do not influence who is assigned to
   a fold.
-- **True-G-independent:** known simulated genetic values are reserved for
+- **True genetic value not used:** known simulated genetic values are reserved for
   held-out evaluation and never determine partitions or ANN tuning.
 
 ## 7. Validation design summary
