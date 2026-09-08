@@ -323,11 +323,6 @@ all_results <- rbind(
   ar[, analysis_cols]
 )
 
-all_results$Model <- factor(
-  all_results$Model,
-  levels = model_order
-)
-
 overall <- aggregate(
   all_results[, metrics],
   by = list(
@@ -336,16 +331,16 @@ overall <- aggregate(
   FUN = mean
 )
 
-overall$Model <- as.character(overall$Model)
-
 overall_genetic_display <- overall[
-  , c(
+  match(model_order, overall$Model),
+  c(
     "Model",
     "Genetic_Correlation",
     "Genetic_RMSE",
     "Genetic_MAE",
     "Genetic_R2"
-  )
+  ),
+  drop = FALSE
 ]
 
 overall_genetic_display |>
@@ -358,13 +353,15 @@ overall_genetic_display |>
   )
 
 overall_phenotype_display <- overall[
-  , c(
+  match(model_order, overall$Model),
+  c(
     "Model",
     "Phenotype_Correlation",
     "Phenotype_RMSE",
     "Phenotype_MAE",
     "Phenotype_R2"
-  )
+  ),
+  drop = FALSE
 ]
 
 overall_phenotype_display |>
@@ -572,10 +569,6 @@ scenario_summary <- aggregate(
     Model = all_results$Model
   ),
   FUN = mean
-)
-
-scenario_summary$Model <- as.character(
-  scenario_summary$Model
 )
 
 scenario_display <- scenario_summary[
