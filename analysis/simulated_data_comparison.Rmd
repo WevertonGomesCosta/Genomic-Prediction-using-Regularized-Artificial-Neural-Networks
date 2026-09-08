@@ -1,5 +1,5 @@
 ---
-title: "Canonical comparison of GBLUP-ADE and regularized ANN models"
+title: "Simulated data: GBLUP-ADE and regularized ANN comparison"
 author:
   - Weverton Gomes da Costa
 date: "`r Sys.Date()`"
@@ -15,114 +15,249 @@ editor_options:
   chunk_output_type: console
 ---
 
+## 1. Purpose
+
+This module closes the simulated-data workflow by comparing GBLUP-ADE with the
+four ANN variants on exactly the same outer-assessment individuals defined in
+M02.
+
+The comparison uses only predictions already produced in M03 and M04. No model
+is refitted and no hyperparameter is selected here. The known **true simulated
+genetic value** is the primary evaluation target; the **observed phenotype** is
+reported as a secondary target because it also contains residual variation.
+
+Three principles define the comparison:
+
+- every method contributes the same 150 `Scenario x outer split` tasks;
+- every task contains the same 200 held-out individuals for all methods;
+- paired ANN-versus-GBLUP summaries are descriptive contrasts of repeated
+  cross-validation results, not tests based on 150 statistically independent
+  replicates.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   warning = FALSE,
   message = FALSE,
-  cache = FALSE
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
 )
 
 options(stringsAsFactors = FALSE)
+
+dir.create(
+  "output/simulated/m05/figures",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
 ```
 
-```{r format-table, include=FALSE}
-format_table <- function(
-  x,
-  caption = NULL,
-  digits = getOption("digits"),
-  row.names = NA,
-  ...
-) {
-  table <- knitr::kable(
-    x,
+## 2. Inputs and matched evaluation design
+
+### 2.1 Saved model results
+
+```{r packages-and-inputs}
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+
+GBLUP_RESULTS_RDS <-
+  "output/simulated/gblup/simulated_gblup_ade_results.rds"
+GBLUP_PREDICTIONS_RDS <-
+  "output/simulated/gblup/simulated_gblup_ade_predictions.rds"
+ANN_RESULTS_RDS <-
+  "output/simulated/ann/final/simulated_ann_results.rds"
+ANN_PREDICTIONS_RDS <-
+  "output/simulated/ann/final/simulated_ann_predictions.rds"
+
+gr <- readRDS(GBLUP_RESULTS_RDS)
+gp <- readRDS(GBLUP_PREDICTIONS_RDS)
+ar <- readRDS(ANN_RESULTS_RDS)
+ap <- readRDS(ANN_PREDICTIONS_RDS)
+
+expected_ann_models <- c(
+  "ANN_0",
+  "ANN_L1",
+  "ANN_L2",
+  "ANN_L1_L2"
+)
+
+model_order <- c(
+  "GBLUP_ADE",
+  expected_ann_models
+)
+
+input_summary <- data.frame(
+  Object = c(
+    "GBLUP-ADE task results",
+    "GBLUP-ADE held-out predictions",
+    "ANN task-by-model results",
+    "ANN held-out predictions"
+  ),
+  Rows = c(
+    nrow(gr),
+    nrow(gp),
+    nrow(ar),
+    nrow(ap)
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |>
+  knitr::kable(
     format = "html",
-    caption = caption,
-    digits = digits,
-    row.names = row.names,
-    table.attr = paste0(
-      'class="table table-striped table-hover table-bordered" ',
-      'style="width:100%; margin-bottom:0;"'
-    ),
-    ...
+    caption = "Saved results entering the final model comparison",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+The inputs contain 150 GBLUP-ADE task results, 600 ANN task-by-model results,
+30,000 GBLUP-ADE held-out predictions, and 120,000 ANN held-out predictions.
+The comparison therefore operates on completed model outputs rather than
+reconstructing either modeling branch.
+
+### 2.2 Matched tasks and assessment individuals
+
+The next block checks the observed comparison structure directly. Prediction
+records are aligned by scenario, repetition, outer fold, split identifier, task
+identifier, and individual identifier before their targets are compared.
+
+```{r matched-design}
+comparison_keys <- c(
+  "Scenario",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "TaskID",
+  "ID"
+)
+
+model_structure_rows <- vector(
+  "list",
+  length(model_order)
+)
+
+for (model_index in seq_along(model_order)) {
+  model <- model_order[model_index]
+
+  if (model == "GBLUP_ADE") {
+    result_data <- gr
+    prediction_data <- gp
+  } else {
+    result_data <- ar[
+      ar$Model == model,
+      ,
+      drop = FALSE
+    ]
+    prediction_data <- ap[
+      ap$Model == model,
+      ,
+      drop = FALSE
+    ]
+  }
+
+  predictions_per_task <- as.integer(
+    table(prediction_data$TaskID)
   )
 
-  knitr::asis_output(
-    paste0(
-      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
-      table,
-      '</div>'
-    )
+  model_structure_rows[[model_index]] <- data.frame(
+    Model = model,
+    Tasks = length(unique(result_data$TaskID)),
+    Predictions = nrow(prediction_data),
+    Min_predictions_per_task = min(predictions_per_task),
+    Max_predictions_per_task = max(predictions_per_task),
+    stringsAsFactors = FALSE
   )
 }
+
+model_structure <- do.call(
+  rbind,
+  model_structure_rows
+)
+rownames(model_structure) <- NULL
+
+model_structure |>
+  knitr::kable(
+    format = "html",
+    caption = "Observed task and assessment structure by model",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+g_targets <- gp[
+  , c(
+    comparison_keys,
+    "Observed_Phenotype",
+    "True_Genetic_Value"
+  )
+]
+
+paired_targets <- merge(
+  g_targets,
+  ap[
+    , c(
+      comparison_keys,
+      "Model",
+      "Observed_Phenotype",
+      "True_Genetic_Value"
+    )
+  ],
+  by = comparison_keys,
+  suffixes = c("_GBLUP", "_ANN"),
+  sort = FALSE
+)
+
+paired_targets$Phenotype_difference <- abs(
+  paired_targets$Observed_Phenotype_GBLUP -
+    paired_targets$Observed_Phenotype_ANN
+)
+paired_targets$TrueG_difference <- abs(
+  paired_targets$True_Genetic_Value_GBLUP -
+    paired_targets$True_Genetic_Value_ANN
+)
+
+target_match <- aggregate(
+  cbind(
+    Phenotype_difference,
+    TrueG_difference
+  ) ~ Model,
+  data = paired_targets,
+  FUN = max
+)
+
+target_match |>
+  knitr::kable(
+    format = "html",
+    digits = 12,
+    caption = "Maximum paired target difference relative to GBLUP-ADE",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-## 1. Objective
+Every model contributes 150 tasks with 200 held-out predictions per task. The
+maximum paired differences in phenotype and true genetic value are zero, so the
+methods are evaluated on identical targets for identical held-out individuals.
 
-This module provides the terminal comparison between GBLUP-ADE and the four ANN
-variants under the frozen outer-CV design. All competing methods are evaluated
-on identical outer-assessment individuals.
+## 3. Evaluation metrics
 
-Prediction of the known **true simulated genetic value** is the primary outcome.
-Prediction of the **observed phenotype** is retained as a secondary outcome.
-Results are summarized overall, by simulation scenario, and through task-matched
-ANN versus GBLUP-ADE contrasts.
+The same metrics are used in M03, M04, and this final comparison.
 
-The module does not fit models, tune hyperparameters, or alter predictions. It
-combines the canonical outputs from M03 and M04 and verifies that the comparison
-is made on the same tasks, individuals, and evaluation targets.
+- **Pearson correlation** measures linear association between prediction and
+  target. It is not a ranking metric and does not by itself measure calibration.
+- **RMSE** and **MAE** measure prediction error on the original target scale;
+  smaller values are better.
+- **Bias** is `mean(prediction - target)`; values nearer zero indicate less mean
+  prediction error.
+- **Slope** is the prediction coefficient in `lm(target ~ prediction)`; values
+  nearer one indicate better proportional calibration, while the regression
+  intercept also contributes to calibration.
+- **R-squared** is calculated as \(1-SSE/SST\). It is not squared Pearson
+  correlation and can be negative for held-out predictions.
 
-## 2. Packages and canonical inputs
-
-### 2.1 Packages
-
-Only `knitr` is required directly for reader-facing table presentation in this
-comparison module. The statistical summaries use base R functions.
-
-```{r packages}
-library(knitr) # Format reader-facing tables and R Markdown output.
-```
-
-The paths below identify the frozen GBLUP-ADE and ANN results consumed by this
-module, together with the versioned comparison tables that may be regenerated
-explicitly when `WRITE_COMPARISON_OUTPUTS=1`.
-
-```{r comparison-paths}
-PROJECT_ROOT <- "."
-project_path <- function(...) file.path(PROJECT_ROOT, ...)
-
-GBLUP_RESULTS_RDS <- project_path(
-  "output", "simulated", "gblup", "simulated_gblup_ade_results.rds"
-)
-GBLUP_PREDICTIONS_RDS <- project_path(
-  "output", "simulated", "gblup", "simulated_gblup_ade_predictions.rds"
-)
-ANN_RESULTS_RDS <- project_path(
-  "output", "simulated", "ann", "final", "simulated_ann_results.rds"
-)
-ANN_PREDICTIONS_RDS <- project_path(
-  "output", "simulated", "ann", "final", "simulated_ann_predictions.rds"
-)
-
-COMPARISON_DIR <- project_path("output", "simulated", "comparison")
-OVERALL_CSV <- file.path(
-  COMPARISON_DIR, "simulated_model_overall_summary.csv"
-)
-SCENARIO_CSV <- file.path(
-  COMPARISON_DIR, "simulated_model_scenario_summary.csv"
-)
-PAIRED_CSV <- file.path(
-  COMPARISON_DIR, "simulated_ann_vs_gblup_paired_summary.csv"
-)
-PAIRED_SCENARIO_CSV <- file.path(
-  COMPARISON_DIR, "simulated_ann_vs_gblup_paired_by_scenario.csv"
-)
-
-WRITE_COMPARISON_OUTPUTS <- identical(
-  Sys.getenv("WRITE_COMPARISON_OUTPUTS", "0"),
-  "1"
-)
-
+```{r metric-definitions, include=FALSE}
 metrics <- c(
   "Genetic_Correlation",
   "Genetic_RMSE",
@@ -138,217 +273,6 @@ metrics <- c(
   "Phenotype_R2"
 )
 
-expected_ann_models <- c(
-  "ANN_0",
-  "ANN_L1",
-  "ANN_L2",
-  "ANN_L1_L2"
-)
-```
-
-### 2.2 GBLUP-ADE results
-
-The GBLUP-ADE branch contributes one result row for each of the 150 frozen outer
-tasks and one held-out prediction for each of the 200 assessment individuals in
-each task.
-
-### 2.3 ANN results
-
-The ANN branch contributes the same 150 outer tasks for each of four ANN
-variants, yielding 600 task-by-model result rows and 120,000 held-out
-predictions.
-
-```{r load-canonical-inputs}
-gr <- readRDS(GBLUP_RESULTS_RDS)
-gp <- readRDS(GBLUP_PREDICTIONS_RDS)
-ar <- readRDS(ANN_RESULTS_RDS)
-ap <- readRDS(ANN_PREDICTIONS_RDS)
-
-input_rows <- data.frame(
-  Object = c(
-    "GBLUP task results", "GBLUP predictions",
-    "ANN task-by-model results", "ANN predictions"
-  ),
-  Rows = c(nrow(gr), nrow(gp), nrow(ar), nrow(ap))
-)
-format_table(
-  input_rows,
-  caption = "Canonical model-comparison inputs",
-  row.names = FALSE
-)
-```
-
-The displayed row counts provide the first check that the comparison consumes
-the finalized outputs from both modeling branches rather than refitting either
-method.
-
-## 3. Fair-comparison contract
-
-The comparison is meaningful only if all methods use the same frozen
-outer-assessment design. The audit below therefore verifies the task structure,
-assessment sample sizes, and equality of the two evaluation targets before any
-performance summary is interpreted.
-
-```{r compatibility-audit}
-comparison_keys <- c(
-  "Scenario", "Repetition", "Fold", "SplitID", "TaskID", "ID"
-)
-g_targets <- gp[
-  , c(comparison_keys, "Observed_Phenotype", "True_Genetic_Value")
-]
-paired_targets <- merge(
-  g_targets,
-  ap[, c(
-    comparison_keys, "Model", "Observed_Phenotype", "True_Genetic_Value"
-  )],
-  by = comparison_keys,
-  suffixes = c("_GBLUP", "_ANN"),
-  sort = FALSE
-)
-paired_targets$Phenotype_difference <- abs(
-  paired_targets$Observed_Phenotype_GBLUP -
-    paired_targets$Observed_Phenotype_ANN
-)
-paired_targets$TrueG_difference <- abs(
-  paired_targets$True_Genetic_Value_GBLUP -
-    paired_targets$True_Genetic_Value_ANN
-)
-
-model_structure <- do.call(
-  rbind,
-  lapply(c("GBLUP_ADE", expected_ann_models), function(model) {
-    if (model == "GBLUP_ADE") {
-      result_data <- gr
-      prediction_data <- gp
-    } else {
-      result_data <- ar[ar$Model == model, , drop = FALSE]
-      prediction_data <- ap[ap$Model == model, , drop = FALSE]
-    }
-    predictions_per_task <- as.integer(table(prediction_data$TaskID))
-    data.frame(
-      Model = model,
-      Tasks = length(unique(result_data$TaskID)),
-      Predictions = nrow(prediction_data),
-      Min_predictions_per_task = min(predictions_per_task),
-      Max_predictions_per_task = max(predictions_per_task)
-    )
-  })
-)
-
-target_match <- aggregate(
-  cbind(Phenotype_difference, TrueG_difference) ~ Model,
-  data = paired_targets,
-  FUN = max
-)
-```
-
-### 3.1 Matched tasks
-
-Each model must contribute the same frozen set of 150 `Scenario × outer split`
-tasks. The table also reports the number of held-out predictions and the
-assessment size observed within each task.
-
-```{r comparison-task-structure}
-format_table(
-  model_structure,
-  caption = "Observed task and assessment structure by model",
-  row.names = FALSE
-)
-```
-
-### 3.2 Matched assessment individuals
-
-The prediction-level merge uses
-`Scenario + Repetition + Fold + SplitID + TaskID + ID`. Consequently, agreement
-of the paired targets is evaluated only after the same assessment individual has
-been aligned across GBLUP-ADE and each ANN variant.
-
-### 3.3 Phenotype agreement
-
-For each ANN variant, the maximum absolute difference between its held-out
-phenotype and the matched GBLUP-ADE phenotype should be zero.
-
-### 3.4 True-G agreement
-
-The same check is performed for the known simulated genetic value, which is the
-primary target of this study.
-
-```{r comparison-target-agreement}
-format_table(
-  target_match,
-  digits = 12,
-  caption = "Maximum paired target difference relative to GBLUP-ADE",
-  row.names = FALSE
-)
-```
-
-The compact contract below summarizes all four observed pairing properties in a
-single table.
-
-```{r compatibility-summary}
-comparison_contract <- data.frame(
-  Quantity = c(
-    "Outer tasks per model",
-    "Assessment predictions per task",
-    "Maximum paired phenotype difference",
-    "Maximum paired true-G difference"
-  ),
-  Observed = c(
-    paste(range(model_structure$Tasks), collapse = " to "),
-    paste(
-      range(c(
-        model_structure$Min_predictions_per_task,
-        model_structure$Max_predictions_per_task
-      )),
-      collapse = " to "
-    ),
-    max(target_match$Phenotype_difference),
-    max(target_match$TrueG_difference)
-  )
-)
-format_table(
-  comparison_contract,
-  caption = "Observed contract for the task-matched model comparison",
-  row.names = FALSE
-)
-```
-
-These quantities describe the pairing structure rather than predictive
-performance. They establish that the subsequent summaries compare matched tasks,
-matched assessment individuals, and identical evaluation targets.
-
-## 4. Evaluation metrics
-
-The same metric definitions are applied separately to prediction of the true
-simulated genetic value and to prediction of the observed phenotype.
-
-### 4.1 Prediction metrics
-
-- **Correlation** describes linear agreement between prediction and target.
-- **RMSE** and **MAE** summarize prediction error on the original target scale.
-- **R-squared** is calculated as \(1-SSE/SST\), using prediction errors relative
-  to the target mean. It is not defined here as squared correlation and can be
-  negative for genuinely held-out predictions.
-
-### 4.2 Calibration metrics
-
-- **Bias** is the mean prediction error,
-  \(\operatorname{mean}(\text{prediction}-\text{target})\). Zero is the
-  calibration target.
-- **Slope** is the prediction coefficient in `lm(target ~ prediction)`. A value
-  near one indicates appropriate proportional scaling, although the regression
-  intercept also contributes to calibration.
-
-Correlation, error metrics, and calibration diagnostics answer complementary
-questions. No single metric is interpreted as establishing universal model
-superiority.
-
-### 4.3 Direction of improvement
-
-For paired ANN-versus-GBLUP comparisons, each metric is assigned either a
-direction of improvement or a calibration target.
-
-```{r comparison-metric-rules}
 higher_better <- c(
   "Genetic_Correlation",
   "Genetic_R2",
@@ -372,160 +296,275 @@ one_target <- c(
   "Genetic_Slope",
   "Phenotype_Slope"
 )
-
-metric_rule <- c(
-  setNames(rep("higher", length(higher_better)), higher_better),
-  setNames(rep("lower", length(lower_better)), lower_better),
-  setNames(rep("zero", length(zero_target)), zero_target),
-  setNames(rep("one", length(one_target)), one_target)
-)
-
-metric_rule_table <- data.frame(
-  Metric = names(metric_rule),
-  Better_value = unname(metric_rule),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  metric_rule_table,
-  caption =
-    "Direction or calibration target used in paired model comparisons",
-  row.names = FALSE
-)
 ```
 
-For `higher`, larger values are preferred; for `lower`, smaller values are
-preferred. Bias is evaluated by distance from zero and slope by distance from
-one.
+For the paired contrasts below, positive performance advantage always favors the
+ANN variant. Higher-is-better metrics use `ANN - GBLUP`; lower-is-better metrics
+use `GBLUP - ANN`; bias is compared by distance from zero; and slope is compared
+by distance from one.
 
-## 5. Overall model performance
+## 4. Overall model performance
 
-Overall performance is shown separately for the two evaluation targets so that
-the primary simulated-data criterion is not visually mixed with the secondary
-phenotype criterion. Both summaries average the same 150 matched outer-CV tasks
-per model.
+### 4.1 Overall means
 
-```{r overall-comparison-calculations}
+```{r overall-performance}
 analysis_cols <- c(
-  "Scenario", "Repetition", "Fold", "SplitID", "TaskID", "Model", metrics
+  "Scenario",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "TaskID",
+  "Model",
+  metrics
 )
 
-all_results <- rbind(gr[, analysis_cols], ar[, analysis_cols])
+all_results <- rbind(
+  gr[, analysis_cols],
+  ar[, analysis_cols]
+)
+
+all_results$Model <- factor(
+  all_results$Model,
+  levels = model_order
+)
 
 overall <- aggregate(
   all_results[, metrics],
-  by = list(Model = all_results$Model),
+  by = list(
+    Model = all_results$Model
+  ),
   FUN = mean
 )
 
-overall_genetic_display <- overall[, c(
-  "Model",
-  "Genetic_Correlation",
-  "Genetic_RMSE",
-  "Genetic_MAE",
-  "Genetic_R2"
-)]
-overall_genetic_display[-1] <- lapply(
-  overall_genetic_display[-1],
-  round,
-  4
-)
+overall$Model <- as.character(overall$Model)
 
-overall_phenotype_display <- overall[, c(
-  "Model",
-  "Phenotype_Correlation",
-  "Phenotype_RMSE",
-  "Phenotype_MAE",
-  "Phenotype_R2"
-)]
-overall_phenotype_display[-1] <- lapply(
-  overall_phenotype_display[-1],
-  round,
-  4
-)
-```
+overall_genetic_display <- overall[
+  , c(
+    "Model",
+    "Genetic_Correlation",
+    "Genetic_RMSE",
+    "Genetic_MAE",
+    "Genetic_R2"
+  )
+]
 
-### 5.1 True genetic value
+overall_genetic_display |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Primary overall performance against true genetic value",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 
-The primary summary compares each model with the known simulated genetic value.
-Higher correlation and \(R^2\), together with lower RMSE and MAE, indicate better
-held-out recovery of the genetic signal.
+overall_phenotype_display <- overall[
+  , c(
+    "Model",
+    "Phenotype_Correlation",
+    "Phenotype_RMSE",
+    "Phenotype_MAE",
+    "Phenotype_R2"
+  )
+]
 
-```{r overall-genetic-performance}
-format_table(
-  overall_genetic_display,
-  caption =
-    "Primary overall performance against true genetic value",
-  row.names = FALSE
-)
-```
+overall_phenotype_display |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Secondary overall performance against observed phenotype",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 
-### 5.2 Phenotype
-
-The secondary summary evaluates the same held-out predictions against the
-observed phenotype, which also contains non-genetic variation.
-
-```{r overall-phenotype-performance}
-format_table(
-  overall_phenotype_display,
-  caption =
-    "Secondary overall performance against observed phenotype",
-  row.names = FALSE
-)
-```
-
-```{r overall-interpretation}
 best_corr_model <- overall$Model[
   which.max(overall$Genetic_Correlation)
 ]
-
 best_rmse_model <- overall$Model[
   which.min(overall$Genetic_RMSE)
 ]
-
 best_r2_model <- overall$Model[
   which.max(overall$Genetic_R2)
 ]
 
-best_overall <- overall[
-  overall$Model == best_corr_model,
+best_corr_value <- max(overall$Genetic_Correlation)
+best_rmse_value <- min(overall$Genetic_RMSE)
+best_r2_value <- max(overall$Genetic_R2)
+
+ann_overall <- overall[
+  overall$Model %in% expected_ann_models,
   ,
   drop = FALSE
 ]
 
-ann_overall_now <- overall[
-  overall$Model != "GBLUP_ADE",
-  ,
-  drop = FALSE
+best_ann_model <- ann_overall$Model[
+  which.max(ann_overall$Genetic_Correlation)
 ]
-
-best_ann_now <- ann_overall_now[
-  which.max(
-    ann_overall_now$Genetic_Correlation
-  ),
-  ,
-  drop = FALSE
-]
+best_ann_correlation <- max(
+  ann_overall$Genetic_Correlation
+)
 ```
 
-Across all 150 matched outer-CV tasks, **`r best_corr_model`** has the highest
-mean genetic correlation
-(`r sprintf("%.4f", best_overall$Genetic_Correlation)`), the lowest mean
-genetic RMSE (`r sprintf("%.4f", best_overall$Genetic_RMSE)`), and the highest
-mean genetic \(R^2\) (`r sprintf("%.4f", best_overall$Genetic_R2)`). Among the
-ANN variants, **`r best_ann_now$Model`** has the highest mean genetic
-correlation (`r sprintf("%.4f", best_ann_now$Genetic_Correlation)`). These
-statements describe the evaluated model and search space; they do not establish
-universal superiority.
+Across the 150 matched outer tasks, the highest mean genetic Pearson correlation
+is obtained by **`r best_corr_model`**
+(`r sprintf("%.4f", best_corr_value)`), the lowest mean genetic RMSE by
+**`r best_rmse_model`** (`r sprintf("%.4f", best_rmse_value)`), and the highest
+mean genetic \(R^2\) by **`r best_r2_model`**
+(`r sprintf("%.4f", best_r2_value)`). Among the ANN variants,
+**`r best_ann_model`** has the highest mean genetic Pearson correlation
+(`r sprintf("%.4f", best_ann_correlation)`). These are descriptive results for
+the evaluated models and search spaces, not claims of universal model
+superiority.
 
-## 6. Performance by scenario
+### 4.2 Distribution across outer tasks
 
-The next table asks whether the overall ranking persists across the six
-prespecified simulation scenarios. Only the primary genetic-value metrics are
-shown here; the complete metric set remains available in the versioned
-comparison outputs.
+The next figures show the 150 outer-task values for each method. Because the
+repeated cross-validation tasks overlap in their training and assessment
+samples, these distributions describe sensitivity to the held-out samples; they
+are not interpreted as 150 statistically independent replicates.
 
-```{r scenario-comparison}
+```{r genetic-correlation-figure, fig.cap="Held-out true genetic-value Pearson correlation across the 150 outer tasks for GBLUP-ADE and the four ANN variants. Boxes summarize the task distribution; white diamonds indicate model means."}
+plot_results <- all_results
+plot_results$Model <- factor(
+  plot_results$Model,
+  levels = model_order,
+  labels = c(
+    "GBLUP-ADE",
+    "ANN-0",
+    "ANN-L1",
+    "ANN-L2",
+    "ANN-L1+L2"
+  )
+)
+
+p_model_correlation <- ggplot(
+  plot_results,
+  aes(
+    x = Model,
+    y = Genetic_Correlation,
+    fill = Model
+  )
+) +
+  geom_boxplot(
+    width = 0.58,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = 20260821L + 501L
+    ),
+    alpha = 0.32,
+    size = 1.3
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 3.2,
+    fill = "white"
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = NULL,
+    y = "Pearson correlation with true genetic value",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 20,
+      hjust = 1
+    )
+  )
+
+print(p_model_correlation)
+```
+
+```{r save-model-correlation-tiff, include=FALSE}
+ggsave(
+  "output/simulated/m05/figures/model_genetic_correlation_comparison.tiff",
+  plot = p_model_correlation,
+  device = "tiff",
+  width = 8.5,
+  height = 5.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
+)
+```
+
+```{r genetic-rmse-figure, fig.cap="Held-out true genetic-value RMSE across the 150 outer tasks for GBLUP-ADE and the four ANN variants. Lower values indicate smaller prediction error; white diamonds indicate model means."}
+p_model_rmse <- ggplot(
+  plot_results,
+  aes(
+    x = Model,
+    y = Genetic_RMSE,
+    fill = Model
+  )
+) +
+  geom_boxplot(
+    width = 0.58,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = 20260821L + 502L
+    ),
+    alpha = 0.32,
+    size = 1.3
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 3.2,
+    fill = "white"
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = NULL,
+    y = "RMSE for true genetic value",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 20,
+      hjust = 1
+    )
+  )
+
+print(p_model_rmse)
+```
+
+```{r save-model-rmse-tiff, include=FALSE}
+ggsave(
+  "output/simulated/m05/figures/model_genetic_rmse_comparison.tiff",
+  plot = p_model_rmse,
+  device = "tiff",
+  width = 8.5,
+  height = 5.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
+)
+```
+
+## 5. Performance by scenario
+
+The scenario summary asks whether the overall pattern persists across C1-C6.
+These scenarios jointly vary genetic complexity and nominal heritability, so
+the sequence is not interpreted as the isolated causal effect of either
+quantity.
+
+```{r scenario-performance}
 scenario_summary <- aggregate(
   all_results[, metrics],
   by = list(
@@ -535,134 +574,156 @@ scenario_summary <- aggregate(
   FUN = mean
 )
 
-scenario_display <- scenario_summary[, c(
-  "Scenario", "Model", "Genetic_Correlation", "Genetic_RMSE", "Genetic_R2"
-)]
-scenario_display[, -(1:2)] <- lapply(
-  scenario_display[, -(1:2), drop = FALSE],
-  round,
-  4
+scenario_summary$Model <- as.character(
+  scenario_summary$Model
 )
 
-format_table(
-  scenario_display,
-  caption =
-    "Primary genetic-value prediction metrics by scenario",
-  row.names = FALSE
-)
-```
+scenario_display <- scenario_summary[
+  , c(
+    "Scenario",
+    "Model",
+    "Genetic_Correlation",
+    "Genetic_RMSE",
+    "Genetic_R2"
+  )
+]
 
-```{r scenario-interpretation}
+scenario_display |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Primary genetic-value prediction metrics by scenario",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
 scenario_ids <- sort(
   unique(scenario_summary$Scenario)
 )
 
+scenario_winner_rows <- vector(
+  "list",
+  length(scenario_ids)
+)
+
+for (scenario_index in seq_along(scenario_ids)) {
+  scenario <- scenario_ids[scenario_index]
+  scenario_data <- scenario_summary[
+    scenario_summary$Scenario == scenario,
+    ,
+    drop = FALSE
+  ]
+
+  scenario_winner_rows[[scenario_index]] <- data.frame(
+    Scenario = scenario,
+    Best_correlation = scenario_data$Model[
+      which.max(scenario_data$Genetic_Correlation)
+    ],
+    Best_RMSE = scenario_data$Model[
+      which.min(scenario_data$Genetic_RMSE)
+    ],
+    Best_R2 = scenario_data$Model[
+      which.max(scenario_data$Genetic_R2)
+    ],
+    stringsAsFactors = FALSE
+  )
+}
+
 scenario_winners <- do.call(
   rbind,
-  lapply(
-    scenario_ids,
-    function(sc) {
-      z <- scenario_summary[
-        scenario_summary$Scenario == sc,
-        ,
-        drop = FALSE
-      ]
-
-      data.frame(
-        Scenario = sc,
-        Best_correlation =
-          z$Model[which.max(z$Genetic_Correlation)],
-        Best_RMSE =
-          z$Model[which.min(z$Genetic_RMSE)],
-        Best_R2 =
-          z$Model[which.max(z$Genetic_R2)],
-        stringsAsFactors = FALSE
-      )
-    }
-  )
+  scenario_winner_rows
 )
 
 corr_wins <- sum(
   scenario_winners$Best_correlation == "GBLUP_ADE"
 )
-
 rmse_wins <- sum(
   scenario_winners$Best_RMSE == "GBLUP_ADE"
 )
-
 r2_wins <- sum(
   scenario_winners$Best_R2 == "GBLUP_ADE"
 )
 ```
 
-GBLUP-ADE has the best mean genetic correlation in
+GBLUP-ADE has the highest mean genetic Pearson correlation in
 **`r corr_wins` of `r length(scenario_ids)` scenarios**, the lowest mean genetic
 RMSE in **`r rmse_wins` of `r length(scenario_ids)`**, and the highest mean
-genetic \(R^2\) in **`r r2_wins` of `r length(scenario_ids)`**. The C1-C6
-sequence is interpreted as performance across the prespecified joint simulation
-gradient, not as an isolated causal effect of QTL number or nominal
-heritability.
+genetic \(R^2\) in **`r r2_wins` of `r length(scenario_ids)`**.
 
-## 7. Task-matched ANN vs GBLUP-ADE comparison
+## 6. Matched ANN versus GBLUP-ADE contrasts
 
-### 7.1 Overall task-matched contrasts
+The ANN-versus-GBLUP comparison is performed within each matched outer task.
+Positive advantage always favors the ANN variant; negative advantage favors
+GBLUP-ADE.
 
-For the three primary genetic-value metrics, the paired advantage is defined so
-that a positive value always favors the ANN variant:
+### 6.1 Overall matched contrasts
 
-- **Correlation advantage** = ANN correlation - GBLUP-ADE correlation.
-- **RMSE advantage** = GBLUP-ADE RMSE - ANN RMSE.
-- **\(R^2\) advantage** = ANN \(R^2\) - GBLUP-ADE \(R^2\).
-
-The same convention is extended to MAE, bias, slope, and the secondary phenotype
-metrics by comparing the appropriate direction or distance from the calibration
-target.
-
-```{r paired-comparison}
-performance_advantage <- function(
-  metric,
-  ann_value,
-  gblup_value
-) {
-  rule <- unname(
-    metric_rule[metric]
+```{r matched-contrasts}
+g <- gr[
+  , c(
+    "Scenario",
+    "Repetition",
+    "Fold",
+    "SplitID",
+    "TaskID",
+    metrics
   )
+]
 
-  candidate_advantages <- list(
-    higher =
-      ann_value - gblup_value,
-    lower =
-      gblup_value - ann_value,
-    zero =
-      abs(gblup_value) - abs(ann_value),
-    one =
-      abs(gblup_value - 1) -
-      abs(ann_value - 1)
-  )
+names(g)[-(1:5)] <- paste0(
+  names(g)[-(1:5)],
+  "_GBLUP"
+)
 
-  candidate_advantages[[rule]]
-}
-
-g <- gr[, c("TaskID", "SplitID", metrics)]
-names(g)[-(1:2)] <- paste0(names(g)[-(1:2)], "_GBLUP")
-
-paired_list <- list()
+paired_rows <- list()
+paired_row_index <- 0L
 
 for (model in sort(unique(ar$Model))) {
   a <- ar[
     ar$Model == model,
-    c("TaskID", "SplitID", "Scenario", metrics)
+    c(
+      "Scenario",
+      "Repetition",
+      "Fold",
+      "SplitID",
+      "TaskID",
+      metrics
+    )
   ]
 
-  z <- merge(a, g, by = c("TaskID", "SplitID"), all = FALSE)
+  matched <- merge(
+    a,
+    g,
+    by = c(
+      "Scenario",
+      "Repetition",
+      "Fold",
+      "SplitID",
+      "TaskID"
+    ),
+    all = FALSE,
+    sort = FALSE
+  )
 
   for (metric in metrics) {
-    ann_value <- z[[metric]]
-    gblup_value <- z[[paste0(metric, "_GBLUP")]]
+    ann_value <- matched[[metric]]
+    gblup_value <- matched[[paste0(metric, "_GBLUP")]]
     raw_difference <- ann_value - gblup_value
-    advantage <- performance_advantage(metric, ann_value, gblup_value)
 
-    paired_list[[length(paired_list) + 1L]] <- data.frame(
+    if (metric %in% higher_better) {
+      advantage <- ann_value - gblup_value
+    } else if (metric %in% lower_better) {
+      advantage <- gblup_value - ann_value
+    } else if (metric %in% zero_target) {
+      advantage <- abs(gblup_value) - abs(ann_value)
+    } else {
+      advantage <-
+        abs(gblup_value - 1) -
+        abs(ann_value - 1)
+    }
+
+    paired_row_index <- paired_row_index + 1L
+    paired_rows[[paired_row_index]] <- data.frame(
       Model = model,
       Metric = metric,
       N = length(raw_difference),
@@ -680,68 +741,109 @@ for (model in sort(unique(ar$Model))) {
   }
 }
 
-paired <- do.call(rbind, paired_list)
+paired <- do.call(
+  rbind,
+  paired_rows
+)
 rownames(paired) <- NULL
 
 paired_primary <- paired[
-  paired$Metric %in% c("Genetic_Correlation", "Genetic_RMSE", "Genetic_R2"),
+  paired$Metric %in% c(
+    "Genetic_Correlation",
+    "Genetic_RMSE",
+    "Genetic_R2"
+  ),
   c(
-    "Model", "Metric", "Mean_ANN", "Mean_GBLUP",
-    "Mean_performance_advantage", "ANN_better", "Equal", "GBLUP_better"
+    "Model",
+    "Metric",
+    "Mean_ANN",
+    "Mean_GBLUP",
+    "Mean_performance_advantage",
+    "ANN_better",
+    "Equal",
+    "GBLUP_better"
   )
 ]
-paired_primary[, 3:5] <- lapply(
-  paired_primary[, 3:5, drop = FALSE],
-  round,
-  4
-)
 
-format_table(
-  paired_primary,
-  caption = paste(
-    "Paired ANN versus GBLUP-ADE comparison for the primary",
-    "genetic-value metrics"
-  ),
-  row.names = FALSE
-)
+paired_primary |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Matched ANN versus GBLUP-ADE contrasts for primary genetic-value metrics",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-The `ANN_better` and `GBLUP_better` counts refer to the same frozen
-outer-assessment tasks for both methods. They therefore describe within-task
-predictive wins under directly matched test samples. These counts are
-descriptive summaries of repeated cross-validation and are not treated as
-independent replicates for a naive fold-level significance test.
+`ANN_better` and `GBLUP_better` count matched outer tasks, so each comparison
+uses the same held-out sample for both methods. These counts describe how often
+one method performs better within the repeated cross-validation design; they are
+not used as independent observations for a naive fold-level significance test.
 
-### 7.2 By simulation scenario
+### 6.2 Matched contrasts by scenario
 
-To localize the paired pattern, genetic-correlation advantage is summarized
-within each scenario over its 25 matched outer tasks. Positive values favor the
-ANN variant and negative values favor GBLUP-ADE.
-
-```{r paired-by-scenario}
-paired_scenario_list <- list()
+```{r matched-contrasts-by-scenario}
+paired_scenario_rows <- list()
+paired_scenario_index <- 0L
 
 for (model in sort(unique(ar$Model))) {
   a <- ar[
     ar$Model == model,
-    c("TaskID", "SplitID", "Scenario", metrics)
+    c(
+      "Scenario",
+      "Repetition",
+      "Fold",
+      "SplitID",
+      "TaskID",
+      metrics
+    )
   ]
 
-  z <- merge(a, g, by = c("TaskID", "SplitID"), all = FALSE)
+  matched <- merge(
+    a,
+    g,
+    by = c(
+      "Scenario",
+      "Repetition",
+      "Fold",
+      "SplitID",
+      "TaskID"
+    ),
+    all = FALSE,
+    sort = FALSE
+  )
 
-  for (scenario in sort(unique(z$Scenario))) {
-    zs <- z[z$Scenario == scenario, , drop = FALSE]
+  for (scenario in sort(unique(matched$Scenario))) {
+    scenario_data <- matched[
+      matched$Scenario == scenario,
+      ,
+      drop = FALSE
+    ]
 
     for (metric in metrics) {
-      ann_value <- zs[[metric]]
-      gblup_value <- zs[[paste0(metric, "_GBLUP")]]
-      advantage <- performance_advantage(metric, ann_value, gblup_value)
+      ann_value <- scenario_data[[metric]]
+      gblup_value <- scenario_data[[paste0(metric, "_GBLUP")]]
 
-      paired_scenario_list[[length(paired_scenario_list) + 1L]] <- data.frame(
+      if (metric %in% higher_better) {
+        advantage <- ann_value - gblup_value
+      } else if (metric %in% lower_better) {
+        advantage <- gblup_value - ann_value
+      } else if (metric %in% zero_target) {
+        advantage <- abs(gblup_value) - abs(ann_value)
+      } else {
+        advantage <-
+          abs(gblup_value - 1) -
+          abs(ann_value - 1)
+      }
+
+      paired_scenario_index <-
+        paired_scenario_index + 1L
+
+      paired_scenario_rows[[paired_scenario_index]] <- data.frame(
         Scenario = scenario,
         Model = model,
         Metric = metric,
-        N = nrow(zs),
+        N = nrow(scenario_data),
         Mean_advantage = mean(advantage),
         Median_advantage = median(advantage),
         ANN_better = sum(advantage > 0),
@@ -753,49 +855,51 @@ for (model in sort(unique(ar$Model))) {
   }
 }
 
-paired_scenario <- do.call(rbind, paired_scenario_list)
+paired_scenario <- do.call(
+  rbind,
+  paired_scenario_rows
+)
 rownames(paired_scenario) <- NULL
 
 paired_scenario_primary <- paired_scenario[
   paired_scenario$Metric == "Genetic_Correlation",
   c(
-    "Scenario", "Model", "Mean_advantage",
-    "ANN_better", "Equal", "GBLUP_better"
+    "Scenario",
+    "Model",
+    "Mean_advantage",
+    "ANN_better",
+    "Equal",
+    "GBLUP_better"
   )
 ]
-paired_scenario_primary$Mean_advantage <- round(
-  paired_scenario_primary$Mean_advantage,
-  4
-)
 
-format_table(
-  paired_scenario_primary,
-  caption = paste(
-    "Paired genetic-correlation advantage by scenario.",
-    "Positive values favor ANN."
-  ),
-  row.names = FALSE
-)
+paired_scenario_primary |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Matched genetic-correlation advantage by scenario; positive values favor ANN",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-The scenario-level paired summaries show whether the overall pattern is
-concentrated in a subset of simulation conditions or persists across the full
-C1--C6 sequence. Positive mean advantage values favor the ANN variant; negative
-values favor GBLUP-ADE. Together with the scenario means above, these paired
-summaries provide a task-matched description of how consistently the methods
-differ.
+The scenario-level contrasts show whether differences are concentrated in a
+subset of simulation conditions or recur across the full C1-C6 sequence. They
+remain descriptive summaries of matched held-out tasks.
 
-## 8. Regularization effects among ANN models
+## 7. Regularization within the ANN branch
 
-The overall comparison can also be read within the ANN branch alone. Restricting
-the primary genetic-value summary to the four neural-network variants isolates
-the effect associated with the prespecified L1 and L2 regularization choices,
-without changing the architecture and learning-rate search contract established
-in M04.
+The four ANN variants share, within each outer task, the architecture and
+learning rate selected with ANN_0 in M04. Their overall contrast therefore
+describes the effect associated with the evaluated L1/L2 choices **conditional
+on that shared structural selection rule**.
 
-```{r ann-regularization-summary}
+```{r ann-regularization}
 ann_regularization_display <- overall[
-  match(expected_ann_models, overall$Model),
+  match(
+    expected_ann_models,
+    overall$Model
+  ),
   c(
     "Model",
     "Genetic_Correlation",
@@ -806,70 +910,119 @@ ann_regularization_display <- overall[
   drop = FALSE
 ]
 
-ann_regularization_display[-1] <- lapply(
-  ann_regularization_display[-1],
-  round,
-  4
+ann_regularization_display |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Overall primary genetic-value performance among ANN variants",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+ann_l1 <- ann_overall[
+  ann_overall$Model == "ANN_L1",
+  ,
+  drop = FALSE
+]
+ann_l1_l2 <- ann_overall[
+  ann_overall$Model == "ANN_L1_L2",
+  ,
+  drop = FALSE
+]
+ann_l2 <- ann_overall[
+  ann_overall$Model == "ANN_L2",
+  ,
+  drop = FALSE
+]
+ann_0 <- ann_overall[
+  ann_overall$Model == "ANN_0",
+  ,
+  drop = FALSE
+]
+```
+
+ANN-L1+L2 has the strongest overall ANN averages by a very small margin over
+ANN-L1: genetic Pearson correlation is
+`r sprintf("%.4f", ann_l1_l2$Genetic_Correlation)` versus
+`r sprintf("%.4f", ann_l1$Genetic_Correlation)`, and genetic RMSE is
+`r sprintf("%.4f", ann_l1_l2$Genetic_RMSE)` versus
+`r sprintf("%.4f", ann_l1$Genetic_RMSE)`. ANN-L2 remains close to ANN-0
+(correlations `r sprintf("%.4f", ann_l2$Genetic_Correlation)` and
+`r sprintf("%.4f", ann_0$Genetic_Correlation)`, respectively). Within the
+prespecified ANN search, the observed regularization gain is therefore associated
+mainly with the L1 component.
+
+## 8. Scientific conclusion
+
+Within the prespecified validation design and ANN search space, GBLUP-ADE has
+the strongest overall predictive performance for the known simulated genetic
+value. It has the highest mean genetic Pearson correlation, the lowest mean
+genetic RMSE, and the highest mean genetic \(R^2\), and the same three criteria
+favor GBLUP-ADE across all six simulation scenarios.
+
+Among the neural networks, ANN-L1+L2 is the strongest variant by a very small
+margin over ANN-L1, whereas ANN-L2 remains close to ANN-0. The improvement
+observed from regularization is therefore driven mainly by L1 under the bounded
+architecture and penalty search evaluated here.
+
+These conclusions are specific to the simulated scenarios, frozen repeated
+cross-validation design, GBLUP-ADE specification, and prespecified ANN search
+space used in this study. They do not establish a universal ranking between
+genomic mixed models and neural networks.
+
+```{r comparison-output-contract, include=FALSE}
+WRITE_COMPARISON_OUTPUTS <- identical(
+  Sys.getenv("WRITE_COMPARISON_OUTPUTS", "0"),
+  "1"
 )
 
-format_table(
-  ann_regularization_display,
-  caption = "Overall primary genetic-value performance among ANN variants",
+COMPARISON_DIR <- "output/simulated/comparison"
+OVERALL_CSV <- file.path(
+  COMPARISON_DIR,
+  "simulated_model_overall_summary.csv"
+)
+SCENARIO_CSV <- file.path(
+  COMPARISON_DIR,
+  "simulated_model_scenario_summary.csv"
+)
+PAIRED_CSV <- file.path(
+  COMPARISON_DIR,
+  "simulated_ann_vs_gblup_paired_summary.csv"
+)
+PAIRED_SCENARIO_CSV <- file.path(
+  COMPARISON_DIR,
+  "simulated_ann_vs_gblup_paired_by_scenario.csv"
+)
+```
+
+```{r write-comparison-outputs, eval=WRITE_COMPARISON_OUTPUTS, include=FALSE}
+dir.create(
+  COMPARISON_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+write.csv(
+  overall,
+  OVERALL_CSV,
+  row.names = FALSE
+)
+write.csv(
+  scenario_summary,
+  SCENARIO_CSV,
+  row.names = FALSE
+)
+write.csv(
+  paired,
+  PAIRED_CSV,
+  row.names = FALSE
+)
+write.csv(
+  paired_scenario,
+  PAIRED_SCENARIO_CSV,
   row.names = FALSE
 )
 ```
 
-The regularized ANN results show that the main improvement relative to `ANN_0`
-is associated with the L1 component. `ANN_L1_L2` has the strongest overall ANN
-averages by a very small margin over `ANN_L1`, whereas `ANN_L2` remains close to
-the unregularized network. This is an interpretation of the evaluated bounded
-search space, not a claim about all possible ANN regularization settings.
-
-## 9. Versioned comparison outputs
-
-The four canonical comparison tables are versioned under
-`output/simulated/comparison/`. They are rewritten only when
-`WRITE_COMPARISON_OUTPUTS=1`; the normal tutorial render leaves the stored
-scientific outputs unchanged.
-
-```{r write-comparison-outputs, eval=WRITE_COMPARISON_OUTPUTS}
-dir.create(COMPARISON_DIR, recursive = TRUE, showWarnings = FALSE)
-write.csv(overall, OVERALL_CSV, row.names = FALSE)
-write.csv(scenario_summary, SCENARIO_CSV, row.names = FALSE)
-write.csv(paired, PAIRED_CSV, row.names = FALSE)
-write.csv(paired_scenario, PAIRED_SCENARIO_CSV, row.names = FALSE)
-```
-
-The following table reports the comparison files already available for reuse.
-
-```{r verify-comparison-outputs}
-canonical_files <- c(
-  OVERALL_CSV, SCENARIO_CSV, PAIRED_CSV, PAIRED_SCENARIO_CSV
-)
-output_files <- data.frame(
-  File = basename(canonical_files),
-  Exists = file.exists(canonical_files),
-  Size_KB = round(file.info(canonical_files)$size / 1024, 1)
-)
-format_table(
-  output_files,
-  caption = "Versioned comparison tables available for reuse",
-  row.names = FALSE
-)
-```
-
-## 10. Overall scientific conclusion
-
-Within the prespecified canonical model and ANN architecture search space,
-GBLUP-ADE provides the strongest overall predictive performance and leads the
-primary genetic-value metrics across all six simulation scenarios. Among the
-neural networks, ANN-L1+L2 has the best overall averages by a very small margin
-over ANN-L1, while ANN-L2 remains close to the unregularized ANN.
-
-These results support a specific conclusion for the frozen design evaluated
-here; they do not establish a universal ranking between genomic mixed models
-and all possible neural-network architectures.
-
-## 11. Navigation
+## 9. Navigation
 
 [GBLUP-ADE](simulated_data_gblup.html) | [Regularized ANN](simulated_data_ann.html) | [Home](index.html)
