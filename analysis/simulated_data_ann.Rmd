@@ -1,5 +1,5 @@
 ---
-title: "Regularized artificial neural networks for simulated genomic data"
+title: "Simulated data: regularized ANN"
 author:
   - Weverton Gomes da Costa
 date: "`r Sys.Date()`"
@@ -15,15 +15,30 @@ editor_options:
   chunk_output_type: console
 ---
 
-## 1. Objective
+## 1. Purpose
 
-This module is the **canonical ANN workflow** for the simulated genomic-data
-branch. ANN hyperparameter tuning and final outer-CV fitting are internal
-stages of one modeling method, parallel to GBLUP-ADE in the public pipeline.
+This module fits four feed-forward neural-network variants to the same six
+simulated scenarios and the same nested validation design established in M02:
+`ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2`.
 
-The four variants are `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2`
-(displayed as **ANN-L1+L2**). They use the same multilayer perceptron and differ
-only in the L1 and L2 penalties applied to network weights.
+The scientific separation is fixed throughout the module:
+
+- the **outer analysis set** contains 800 individuals and is the only source of
+  phenotype information used for tuning, epoch selection, and final fitting;
+- the **outer assessment set** contains 200 individuals and remains untouched
+  until the final prediction for that task already exists;
+- the **four inner folds** are used only to select architecture, learning rate,
+  and applicable L1/L2 penalties inside the outer analysis set;
+- **true genetic values** do not participate in partition generation,
+  preprocessing, tuning, epoch selection, fitting, or prediction and are used
+  only for held-out evaluation.
+
+Architecture and learning rate are selected with `ANN_0` for each outer task and
+then held fixed across all four variants. The regularized variants subsequently
+tune only their applicable penalties. This creates a controlled comparison of
+regularization **conditional on the structure selected with ANN_0**; it does not
+claim that each regularized family would select the same structure under an
+independent architecture search.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -36,193 +51,23 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
-```
 
-```{r table-formatting, include=FALSE}
-format_table <- function(
-  x,
-  caption = NULL,
-  digits = getOption("digits"),
-  row.names = NA,
-  ...
-) {
-  table <- knitr::kable(
-    x,
-    format = "html",
-    caption = caption,
-    digits = digits,
-    row.names = row.names,
-    table.attr = paste0(
-      'class="table table-striped table-hover table-bordered" ',
-      'style="width:100%; margin-bottom:0;"'
-    ),
-    ...
-  )
-
-  knitr::asis_output(
-    paste0(
-      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
-      table,
-      '</div>'
-    )
-  )
-}
-```
-
-### 1.1 How to read this module
-
-The module separates three stages that must not be conflated:
-
-1. **nested tuning**, which uses only the frozen inner cross-validation folds;
-2. **epoch selection**, which uses only the 800 outer-analysis individuals;
-3. **final refitting and assessment**, which refits on all 800 outer-analysis
-   individuals and predicts the untouched 200 outer-assessment individuals.
-
-True simulated genetic values are not used in tuning or epoch selection. They
-are accessed only after held-out predictions have been generated, as the
-primary target for evaluating recovery of the simulated genetic signal.
-
-## 2. ANN variants and tuning strategy
-
-### 2.1 Models compared
-
-All four ANN variants use the same feed-forward network definition. Their only
-difference is the regularization applied to the network weights.
-
-```{r ann-variants}
-ann_variants <- data.frame(
-  Model = c("ANN_0", "ANN_L1", "ANN_L2", "ANN_L1_L2"),
-  L1 = c("No", "Yes", "No", "Yes"),
-  L2 = c("No", "No", "Yes", "Yes"),
-  Interpretation = c(
-    "Unregularized reference ANN.",
-    "ANN with L1 weight regularization.",
-    "ANN with L2 weight regularization.",
-    "ANN with simultaneous L1 and L2 weight regularization."
-  ),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  ann_variants,
-  caption = "ANN variants compared in the canonical workflow"
+dir.create(
+  "output/simulated/m04/figures",
+  recursive = TRUE,
+  showWarnings = FALSE
 )
 ```
 
-### 2.2 Tuned hyperparameters
+## 2. ANN variants and fixed settings
 
-Architecture and learning rate are selected once per outer task using `ANN_0`
-and are then shared by all four variants. After that shared structural choice,
-the regularized variants tune only the penalty coefficient or coefficients that
-define their model.
+The four variants use the same multilayer perceptron and differ only in the
+penalties applied to network weights. Bias terms are not penalized.
 
-```{r tuned-hyperparameters}
-tuned_hyperparameters <- data.frame(
-  Hyperparameter = c(
-    "Architecture",
-    "Learning rate",
-    "L1 coefficient",
-    "L2 coefficient"
-  ),
-  Role = c(
-    "Number and size of hidden layers.",
-    "Adam optimization step size.",
-    "Strength of absolute-weight regularization.",
-    "Strength of squared-weight regularization."
-  ),
-  Selection = c(
-    "Selected with ANN_0 and shared across all variants.",
-    "Selected with ANN_0 and shared across all variants.",
-    "Selected only for ANN_L1 and ANN_L1_L2.",
-    "Selected only for ANN_L2 and ANN_L1_L2."
-  ),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  tuned_hyperparameters,
-  caption = "Hyperparameters considered in ANN tuning"
-)
-```
-
-### 2.3 Fixed optimization controls
-
-ReLU activation, Adam optimization, zero dropout, the tuning epoch ceiling,
-patience, minimum improvement, and early-validation fraction are fixed
-optimization controls. They determine **how** each candidate is optimized and
-are not additional dimensions of the scientific hyperparameter search.
-
-```{r fixed-optimization-controls}
-fixed_optimization_controls <- data.frame(
-  Control = c(
-    "Activation",
-    "Optimizer",
-    "Dropout",
-    "Maximum tuning epochs",
-    "Patience",
-    "Minimum improvement (min_delta)",
-    "Early-validation fraction"
-  ),
-  Canonical_value = c(
-    "ReLU",
-    "Adam",
-    "0",
-    "2000",
-    "25",
-    "1e-6",
-    "0.15"
-  ),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  fixed_optimization_controls,
-  caption = "Fixed ANN optimization controls"
-)
-```
-
-### 2.4 Early stopping
-
-An epoch is one complete pass through the current fitting observations. During
-candidate training, loss is monitored on a separate early-validation subset
-drawn only from the current analysis sample.
-
-Training stops after 25 consecutive epochs without an improvement of at least
-\(10^{-6}\). The 2000-epoch value is therefore a convergence ceiling, not a
-fixed training length. Epoch diagnostics are retained for optimization
-diagnostics but are excluded from candidate ranking.
-
-### 2.5 Bounded architecture search
-
-The canonical architecture catalog is deliberately bounded to
-small-to-moderate feed-forward networks. Its upper boundary is `64-32`.
-
-Selection of a boundary architecture is interpreted as evidence that the
-prespecified search space was active for that task. It does not trigger a
-post-hoc enlargement of the canonical search space. Consequently, ANN versus
-GBLUP-ADE conclusions apply to this prespecified ANN search space, not to every
-possible neural-network architecture.
-
-## 3. Packages and computational environment
-
-### 3.1 Packages
-
-`knitr` formats the reader-facing tables. `torch` is initialized only when
-tuning or final ANN fitting is explicitly requested; saved-output renders do not
-require a new ANN runtime.
-
-```{r packages-base, warning=FALSE, message=FALSE}
-library(knitr) # Format reader-facing tables and R Markdown output.
-```
-
-### 3.2 Execution mode
-
-ANN tuning and final fitting are opt-in computational stages. With both runtime
-flags disabled, the page is rebuilt from the canonical saved outputs.
-
-```{r execution-mode}
-PROJECT_ROOT <- "."
-project_path <- function(...) file.path(PROJECT_ROOT, ...)
+```{r packages-and-settings, warning=FALSE, message=FALSE}
+library(knitr)
+library(ggplot2)
+library(ggthemes)
 
 RUN_ANN_TUNING <- identical(
   Sys.getenv("RUN_ANN_TUNING", "0"),
@@ -234,304 +79,227 @@ RUN_ANN <- identical(
 )
 ANN_RUNTIME_REQUIRED <- RUN_ANN_TUNING || RUN_ANN
 
-# Legacy/auxiliary execution flags are retained unchanged for compatibility.
-ANN_TUNING_FORCE <- identical(
-  Sys.getenv("ANN_TUNING_FORCE", "0"),
-  "1"
-)
-ANN_TUNING_PILOT <- identical(
-  Sys.getenv("ANN_TUNING_PILOT", "0"),
-  "1"
-)
-ANN_TUNING_PILOT_TASK <- Sys.getenv(
-  "ANN_TUNING_PILOT_TASK",
-  "C1_R01_F01"
-)
-
-execution_mode <- data.frame(
-  Item = c(
-    "Run nested tuning",
-    "Run final ANN fitting",
-    "ANN runtime required"
-  ),
-  Value = c(
-    RUN_ANN_TUNING,
-    RUN_ANN,
-    ANN_RUNTIME_REQUIRED
-  ),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  execution_mode,
-  caption = "ANN execution mode for the current render"
-)
-```
-
-The auxiliary `ANN_TUNING_FORCE`, `ANN_TUNING_PILOT`, and
-`ANN_TUNING_PILOT_TASK` flags are retained unchanged for compatibility. Their
-historical behavior is not redefined in this editorial stage.
-
-### 3.3 CPU/CUDA device
-
-When an ANN runtime is requested, `torch` detects CUDA availability and selects
-the requested `ANN_DEVICE` (`cpu`, `cuda`, or automatic selection). With saved
-outputs only, the runtime remains uninitialized.
-
-```{r packages-device, warning=FALSE, message=FALSE}
 if (ANN_RUNTIME_REQUIRED) {
   suppressPackageStartupMessages(library(torch))
-  cuda_available <- torch::cuda_is_available()
-  requested_device <- tolower(Sys.getenv("ANN_DEVICE", "auto"))
-
-  ANN_DEVICE_LABEL <- if (requested_device == "cuda") {
-    "cuda"
-  } else if (requested_device == "cpu") {
-    "cpu"
-  } else if (cuda_available) {
-    "cuda"
-  } else {
-    "cpu"
-  }
-
-  ANN_DEVICE <- torch::torch_device(ANN_DEVICE_LABEL)
-
-  sync_device <- function() {
-    if (ANN_DEVICE_LABEL == "cuda") torch::cuda_synchronize()
-    invisible(NULL)
-  }
-
-  set_ann_seed <- function(seed) {
-    set.seed(as.integer(seed))
-    torch::torch_manual_seed(as.integer(seed))
-    invisible(NULL)
-  }
-
-  torch_version_display <- as.character(packageVersion("torch"))
-  cuda_display <- cuda_available
-  device_display <- ANN_DEVICE_LABEL
-} else {
-  cuda_available <- NA
-  ANN_DEVICE_LABEL <- "not initialized (saved-output render)"
-  ANN_DEVICE <- NULL
-  sync_device <- function() invisible(NULL)
-  set_ann_seed <- function(seed) invisible(seed)
-  torch_version_display <- "not initialized (saved-output render)"
-  cuda_display <- "not initialized (saved-output render)"
-  device_display <- ANN_DEVICE_LABEL
 }
 
-environment_table <- data.frame(
-  Item = c("torch version", "CUDA available", "device"),
-  Value = c(torch_version_display, cuda_display, device_display),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  environment_table,
-  caption = "ANN computational environment"
-)
-```
-
-## 4. Canonical inputs and outputs
-
-### 4.1 Input files
-
-The ANN branch consumes the audited common simulated-data object and the frozen
-nested validation design produced by the preceding modules. The two audit CSV
-files are retained as provenance references for those upstream contracts.
-
-```{r ann-input-paths}
-DATA_FILE <- project_path(
-  "output", "simulated", "audit", "preprocessed_simulated_common.rds"
-)
-CV_FILE <- project_path(
-  "output", "simulated", "validation", "simulated_cv_design.rds"
-)
-DATA_AUDIT_FILE <- project_path(
-  "output", "simulated", "audit", "simulated_audit_summary.csv"
-)
-CV_AUDIT_FILE <- project_path(
-  "output", "simulated", "validation", "simulated_cv_design_audit.csv"
-)
-
-input_files <- data.frame(
-  File = basename(c(
-    DATA_FILE,
-    CV_FILE,
-    DATA_AUDIT_FILE,
-    CV_AUDIT_FILE
-  )),
-  Role = c(
-    "Audited phenotype, genotype, true-G, and scenario objects.",
-    "Frozen outer and inner validation partitions.",
-    "Data-audit provenance record.",
-    "Validation-design provenance record."
-  ),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  input_files,
-  caption = "Canonical files available to the ANN branch"
-)
-```
-
-### 4.2 Canonical data objects
-
-The same 1,000 individuals, 4,010 markers, six scenarios, 25 outer splits, and
-100 inner splits established upstream are reused here. Small previews make the
-reader-facing inputs explicit before tuning logic is introduced.
-
-```{r inputs}
-common <- readRDS(DATA_FILE)
-cv <- readRDS(CV_FILE)
-
-phenotype <- common$phenotype
-geno <- common$genotype_m101
-ids <- seq_len(nrow(geno))
-scenario_names <- colnames(phenotype)
-
-ann_input_summary <- data.frame(
-  Object = c(
-    "Phenotype",
-    "Genotype",
-    "Outer validation splits",
-    "Inner validation splits"
-  ),
-  Rows_or_count = c(
-    nrow(phenotype),
-    nrow(geno),
-    length(cv$outer_splits),
-    sum(vapply(cv$inner_splits, length, integer(1)))
-  ),
-  Columns = c(
-    ncol(phenotype),
-    ncol(geno),
-    NA,
-    NA
-  ),
-  Role = c(
-    "Response used for ANN fitting.",
-    "Marker predictors used by all ANN variants.",
-    "Frozen final assessment partitions.",
-    "Frozen candidate-evaluation partitions."
-  ),
-  stringsAsFactors = FALSE
-)
-
-phenotype_sample <- data.frame(
-  ID = ids[1:6],
-  phenotype[1:6, , drop = FALSE],
-  check.names = FALSE
-)
-genotype_sample <- data.frame(
-  ID = ids[1:6],
-  geno[1:6, 1:10, drop = FALSE],
-  check.names = FALSE
-)
-
-format_table(
-  ann_input_summary,
-  caption = "Canonical ANN input objects"
-)
-format_table(
-  phenotype_sample,
-  digits = 4,
-  caption = "First six phenotype rows"
-)
-format_table(
-  genotype_sample,
-  caption = "First six individuals and first ten markers"
-)
-```
-
-The validation objects are reused exactly as frozen in M02. No ANN variant
-constructs its own outer or inner cross-validation partitions.
-
-### 4.3 Tuning output files
-
-Nested tuning writes task-level candidate summaries, inner-fold results,
-selected configurations, and run metadata. The canonical output stem is
-unchanged; the legacy pilot stem is retained when its existing flag is active.
-
-```{r ann-tuning-output-paths}
-CHECKPOINT_DIR <- project_path(
-  ".local", "checkpoints", "canonical", "ann_tuning"
-)
-
-OUTPUT_STEM <- if (ANN_TUNING_PILOT) {
-  project_path(
-    ".local", "pilot", "ann", "tuning", "simulated_ann_tuning_pilot"
-  )
-} else {
-  project_path(
-    "output", "simulated", "ann", "tuning", "simulated_ann_tuning"
-  )
-}
-
-CANDIDATE_RDS <- paste0(OUTPUT_STEM, "_candidate_summary.rds")
-FOLD_RDS <- paste0(OUTPUT_STEM, "_fold_results.rds")
-SELECTED_RDS <- paste0(OUTPUT_STEM, "_selected_configurations.rds")
-RUN_RDS <- paste0(OUTPUT_STEM, "_run_metadata.rds")
-MANIFEST_RDS <- paste0(OUTPUT_STEM, "_manifest.rds")
-
-CANDIDATE_CSV <- paste0(OUTPUT_STEM, "_candidate_summary.csv")
-FOLD_CSV <- paste0(OUTPUT_STEM, "_fold_results.csv")
-SELECTED_CSV <- paste0(OUTPUT_STEM, "_selected_configurations.csv")
-MANIFEST_CSV <- paste0(OUTPUT_STEM, "_manifest.csv")
-
-tuning_output_files <- data.frame(
-  File = basename(c(
-    CANDIDATE_RDS,
-    FOLD_RDS,
-    SELECTED_RDS,
-    RUN_RDS,
-    MANIFEST_RDS,
-    CANDIDATE_CSV,
-    FOLD_CSV,
-    SELECTED_CSV,
-    MANIFEST_CSV
-  )),
-  Role = c(
-    "Candidate-level tuning summaries.",
-    "Inner candidate-fold results.",
-    "Selected ANN configurations by outer task and model.",
-    "Canonical tuning run metadata.",
-    "Canonical tuning manifest.",
-    "CSV copy of candidate summaries.",
-    "CSV copy of inner candidate-fold results.",
-    "CSV copy of selected configurations.",
-    "CSV representation of the tuning manifest."
-  ),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  tuning_output_files,
-  caption = "Canonical ANN tuning output artifacts"
-)
-```
-
-## 5. ANN parameter values
-
-The scientific tuning space is defined once below and reused by candidate
-construction, inner-CV training, nested tuning, and final fitting.
-
-```{r ann-parameter-values}
 SEED_GLOBAL <- 20260821L
-
 MAX_EPOCHS <- 2000L
-
-# Compatibility token only: preserves the exact config_id of the completed
-# ANN_TUNING_CANONICAL_V1 run. It does not control final refit length.
-TUNING_V1_COMPATIBILITY_TOKEN <- 2000L
-
 PATIENCE <- 25L
 MIN_DELTA <- 1e-6
 EARLY_VALIDATION_FRACTION <- 0.15
 DROPOUT <- 0
+FINAL_EPOCH_MAX_EPOCHS <- 3000L
 
+MODEL_LEVELS <- c(
+  "ANN_0",
+  "ANN_L1",
+  "ANN_L2",
+  "ANN_L1_L2"
+)
+
+ann_variants <- data.frame(
+  Model = MODEL_LEVELS,
+  L1 = c("No", "Yes", "No", "Yes"),
+  L2 = c("No", "No", "Yes", "Yes"),
+  Interpretation = c(
+    "Unregularized reference ANN.",
+    "ANN with L1 weight regularization.",
+    "ANN with L2 weight regularization.",
+    "ANN with simultaneous L1 and L2 weight regularization."
+  ),
+  stringsAsFactors = FALSE
+)
+
+ann_variants |>
+  knitr::kable(
+    format = "html",
+    caption = "ANN variants evaluated under the same validation design",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+fixed_controls <- data.frame(
+  Control = c(
+    "Activation",
+    "Optimizer",
+    "Dropout",
+    "Maximum tuning epochs",
+    "Patience",
+    "Minimum improvement",
+    "Early-validation fraction",
+    "Maximum epoch-selection epochs"
+  ),
+  Value = c(
+    "ReLU",
+    "Adam",
+    DROPOUT,
+    MAX_EPOCHS,
+    PATIENCE,
+    MIN_DELTA,
+    EARLY_VALIDATION_FRACTION,
+    FINAL_EPOCH_MAX_EPOCHS
+  ),
+  stringsAsFactors = FALSE
+)
+
+fixed_controls |>
+  knitr::kable(
+    format = "html",
+    caption = "Fixed ANN optimization controls",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+The 2000-epoch and 3000-epoch values are **maximum optimization caps**, not
+claims of numerical convergence and not fixed training lengths. Early stopping
+can terminate an optimization run earlier when the prespecified patience rule is
+met.
+
+## 3. Data and validation structure
+
+The ANN branch reuses the M01 data object and the M02 nested validation object
+directly.
+
+```{r inputs}
+common <- readRDS(
+  "output/simulated/audit/preprocessed_simulated_common.rds"
+)
+cv <- readRDS(
+  "output/simulated/validation/simulated_cv_design.rds"
+)
+
+phenotype <- common$phenotype
+geno <- common$genotype_m101
+control <- common$scenario_control
+
+ids <- seq_len(nrow(geno))
+scenario_names <- colnames(phenotype)
+
+input_summary <- data.frame(
+  Object = c(
+    "Phenotype",
+    "Genotype",
+    "Outer splits",
+    "Inner splits"
+  ),
+  Structure = c(
+    paste(dim(phenotype), collapse = " x "),
+    paste(dim(geno), collapse = " x "),
+    length(cv$outer_splits),
+    sum(vapply(cv$inner_splits, length, integer(1)))
+  ),
+  Role = c(
+    "Response used inside analysis subsets only.",
+    "4,010 marker predictors used by all ANN variants.",
+    "25 held-out outer evaluation partitions.",
+    "100 inner partitions used for nested tuning."
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Objects entering the ANN workflow",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+The same 1,000 individuals, 4,010 markers, six scenarios, 25 outer splits, and
+100 inner splits are therefore used by all ANN variants. No ANN variant creates
+its own validation partition.
+
+## 4. Neural-network model and regularization
+
+For standardized marker vector \(\mathbf{x}\), each hidden layer applies
+
+\[
+\mathbf{h}^{(\ell)}=
+\operatorname{ReLU}
+\left(
+\mathbf{W}_{\ell}\mathbf{h}^{(\ell-1)}+
+\mathbf{b}_{\ell}
+\right).
+\]
+
+The final layer is linear because the response is continuous. Training minimizes
+
+\[
+\mathcal{L}=
+\operatorname{MSE}(y,\hat y)
++
+\lambda_1\sum_j |w_j|
++
+\frac{\lambda_2}{2}\sum_j w_j^2.
+\]
+
+`ANN_0` sets both penalties to zero, `ANN_L1` uses only \(\lambda_1\),
+`ANN_L2` uses only \(\lambda_2\), and `ANN_L1_L2` uses both. Adam is run with
+`weight_decay = 0`, so L2 enters only through the explicit penalty shown above.
+
+The runtime implementation below is evaluated only when tuning or final ANN
+fitting is explicitly requested. The `initialize` and `forward` methods are the
+network definition required by the `torch` API; the analysis itself does not use
+separate local helper functions for preprocessing, fitting, ranking, or metric
+calculation.
+
+```{r runtime-and-model, eval=ANN_RUNTIME_REQUIRED}
+cuda_available <- torch::cuda_is_available()
+requested_device <- tolower(Sys.getenv("ANN_DEVICE", "auto"))
+
+ANN_DEVICE_LABEL <- if (requested_device == "cuda") {
+  "cuda"
+} else if (requested_device == "cpu") {
+  "cpu"
+} else if (cuda_available) {
+  "cuda"
+} else {
+  "cpu"
+}
+
+ANN_DEVICE <- torch::torch_device(ANN_DEVICE_LABEL)
+
+TorchGenomicMLP <- torch::nn_module(
+  "TorchGenomicMLP",
+  initialize = function(input_dim, hidden_units) {
+    self$linears <- torch::nn_module_list()
+    previous <- as.integer(input_dim)
+
+    for (hidden in hidden_units) {
+      self$linears$append(
+        torch::nn_linear(
+          previous,
+          as.integer(hidden)
+        )
+      )
+      previous <- as.integer(hidden)
+    }
+
+    self$output <- torch::nn_linear(previous, 1L)
+  },
+  forward = function(x) {
+    for (layer_index in seq_len(length(self$linears))) {
+      x <- torch::nnf_relu(
+        self$linears[[layer_index]](x)
+      )
+    }
+    self$output(x)
+  }
+)
+```
+
+## 5. Nested hyperparameter tuning
+
+### 5.1 Search space
+
+The architecture catalog is intentionally bounded. Architecture and learning
+rate are selected first with `ANN_0`; L1/L2 penalties are selected only after
+that shared structure has been fixed for the outer task.
+
+```{r search-space}
 ARCHITECTURES <- list(
   `2` = c(2L),
   `4` = c(4L),
@@ -567,8 +335,6 @@ L2_VALUES <- c(
   1e-2
 )
 
-# Full Cartesian grid for the simultaneous L1+L2 model.
-# Both coefficients are strictly positive in ANN_L1_L2.
 L1_L2_GRID <- expand.grid(
   L1 = L1_VALUES,
   L2 = L2_VALUES,
@@ -576,141 +342,6 @@ L1_L2_GRID <- expand.grid(
   stringsAsFactors = FALSE
 )
 
-MODEL_LEVELS <- c(
-  "ANN_0",
-  "ANN_L1",
-  "ANN_L2",
-  "ANN_L1_L2"
-)
-
-ANN_TUNING_CONFIG_ID <- paste(
-  "ANN_TUNING_CANONICAL_V1",
-  paste(names(ARCHITECTURES), collapse = "-"),
-  paste(LEARNING_RATES, collapse = "-"),
-  paste(L1_VALUES, collapse = "-"),
-  paste(L2_VALUES, collapse = "-"),
-  MAX_EPOCHS,
-  PATIENCE,
-  MIN_DELTA,
-  EARLY_VALIDATION_FRACTION,
-  TUNING_V1_COMPATIBILITY_TOKEN,
-  sep = "__"
-)
-
-if (RUN_ANN_TUNING) {
-  dir.create(
-    CHECKPOINT_DIR,
-    recursive = TRUE,
-    showWarnings = FALSE
-  )
-  dir.create(
-    dirname(CANDIDATE_RDS),
-    recursive = TRUE,
-    showWarnings = FALSE
-  )
-}
-```
-
-`TUNING_V1_COMPATIBILITY_TOKEN` is retained solely to preserve the historical
-`ANN_TUNING_CANONICAL_V1` configuration identifier. It does **not** determine
-the final ANN refit length.
-
-### 5.1 Architectures
-
-```{r architecture-values}
-architecture_table <- data.frame(
-  Architecture = names(ARCHITECTURES),
-  Hidden_layers = vapply(
-    ARCHITECTURES,
-    function(x) paste(x, collapse = " - "),
-    character(1)
-  ),
-  Number_of_hidden_layers = vapply(
-    ARCHITECTURES,
-    length,
-    integer(1)
-  ),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  architecture_table,
-  caption = "Prespecified ANN architecture catalog"
-)
-```
-
-The `64-32` architecture is the prespecified upper bound of the canonical
-search space.
-
-### 5.2 Learning rates
-
-```{r learning-rate-values}
-learning_rate_table <- data.frame(
-  Learning_rate = LEARNING_RATES
-)
-
-format_table(
-  learning_rate_table,
-  digits = 6,
-  caption = "Candidate Adam learning rates"
-)
-```
-
-### 5.3 L1 penalties
-
-```{r l1-values}
-l1_table <- data.frame(
-  L1 = L1_VALUES
-)
-
-format_table(
-  l1_table,
-  digits = 6,
-  caption = "Candidate L1 penalty coefficients"
-)
-```
-
-### 5.4 L2 penalties
-
-```{r l2-values}
-l2_table <- data.frame(
-  L2 = L2_VALUES
-)
-
-format_table(
-  l2_table,
-  digits = 6,
-  caption = "Candidate L2 penalty coefficients"
-)
-```
-
-### 5.5 Combined L1 + L2 grid
-
-`ANN_L1_L2` uses the full Cartesian product of the six positive L1 values and
-four positive L2 values, yielding 24 combined penalty configurations.
-
-```{r l1-l2-values}
-format_table(
-  L1_L2_GRID,
-  digits = 6,
-  caption = "Positive L1 x L2 grid for ANN-L1+L2"
-)
-```
-
-## 6. Candidate grids
-
-Architecture and learning rate are selected **once per outer task using
-`ANN_0`**. The selected structure is then shared by all four ANN variants. This
-keeps the comparison between regularization variants focused on L1/L2
-penalties rather than allowing each model family to change network capacity.
-
-After structure selection:
-
-- `ANN_L1` tunes only L1;
-- `ANN_L2` tunes only L2;
-- `ANN_L1_L2` tunes the full positive L1 x L2 Cartesian grid.
-
-```{r grids}
 structure_grid <- expand.grid(
   Architecture = names(ARCHITECTURES),
   Learning_rate = LEARNING_RATES,
@@ -742,9 +373,9 @@ l1l2_grid <- data.frame(
   stringsAsFactors = FALSE
 )
 
-grid_summary <- data.frame(
+search_summary <- data.frame(
   Stage = c(
-    "Shared architecture + learning rate",
+    "Architecture + learning rate with ANN_0",
     "ANN_L1 penalty",
     "ANN_L2 penalty",
     "ANN_L1_L2 penalties"
@@ -754,883 +385,115 @@ grid_summary <- data.frame(
     nrow(l1_grid),
     nrow(l2_grid),
     nrow(l1l2_grid)
-  )
-)
-
-grid_summary$Inner_fits_per_outer_task <-
-  4L * grid_summary$Candidates
-
-format_table(
-  grid_summary,
-  caption = "Canonical ANN tuning grid"
-)
-
-CANDIDATES_PER_TASK <- sum(
-  grid_summary$Candidates
-)
-INNER_FITS_PER_TASK <- 4L *
-  CANDIDATES_PER_TASK
-
-cat(
-  "Candidates per outer task:",
-  CANDIDATES_PER_TASK,
-  "\n"
-)
-cat(
-  "Inner candidate-fold fits per outer task:",
-  INNER_FITS_PER_TASK,
-  "\n"
-)
-cat(
-  "Planned inner fits for all 150 outer tasks:",
-  150L * INNER_FITS_PER_TASK,
-  "\n"
-)
-```
-
-The grid contains 70 candidate configurations per outer task. With four frozen
-inner folds, this corresponds to 280 candidate-fold fits per task and 42,000
-fits across the 150 scenario-by-split tasks. Architecture and learning rate are
-selected using `ANN_0` and then held common across all four ANN variants within
-each task, so their subsequent contrast isolates the L1/L2 penalty choice.
-
-## 7. Data preprocessing
-
-Preprocessing is estimated independently inside each fitting subset. The same
-fitted transformation is then applied to the corresponding early-validation and
-assessment observations. This ordering prevents validation information from
-influencing the parameters used to train the network.
-
-### 7.1 Marker standardization
-
-For each fit, marker means and standard deviations are estimated only from the
-current fitting individuals. The fitted center and scale are subsequently
-applied unchanged to early-validation and assessment individuals.
-
-Markers with effectively zero fitting-set variance receive unit scale. This
-avoids numerical division by zero without introducing information from outside
-the fitting subset.
-
-### 7.2 Response standardization
-
-Phenotypes are centered and scaled using only the fitting subset. Network
-predictions are transformed back to the original phenotype scale before RMSE,
-correlation, and MAE are calculated.
-
-### 7.3 Early-validation split
-
-The early-validation subset is drawn deterministically from the current
-analysis sample using a prespecified seed and fraction. It is distinct from the
-frozen inner-assessment fold, which remains untouched until candidate
-prediction.
-
-The helper functions below implement these transformations and retain the
-historical metric aliases required by the result-building code.
-
-```{r support-functions}
-correlation <- function(predicted, observed) {
-  cor(predicted, observed)
-}
-
-rmse <- function(predicted, observed) {
-  sqrt(
-    mean(
-      (predicted - observed)^2
-    )
-  )
-}
-
-mae <- function(predicted, observed) {
-  mean(
-    abs(
-      predicted - observed
-    )
-  )
-}
-
-# Historical names retained for compatibility with result-building code.
-safe_cor <- correlation
-safe_rmse <- rmse
-safe_mae <- mae
-
-parameter_count <- function(
-  input_dim,
-  hidden_units
-) {
-  inputs <- c(input_dim, hidden_units)
-  outputs <- c(hidden_units, 1L)
-
-  sum(
-    inputs * outputs +
-      outputs
-  )
-}
-
-make_validation_split <- function(
-  x,
-  frac,
-  seed
-) {
-  set.seed(seed)
-
-  n_validation <- as.integer(
-    round(
-      length(x) * frac
-    )
-  )
-
-  validation <- sort(
-    sample(
-      x,
-      n_validation
-    )
-  )
-
-  list(
-    train = sort(
-      setdiff(
-        x,
-        validation
-      )
-    ),
-    validation = validation
-  )
-}
-
-fit_x_scaler <- function(x) {
-  center <- colMeans(x)
-  scale <- apply(x, 2, sd)
-
-  zero_variance <- scale < 1e-8
-  scale[zero_variance] <- 1
-
-  list(
-    center = center,
-    scale = scale,
-    zero = zero_variance
-  )
-}
-
-scale_x <- function(x, scaler) {
-  sweep(
-    sweep(
-      x,
-      2,
-      scaler$center,
-      "-"
-    ),
-    2,
-    scaler$scale,
-    "/"
-  )
-}
-
-fit_y_scaler <- function(y) {
-  list(
-    center = mean(y),
-    scale = max(
-      sd(y),
-      1e-8
-    )
-  )
-}
-
-scale_y <- function(y, scaler) {
-  (y - scaler$center) /
-    scaler$scale
-}
-
-unscale_y <- function(y, scaler) {
-  y * scaler$scale +
-    scaler$center
-}
-```
-
-## 8. Neural-network definition
-
-### 8.1 Hidden layers and ReLU
-
-For a standardized marker vector \(\mathbf{x}\), each hidden layer applies a
-linear transformation followed by ReLU activation:
-
-\[
-\mathbf{h}^{(\ell)} =
-\operatorname{ReLU}
-(\mathbf{W}_{\ell}\mathbf{h}^{(\ell-1)}+\mathbf{b}_{\ell}).
-\]
-
-The symbols used in the network equations have the following roles:
-
-```{r network-symbols}
-network_symbols <- data.frame(
-  Symbol = c("x", "W", "b", "h", "y-hat"),
-  Meaning = c(
-    "Standardized marker vector.",
-    "Layer weights.",
-    "Layer biases.",
-    "Hidden-layer activations.",
-    "Network prediction."
+  ),
+  Inner_fits_per_outer_task = 4L * c(
+    nrow(structure_grid),
+    nrow(l1_grid),
+    nrow(l2_grid),
+    nrow(l1l2_grid)
   ),
   stringsAsFactors = FALSE
 )
 
-format_table(
-  network_symbols,
-  caption = "Symbols used in the ANN definition"
+search_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Prespecified ANN tuning search",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+CANDIDATES_PER_TASK <- sum(search_summary$Candidates)
+INNER_FITS_PER_TASK <- 4L * CANDIDATES_PER_TASK
+```
+
+The search contains **70 candidate configurations per outer task**: 36
+architecture-learning-rate combinations, 6 L1 values, 4 L2 values, and 24
+positive L1-L2 pairs. With four inner folds, that yields **280 candidate-fold
+fits per outer task** and **42,000 inner fits across the 150 scenario-by-split
+outer tasks**.
+
+Selection of `64-32` or another boundary value is interpreted descriptively as
+boundary occupancy of this prespecified search space. It does not trigger a
+post-hoc enlargement of the search.
+
+### 5.2 Inner fitting and preprocessing
+
+For every inner fold, the 600 inner-analysis individuals are split again only
+for optimization: 15% form an early-validation subset and the remainder form the
+fitting subset. The 200 frozen inner-assessment individuals remain untouched
+until the candidate has been trained and its best early-validation checkpoint
+has been restored.
+
+Marker means, marker standard deviations, phenotype mean, and phenotype standard
+deviation are estimated **only from the current fitting subset**. Those fitted
+transformations are then applied unchanged to the early-validation and
+inner-assessment observations. Markers with fitting-set standard deviation below
+`1e-8` receive unit scale to avoid division by zero.
+
+The complete tuning code below writes the same historical output schemas when
+`RUN_ANN_TUNING=1`. The normal page build leaves this expensive stage disabled
+and reads the existing saved outputs instead.
+
+```{r tuning-paths, include=FALSE}
+SELECTED_RDS <- "output/simulated/ann/tuning/simulated_ann_tuning_selected_configurations.rds"
+CANDIDATE_RDS <- "output/simulated/ann/tuning/simulated_ann_tuning_candidate_summary.rds"
+FOLD_RDS <- "output/simulated/ann/tuning/simulated_ann_tuning_fold_results.rds"
+RUN_RDS <- "output/simulated/ann/tuning/simulated_ann_tuning_run_metadata.rds"
+MANIFEST_RDS <- "output/simulated/ann/tuning/simulated_ann_tuning_manifest.rds"
+
+SELECTED_CSV <- "output/simulated/ann/tuning/simulated_ann_tuning_selected_configurations.csv"
+CANDIDATE_CSV <- "output/simulated/ann/tuning/simulated_ann_tuning_candidate_summary.csv"
+FOLD_CSV <- "output/simulated/ann/tuning/simulated_ann_tuning_fold_results.csv"
+MANIFEST_CSV <- "output/simulated/ann/tuning/simulated_ann_tuning_manifest.csv"
+
+FINAL_RESULTS_RDS <- "output/simulated/ann/final/simulated_ann_results.rds"
+FINAL_PREDICTIONS_RDS <- "output/simulated/ann/final/simulated_ann_predictions.rds"
+FINAL_EPOCH_RDS <- "output/simulated/ann/final/simulated_ann_epoch_selection.rds"
+FINAL_RUN_RDS <- "output/simulated/ann/final/simulated_ann_run_metadata.rds"
+
+FINAL_RESULTS_CSV <- "output/simulated/ann/final/simulated_ann_results.csv"
+FINAL_PREDICTIONS_CSV <- "output/simulated/ann/final/simulated_ann_predictions.csv"
+FINAL_EPOCH_CSV <- "output/simulated/ann/final/simulated_ann_epoch_selection.csv"
+
+TUNING_V1_COMPATIBILITY_TOKEN <- 2000L
+ANN_TUNING_CONFIG_ID <- paste(
+  "ANN_TUNING_CANONICAL_V1",
+  paste(names(ARCHITECTURES), collapse = "-"),
+  paste(LEARNING_RATES, collapse = "-"),
+  paste(L1_VALUES, collapse = "-"),
+  paste(L2_VALUES, collapse = "-"),
+  MAX_EPOCHS,
+  PATIENCE,
+  MIN_DELTA,
+  EARLY_VALIDATION_FRACTION,
+  TUNING_V1_COMPATIBILITY_TOKEN,
+  sep = "__"
+)
+
+FINAL_CONFIG_ID <- paste0(
+  "ANN_FINAL_CANONICAL_V2__FROM__",
+  ANN_TUNING_CONFIG_ID,
+  "__FINAL_EPOCH_CAP_",
+  FINAL_EPOCH_MAX_EPOCHS,
+  "__BEST_EPOCH_REFIT"
 )
 ```
 
-### 8.2 Linear output
-
-The output layer is linear because the response is continuous. No output
-activation is applied after the last linear transformation.
-
-### 8.3 L1 and L2 penalties
-
-Training minimizes
-
-\[
-\mathcal{L}=
-\operatorname{MSE}(y,\hat{y})+
-\lambda_1\sum_j |w_j|+
-\frac{\lambda_2}{2}\sum_j w_j^2.
-\]
-
-`ANN_0` uses \(\lambda_1=\lambda_2=0\), `ANN_L1` uses only L1,
-`ANN_L2` uses only L2, and `ANN_L1_L2` uses both. Bias terms are not penalized.
-Adam uses `weight_decay = 0`, so L2 enters only through the explicit penalty
-above.
-
-The response is standardized from the fitting subset during optimization and
-predictions are transformed back to the original phenotype scale before
-performance metrics are calculated.
-
-The largest `64-32` architecture in the prespecified catalog illustrates
-the same hidden-layer and linear-output structure used throughout the search:
-
-```{r ann-forward-example, eval=FALSE}
-model <- nn_module(
-  initialize = function(input_dim) {
-    self$hidden1 <- nn_linear(input_dim, 64)
-    self$hidden2 <- nn_linear(64, 32)
-    self$output <- nn_linear(32, 1)
-  },
-  forward = function(x) {
-    x <- nnf_relu(self$hidden1(x))
-    x <- nnf_relu(self$hidden2(x))
-    self$output(x)
-  }
-)
-```
-
-Smaller catalog architectures follow the same pattern with fewer hidden units
-or one hidden layer. The generic implementation shown next constructs all nine
-architectures from the same definition.
-
-```{r model-definition, eval=ANN_RUNTIME_REQUIRED}
-TorchGenomicMLP <- torch::nn_module(
-  "TorchGenomicMLP_CanonicalTuning",
-
-  initialize = function(
-    input_dim,
-    hidden_units
-  ) {
-    self$linears <-
-      torch::nn_module_list()
-
-    previous <-
-      as.integer(input_dim)
-
-    for (hidden in hidden_units) {
-      self$linears$append(
-        torch::nn_linear(
-          previous,
-          as.integer(hidden)
-        )
-      )
-      previous <- as.integer(hidden)
-    }
-
-    self$output <-
-      torch::nn_linear(
-        previous,
-        1L
-      )
-  },
-
-  forward = function(x) {
-    for (
-      layer_index in seq_len(
-        length(self$linears)
-      )
-    ) {
-      x <- torch::nnf_relu(
-        self$linears[[layer_index]](x)
-      )
-    }
-
-    self$output(x)
-  }
+```{r run-tuning, eval=RUN_ANN_TUNING}
+dir.create(
+  "output/simulated/ann/tuning",
+  recursive = TRUE,
+  showWarnings = FALSE
 )
 
-weight_penalty <- function(
-  model,
-  l1,
-  l2
-) {
-  weights <- lapply(
-    seq_len(
-      length(model$linears)
-    ),
-    function(layer_index) {
-      model$linears[[layer_index]]$weight
-    }
-  )
-
-  weights[[length(weights) + 1L]] <- model$output$weight
-
-  penalty_l1 <-
-    weights[[1]]$sum() * 0
-  penalty_l2 <-
-    weights[[1]]$sum() * 0
-
-  for (weight in weights) {
-    penalty_l1 <-
-      penalty_l1 +
-      weight$abs()$sum()
-
-    penalty_l2 <-
-      penalty_l2 +
-      weight$pow(2)$sum()
-  }
-
-  l1 * penalty_l1 +
-    (l2 / 2) * penalty_l2
-}
-
-clone_state <- function(model) {
-  state <- model$state_dict()
-
-  copied_state <- lapply(
-    state,
-    function(parameter) {
-      parameter$detach()$clone()
-    }
-  )
-
-  names(copied_state) <-
-    names(state)
-
-  copied_state
-}
-```
-
-## 9. Inner-CV training
-
-For every frozen inner fold, the inner-analysis individuals are divided
-deterministically into a fitting subset and an early-validation subset. The
-frozen inner-assessment individuals remain untouched until the candidate has
-been trained and its best checkpoint restored.
-
-### 9.1 One optimization step
-
-Each epoch predicts the fitting subset, calculates mean squared error plus the
-selected weight penalty, backpropagates the loss, and updates the network with
-Adam.
-
-```{r ann-optimization-step, eval=FALSE}
-optimizer$zero_grad()
-
-prediction <- model(x_fit)
-
-loss <- nnf_mse_loss(
-  prediction,
-  y_fit
-) + weight_penalty(
-  model,
-  l1,
-  l2
-)
-
-loss$backward()
-optimizer$step()
-```
-
-### 9.2 Complete candidate training
-
-The complete helper shown next applies the fitting-set scalers, trains the
-candidate, monitors early-validation loss, restores the best checkpoint, and
-predicts the untouched inner-assessment fold.
-
-The conditionals inside this function are part of the ANN optimization
-algorithm itself rather than defensive execution guards.
-
-```{r training-functions}
-prepare_bundle <- function(
-  fit_ids,
-  validation_ids,
-  assessment_ids,
-  scenario_index
-) {
-  fit_index <- match(fit_ids, ids)
-  validation_index <- match(
-    validation_ids,
-    ids
-  )
-  assessment_index <- match(
-    assessment_ids,
-    ids
-  )
-
-  x_scaler <- fit_x_scaler(
-    geno[
-      fit_index,
-      ,
-      drop = FALSE
-    ]
-  )
-  y_scaler <- fit_y_scaler(
-    phenotype[
-      fit_index,
-      scenario_index
-    ]
-  )
-
-  list(
-    x_fit = scale_x(
-      geno[
-        fit_index,
-        ,
-        drop = FALSE
-      ],
-      x_scaler
-    ),
-    x_validation = scale_x(
-      geno[
-        validation_index,
-        ,
-        drop = FALSE
-      ],
-      x_scaler
-    ),
-    x_assessment = scale_x(
-      geno[
-        assessment_index,
-        ,
-        drop = FALSE
-      ],
-      x_scaler
-    ),
-    y_fit = scale_y(
-      phenotype[
-        fit_index,
-        scenario_index
-      ],
-      y_scaler
-    ),
-    y_validation = scale_y(
-      phenotype[
-        validation_index,
-        scenario_index
-      ],
-      y_scaler
-    ),
-    y_assessment = phenotype[
-      assessment_index,
-      scenario_index
-    ],
-    y_scaler = y_scaler,
-    zero_variance_markers =
-      sum(x_scaler$zero)
-  )
-}
-
-train_inner_candidate <- function(
-  bundle,
-  architecture,
-  learning_rate,
-  l1,
-  l2,
-  seed
-) {
-  set_ann_seed(seed)
-
-  x_fit <- torch::torch_tensor(
-    bundle$x_fit,
-    dtype = torch::torch_float()
-  )$to(device = ANN_DEVICE)
-
-  y_fit <- torch::torch_tensor(
-    matrix(bundle$y_fit, ncol = 1),
-    dtype = torch::torch_float()
-  )$to(device = ANN_DEVICE)
-
-  x_validation <- torch::torch_tensor(
-    bundle$x_validation,
-    dtype = torch::torch_float()
-  )$to(device = ANN_DEVICE)
-
-  y_validation <- torch::torch_tensor(
-    matrix(
-      bundle$y_validation,
-      ncol = 1
-    ),
-    dtype = torch::torch_float()
-  )$to(device = ANN_DEVICE)
-
-  x_assessment <- torch::torch_tensor(
-    bundle$x_assessment,
-    dtype = torch::torch_float()
-  )$to(device = ANN_DEVICE)
-
-  model <- TorchGenomicMLP(
-    ncol(bundle$x_fit),
-    ARCHITECTURES[[architecture]]
-  )$to(device = ANN_DEVICE)
-
-  optimizer <- torch::optim_adam(
-    params = model$parameters,
-    lr = learning_rate,
-    weight_decay = 0
-  )
-
-  best_validation_loss <- Inf
-  checkpoint_epoch <- 1L
-  checkpoint_state <- clone_state(model)
-  stale_epochs <- 0L
-  last_epoch <- 0L
-  stopped_by_patience <- FALSE
-
-  sync_device()
-  fit_start <-
-    proc.time()[["elapsed"]]
-
-  for (epoch in seq_len(MAX_EPOCHS)) {
-    last_epoch <- epoch
-
-    model$train()
-    optimizer$zero_grad()
-
-    prediction <- model(x_fit)
-
-    loss <-
-      torch::nnf_mse_loss(
-        prediction,
-        y_fit
-      ) +
-      weight_penalty(
-        model,
-        l1,
-        l2
-      )
-
-    loss$backward()
-    optimizer$step()
-
-    model$eval()
-
-    validation_loss <-
-      torch::with_no_grad({
-        torch::nnf_mse_loss(
-          model(x_validation),
-          y_validation
-        )
-      })
-
-    validation_value <-
-      as.numeric(
-        validation_loss$to(
-          device =
-            torch::torch_device("cpu")
-        )
-      )
-
-    improved <-
-      validation_value <
-      best_validation_loss -
-      MIN_DELTA
-
-    if (improved) {
-      best_validation_loss <-
-        validation_value
-      checkpoint_epoch <- epoch
-      checkpoint_state <-
-        clone_state(model)
-      stale_epochs <- 0L
-    } else {
-      stale_epochs <-
-        stale_epochs + 1L
-    }
-
-    if (stale_epochs >= PATIENCE) {
-      stopped_by_patience <- TRUE
-      break
-    }
-  }
-
-  sync_device()
-  fit_seconds <-
-    proc.time()[["elapsed"]] -
-    fit_start
-
-  model$load_state_dict(
-    checkpoint_state
-  )
-  model$eval()
-
-  prediction_start <-
-    proc.time()[["elapsed"]]
-
-  prediction_scaled <-
-    torch::with_no_grad({
-      as.numeric(
-        model(x_assessment)$to(
-          device =
-            torch::torch_device("cpu")
-        )
-      )
-    })
-
-  prediction_seconds <-
-    proc.time()[["elapsed"]] -
-    prediction_start
-
-  list(
-    prediction = unscale_y(
-      prediction_scaled,
-      bundle$y_scaler
-    ),
-    early_stop_epoch =
-      as.integer(checkpoint_epoch),
-    last_epoch =
-      as.integer(last_epoch),
-    stopped_by_patience =
-      stopped_by_patience,
-    hit_epoch_ceiling =
-      last_epoch >= MAX_EPOCHS &&
-      !stopped_by_patience,
-    fit_seconds = fit_seconds,
-    prediction_seconds =
-      prediction_seconds,
-    zero_variance_markers =
-      bundle$zero_variance_markers
-  )
-}
-```
-
-### 9.3 Early stopping
-
-Within `train_inner_candidate()`, an improvement requires the current
-early-validation loss to be at least `MIN_DELTA` below the best loss observed so
-far. An improved epoch replaces the stored checkpoint and resets the stale-epoch
-counter.
-
-Training stops when `stale_epochs >= PATIENCE`. The stored best checkpoint is
-then restored before the untouched inner-assessment fold is predicted. Thus,
-the epoch at which training stops and the epoch retained for prediction are not
-necessarily the same.
-
-Early-stopping diagnostics are saved for optimization assessment but do not
-participate in candidate ranking.
-
-
-## 10. Candidate evaluation and ranking
-
-Each candidate is fitted independently in the four frozen inner folds. The
-candidate-level summary averages the held-out inner-assessment metrics across
-those four fits.
-
-Candidate ranking is deterministic and does **not** include epoch information.
-
-The ranking hierarchy is:
-
-1. lower mean inner-assessment RMSE;
-2. higher mean inner-assessment correlation;
-3. fewer network parameters;
-4. smaller total penalty coefficient;
-5. smaller learning rate;
-6. candidate ID.
-
-A completed candidate table is therefore sorted by the same hierarchy:
-
-```{r candidate-ranking-example, eval=FALSE}
-candidate_summary <- candidate_summary[
-  order(
-    candidate_summary$Mean_RMSE,
-    -candidate_summary$Mean_Correlation,
-    candidate_summary$Parameters,
-    candidate_summary$Penalty,
-    candidate_summary$Learning_rate,
-    candidate_summary$CandidateID
-  ),
-]
-```
-
-The first row is the selected candidate. The complete function shown next
-fits the same candidate in each of the four inner folds, averages the three
-prediction metrics, and then applies exactly this ranking hierarchy.
-
-```{r candidate-functions}
-evaluate_candidate <- function(
-  bundles,
-  model_name,
-  architecture,
-  learning_rate,
-  l1,
-  l2,
-  seed_base,
-  candidate_id
-) {
-  fold_rows <- vector("list", 4L)
-
-  for (inner_fold in 1:4) {
-    fitted <- train_inner_candidate(
-      bundles[[inner_fold]],
-      architecture,
-      learning_rate,
-      l1,
-      l2,
-      seed_base + inner_fold
-    )
-
-    fold_rows[[inner_fold]] <- data.frame(
-      Model = model_name,
-      CandidateID = candidate_id,
-      Architecture = architecture,
-      Learning_rate = learning_rate,
-      L1 = l1,
-      L2 = l2,
-      InnerFold = inner_fold,
-      RMSE = rmse(
-        fitted$prediction,
-        bundles[[inner_fold]]$y_assessment
-      ),
-      Correlation = correlation(
-        fitted$prediction,
-        bundles[[inner_fold]]$y_assessment
-      ),
-      MAE = mae(
-        fitted$prediction,
-        bundles[[inner_fold]]$y_assessment
-      ),
-      EarlyStop_epoch =
-        fitted$early_stop_epoch,
-      Last_epoch =
-        fitted$last_epoch,
-      Stopped_by_patience =
-        fitted$stopped_by_patience,
-      Hit_epoch_ceiling =
-        fitted$hit_epoch_ceiling,
-      Fit_seconds =
-        fitted$fit_seconds,
-      Prediction_seconds =
-        fitted$prediction_seconds,
-      Status = "ok",
-      Error = NA_character_,
-      stringsAsFactors = FALSE
-    )
-  }
-
-  folds <- do.call(
-    rbind,
-    fold_rows
-  )
-
-  candidate_summary <- data.frame(
-    Model = model_name,
-    CandidateID = candidate_id,
-    Architecture = architecture,
-    Learning_rate = learning_rate,
-    L1 = l1,
-    L2 = l2,
-    Inner_folds_ok = 4L,
-    Mean_RMSE = mean(folds$RMSE),
-    Mean_Correlation =
-      mean(folds$Correlation),
-    Mean_MAE = mean(folds$MAE),
-    Median_EarlyStop_epoch =
-      median(folds$EarlyStop_epoch),
-    Max_Last_epoch =
-      max(folds$Last_epoch),
-    N_epoch_ceiling =
-      sum(folds$Hit_epoch_ceiling),
-    Status = "ok",
-    stringsAsFactors = FALSE
-  )
-
-  list(
-    summary = candidate_summary,
-    folds = folds
-  )
-}
-
-choose_candidate <- function(x) {
-  ranked <- x
-
-  ranked$Parameters <- vapply(
-    ranked$Architecture,
-    function(architecture) {
-      parameter_count(
-        ncol(geno),
-        ARCHITECTURES[[architecture]]
-      )
-    },
-    numeric(1)
-  )
-
-  ranked$Penalty <-
-    ranked$L1 +
-    ranked$L2
-
-  ranked <- ranked[
-    order(
-      ranked$Mean_RMSE,
-      -ranked$Mean_Correlation,
-      ranked$Parameters,
-      ranked$Penalty,
-      ranked$Learning_rate,
-      ranked$CandidateID
-    ),
-    ,
-    drop = FALSE
-  ]
-
-  ranked[
-    1,
-    ,
-    drop = FALSE
-  ]
-}
-```
-
-## 11. Hyperparameter tuning
-
-Nested tuning uses the frozen validation design from M02. The outer assessment
-set is not predicted anywhere in this stage; it remains reserved for final
-model evaluation after hyperparameter and epoch selection are complete.
-
-### 11.1 Frozen outer tasks
-
-The six scenarios share the same 25 frozen outer splits, producing 150
-`Scenario × outer split` tuning tasks.
-
-```{r tasks}
 outer_map <- unique(
   cv$outer_assignments[
-    ,
-    c(
-      "Repetition",
-      "OuterFold",
-      "SplitID"
-    )
+    , c("Repetition", "OuterFold", "SplitID")
   ]
 )
-
 outer_map <- outer_map[
-  order(
-    outer_map$Repetition,
-    outer_map$OuterFold
-  ),
+  order(outer_map$Repetition, outer_map$OuterFold),
   ,
   drop = FALSE
 ]
@@ -1643,126 +506,40 @@ task_table <- merge(
   outer_map,
   by = NULL
 )
-
 task_table <- task_table[
   order(
-    match(
-      task_table$Scenario,
-      scenario_names
-    ),
+    match(task_table$Scenario, scenario_names),
     task_table$Repetition,
     task_table$OuterFold
   ),
   ,
   drop = FALSE
 ]
-
+task_table$Fold <- task_table$OuterFold
 task_table$TaskID <- paste(
   task_table$Scenario,
   task_table$SplitID,
   sep = "_"
 )
-task_table$Fold <-
-  task_table$OuterFold
-
 rownames(task_table) <- NULL
 
-EXPECTED_TASKS <- nrow(task_table)
-EXPECTED_SELECTED_ROWS <-
-  EXPECTED_TASKS *
-  length(MODEL_LEVELS)
-EXPECTED_CANDIDATE_ROWS <-
-  EXPECTED_TASKS *
-  CANDIDATES_PER_TASK
-EXPECTED_FOLD_ROWS <-
-  EXPECTED_TASKS *
-  INNER_FITS_PER_TASK
+selected_task_rows <- vector("list", nrow(task_table))
+candidate_task_rows <- vector("list", nrow(task_table))
+fold_task_rows <- vector("list", nrow(task_table))
+task_seconds <- numeric(nrow(task_table))
 
-format_table(
-  head(task_table, 15),
-  caption =
-    "First 15 canonical ANN tuning tasks",
-  row.names = FALSE
-)
-```
+run_start <- proc.time()[["elapsed"]]
 
+for (task_index in seq_len(nrow(task_table))) {
+  task <- task_table[task_index, , drop = FALSE]
+  scenario_index <- match(task$Scenario, scenario_names)
+  inner <- cv$inner_splits[[task$SplitID]]
+  task_start <- proc.time()[["elapsed"]]
 
-
-Each row represents one `Scenario × Repetition × Fold` combination. The same
-`TaskID` is used for all four ANN variants, which ensures that their selected
-regularization settings are compared within the same frozen outer task.
-
-### 11.2 Architecture and learning rate
-
-For each outer task, the 36 architecture-by-learning-rate combinations are
-evaluated with `ANN_0`. The deterministic candidate ranking described in
-Section 10 selects one shared architecture and one shared learning rate.
-
-### 11.3 L1
-
-With architecture and learning rate fixed, `ANN_L1` evaluates the six
-prespecified positive L1 coefficients. No additional architecture search is
-performed for the L1-regularized model.
-
-### 11.4 L2
-
-`ANN_L2` reuses the same selected architecture and learning rate and evaluates
-only the four prespecified positive L2 coefficients.
-
-### 11.5 L1 + L2
-
-`ANN_L1_L2` also reuses the shared architecture and learning rate, evaluating
-the complete 6 x 4 positive L1-by-L2 grid. This produces 24 combined-penalty
-candidates.
-
-The chunk below implements all four tuning stages for the 150 frozen outer
-tasks. It evaluates only inner-CV candidates and never predicts the outer
-assessment set.
-
-```{r run-tuning, eval=RUN_ANN_TUNING}
-run_start <-
-  proc.time()[["elapsed"]]
-
-task_outputs <- vector(
-  "list",
-  nrow(task_table)
-)
-
-for (
-  task_index in seq_len(
-    nrow(task_table)
-  )
-) {
-  task <- task_table[
-    task_index,
-    ,
-    drop = FALSE
-  ]
-
-  scenario <- task$Scenario
-  scenario_index <- match(
-    scenario,
-    scenario_names
-  )
-  split_id <- task$SplitID
-
-  task_start <-
-    proc.time()[["elapsed"]]
-
-  inner <-
-    cv$inner_splits[[split_id]]
-
-  bundles <- vector(
-    "list",
-    4L
-  )
+  bundles <- vector("list", 4L)
 
   for (inner_fold in 1:4) {
-    inner_split <-
-      inner[[paste0(
-        "I",
-        inner_fold
-      )]]
+    inner_split <- inner[[paste0("I", inner_fold)]]
 
     validation_seed <-
       SEED_GLOBAL +
@@ -1771,20 +548,108 @@ for (
       task$OuterFold * 1000L +
       inner_fold * 10L
 
-    validation <-
-      make_validation_split(
+    set.seed(validation_seed)
+    n_validation <- as.integer(
+      round(
+        length(inner_split$analysis_ids) *
+        EARLY_VALIDATION_FRACTION
+      )
+    )
+    validation_ids <- sort(
+      sample(
         inner_split$analysis_ids,
-        EARLY_VALIDATION_FRACTION,
-        validation_seed
+        n_validation,
+        replace = FALSE
       )
+    )
+    fit_ids <- sort(
+      setdiff(
+        inner_split$analysis_ids,
+        validation_ids
+      )
+    )
 
-    bundles[[inner_fold]] <-
-      prepare_bundle(
-        validation$train,
-        validation$validation,
-        inner_split$assessment_ids,
+    fit_index <- match(fit_ids, ids)
+    validation_index <- match(validation_ids, ids)
+    assessment_index <- match(
+      inner_split$assessment_ids,
+      ids
+    )
+
+    x_center <- colMeans(
+      geno[fit_index, , drop = FALSE]
+    )
+    x_scale <- apply(
+      geno[fit_index, , drop = FALSE],
+      2,
+      sd
+    )
+    zero_variance <- x_scale < 1e-8
+    x_scale[zero_variance] <- 1
+
+    y_center <- mean(
+      phenotype[fit_index, scenario_index]
+    )
+    y_scale <- max(
+      sd(phenotype[fit_index, scenario_index]),
+      1e-8
+    )
+
+    x_fit <- sweep(
+      sweep(
+        geno[fit_index, , drop = FALSE],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+    x_validation <- sweep(
+      sweep(
+        geno[validation_index, , drop = FALSE],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+    x_assessment <- sweep(
+      sweep(
+        geno[assessment_index, , drop = FALSE],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+
+    y_fit <-
+      (phenotype[fit_index, scenario_index] - y_center) /
+      y_scale
+    y_validation <-
+      (phenotype[validation_index, scenario_index] - y_center) /
+      y_scale
+
+    bundles[[inner_fold]] <- list(
+      x_fit = x_fit,
+      x_validation = x_validation,
+      x_assessment = x_assessment,
+      y_fit = y_fit,
+      y_validation = y_validation,
+      y_assessment = phenotype[
+        assessment_index,
         scenario_index
-      )
+      ],
+      y_center = y_center,
+      y_scale = y_scale,
+      zero_variance_markers = sum(zero_variance)
+    )
   }
 
   base_seed <-
@@ -1793,7 +658,6 @@ for (
     task$Repetition * 100000L +
     task$OuterFold * 10000L
 
-  # Stage 1: select architecture and learning rate using ANN_0.
   structure_summary_rows <- vector(
     "list",
     nrow(structure_grid)
@@ -1803,36 +667,227 @@ for (
     nrow(structure_grid)
   )
 
-  for (
-    candidate_index in seq_len(
-      nrow(structure_grid)
+  for (candidate_index in seq_len(nrow(structure_grid))) {
+    candidate <- structure_grid[
+      candidate_index,
+      ,
+      drop = FALSE
+    ]
+
+    fold_rows <- vector("list", 4L)
+
+    for (inner_fold in 1:4) {
+      bundle <- bundles[[inner_fold]]
+      fit_seed <- base_seed + 1000000L + inner_fold
+
+      set.seed(as.integer(fit_seed))
+      torch::torch_manual_seed(as.integer(fit_seed))
+
+      x_fit_tensor <- torch::torch_tensor(
+        bundle$x_fit,
+        dtype = torch::torch_float()
+      )$to(device = ANN_DEVICE)
+      y_fit_tensor <- torch::torch_tensor(
+        matrix(bundle$y_fit, ncol = 1),
+        dtype = torch::torch_float()
+      )$to(device = ANN_DEVICE)
+      x_validation_tensor <- torch::torch_tensor(
+        bundle$x_validation,
+        dtype = torch::torch_float()
+      )$to(device = ANN_DEVICE)
+      y_validation_tensor <- torch::torch_tensor(
+        matrix(bundle$y_validation, ncol = 1),
+        dtype = torch::torch_float()
+      )$to(device = ANN_DEVICE)
+      x_assessment_tensor <- torch::torch_tensor(
+        bundle$x_assessment,
+        dtype = torch::torch_float()
+      )$to(device = ANN_DEVICE)
+
+      model <- TorchGenomicMLP(
+        ncol(bundle$x_fit),
+        ARCHITECTURES[[candidate$Architecture]]
+      )$to(device = ANN_DEVICE)
+
+      optimizer <- torch::optim_adam(
+        params = model$parameters,
+        lr = candidate$Learning_rate,
+        weight_decay = 0
+      )
+
+      best_validation_loss <- Inf
+      checkpoint_epoch <- 1L
+      state <- model$state_dict()
+      checkpoint_state <- state
+      for (state_name in names(state)) {
+        checkpoint_state[[state_name]] <-
+          state[[state_name]]$detach()$clone()
+      }
+      stale_epochs <- 0L
+      last_epoch <- 0L
+      stopped_by_patience <- FALSE
+
+      if (ANN_DEVICE_LABEL == "cuda") {
+        torch::cuda_synchronize()
+      }
+      fit_start <- proc.time()[["elapsed"]]
+
+      for (epoch in seq_len(MAX_EPOCHS)) {
+        last_epoch <- epoch
+        model$train()
+        optimizer$zero_grad()
+
+        prediction <- model(x_fit_tensor)
+        penalty_l1 <- prediction$sum() * 0
+        penalty_l2 <- prediction$sum() * 0
+
+        for (layer_index in seq_len(length(model$linears))) {
+          weight <- model$linears[[layer_index]]$weight
+          penalty_l1 <- penalty_l1 + weight$abs()$sum()
+          penalty_l2 <- penalty_l2 + weight$pow(2)$sum()
+        }
+        weight <- model$output$weight
+        penalty_l1 <- penalty_l1 + weight$abs()$sum()
+        penalty_l2 <- penalty_l2 + weight$pow(2)$sum()
+
+        loss <-
+          torch::nnf_mse_loss(
+            prediction,
+            y_fit_tensor
+          ) +
+          candidate$L1 * penalty_l1 +
+          (candidate$L2 / 2) * penalty_l2
+
+        loss$backward()
+        optimizer$step()
+
+        model$eval()
+        validation_loss <- torch::with_no_grad({
+          torch::nnf_mse_loss(
+            model(x_validation_tensor),
+            y_validation_tensor
+          )
+        })
+        validation_value <- as.numeric(
+          validation_loss$to(
+            device = torch::torch_device("cpu")
+          )
+        )
+
+        improved <-
+          validation_value <
+          best_validation_loss - MIN_DELTA
+
+        if (improved) {
+          best_validation_loss <- validation_value
+          checkpoint_epoch <- epoch
+          state <- model$state_dict()
+          checkpoint_state <- state
+          for (state_name in names(state)) {
+            checkpoint_state[[state_name]] <-
+              state[[state_name]]$detach()$clone()
+          }
+          stale_epochs <- 0L
+        } else {
+          stale_epochs <- stale_epochs + 1L
+        }
+
+        if (stale_epochs >= PATIENCE) {
+          stopped_by_patience <- TRUE
+          break
+        }
+      }
+
+      if (ANN_DEVICE_LABEL == "cuda") {
+        torch::cuda_synchronize()
+      }
+      fit_seconds <-
+        proc.time()[["elapsed"]] - fit_start
+
+      model$load_state_dict(checkpoint_state)
+      model$eval()
+
+      prediction_start <- proc.time()[["elapsed"]]
+      prediction_scaled <- torch::with_no_grad({
+        as.numeric(
+          model(x_assessment_tensor)$to(
+            device = torch::torch_device("cpu")
+          )
+        )
+      })
+      prediction_seconds <-
+        proc.time()[["elapsed"]] - prediction_start
+
+      prediction_assessment <-
+        prediction_scaled * bundle$y_scale +
+        bundle$y_center
+      observed_assessment <- bundle$y_assessment
+
+      fold_rows[[inner_fold]] <- data.frame(
+        Model = "ANN_0",
+        CandidateID = candidate_index,
+        Architecture = candidate$Architecture,
+        Learning_rate = candidate$Learning_rate,
+        L1 = 0,
+        L2 = 0,
+        InnerFold = inner_fold,
+        RMSE = sqrt(
+          mean(
+            (prediction_assessment - observed_assessment)^2
+          )
+        ),
+        Correlation = cor(
+          prediction_assessment,
+          observed_assessment
+        ),
+        MAE = mean(
+          abs(
+            prediction_assessment - observed_assessment
+          )
+        ),
+        EarlyStop_epoch = as.integer(checkpoint_epoch),
+        Last_epoch = as.integer(last_epoch),
+        Stopped_by_patience = stopped_by_patience,
+        Hit_epoch_ceiling =
+          last_epoch >= MAX_EPOCHS &&
+          !stopped_by_patience,
+        Fit_seconds = fit_seconds,
+        Prediction_seconds = prediction_seconds,
+        Status = "ok",
+        Error = NA_character_,
+        stringsAsFactors = FALSE
+      )
+    }
+
+    folds <- do.call(rbind, fold_rows)
+    hidden <- ARCHITECTURES[[candidate$Architecture]]
+    network_inputs <- c(ncol(geno), hidden)
+    network_outputs <- c(hidden, 1L)
+
+    structure_summary_rows[[candidate_index]] <- data.frame(
+      Model = "ANN_0",
+      CandidateID = candidate_index,
+      Architecture = candidate$Architecture,
+      Learning_rate = candidate$Learning_rate,
+      L1 = 0,
+      L2 = 0,
+      Inner_folds_ok = 4L,
+      Mean_RMSE = mean(folds$RMSE),
+      Mean_Correlation = mean(folds$Correlation),
+      Mean_MAE = mean(folds$MAE),
+      Median_EarlyStop_epoch = median(folds$EarlyStop_epoch),
+      Max_Last_epoch = max(folds$Last_epoch),
+      N_epoch_ceiling = sum(folds$Hit_epoch_ceiling),
+      Parameters = sum(
+        network_inputs * network_outputs +
+        network_outputs
+      ),
+      Penalty = 0,
+      Status = "ok",
+      stringsAsFactors = FALSE
     )
-  ) {
-    candidate <-
-      structure_grid[
-        candidate_index,
-        ,
-        drop = FALSE
-      ]
 
-    evaluated <- evaluate_candidate(
-      bundles = bundles,
-      model_name = "ANN_0",
-      architecture =
-        candidate$Architecture,
-      learning_rate =
-        candidate$Learning_rate,
-      l1 = 0,
-      l2 = 0,
-      seed_base =
-        base_seed + 1000000L,
-      candidate_id =
-        candidate_index
-    )
-
-    structure_summary_rows[[candidate_index]] <- evaluated$summary
-
-    structure_fold_rows[[candidate_index]] <- evaluated$folds
+    structure_fold_rows[[candidate_index]] <- folds
   }
 
   structure_summary <- do.call(
@@ -1844,188 +899,355 @@ for (
     structure_fold_rows
   )
 
-  chosen_structure <-
-    choose_candidate(
-      structure_summary
-    )
+  structure_summary <- structure_summary[
+    order(
+      structure_summary$Mean_RMSE,
+      -structure_summary$Mean_Correlation,
+      structure_summary$Parameters,
+      structure_summary$Penalty,
+      structure_summary$Learning_rate,
+      structure_summary$CandidateID
+    ),
+    ,
+    drop = FALSE
+  ]
 
-  selected_architecture <-
-    chosen_structure$Architecture
-  selected_learning_rate <-
-    chosen_structure$Learning_rate
+  chosen_structure <- structure_summary[1, , drop = FALSE]
+  selected_architecture <- chosen_structure$Architecture
+  selected_learning_rate <- chosen_structure$Learning_rate
 
-  # Stage 2: tune only the regularization coefficients.
   penalty_grids <- list(
     ANN_L1 = l1_grid,
     ANN_L2 = l2_grid,
     ANN_L1_L2 = l1l2_grid
   )
-
-  penalty_summaries <- list()
-  penalty_folds <- list()
+  penalty_summary_all <- list()
+  penalty_fold_all <- list()
   penalty_selected <- list()
 
-  for (
-    model_name in names(
-      penalty_grids
-    )
-  ) {
-    grid <-
-      penalty_grids[[model_name]]
+  for (model_name in names(penalty_grids)) {
+    grid <- penalty_grids[[model_name]]
+    model_summary_rows <- vector("list", nrow(grid))
+    model_fold_rows <- vector("list", nrow(grid))
 
-    candidate_summaries <- vector(
-      "list",
-      nrow(grid)
-    )
-    candidate_folds <- vector(
-      "list",
-      nrow(grid)
-    )
+    for (candidate_index in seq_len(nrow(grid))) {
+      fold_rows <- vector("list", 4L)
 
-    for (
-      candidate_index in seq_len(
-        nrow(grid)
-      )
-    ) {
-      evaluated <- evaluate_candidate(
-        bundles = bundles,
-        model_name = model_name,
-        architecture =
-          selected_architecture,
-        learning_rate =
-          selected_learning_rate,
-        l1 =
-          grid$L1[candidate_index],
-        l2 =
+      for (inner_fold in 1:4) {
+        bundle <- bundles[[inner_fold]]
+        fit_seed <- base_seed + 2000000L + inner_fold
+
+        set.seed(as.integer(fit_seed))
+        torch::torch_manual_seed(as.integer(fit_seed))
+
+        x_fit_tensor <- torch::torch_tensor(
+          bundle$x_fit,
+          dtype = torch::torch_float()
+        )$to(device = ANN_DEVICE)
+        y_fit_tensor <- torch::torch_tensor(
+          matrix(bundle$y_fit, ncol = 1),
+          dtype = torch::torch_float()
+        )$to(device = ANN_DEVICE)
+        x_validation_tensor <- torch::torch_tensor(
+          bundle$x_validation,
+          dtype = torch::torch_float()
+        )$to(device = ANN_DEVICE)
+        y_validation_tensor <- torch::torch_tensor(
+          matrix(bundle$y_validation, ncol = 1),
+          dtype = torch::torch_float()
+        )$to(device = ANN_DEVICE)
+        x_assessment_tensor <- torch::torch_tensor(
+          bundle$x_assessment,
+          dtype = torch::torch_float()
+        )$to(device = ANN_DEVICE)
+
+        model <- TorchGenomicMLP(
+          ncol(bundle$x_fit),
+          ARCHITECTURES[[selected_architecture]]
+        )$to(device = ANN_DEVICE)
+
+        optimizer <- torch::optim_adam(
+          params = model$parameters,
+          lr = selected_learning_rate,
+          weight_decay = 0
+        )
+
+        best_validation_loss <- Inf
+        checkpoint_epoch <- 1L
+        state <- model$state_dict()
+        checkpoint_state <- state
+        for (state_name in names(state)) {
+          checkpoint_state[[state_name]] <-
+            state[[state_name]]$detach()$clone()
+        }
+        stale_epochs <- 0L
+        last_epoch <- 0L
+        stopped_by_patience <- FALSE
+
+        if (ANN_DEVICE_LABEL == "cuda") {
+          torch::cuda_synchronize()
+        }
+        fit_start <- proc.time()[["elapsed"]]
+
+        for (epoch in seq_len(MAX_EPOCHS)) {
+          last_epoch <- epoch
+          model$train()
+          optimizer$zero_grad()
+
+          prediction <- model(x_fit_tensor)
+          penalty_l1 <- prediction$sum() * 0
+          penalty_l2 <- prediction$sum() * 0
+
+          for (layer_index in seq_len(length(model$linears))) {
+            weight <- model$linears[[layer_index]]$weight
+            penalty_l1 <- penalty_l1 + weight$abs()$sum()
+            penalty_l2 <- penalty_l2 + weight$pow(2)$sum()
+          }
+          weight <- model$output$weight
+          penalty_l1 <- penalty_l1 + weight$abs()$sum()
+          penalty_l2 <- penalty_l2 + weight$pow(2)$sum()
+
+          loss <-
+            torch::nnf_mse_loss(
+              prediction,
+              y_fit_tensor
+            ) +
+            grid$L1[candidate_index] * penalty_l1 +
+            (grid$L2[candidate_index] / 2) * penalty_l2
+
+          loss$backward()
+          optimizer$step()
+
+          model$eval()
+          validation_loss <- torch::with_no_grad({
+            torch::nnf_mse_loss(
+              model(x_validation_tensor),
+              y_validation_tensor
+            )
+          })
+          validation_value <- as.numeric(
+            validation_loss$to(
+              device = torch::torch_device("cpu")
+            )
+          )
+
+          improved <-
+            validation_value <
+            best_validation_loss - MIN_DELTA
+
+          if (improved) {
+            best_validation_loss <- validation_value
+            checkpoint_epoch <- epoch
+            state <- model$state_dict()
+            checkpoint_state <- state
+            for (state_name in names(state)) {
+              checkpoint_state[[state_name]] <-
+                state[[state_name]]$detach()$clone()
+            }
+            stale_epochs <- 0L
+          } else {
+            stale_epochs <- stale_epochs + 1L
+          }
+
+          if (stale_epochs >= PATIENCE) {
+            stopped_by_patience <- TRUE
+            break
+          }
+        }
+
+        if (ANN_DEVICE_LABEL == "cuda") {
+          torch::cuda_synchronize()
+        }
+        fit_seconds <-
+          proc.time()[["elapsed"]] - fit_start
+
+        model$load_state_dict(checkpoint_state)
+        model$eval()
+
+        prediction_start <- proc.time()[["elapsed"]]
+        prediction_scaled <- torch::with_no_grad({
+          as.numeric(
+            model(x_assessment_tensor)$to(
+              device = torch::torch_device("cpu")
+            )
+          )
+        })
+        prediction_seconds <-
+          proc.time()[["elapsed"]] - prediction_start
+
+        prediction_assessment <-
+          prediction_scaled * bundle$y_scale +
+          bundle$y_center
+        observed_assessment <- bundle$y_assessment
+
+        fold_rows[[inner_fold]] <- data.frame(
+          Model = model_name,
+          CandidateID = candidate_index,
+          Architecture = selected_architecture,
+          Learning_rate = selected_learning_rate,
+          L1 = grid$L1[candidate_index],
+          L2 = grid$L2[candidate_index],
+          InnerFold = inner_fold,
+          RMSE = sqrt(
+            mean(
+              (prediction_assessment - observed_assessment)^2
+            )
+          ),
+          Correlation = cor(
+            prediction_assessment,
+            observed_assessment
+          ),
+          MAE = mean(
+            abs(
+              prediction_assessment - observed_assessment
+            )
+          ),
+          EarlyStop_epoch = as.integer(checkpoint_epoch),
+          Last_epoch = as.integer(last_epoch),
+          Stopped_by_patience = stopped_by_patience,
+          Hit_epoch_ceiling =
+            last_epoch >= MAX_EPOCHS &&
+            !stopped_by_patience,
+          Fit_seconds = fit_seconds,
+          Prediction_seconds = prediction_seconds,
+          Status = "ok",
+          Error = NA_character_,
+          stringsAsFactors = FALSE
+        )
+      }
+
+      folds <- do.call(rbind, fold_rows)
+      hidden <- ARCHITECTURES[[selected_architecture]]
+      network_inputs <- c(ncol(geno), hidden)
+      network_outputs <- c(hidden, 1L)
+
+      model_summary_rows[[candidate_index]] <- data.frame(
+        Model = model_name,
+        CandidateID = candidate_index,
+        Architecture = selected_architecture,
+        Learning_rate = selected_learning_rate,
+        L1 = grid$L1[candidate_index],
+        L2 = grid$L2[candidate_index],
+        Inner_folds_ok = 4L,
+        Mean_RMSE = mean(folds$RMSE),
+        Mean_Correlation = mean(folds$Correlation),
+        Mean_MAE = mean(folds$MAE),
+        Median_EarlyStop_epoch = median(folds$EarlyStop_epoch),
+        Max_Last_epoch = max(folds$Last_epoch),
+        N_epoch_ceiling = sum(folds$Hit_epoch_ceiling),
+        Parameters = sum(
+          network_inputs * network_outputs +
+          network_outputs
+        ),
+        Penalty =
+          grid$L1[candidate_index] +
           grid$L2[candidate_index],
-        seed_base =
-          base_seed + 2000000L,
-        candidate_id =
-          candidate_index
+        Status = "ok",
+        stringsAsFactors = FALSE
       )
 
-      candidate_summaries[[candidate_index]] <- evaluated$summary
-      candidate_folds[[candidate_index]] <- evaluated$folds
+      model_fold_rows[[candidate_index]] <- folds
     }
 
-    penalty_summaries[[model_name]] <- do.call(
-      rbind,
-      candidate_summaries
-    )
-    penalty_folds[[model_name]] <- do.call(
-      rbind,
-      candidate_folds
-    )
-    penalty_selected[[model_name]] <- choose_candidate(
-      penalty_summaries[[model_name]]
-    )
+    model_summary <- do.call(rbind, model_summary_rows)
+    model_folds <- do.call(rbind, model_fold_rows)
+
+    model_summary <- model_summary[
+      order(
+        model_summary$Mean_RMSE,
+        -model_summary$Mean_Correlation,
+        model_summary$Parameters,
+        model_summary$Penalty,
+        model_summary$Learning_rate,
+        model_summary$CandidateID
+      ),
+      ,
+      drop = FALSE
+    ]
+
+    penalty_summary_all[[model_name]] <- model_summary
+    penalty_fold_all[[model_name]] <- model_folds
+    penalty_selected[[model_name]] <-
+      model_summary[1, , drop = FALSE]
   }
 
   selected_table <- rbind(
     data.frame(
       Model = "ANN_0",
-      Architecture =
-        selected_architecture,
-      Learning_rate =
-        selected_learning_rate,
+      Architecture = selected_architecture,
+      Learning_rate = selected_learning_rate,
       L1 = 0,
       L2 = 0,
-      Inner_RMSE =
-        chosen_structure$Mean_RMSE,
-      Inner_Correlation =
-        chosen_structure$Mean_Correlation,
-      Inner_MAE =
-        chosen_structure$Mean_MAE,
+      Inner_RMSE = chosen_structure$Mean_RMSE,
+      Inner_Correlation = chosen_structure$Mean_Correlation,
+      Inner_MAE = chosen_structure$Mean_MAE,
       stringsAsFactors = FALSE
     ),
-    do.call(
-      rbind,
-      lapply(
-        names(penalty_selected),
-        function(model_name) {
-          selected_candidate <-
-            penalty_selected[[model_name]]
-
-          data.frame(
-            Model = model_name,
-            Architecture =
-              selected_architecture,
-            Learning_rate =
-              selected_learning_rate,
-            L1 =
-              selected_candidate$L1,
-            L2 =
-              selected_candidate$L2,
-            Inner_RMSE =
-              selected_candidate$Mean_RMSE,
-            Inner_Correlation =
-              selected_candidate$Mean_Correlation,
-            Inner_MAE =
-              selected_candidate$Mean_MAE,
-            stringsAsFactors = FALSE
-          )
-        }
-      )
+    data.frame(
+      Model = "ANN_L1",
+      Architecture = selected_architecture,
+      Learning_rate = selected_learning_rate,
+      L1 = penalty_selected$ANN_L1$L1,
+      L2 = penalty_selected$ANN_L1$L2,
+      Inner_RMSE = penalty_selected$ANN_L1$Mean_RMSE,
+      Inner_Correlation = penalty_selected$ANN_L1$Mean_Correlation,
+      Inner_MAE = penalty_selected$ANN_L1$Mean_MAE,
+      stringsAsFactors = FALSE
+    ),
+    data.frame(
+      Model = "ANN_L2",
+      Architecture = selected_architecture,
+      Learning_rate = selected_learning_rate,
+      L1 = penalty_selected$ANN_L2$L1,
+      L2 = penalty_selected$ANN_L2$L2,
+      Inner_RMSE = penalty_selected$ANN_L2$Mean_RMSE,
+      Inner_Correlation = penalty_selected$ANN_L2$Mean_Correlation,
+      Inner_MAE = penalty_selected$ANN_L2$Mean_MAE,
+      stringsAsFactors = FALSE
+    ),
+    data.frame(
+      Model = "ANN_L1_L2",
+      Architecture = selected_architecture,
+      Learning_rate = selected_learning_rate,
+      L1 = penalty_selected$ANN_L1_L2$L1,
+      L2 = penalty_selected$ANN_L1_L2$L2,
+      Inner_RMSE = penalty_selected$ANN_L1_L2$Mean_RMSE,
+      Inner_Correlation = penalty_selected$ANN_L1_L2$Mean_Correlation,
+      Inner_MAE = penalty_selected$ANN_L1_L2$Mean_MAE,
+      stringsAsFactors = FALSE
     )
   )
-
-  for (
-    column_name in c(
-      "Scenario",
-      "Repetition",
-      "Fold",
-      "SplitID",
-      "TaskID"
-    )
-  ) {
-    selected_table[[column_name]] <-
-      task[[column_name]]
-  }
 
   tuning_summary <- rbind(
     structure_summary,
-    do.call(
-      rbind,
-      penalty_summaries
-    )
+    penalty_summary_all$ANN_L1,
+    penalty_summary_all$ANN_L2,
+    penalty_summary_all$ANN_L1_L2
   )
   tuning_folds <- rbind(
     structure_folds,
-    do.call(
-      rbind,
-      penalty_folds
-    )
+    penalty_fold_all$ANN_L1,
+    penalty_fold_all$ANN_L2,
+    penalty_fold_all$ANN_L1_L2
   )
 
-  for (
-    column_name in c(
-      "Scenario",
-      "Repetition",
-      "Fold",
-      "SplitID",
-      "TaskID"
-    )
-  ) {
-    tuning_summary[[column_name]] <-
-      task[[column_name]]
-    tuning_folds[[column_name]] <-
-      task[[column_name]]
+  for (column_name in c(
+    "Scenario",
+    "Repetition",
+    "Fold",
+    "SplitID",
+    "TaskID"
+  )) {
+    selected_table[[column_name]] <- task[[column_name]]
+    tuning_summary[[column_name]] <- task[[column_name]]
+    tuning_folds[[column_name]] <- task[[column_name]]
   }
 
-  task_seconds <-
-    proc.time()[["elapsed"]] -
-    task_start
-
-  task_outputs[[task_index]] <- list(
-    Status = "ok",
-    ConfigID =
-      ANN_TUNING_CONFIG_ID,
-    TaskID = task$TaskID,
-    selected = selected_table,
-    tuning_summary = tuning_summary,
-    tuning_folds = tuning_folds,
-    task_seconds = task_seconds
-  )
+  selected_task_rows[[task_index]] <- selected_table
+  candidate_task_rows[[task_index]] <- tuning_summary
+  fold_task_rows[[task_index]] <- tuning_folds
+  task_seconds[task_index] <-
+    proc.time()[["elapsed"]] - task_start
 
   cat(
     sprintf(
@@ -2033,63 +1255,39 @@ for (
       task_index,
       nrow(task_table),
       task$TaskID,
-      task_seconds,
+      task_seconds[task_index],
       selected_architecture,
       selected_learning_rate
     )
   )
 }
 
-current_session_seconds <-
-  proc.time()[["elapsed"]] -
-  run_start
-
 selected_configurations <- do.call(
   rbind,
-  lapply(
-    task_outputs,
-    function(task_output) {
-      task_output$selected
-    }
-  )
+  selected_task_rows
 )
 candidate_summary <- do.call(
   rbind,
-  lapply(
-    task_outputs,
-    function(task_output) {
-      task_output$tuning_summary
-    }
-  )
+  candidate_task_rows
 )
 fold_results <- do.call(
   rbind,
-  lapply(
-    task_outputs,
-    function(task_output) {
-      task_output$tuning_folds
-    }
-  )
+  fold_task_rows
 )
 
-task_seconds_total <- sum(
-  vapply(
-    task_outputs,
-    function(task_output) {
-      task_output$task_seconds
-    },
-    numeric(1)
-  )
-)
+rownames(selected_configurations) <- NULL
+rownames(candidate_summary) <- NULL
+rownames(fold_results) <- NULL
+
+run_seconds <-
+  proc.time()[["elapsed"]] - run_start
 
 manifest <- list(
-  analysis =
-    "canonical_simulated_ann_tuning",
+  analysis = "canonical_simulated_ann_tuning",
   dataset = "simulated",
   mode = "full",
   pilot_task = NA_character_,
-  config_id =
-    ANN_TUNING_CONFIG_ID,
+  config_id = ANN_TUNING_CONFIG_ID,
   seed_global = SEED_GLOBAL,
   models = MODEL_LEVELS,
   architectures = ARCHITECTURES,
@@ -2101,49 +1299,28 @@ manifest <- list(
   activation = "ReLU",
   dropout = DROPOUT,
   max_epochs = MAX_EPOCHS,
-  final_train_epochs =
-    TUNING_V1_COMPATIBILITY_TOKEN,
+  final_train_epochs = TUNING_V1_COMPATIBILITY_TOKEN,
   patience = PATIENCE,
   min_delta = MIN_DELTA,
-  early_validation_fraction =
-    EARLY_VALIDATION_FRACTION,
-  primary_tuning_metric =
-    "mean inner-assessment RMSE",
-  secondary_tuning_metric =
-    "mean inner-assessment correlation",
-  epoch_used_in_candidate_ranking =
-    FALSE,
-  outer_assessment_used =
-    FALSE,
-  true_genetic_value_used =
-    FALSE,
-  architecture_lr_shared_across_models =
-    TRUE,
-  candidates_per_task =
-    CANDIDATES_PER_TASK,
-  inner_fits_per_task =
-    INNER_FITS_PER_TASK,
-  number_tasks =
-    EXPECTED_TASKS,
-  selected_rows =
-    nrow(selected_configurations),
-  candidate_rows =
-    nrow(candidate_summary),
-  fold_rows =
-    nrow(fold_results),
-  torch_version =
-    as.character(
-      packageVersion("torch")
-    ),
+  early_validation_fraction = EARLY_VALIDATION_FRACTION,
+  primary_tuning_metric = "mean inner-assessment RMSE",
+  secondary_tuning_metric = "mean inner-assessment correlation",
+  epoch_used_in_candidate_ranking = FALSE,
+  outer_assessment_used = FALSE,
+  true_genetic_value_used = FALSE,
+  architecture_lr_shared_across_models = TRUE,
+  candidates_per_task = CANDIDATES_PER_TASK,
+  inner_fits_per_task = INNER_FITS_PER_TASK,
+  number_tasks = nrow(task_table),
+  selected_rows = nrow(selected_configurations),
+  candidate_rows = nrow(candidate_summary),
+  fold_rows = nrow(fold_results),
+  torch_version = as.character(packageVersion("torch")),
   device = ANN_DEVICE_LABEL,
-  cuda_available =
-    cuda_available,
-  current_session_seconds =
-    current_session_seconds,
-  checkpoint_task_seconds =
-    task_seconds_total,
-  timestamp =
-    as.character(Sys.time())
+  cuda_available = cuda_available,
+  current_session_seconds = run_seconds,
+  checkpoint_task_seconds = sum(task_seconds),
+  timestamp = as.character(Sys.time())
 )
 
 manifest_table <- data.frame(
@@ -2151,21 +1328,9 @@ manifest_table <- data.frame(
     "analysis",
     "mode",
     "config_id",
-    "architectures",
-    "learning_rates",
-    "L1_values",
-    "L2_values",
-    "combined_grid_size",
-    "MAX_EPOCHS",
-    "TUNING_V1_COMPATIBILITY_TOKEN",
-    "patience",
-    "dropout",
-    "optimizer",
-    "activation",
     "candidates_per_task",
     "inner_fits_per_task",
     "tasks",
-    "epoch_used_in_candidate_ranking",
     "outer_assessment_used",
     "true_genetic_value_used"
   ),
@@ -2173,21 +1338,9 @@ manifest_table <- data.frame(
     manifest$analysis,
     manifest$mode,
     manifest$config_id,
-    paste(names(ARCHITECTURES), collapse = " | "),
-    paste(LEARNING_RATES, collapse = " | "),
-    paste(L1_VALUES, collapse = " | "),
-    paste(L2_VALUES, collapse = " | "),
-    nrow(L1_L2_GRID),
-    MAX_EPOCHS,
-    TUNING_V1_COMPATIBILITY_TOKEN,
-    PATIENCE,
-    DROPOUT,
-    "Adam",
-    "ReLU",
-    CANDIDATES_PER_TASK,
-    INNER_FITS_PER_TASK,
-    EXPECTED_TASKS,
-    FALSE,
+    manifest$candidates_per_task,
+    manifest$inner_fits_per_task,
+    manifest$number_tasks,
     FALSE,
     FALSE
   ),
@@ -2242,1031 +1395,167 @@ write.csv(
 )
 ```
 
-## 12. Selected configurations
+### 5.3 Candidate ranking
 
-The reader-facing summaries below use the canonical saved tuning outputs. This
-allows the page to be rebuilt without rerunning the 42,000 inner candidate-fold
-fits while preserving the exact configurations selected by the canonical run.
+Within each tuning stage, candidate ranking follows the same deterministic
+hierarchy:
 
-```{r saved-integrity}
+1. lower mean inner-assessment RMSE;
+2. higher mean inner-assessment **Pearson correlation**;
+3. fewer network parameters;
+4. smaller total penalty coefficient;
+5. smaller learning rate;
+6. candidate identifier.
+
+Early-stop epoch information is stored as an optimization diagnostic but does
+not participate in candidate ranking.
+
+## 6. Selected configurations and tuning diagnostics
+
+The normal page build reads the previously completed tuning outputs rather than
+rerunning the 42,000 candidate-fold fits.
+
+```{r saved-tuning-results}
 selected_configurations <- readRDS(SELECTED_RDS)
 candidate_summary <- readRDS(CANDIDATE_RDS)
 fold_results <- readRDS(FOLD_RDS)
-run_metadata <- readRDS(RUN_RDS)
+tuning_metadata <- readRDS(RUN_RDS)
 
-tuning_output_summary <- data.frame(
+saved_tuning_summary <- data.frame(
   Object = c(
-    "Selected configurations", "Candidate summaries",
+    "Selected configurations",
+    "Candidate summaries",
     "Inner candidate-fold results"
   ),
   Rows = c(
-    nrow(selected_configurations), nrow(candidate_summary), nrow(fold_results)
+    nrow(selected_configurations),
+    nrow(candidate_summary),
+    nrow(fold_results)
+  ),
+  stringsAsFactors = FALSE
+)
+
+saved_tuning_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Stored ANN tuning results",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
   )
-)
-format_table(
-  tuning_output_summary,
-  caption = "Observed size of the canonical ANN tuning outputs",
-  row.names = FALSE
-)
 ```
 
-### 12.1 Architecture and learning-rate frequencies
+Architecture and learning rate are shared across all four ANN variants within an
+outer task. Their frequencies therefore describe the structure selected before
+model-specific penalty tuning.
 
-Architecture and learning rate are shared by all four ANN variants within each
-outer task. Their selection frequencies therefore summarize the structural
-choices made before any model-specific penalty tuning.
-
-```{r selected-structure-summary}
-task_level <- unique(
+```{r tuning-frequency-summaries}
+task_structure <- unique(
   selected_configurations[
-    ,
-    c(
-      "TaskID",
-      "Architecture",
-      "Learning_rate"
-    )
+    , c("TaskID", "Architecture", "Learning_rate")
   ]
 )
 
 architecture_frequency <- as.data.frame(
-  table(
-    Architecture =
-      task_level$Architecture
-  ),
+  table(task_structure$Architecture),
   stringsAsFactors = FALSE
 )
-names(architecture_frequency)[2] <-
+names(architecture_frequency) <- c(
+  "Architecture",
   "Selected_tasks"
-
-architecture_frequency <-
-  architecture_frequency[
-    order(
-      match(
-        architecture_frequency$Architecture,
-        names(ARCHITECTURES)
-      )
-    ),
-    ,
-    drop = FALSE
-  ]
+)
 
 learning_rate_frequency <- as.data.frame(
-  table(
-    Learning_rate =
-      task_level$Learning_rate
-  ),
+  table(task_structure$Learning_rate),
   stringsAsFactors = FALSE
 )
-names(learning_rate_frequency)[2] <-
+names(learning_rate_frequency) <- c(
+  "Learning_rate",
   "Selected_tasks"
+)
 
-format_table(
-  architecture_frequency,
-  caption =
-    "Selected shared architecture across the 150 outer tasks",
-  row.names = FALSE
-)
-format_table(
-  learning_rate_frequency,
-  caption =
-    "Selected shared learning rate across the 150 outer tasks",
-  row.names = FALSE
-)
+architecture_frequency |>
+  knitr::kable(
+    format = "html",
+    caption = "Selected shared architecture across the 150 outer tasks",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+learning_rate_frequency |>
+  knitr::kable(
+    format = "html",
+    caption = "Selected shared learning rate across the 150 outer tasks",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-### 12.2 Penalty selections
+The optimization diagnostics below are descriptive. Reaching an epoch cap or a
+search boundary does not retrospectively alter the tuning grid.
 
-The regularized variants subsequently select only their applicable L1 and/or L2
-coefficients. The frequency tables show how often each penalty value is selected,
-and the final table gives a small task-level sample of the canonical choices.
-
-```{r selected-penalty-summary}
-l1_frequency <- selected_configurations[
-  selected_configurations$Model %in%
-    c("ANN_L1", "ANN_L1_L2"),
-  c("Model", "L1"),
-  drop = FALSE
-]
-l1_frequency$Selected_tasks <- 1L
-l1_frequency <- aggregate(
-  Selected_tasks ~ Model + L1,
-  data = l1_frequency,
-  FUN = sum
-)
-
-l2_frequency <- selected_configurations[
-  selected_configurations$Model %in%
-    c("ANN_L2", "ANN_L1_L2"),
-  c("Model", "L2"),
-  drop = FALSE
-]
-l2_frequency$Selected_tasks <- 1L
-l2_frequency <- aggregate(
-  Selected_tasks ~ Model + L2,
-  data = l2_frequency,
-  FUN = sum
-)
-
-format_table(
-  l1_frequency,
-  digits = 6,
-  caption =
-    "Selected L1 coefficients by regularized ANN variant",
-  row.names = FALSE
-)
-format_table(
-  l2_frequency,
-  digits = 6,
-  caption =
-    "Selected L2 coefficients by regularized ANN variant",
-  row.names = FALSE
-)
-
-selected_display <- head(
-  selected_configurations[
-    order(
-      selected_configurations$Scenario,
-      selected_configurations$Repetition,
-      selected_configurations$Fold,
-      match(
-        selected_configurations$Model,
-        MODEL_LEVELS
-      )
-    ),
-    c(
-      "Scenario",
-      "Repetition",
-      "Fold",
-      "Model",
-      "Architecture",
-      "Learning_rate",
-      "L1",
-      "L2",
-      "Inner_RMSE",
-      "Inner_Correlation"
-    ),
-    drop = FALSE
-  ],
-  20
-)
-
-format_table(
-  selected_display,
-  digits = 6,
-  caption =
-    "First 20 selected canonical ANN configurations",
-  row.names = FALSE
-)
-```
-
-Because architecture and learning rate are shared by the four ANN variants within each task, differences among `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2` are not produced by giving the regularized variants a different structural search space.
-
-### 12.3 Optimization diagnostics
-
-These diagnostics describe how the fixed early-stopping protocol behaved over
-the canonical tuning fits. They do not enter candidate ranking and do not
-change the tuning grid.
-
-```{r optimization-diagnostics}
-selected_keys <- merge(
-  selected_configurations[
-    ,
-    c(
-      "TaskID",
-      "Model",
-      "Architecture",
-      "Learning_rate",
-      "L1",
-      "L2"
-    )
-  ],
-  fold_results,
-  by = c(
-    "TaskID",
-    "Model",
-    "Architecture",
-    "Learning_rate",
-    "L1",
-    "L2"
-  ),
-  all.x = TRUE,
-  sort = FALSE
-)
-
+```{r tuning-diagnostics}
 optimization_summary <- data.frame(
   Diagnostic = c(
     "Inner candidate-fold fits",
     "Median best early-stop epoch",
     "Median last epoch",
     "Fits stopped by patience",
-    "Fits reaching 2000-epoch ceiling",
-    "Selected-candidate inner folds",
-    "Selected-candidate folds reaching ceiling"
+    "Fits reaching 2000-epoch cap"
   ),
   Value = c(
-    as.character(nrow(fold_results)),
-    sprintf(
-      "%.1f",
-      median(
-        fold_results$EarlyStop_epoch,
-        na.rm = TRUE
-      )
-    ),
-    sprintf(
-      "%.1f",
-      median(
-        fold_results$Last_epoch,
-        na.rm = TRUE
-      )
-    ),
-    sprintf(
-      "%d / %d",
-      sum(
-        fold_results$Stopped_by_patience,
-        na.rm = TRUE
-      ),
-      nrow(fold_results)
-    ),
-    sprintf(
-      "%d / %d",
-      sum(
-        fold_results$Hit_epoch_ceiling,
-        na.rm = TRUE
-      ),
-      nrow(fold_results)
-    ),
-    as.character(nrow(selected_keys)),
-    sprintf(
-      "%d / %d",
-      sum(
-        selected_keys$Hit_epoch_ceiling,
-        na.rm = TRUE
-      ),
-      nrow(selected_keys)
-    )
+    nrow(fold_results),
+    median(fold_results$EarlyStop_epoch, na.rm = TRUE),
+    median(fold_results$Last_epoch, na.rm = TRUE),
+    sum(fold_results$Stopped_by_patience, na.rm = TRUE),
+    sum(fold_results$Hit_epoch_ceiling, na.rm = TRUE)
   ),
   stringsAsFactors = FALSE
 )
 
-format_table(
-  optimization_summary,
-  caption =
-    "Canonical ANN tuning optimization diagnostics",
-  row.names = FALSE
-)
+optimization_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "ANN tuning optimization diagnostics",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-Of the `r nrow(fold_results)` inner candidate-fold fits,
-`r sum(fold_results$Stopped_by_patience, na.rm = TRUE)` stopped by patience and
-`r sum(fold_results$Hit_epoch_ceiling, na.rm = TRUE)` reached the 2000-epoch
-ceiling. The median best epoch shows where the best early-validation checkpoint
-typically occurred; these diagnostics are not used to rank candidates.
-
-### 12.4 Search-boundary diagnostics
-
-Boundary occupancy is reported descriptively because `64-32` and the extreme
-learning-rate and penalty values are deliberate limits of the prespecified
-search space. Reaching one of these limits identifies where the bounded search
-was active; it does not trigger post-hoc enlargement of the canonical grid.
-
-These frequencies are therefore interpreted as search-space diagnostics and as
-a limitation of the prespecified comparison, not as a new tuning rule.
-
-```{r boundary-description}
-task_level <- unique(
-  selected_configurations[
-    ,
-    c(
-      "TaskID",
-      "Scenario",
-      "Architecture",
-      "Learning_rate"
-    )
-  ]
-)
-
-boundary_table <- data.frame(
-  Boundary = c(
-    "Architecture = 64-32",
-    "Learning rate = 1.25e-4",
-    "ANN_L1: L1 = 1e-1",
-    "ANN_L1_L2: L1 = 1e-1",
-    "ANN_L2: L2 = 1e-2",
-    "ANN_L1_L2: L2 = 1e-2"
-  ),
-  Selected = c(
-    sum(
-      task_level$Architecture ==
-        "64-32"
-    ),
-    sum(
-      abs(
-        task_level$Learning_rate -
-          min(LEARNING_RATES)
-      ) < 1e-14
-    ),
-    sum(
-      selected_configurations$Model ==
-        "ANN_L1" &
-      abs(
-        selected_configurations$L1 -
-          max(L1_VALUES)
-      ) < 1e-14
-    ),
-    sum(
-      selected_configurations$Model ==
-        "ANN_L1_L2" &
-      abs(
-        selected_configurations$L1 -
-          max(L1_VALUES)
-      ) < 1e-14
-    ),
-    sum(
-      selected_configurations$Model ==
-        "ANN_L2" &
-      abs(
-        selected_configurations$L2 -
-          max(L2_VALUES)
-      ) < 1e-14
-    ),
-    sum(
-      selected_configurations$Model ==
-        "ANN_L1_L2" &
-      abs(
-        selected_configurations$L2 -
-          max(L2_VALUES)
-      ) < 1e-14
-    )
-  ),
-  Denominator = c(
-    150L,
-    150L,
-    150L,
-    150L,
-    150L,
-    150L
-  ),
-  stringsAsFactors = FALSE
-)
-
-boundary_table$Proportion <-
-  boundary_table$Selected /
-  boundary_table$Denominator
-
-format_table(
-  boundary_table,
-  digits = 4,
-  caption =
-    "Descriptive canonical tuning-boundary occupancy",
-  row.names = FALSE
-)
-```
-
-In the canonical run, the upper architecture `64-32` was selected in
-`r boundary_table$Selected[boundary_table$Boundary == "Architecture = 64-32"]`
-of 150 tasks. The remaining rows show how often the selected learning rate or
-penalty coefficient reached the edge of its prespecified grid. These counts are
-reported as search-space diagnostics, not as a reason to enlarge the grid after
-observing the results.
-
-## 13. Final model fitting
+## 7. Final fitting
 
 Nested tuning returns one architecture, learning rate, and applicable penalty
 coefficient(s) for each `Scenario × outer split × ANN variant`. Final fitting
 then uses those choices without reopening the hyperparameter search.
 
-The final stage follows one fixed sequence:
+The final sequence is:
 
-1. take the selected hyperparameters from nested tuning;
-2. use only the 800 outer-analysis individuals to select `Best_epoch`;
-3. allow at most 3000 epochs during this epoch-selection fit;
+1. take the selected tuning configuration;
+2. split only the 800 outer-analysis individuals into fitting and
+   early-validation subsets;
+3. select `Best_epoch` under the 3000-epoch optimization cap;
 4. reinitialize the network;
-5. refit all 800 outer-analysis individuals for exactly `Best_epoch`;
-6. predict the untouched 200 outer-assessment individuals.
+5. refit on all 800 outer-analysis individuals for exactly `Best_epoch`;
+6. predict the untouched 200 outer-assessment individuals;
+7. only then access outer-assessment phenotype and true genetic value for
+   evaluation.
 
-The 3000-epoch value is a **safety ceiling**, not the final training length.
-Outer-assessment phenotypes and true genetic values are excluded from both
-hyperparameter selection and `Best_epoch` selection.
+The complete final-fitting code is shown directly below without local training,
+preprocessing, or metric wrappers.
 
-### 13.1 Final fitting contract
-
-The contract below makes the separation between tuning, epoch selection, final
-refitting, and held-out assessment explicit.
-
-```{r final-ann-contract}
-FINAL_EPOCH_MAX_EPOCHS <- 3000L
-
-FINAL_OUTPUT_STEM <- project_path(
-  "output",
-  "simulated",
-  "ann",
-  "final",
-  "simulated_ann"
+```{r run-final-ann, eval=RUN_ANN}
+dir.create(
+  "output/simulated/ann/final",
+  recursive = TRUE,
+  showWarnings = FALSE
 )
 
-FINAL_RESULTS_RDS <-
-  paste0(
-    FINAL_OUTPUT_STEM,
-    "_results.rds"
-  )
-FINAL_PREDICTIONS_RDS <-
-  paste0(
-    FINAL_OUTPUT_STEM,
-    "_predictions.rds"
-  )
-FINAL_EPOCH_RDS <-
-  paste0(
-    FINAL_OUTPUT_STEM,
-    "_epoch_selection.rds"
-  )
-FINAL_RUN_RDS <-
-  paste0(
-    FINAL_OUTPUT_STEM,
-    "_run_metadata.rds"
-  )
-
-FINAL_RESULTS_CSV <-
-  paste0(
-    FINAL_OUTPUT_STEM,
-    "_results.csv"
-  )
-FINAL_PREDICTIONS_CSV <-
-  paste0(
-    FINAL_OUTPUT_STEM,
-    "_predictions.csv"
-  )
-FINAL_EPOCH_CSV <-
-  paste0(
-    FINAL_OUTPUT_STEM,
-    "_epoch_selection.csv"
-  )
-
-FINAL_CONFIG_ID <- paste0(
-  "ANN_FINAL_CANONICAL_V2__FROM__",
-  ANN_TUNING_CONFIG_ID,
-  "__FINAL_EPOCH_CAP_",
-  FINAL_EPOCH_MAX_EPOCHS,
-  "__BEST_EPOCH_REFIT"
-)
-
-final_contract <- data.frame(
-  Item = c(
-    "Tuning source",
-    "Epoch ceiling",
-    "Final epoch rule",
-    "Outer assessment in tuning",
-    "Outer assessment in epoch selection",
-    "True G in selection"
-  ),
-  Value = c(
-    "ANN_TUNING_CANONICAL_V1",
-    FINAL_EPOCH_MAX_EPOCHS,
-    "Best_epoch selected inside outer-analysis; refit all 800",
-    FALSE,
-    FALSE,
-    FALSE
-  ),
-  stringsAsFactors = FALSE
-)
-
-format_table(
-  final_contract,
-  caption =
-    "Canonical final ANN contract",
-  row.names = FALSE
-)
-```
-
-The three `FALSE` entries are the key leakage controls: the outer assessment
-set is excluded from tuning and epoch selection, and true genetic values are
-used only after prediction for evaluation. `Best_epoch` is therefore selected
-without access to either final assessment target.
-
-### 13.2 Best-epoch selection
-
-`select_final_epoch()` uses only the current 800-individual outer-analysis set.
-That set is divided deterministically into fitting and early-validation
-subsets. Scaling is fitted on the fitting subset, and early stopping is allowed
-to search up to `FINAL_EPOCH_MAX_EPOCHS = 3000`.
-
-The best early-validation checkpoint determines `Best_epoch`. The outer
-assessment set is not used in this decision.
-
-```{r final-epoch-selection-functions}
-final_bias <- function(
-  predicted,
-  observed
-) {
-  mean(
-    predicted - observed
-  )
-}
-
-final_slope <- function(
-  predicted,
-  observed
-) {
-  as.numeric(
-    coef(
-      lm(
-        observed ~ predicted
-      )
-    )[2]
-  )
-}
-
-final_r2 <- function(
-  predicted,
-  observed
-) {
-  total_variation <- sum(
-    (
-      observed -
-      mean(observed)
-    )^2
-  )
-
-  1 -
-    sum(
-      (
-        observed -
-        predicted
-      )^2
-    ) /
-    total_variation
-}
-
-final_metrics <- function(
-  predicted,
-  observed,
-  prefix
-) {
-  values <- c(
-    correlation(predicted, observed),
-    rmse(predicted, observed),
-    mae(predicted, observed),
-    final_bias(predicted, observed),
-    final_slope(predicted, observed),
-    final_r2(predicted, observed)
-  )
-
-  names(values) <- paste0(
-    prefix,
-    c(
-      "_Correlation",
-      "_RMSE",
-      "_MAE",
-      "_Bias",
-      "_Slope",
-      "_R2"
-    )
-  )
-
-  values
-}
-
-select_final_epoch <- function(
-  analysis_ids,
-  scenario_index,
-  architecture,
-  learning_rate,
-  l1,
-  l2,
-  split_seed,
-  fit_seed
-) {
-  validation_split <-
-    make_validation_split(
-      analysis_ids,
-      EARLY_VALIDATION_FRACTION,
-      split_seed
-    )
-
-  fit_index <- match(
-    validation_split$train,
-    ids
-  )
-  validation_index <- match(
-    validation_split$validation,
-    ids
-  )
-
-  x_scaler <- fit_x_scaler(
-    geno[
-      fit_index,
-      ,
-      drop = FALSE
-    ]
-  )
-  y_scaler <- fit_y_scaler(
-    phenotype[
-      fit_index,
-      scenario_index
-    ]
-  )
-
-  x_fit <- scale_x(
-    geno[
-      fit_index,
-      ,
-      drop = FALSE
-    ],
-    x_scaler
-  )
-  x_validation <- scale_x(
-    geno[
-      validation_index,
-      ,
-      drop = FALSE
-    ],
-    x_scaler
-  )
-  y_fit <- scale_y(
-    phenotype[
-      fit_index,
-      scenario_index
-    ],
-    y_scaler
-  )
-  y_validation <- scale_y(
-    phenotype[
-      validation_index,
-      scenario_index
-    ],
-    y_scaler
-  )
-
-  set_ann_seed(fit_seed)
-
-  x_fit_tensor <-
-    torch::torch_tensor(
-      x_fit,
-      dtype = torch::torch_float()
-    )$to(device = ANN_DEVICE)
-
-  y_fit_tensor <-
-    torch::torch_tensor(
-      matrix(y_fit, ncol = 1),
-      dtype = torch::torch_float()
-    )$to(device = ANN_DEVICE)
-
-  x_validation_tensor <-
-    torch::torch_tensor(
-      x_validation,
-      dtype = torch::torch_float()
-    )$to(device = ANN_DEVICE)
-
-  y_validation_tensor <-
-    torch::torch_tensor(
-      matrix(y_validation, ncol = 1),
-      dtype = torch::torch_float()
-    )$to(device = ANN_DEVICE)
-
-  model <- TorchGenomicMLP(
-    ncol(x_fit),
-    ARCHITECTURES[[architecture]]
-  )$to(device = ANN_DEVICE)
-
-  optimizer <- torch::optim_adam(
-    params = model$parameters,
-    lr = learning_rate,
-    weight_decay = 0
-  )
-
-  best_validation_loss <- Inf
-  best_epoch <- 1L
-  best_state <- clone_state(model)
-  stale_epochs <- 0L
-  last_epoch <- 0L
-  stopped_by_patience <- FALSE
-
-  fit_start <-
-    proc.time()[["elapsed"]]
-
-  for (
-    epoch in seq_len(
-      FINAL_EPOCH_MAX_EPOCHS
-    )
-  ) {
-    last_epoch <- epoch
-
-    model$train()
-    optimizer$zero_grad()
-
-    prediction <-
-      model(x_fit_tensor)
-
-    loss <-
-      torch::nnf_mse_loss(
-        prediction,
-        y_fit_tensor
-      ) +
-      weight_penalty(
-        model,
-        l1,
-        l2
-      )
-
-    loss$backward()
-    optimizer$step()
-
-    model$eval()
-
-    validation_loss <-
-      torch::with_no_grad({
-        torch::nnf_mse_loss(
-          model(x_validation_tensor),
-          y_validation_tensor
-        )
-      })
-
-    validation_value <-
-      as.numeric(
-        validation_loss$to(
-          device =
-            torch::torch_device("cpu")
-        )
-      )
-
-    improved <-
-      validation_value <
-      best_validation_loss -
-      MIN_DELTA
-
-    if (improved) {
-      best_validation_loss <-
-        validation_value
-      best_epoch <- epoch
-      best_state <-
-        clone_state(model)
-      stale_epochs <- 0L
-    } else {
-      stale_epochs <-
-        stale_epochs + 1L
-    }
-
-    if (stale_epochs >= PATIENCE) {
-      stopped_by_patience <- TRUE
-      break
-    }
-  }
-
-  fit_seconds <-
-    proc.time()[["elapsed"]] -
-    fit_start
-
-  model$load_state_dict(
-    best_state
-  )
-  model$eval()
-
-  prediction_scaled <-
-    torch::with_no_grad({
-      as.numeric(
-        model(
-          x_validation_tensor
-        )$to(
-          device =
-            torch::torch_device("cpu")
-        )
-      )
-    })
-
-  prediction <-
-    unscale_y(
-      prediction_scaled,
-      y_scaler
-    )
-  observed <-
-    phenotype[
-      validation_index,
-      scenario_index
-    ]
-
-  list(
-    best_epoch =
-      as.integer(best_epoch),
-    last_epoch =
-      as.integer(last_epoch),
-    stopped_by_patience =
-      stopped_by_patience,
-    hit_epoch_ceiling =
-      last_epoch >=
-      FINAL_EPOCH_MAX_EPOCHS &&
-      !stopped_by_patience,
-    validation_rmse =
-      rmse(prediction, observed),
-    validation_correlation =
-      correlation(
-        prediction,
-        observed
-      ),
-    fit_seconds = fit_seconds,
-    n_fit =
-      length(
-        validation_split$train
-      ),
-    n_validation =
-      length(
-        validation_split$validation
-      )
-  )
-}
-```
-
-### 13.3 Refit on all outer-analysis individuals
-
-After `Best_epoch` has been selected, `train_final_fixed()` reinitializes the
-network and re-estimates marker and phenotype scaling from **all 800
-outer-analysis individuals**. The network is then trained for exactly the
-selected `Best_epoch`.
-
-No early stopping is applied during this refit: the selected epoch count is
-already fixed before the 200 outer-assessment individuals are predicted.
-
-```{r final-fixed-refit-function}
-train_final_fixed <- function(
-  train_ids,
-  assessment_ids,
-  scenario_index,
-  architecture,
-  learning_rate,
-  l1,
-  l2,
-  epochs,
-  seed
-) {
-  train_index <- match(
-    train_ids,
-    ids
-  )
-  assessment_index <- match(
-    assessment_ids,
-    ids
-  )
-
-  x_scaler <- fit_x_scaler(
-    geno[
-      train_index,
-      ,
-      drop = FALSE
-    ]
-  )
-  y_scaler <- fit_y_scaler(
-    phenotype[
-      train_index,
-      scenario_index
-    ]
-  )
-
-  x_train <- scale_x(
-    geno[
-      train_index,
-      ,
-      drop = FALSE
-    ],
-    x_scaler
-  )
-  x_assessment <- scale_x(
-    geno[
-      assessment_index,
-      ,
-      drop = FALSE
-    ],
-    x_scaler
-  )
-  y_train <- scale_y(
-    phenotype[
-      train_index,
-      scenario_index
-    ],
-    y_scaler
-  )
-
-  set_ann_seed(seed)
-
-  x_train_tensor <-
-    torch::torch_tensor(
-      x_train,
-      dtype = torch::torch_float()
-    )$to(device = ANN_DEVICE)
-
-  y_train_tensor <-
-    torch::torch_tensor(
-      matrix(y_train, ncol = 1),
-      dtype = torch::torch_float()
-    )$to(device = ANN_DEVICE)
-
-  x_assessment_tensor <-
-    torch::torch_tensor(
-      x_assessment,
-      dtype = torch::torch_float()
-    )$to(device = ANN_DEVICE)
-
-  model <- TorchGenomicMLP(
-    ncol(x_train),
-    ARCHITECTURES[[architecture]]
-  )$to(device = ANN_DEVICE)
-
-  optimizer <- torch::optim_adam(
-    params = model$parameters,
-    lr = learning_rate,
-    weight_decay = 0
-  )
-
-  fit_start <-
-    proc.time()[["elapsed"]]
-
-  for (
-    epoch in seq_len(
-      as.integer(epochs)
-    )
-  ) {
-    model$train()
-    optimizer$zero_grad()
-
-    prediction <-
-      model(x_train_tensor)
-
-    loss <-
-      torch::nnf_mse_loss(
-        prediction,
-        y_train_tensor
-      ) +
-      weight_penalty(
-        model,
-        l1,
-        l2
-      )
-
-    loss$backward()
-    optimizer$step()
-  }
-
-  fit_seconds <-
-    proc.time()[["elapsed"]] -
-    fit_start
-
-  model$eval()
-
-  prediction_start <-
-    proc.time()[["elapsed"]]
-
-  prediction_scaled <-
-    torch::with_no_grad({
-      as.numeric(
-        model(
-          x_assessment_tensor
-        )$to(
-          device =
-            torch::torch_device("cpu")
-        )
-      )
-    })
-
-  prediction_seconds <-
-    proc.time()[["elapsed"]] -
-    prediction_start
-
-  list(
-    prediction = unscale_y(
-      prediction_scaled,
-      y_scaler
-    ),
-    fit_seconds =
-      fit_seconds,
-    prediction_seconds =
-      prediction_seconds,
-    zero_variance_markers =
-      sum(x_scaler$zero)
-  )
-}
-```
-
-### 13.4 Held-out predictions
-
-The 150 final tasks reuse the same frozen outer splits and task identifiers used
-during tuning. Each task is fitted for all four ANN variants, producing
-**600 model-by-task fits**. Every fitted model predicts the same 200 untouched
-outer-assessment individuals for its task.
-
-```{r final-ann-tasks}
 outer_map <- unique(
   cv$outer_assignments[
-    ,
-    c(
-      "Repetition",
-      "OuterFold",
-      "SplitID"
-    )
+    , c("Repetition", "OuterFold", "SplitID")
   ]
 )
-
 outer_map <- outer_map[
-  order(
-    outer_map$Repetition,
-    outer_map$OuterFold
-  ),
+  order(outer_map$Repetition, outer_map$OuterFold),
   ,
   drop = FALSE
 ]
@@ -3279,92 +1568,57 @@ final_task_table <- merge(
   outer_map,
   by = NULL
 )
-
 final_task_table <- final_task_table[
   order(
-    match(
-      final_task_table$Scenario,
-      scenario_names
-    ),
+    match(final_task_table$Scenario, scenario_names),
     final_task_table$Repetition,
     final_task_table$OuterFold
   ),
   ,
   drop = FALSE
 ]
-
-final_task_table$Fold <-
-  final_task_table$OuterFold
+final_task_table$Fold <- final_task_table$OuterFold
 final_task_table$TaskID <- paste(
   final_task_table$Scenario,
   final_task_table$SplitID,
   sep = "_"
 )
-
 rownames(final_task_table) <- NULL
 
-format_table(
-  head(final_task_table, 15),
-  caption =
-    "First 15 canonical ANN final tasks",
-  row.names = FALSE
-)
-```
-
-Each row is one `Scenario × outer split` final-prediction task. The four ANN
-variants reuse the same `TaskID`. The final loop below first selects
-`Best_epoch`, then refits the corresponding model on all 800 outer-analysis
-individuals, and only afterward predicts the 200 outer-assessment individuals.
-
-True genetic values and observed phenotypes from the outer assessment are
-accessed only after prediction, when the held-out evaluation metrics are
-constructed.
-
-```{r run-final-ann, eval=RUN_ANN}
-dir.create(
-  dirname(FINAL_RESULTS_RDS),
-  recursive = TRUE,
-  showWarnings = FALSE
-)
-
-true_g <-
-  common$true_genetic_value
-control <-
-  common$scenario_control
-
-run_start <-
-  proc.time()[["elapsed"]]
-
-task_outputs <- vector(
+result_task_rows <- vector(
   "list",
   nrow(final_task_table)
 )
+prediction_task_rows <- vector(
+  "list",
+  nrow(final_task_table)
+)
+epoch_task_rows <- vector(
+  "list",
+  nrow(final_task_table)
+)
+final_task_seconds <- numeric(
+  nrow(final_task_table)
+)
 
-for (
-  task_index in seq_len(
-    nrow(final_task_table)
-  )
-) {
+run_start <- proc.time()[["elapsed"]]
+
+for (task_index in seq_len(nrow(final_task_table))) {
   task <- final_task_table[
     task_index,
     ,
     drop = FALSE
   ]
-
   scenario_index <- match(
     task$Scenario,
     scenario_names
   )
-  outer <-
-    cv$outer_splits[[task$SplitID]]
-
-  selected_for_task <-
-    selected_configurations[
-      selected_configurations$TaskID ==
-        task$TaskID,
-      ,
-      drop = FALSE
-    ]
+  outer <- cv$outer_splits[[task$SplitID]]
+  selected_for_task <- selected_configurations[
+    selected_configurations$TaskID == task$TaskID,
+    ,
+    drop = FALSE
+  ]
 
   seed_base <-
     SEED_GLOBAL +
@@ -3372,12 +1626,9 @@ for (
     task$Repetition * 100000L +
     task$OuterFold * 10000L
 
-  split_seed <-
-    seed_base + 8000000L
-  epoch_seed <-
-    seed_base + 8100000L
-  final_fit_seed <-
-    seed_base + 8200000L
+  split_seed <- seed_base + 8000000L
+  epoch_seed <- seed_base + 8100000L
+  final_fit_seed <- seed_base + 8200000L
 
   result_rows <- vector(
     "list",
@@ -3392,93 +1643,444 @@ for (
     length(MODEL_LEVELS)
   )
 
-  task_start <-
-    proc.time()[["elapsed"]]
+  task_start <- proc.time()[["elapsed"]]
 
-  for (
-    model_index in seq_along(
-      MODEL_LEVELS
+  for (model_index in seq_along(MODEL_LEVELS)) {
+    model_name <- MODEL_LEVELS[model_index]
+    config <- selected_for_task[
+      selected_for_task$Model == model_name,
+      ,
+      drop = FALSE
+    ]
+
+    # Select Best_epoch using only the 800 outer-analysis individuals.
+    set.seed(split_seed)
+    n_validation <- as.integer(
+      round(
+        length(outer$analysis_ids) *
+        EARLY_VALIDATION_FRACTION
+      )
     )
-  ) {
-    model_name <-
-      MODEL_LEVELS[model_index]
-
-    config <-
-      selected_for_task[
-        selected_for_task$Model ==
-          model_name,
-        ,
-        drop = FALSE
-      ]
-
-    epoch_fit <- select_final_epoch(
-      analysis_ids =
+    validation_ids <- sort(
+      sample(
         outer$analysis_ids,
-      scenario_index =
-        scenario_index,
-      architecture =
-        config$Architecture,
-      learning_rate =
-        config$Learning_rate,
-      l1 = config$L1,
-      l2 = config$L2,
-      split_seed =
-        split_seed,
-      fit_seed =
-        epoch_seed
+        n_validation,
+        replace = FALSE
+      )
     )
-
-    final_fit <- train_final_fixed(
-      train_ids =
+    fit_ids <- sort(
+      setdiff(
         outer$analysis_ids,
-      assessment_ids =
-        outer$assessment_ids,
-      scenario_index =
-        scenario_index,
-      architecture =
-        config$Architecture,
-      learning_rate =
-        config$Learning_rate,
-      l1 = config$L1,
-      l2 = config$L2,
-      epochs =
-        epoch_fit$best_epoch,
-      seed =
-        final_fit_seed
+        validation_ids
+      )
     )
 
+    fit_index <- match(fit_ids, ids)
+    validation_index <- match(validation_ids, ids)
+
+    x_center <- colMeans(
+      geno[fit_index, , drop = FALSE]
+    )
+    x_scale <- apply(
+      geno[fit_index, , drop = FALSE],
+      2,
+      sd
+    )
+    x_scale[x_scale < 1e-8] <- 1
+
+    y_center <- mean(
+      phenotype[fit_index, scenario_index]
+    )
+    y_scale <- max(
+      sd(phenotype[fit_index, scenario_index]),
+      1e-8
+    )
+
+    x_fit <- sweep(
+      sweep(
+        geno[fit_index, , drop = FALSE],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+    x_validation <- sweep(
+      sweep(
+        geno[validation_index, , drop = FALSE],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+    y_fit <-
+      (phenotype[fit_index, scenario_index] - y_center) /
+      y_scale
+    y_validation <-
+      (phenotype[validation_index, scenario_index] - y_center) /
+      y_scale
+
+    set.seed(as.integer(epoch_seed))
+    torch::torch_manual_seed(as.integer(epoch_seed))
+
+    x_fit_tensor <- torch::torch_tensor(
+      x_fit,
+      dtype = torch::torch_float()
+    )$to(device = ANN_DEVICE)
+    y_fit_tensor <- torch::torch_tensor(
+      matrix(y_fit, ncol = 1),
+      dtype = torch::torch_float()
+    )$to(device = ANN_DEVICE)
+    x_validation_tensor <- torch::torch_tensor(
+      x_validation,
+      dtype = torch::torch_float()
+    )$to(device = ANN_DEVICE)
+    y_validation_tensor <- torch::torch_tensor(
+      matrix(y_validation, ncol = 1),
+      dtype = torch::torch_float()
+    )$to(device = ANN_DEVICE)
+
+    model <- TorchGenomicMLP(
+      ncol(x_fit),
+      ARCHITECTURES[[config$Architecture]]
+    )$to(device = ANN_DEVICE)
+    optimizer <- torch::optim_adam(
+      params = model$parameters,
+      lr = config$Learning_rate,
+      weight_decay = 0
+    )
+
+    best_validation_loss <- Inf
+    best_epoch <- 1L
+    state <- model$state_dict()
+    best_state <- state
+    for (state_name in names(state)) {
+      best_state[[state_name]] <-
+        state[[state_name]]$detach()$clone()
+    }
+    stale_epochs <- 0L
+    last_epoch <- 0L
+    stopped_by_patience <- FALSE
+
+    if (ANN_DEVICE_LABEL == "cuda") {
+      torch::cuda_synchronize()
+    }
+    epoch_fit_start <- proc.time()[["elapsed"]]
+
+    for (epoch in seq_len(FINAL_EPOCH_MAX_EPOCHS)) {
+      last_epoch <- epoch
+      model$train()
+      optimizer$zero_grad()
+
+      prediction <- model(x_fit_tensor)
+      penalty_l1 <- prediction$sum() * 0
+      penalty_l2 <- prediction$sum() * 0
+
+      for (layer_index in seq_len(length(model$linears))) {
+        weight <- model$linears[[layer_index]]$weight
+        penalty_l1 <- penalty_l1 + weight$abs()$sum()
+        penalty_l2 <- penalty_l2 + weight$pow(2)$sum()
+      }
+      weight <- model$output$weight
+      penalty_l1 <- penalty_l1 + weight$abs()$sum()
+      penalty_l2 <- penalty_l2 + weight$pow(2)$sum()
+
+      loss <-
+        torch::nnf_mse_loss(
+          prediction,
+          y_fit_tensor
+        ) +
+        config$L1 * penalty_l1 +
+        (config$L2 / 2) * penalty_l2
+
+      loss$backward()
+      optimizer$step()
+
+      model$eval()
+      validation_loss <- torch::with_no_grad({
+        torch::nnf_mse_loss(
+          model(x_validation_tensor),
+          y_validation_tensor
+        )
+      })
+      validation_value <- as.numeric(
+        validation_loss$to(
+          device = torch::torch_device("cpu")
+        )
+      )
+
+      improved <-
+        validation_value <
+        best_validation_loss - MIN_DELTA
+
+      if (improved) {
+        best_validation_loss <- validation_value
+        best_epoch <- epoch
+        state <- model$state_dict()
+        best_state <- state
+        for (state_name in names(state)) {
+          best_state[[state_name]] <-
+            state[[state_name]]$detach()$clone()
+        }
+        stale_epochs <- 0L
+      } else {
+        stale_epochs <- stale_epochs + 1L
+      }
+
+      if (stale_epochs >= PATIENCE) {
+        stopped_by_patience <- TRUE
+        break
+      }
+    }
+
+    if (ANN_DEVICE_LABEL == "cuda") {
+      torch::cuda_synchronize()
+    }
+    epoch_fit_seconds <-
+      proc.time()[["elapsed"]] - epoch_fit_start
+
+    model$load_state_dict(best_state)
+    model$eval()
+    validation_prediction_scaled <- torch::with_no_grad({
+      as.numeric(
+        model(x_validation_tensor)$to(
+          device = torch::torch_device("cpu")
+        )
+      )
+    })
+    validation_prediction <-
+      validation_prediction_scaled * y_scale +
+      y_center
+    validation_observed <- phenotype[
+      validation_index,
+      scenario_index
+    ]
+
+    validation_rmse <- sqrt(
+      mean(
+        (validation_prediction - validation_observed)^2
+      )
+    )
+    validation_correlation <- cor(
+      validation_prediction,
+      validation_observed
+    )
+
+    # Refit all 800 outer-analysis individuals for exactly Best_epoch.
+    train_index <- match(outer$analysis_ids, ids)
     assessment_index <- match(
       outer$assessment_ids,
       ids
     )
 
-    observed <-
-      phenotype[
-        assessment_index,
-        scenario_index
-      ]
-    true_genetic_value <-
-      true_g[
-        assessment_index,
-        scenario_index
-      ]
-    predicted_value <-
-      final_fit$prediction
+    x_center <- colMeans(
+      geno[train_index, , drop = FALSE]
+    )
+    x_scale <- apply(
+      geno[train_index, , drop = FALSE],
+      2,
+      sd
+    )
+    zero_variance <- x_scale < 1e-8
+    x_scale[zero_variance] <- 1
 
-    genetic_metrics <- final_metrics(
-      predicted_value,
-      true_genetic_value,
-      "Genetic"
+    y_center <- mean(
+      phenotype[train_index, scenario_index]
     )
-    phenotype_metrics <- final_metrics(
-      predicted_value,
-      observed,
-      "Phenotype"
+    y_scale <- max(
+      sd(phenotype[train_index, scenario_index]),
+      1e-8
     )
+
+    x_train <- sweep(
+      sweep(
+        geno[train_index, , drop = FALSE],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+    x_assessment <- sweep(
+      sweep(
+        geno[assessment_index, , drop = FALSE],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+    y_train <-
+      (phenotype[train_index, scenario_index] - y_center) /
+      y_scale
+
+    set.seed(as.integer(final_fit_seed))
+    torch::torch_manual_seed(as.integer(final_fit_seed))
+
+    x_train_tensor <- torch::torch_tensor(
+      x_train,
+      dtype = torch::torch_float()
+    )$to(device = ANN_DEVICE)
+    y_train_tensor <- torch::torch_tensor(
+      matrix(y_train, ncol = 1),
+      dtype = torch::torch_float()
+    )$to(device = ANN_DEVICE)
+    x_assessment_tensor <- torch::torch_tensor(
+      x_assessment,
+      dtype = torch::torch_float()
+    )$to(device = ANN_DEVICE)
+
+    model <- TorchGenomicMLP(
+      ncol(x_train),
+      ARCHITECTURES[[config$Architecture]]
+    )$to(device = ANN_DEVICE)
+    optimizer <- torch::optim_adam(
+      params = model$parameters,
+      lr = config$Learning_rate,
+      weight_decay = 0
+    )
+
+    if (ANN_DEVICE_LABEL == "cuda") {
+      torch::cuda_synchronize()
+    }
+    final_fit_start <- proc.time()[["elapsed"]]
+
+    for (epoch in seq_len(as.integer(best_epoch))) {
+      model$train()
+      optimizer$zero_grad()
+
+      prediction <- model(x_train_tensor)
+      penalty_l1 <- prediction$sum() * 0
+      penalty_l2 <- prediction$sum() * 0
+
+      for (layer_index in seq_len(length(model$linears))) {
+        weight <- model$linears[[layer_index]]$weight
+        penalty_l1 <- penalty_l1 + weight$abs()$sum()
+        penalty_l2 <- penalty_l2 + weight$pow(2)$sum()
+      }
+      weight <- model$output$weight
+      penalty_l1 <- penalty_l1 + weight$abs()$sum()
+      penalty_l2 <- penalty_l2 + weight$pow(2)$sum()
+
+      loss <-
+        torch::nnf_mse_loss(
+          prediction,
+          y_train_tensor
+        ) +
+        config$L1 * penalty_l1 +
+        (config$L2 / 2) * penalty_l2
+
+      loss$backward()
+      optimizer$step()
+    }
+
+    if (ANN_DEVICE_LABEL == "cuda") {
+      torch::cuda_synchronize()
+    }
+    final_fit_seconds <-
+      proc.time()[["elapsed"]] - final_fit_start
+
+    model$eval()
+    prediction_start <- proc.time()[["elapsed"]]
+    predicted_scaled <- torch::with_no_grad({
+      as.numeric(
+        model(x_assessment_tensor)$to(
+          device = torch::torch_device("cpu")
+        )
+      )
+    })
+    prediction_seconds <-
+      proc.time()[["elapsed"]] - prediction_start
+
+    predicted_value <-
+      predicted_scaled * y_scale + y_center
+
+    # Held-out targets are accessed only after prediction already exists.
+    observed <- phenotype[
+      assessment_index,
+      scenario_index
+    ]
+    true_genetic_value <- common$true_genetic_value[
+      assessment_index,
+      scenario_index
+    ]
+
+    genetic_correlation <- cor(
+      predicted_value,
+      true_genetic_value
+    )
+    genetic_rmse <- sqrt(
+      mean(
+        (predicted_value - true_genetic_value)^2
+      )
+    )
+    genetic_mae <- mean(
+      abs(
+        predicted_value - true_genetic_value
+      )
+    )
+    genetic_bias <- mean(
+      predicted_value - true_genetic_value
+    )
+    genetic_slope <- as.numeric(
+      coef(
+        lm(
+          true_genetic_value ~ predicted_value
+        )
+      )[2]
+    )
+    genetic_r2 <- 1 -
+      sum(
+        (true_genetic_value - predicted_value)^2
+      ) /
+      sum(
+        (
+          true_genetic_value -
+          mean(true_genetic_value)
+        )^2
+      )
+
+    phenotype_correlation <- cor(
+      predicted_value,
+      observed
+    )
+    phenotype_rmse <- sqrt(
+      mean(
+        (predicted_value - observed)^2
+      )
+    )
+    phenotype_mae <- mean(
+      abs(
+        predicted_value - observed
+      )
+    )
+    phenotype_bias <- mean(
+      predicted_value - observed
+    )
+    phenotype_slope <- as.numeric(
+      coef(
+        lm(observed ~ predicted_value)
+      )[2]
+    )
+    phenotype_r2 <- 1 -
+      sum(
+        (observed - predicted_value)^2
+      ) /
+      sum(
+        (observed - mean(observed))^2
+      )
 
     meta <- control[
-      control$Scenario ==
-        task$Scenario,
+      control$Scenario == task$Scenario,
       ,
       drop = FALSE
     ]
@@ -3493,90 +2095,38 @@ for (
       SplitID = task$SplitID,
       TaskID = task$TaskID,
       Model = model_name,
-      Architecture =
-        config$Architecture,
-      Learning_rate =
-        config$Learning_rate,
+      Architecture = config$Architecture,
+      Learning_rate = config$Learning_rate,
       L1 = config$L1,
       L2 = config$L2,
-      Best_epoch =
-        epoch_fit$best_epoch,
-      Epoch_Last =
-        epoch_fit$last_epoch,
-      Epoch_Stopped_by_patience =
-        epoch_fit$stopped_by_patience,
+      Best_epoch = as.integer(best_epoch),
+      Epoch_Last = as.integer(last_epoch),
+      Epoch_Stopped_by_patience = stopped_by_patience,
       Epoch_Hit_ceiling =
-        epoch_fit$hit_epoch_ceiling,
-      Inner_RMSE =
-        config$Inner_RMSE,
-      Inner_Correlation =
-        config$Inner_Correlation,
-      Inner_MAE =
-        config$Inner_MAE,
+        last_epoch >= FINAL_EPOCH_MAX_EPOCHS &&
+        !stopped_by_patience,
+      Inner_RMSE = config$Inner_RMSE,
+      Inner_Correlation = config$Inner_Correlation,
+      Inner_MAE = config$Inner_MAE,
       N_train = 800L,
       N_test = 200L,
-      N_pred_finite =
-        sum(
-          is.finite(
-            predicted_value
-          )
-        ),
-      N_zero_variance_markers =
-        final_fit$zero_variance_markers,
-      Genetic_Correlation =
-        genetic_metrics[
-          "Genetic_Correlation"
-        ],
-      Genetic_RMSE =
-        genetic_metrics[
-          "Genetic_RMSE"
-        ],
-      Genetic_MAE =
-        genetic_metrics[
-          "Genetic_MAE"
-        ],
-      Genetic_Bias =
-        genetic_metrics[
-          "Genetic_Bias"
-        ],
-      Genetic_Slope =
-        genetic_metrics[
-          "Genetic_Slope"
-        ],
-      Genetic_R2 =
-        genetic_metrics[
-          "Genetic_R2"
-        ],
-      Phenotype_Correlation =
-        phenotype_metrics[
-          "Phenotype_Correlation"
-        ],
-      Phenotype_RMSE =
-        phenotype_metrics[
-          "Phenotype_RMSE"
-        ],
-      Phenotype_MAE =
-        phenotype_metrics[
-          "Phenotype_MAE"
-        ],
-      Phenotype_Bias =
-        phenotype_metrics[
-          "Phenotype_Bias"
-        ],
-      Phenotype_Slope =
-        phenotype_metrics[
-          "Phenotype_Slope"
-        ],
-      Phenotype_R2 =
-        phenotype_metrics[
-          "Phenotype_R2"
-        ],
-      Epoch_selection_seconds =
-        epoch_fit$fit_seconds,
-      Final_fit_seconds =
-        final_fit$fit_seconds,
-      Predict_seconds =
-        final_fit$prediction_seconds,
+      N_pred_finite = sum(is.finite(predicted_value)),
+      N_zero_variance_markers = sum(zero_variance),
+      Genetic_Correlation = genetic_correlation,
+      Genetic_RMSE = genetic_rmse,
+      Genetic_MAE = genetic_mae,
+      Genetic_Bias = genetic_bias,
+      Genetic_Slope = genetic_slope,
+      Genetic_R2 = genetic_r2,
+      Phenotype_Correlation = phenotype_correlation,
+      Phenotype_RMSE = phenotype_rmse,
+      Phenotype_MAE = phenotype_mae,
+      Phenotype_Bias = phenotype_bias,
+      Phenotype_Slope = phenotype_slope,
+      Phenotype_R2 = phenotype_r2,
+      Epoch_selection_seconds = epoch_fit_seconds,
+      Final_fit_seconds = final_fit_seconds,
+      Predict_seconds = prediction_seconds,
       Status = "ok",
       Error = NA_character_,
       stringsAsFactors = FALSE
@@ -3592,21 +2142,15 @@ for (
       SplitID = task$SplitID,
       TaskID = task$TaskID,
       Model = model_name,
-      Architecture =
-        config$Architecture,
-      Learning_rate =
-        config$Learning_rate,
+      Architecture = config$Architecture,
+      Learning_rate = config$Learning_rate,
       L1 = config$L1,
       L2 = config$L2,
-      Best_epoch =
-        epoch_fit$best_epoch,
+      Best_epoch = as.integer(best_epoch),
       ID = ids[assessment_index],
-      Observed_Phenotype =
-        observed,
-      True_Genetic_Value =
-        true_genetic_value,
-      Predicted_Value =
-        predicted_value,
+      Observed_Phenotype = observed,
+      True_Genetic_Value = true_genetic_value,
+      Predicted_Value = predicted_value,
       Status = "ok",
       stringsAsFactors = FALSE
     )
@@ -3618,51 +2162,40 @@ for (
       SplitID = task$SplitID,
       TaskID = task$TaskID,
       Model = model_name,
-      Architecture =
-        config$Architecture,
-      Learning_rate =
-        config$Learning_rate,
+      Architecture = config$Architecture,
+      Learning_rate = config$Learning_rate,
       L1 = config$L1,
       L2 = config$L2,
-      Best_epoch =
-        epoch_fit$best_epoch,
-      Last_epoch =
-        epoch_fit$last_epoch,
-      Stopped_by_patience =
-        epoch_fit$stopped_by_patience,
+      Best_epoch = as.integer(best_epoch),
+      Last_epoch = as.integer(last_epoch),
+      Stopped_by_patience = stopped_by_patience,
       Hit_epoch_ceiling =
-        epoch_fit$hit_epoch_ceiling,
-      Validation_RMSE =
-        epoch_fit$validation_rmse,
-      Validation_Correlation =
-        epoch_fit$validation_correlation,
-      N_epoch_fit =
-        epoch_fit$n_fit,
-      N_epoch_validation =
-        epoch_fit$n_validation,
-      Fit_seconds =
-        epoch_fit$fit_seconds,
+        last_epoch >= FINAL_EPOCH_MAX_EPOCHS &&
+        !stopped_by_patience,
+      Validation_RMSE = validation_rmse,
+      Validation_Correlation = validation_correlation,
+      N_epoch_fit = length(fit_ids),
+      N_epoch_validation = length(validation_ids),
+      Fit_seconds = epoch_fit_seconds,
       stringsAsFactors = FALSE
     )
   }
 
-  task_outputs[[task_index]] <- list(
-    results = do.call(
-      rbind,
-      result_rows
-    ),
-    predictions = do.call(
-      rbind,
-      prediction_rows
-    ),
-    epoch_selection = do.call(
-      rbind,
-      epoch_rows
-    ),
-    task_seconds =
-      proc.time()[["elapsed"]] -
-      task_start
+  result_task_rows[[task_index]] <- do.call(
+    rbind,
+    result_rows
   )
+  prediction_task_rows[[task_index]] <- do.call(
+    rbind,
+    prediction_rows
+  )
+  epoch_task_rows[[task_index]] <- do.call(
+    rbind,
+    epoch_rows
+  )
+
+  final_task_seconds[task_index] <-
+    proc.time()[["elapsed"]] - task_start
 
   cat(
     sprintf(
@@ -3670,105 +2203,51 @@ for (
       task_index,
       nrow(final_task_table),
       task$TaskID,
-      task_outputs[[task_index]]$task_seconds / 60
+      final_task_seconds[task_index] / 60
     )
   )
 }
 
-results <- do.call(
-  rbind,
-  lapply(
-    task_outputs,
-    function(task_output) {
-      task_output$results
-    }
-  )
-)
-predictions <- do.call(
-  rbind,
-  lapply(
-    task_outputs,
-    function(task_output) {
-      task_output$predictions
-    }
-  )
-)
-epoch_selection <- do.call(
-  rbind,
-  lapply(
-    task_outputs,
-    function(task_output) {
-      task_output$epoch_selection
-    }
-  )
-)
+results <- do.call(rbind, result_task_rows)
+predictions <- do.call(rbind, prediction_task_rows)
+epoch_selection <- do.call(rbind, epoch_task_rows)
 
 rownames(results) <- NULL
 rownames(predictions) <- NULL
 rownames(epoch_selection) <- NULL
 
 run_seconds <-
-  proc.time()[["elapsed"]] -
-  run_start
-
-task_seconds_total <- sum(
-  vapply(
-    task_outputs,
-    function(task_output) {
-      task_output$task_seconds
-    },
-    numeric(1)
-  )
-)
+  proc.time()[["elapsed"]] - run_start
 
 final_meta <- list(
   dataset = "simulated",
-  analysis =
-    "canonical_simulated_ann",
+  analysis = "canonical_simulated_ann",
   mode = "full",
   pilot_task = NA_character_,
   config_id = FINAL_CONFIG_ID,
-  tuning_config_id =
-    ANN_TUNING_CONFIG_ID,
+  tuning_config_id = ANN_TUNING_CONFIG_ID,
   seed_global = SEED_GLOBAL,
   models = MODEL_LEVELS,
-  tuning_max_epochs =
-    MAX_EPOCHS,
-  final_epoch_max_epochs =
-    FINAL_EPOCH_MAX_EPOCHS,
+  tuning_max_epochs = MAX_EPOCHS,
+  final_epoch_max_epochs = FINAL_EPOCH_MAX_EPOCHS,
   patience = PATIENCE,
   min_delta = MIN_DELTA,
-  early_validation_fraction =
-    EARLY_VALIDATION_FRACTION,
+  early_validation_fraction = EARLY_VALIDATION_FRACTION,
   final_refit_rule =
     "Best_epoch selected inside outer-analysis, then refit on all 800",
-  outer_assessment_used_in_tuning =
-    FALSE,
-  outer_assessment_used_in_epoch_selection =
-    FALSE,
-  true_genetic_value_used_in_selection =
-    FALSE,
-  number_tasks =
-    nrow(final_task_table),
-  model_task_rows =
-    nrow(results),
-  prediction_rows =
-    nrow(predictions),
-  epoch_selection_rows =
-    nrow(epoch_selection),
-  torch_version =
-    as.character(
-      packageVersion("torch")
-    ),
+  outer_assessment_used_in_tuning = FALSE,
+  outer_assessment_used_in_epoch_selection = FALSE,
+  true_genetic_value_used_in_selection = FALSE,
+  number_tasks = nrow(final_task_table),
+  model_task_rows = nrow(results),
+  prediction_rows = nrow(predictions),
+  epoch_selection_rows = nrow(epoch_selection),
+  torch_version = as.character(packageVersion("torch")),
   device = ANN_DEVICE_LABEL,
-  cuda_available =
-    cuda_available,
-  current_session_seconds =
-    run_seconds,
-  checkpoint_task_seconds =
-    task_seconds_total,
-  timestamp =
-    as.character(Sys.time())
+  cuda_available = cuda_available,
+  current_session_seconds = run_seconds,
+  checkpoint_task_seconds = sum(final_task_seconds),
+  timestamp = as.character(Sys.time())
 )
 
 saveRDS(
@@ -3809,67 +2288,65 @@ write.csv(
 )
 ```
 
-## 14. Canonical final results
+## 8. Saved ANN results
 
-The final performance tables use the canonical 600 model-task results,
-120,000 held-out predictions, and 600 epoch-selection records. These saved
-objects are loaded and checked internally before the reader-facing summaries are
-constructed.
+The normal page build reads the completed final ANN outputs. This keeps the
+scientific results fixed while allowing the explanation, tables, and figures to
+be rebuilt without reexecuting tuning or final fitting.
 
-```{r final-saved-results}
+```{r saved-final-results}
 results <- readRDS(FINAL_RESULTS_RDS)
 predictions <- readRDS(FINAL_PREDICTIONS_RDS)
 epoch_selection <- readRDS(FINAL_EPOCH_RDS)
 final_meta <- readRDS(FINAL_RUN_RDS)
 
 final_output_summary <- data.frame(
-  Object = c("Model-task results", "Held-out predictions", "Epoch selections"),
-  Rows = c(nrow(results), nrow(predictions), nrow(epoch_selection)),
+  Object = c(
+    "Model-task results",
+    "Held-out predictions",
+    "Epoch selections"
+  ),
+  Rows = c(
+    nrow(results),
+    nrow(predictions),
+    nrow(epoch_selection)
+  ),
   Unique_tasks = c(
     length(unique(results$TaskID)),
     length(unique(predictions$TaskID)),
     length(unique(epoch_selection$TaskID))
+  ),
+  stringsAsFactors = FALSE
+)
+
+final_output_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Stored final ANN result structure",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
   )
-)
-format_table(
-  final_output_summary,
-  caption = "Observed size of the canonical final ANN outputs",
-  row.names = FALSE
-)
-cat("\nFinal Best_epoch summary:\n")
-print(summary(epoch_selection$Best_epoch))
-cat(
-  "\nFinal epoch-selection fits reaching the",
-  FINAL_EPOCH_MAX_EPOCHS,
-  "epoch ceiling:",
-  sum(epoch_selection$Hit_epoch_ceiling, na.rm = TRUE),
-  "/", nrow(epoch_selection), "\n"
-)
 ```
 
-Across the `r nrow(epoch_selection)` final epoch-selection fits,
-`r sum(epoch_selection$Stopped_by_patience, na.rm = TRUE)` stopped by patience
-and `r sum(epoch_selection$Hit_epoch_ceiling, na.rm = TRUE)` reached the
-`r FINAL_EPOCH_MAX_EPOCHS`-epoch ceiling. Thus, the safety ceiling did not define
-a common training length; each final network was subsequently refit for its own
-selected `Best_epoch`.
+The stored benchmark contains **600 model-task results**, **120,000 held-out
+predictions**, and **600 epoch-selection records**. The historical `Status =
+"ok"` field indicates that a fit returned and produced stored predictions; it is
+not interpreted as a formal proof of numerical convergence.
 
+## 9. Predictive performance
 
-## 15. Predictive performance
+Recovery of the known true genetic value is the primary evaluation target.
+Phenotype prediction is retained as a secondary target because phenotype also
+contains residual variation.
 
-Final performance is summarized separately for the two evaluation targets.
-Recovery of the known **true genetic value** is the primary simulated-data
-criterion; prediction of the **observed phenotype** is secondary. Both summaries
-average the same 25 frozen outer splits for each scenario and ANN variant.
-
-```{r final-ann-performance-calculations}
+```{r performance-summary}
 ok <- results[
   results$Status == "ok",
   ,
   drop = FALSE
 ]
 
-perf <- aggregate(
+scenario_performance <- aggregate(
   cbind(
     Genetic_Correlation,
     Genetic_RMSE,
@@ -3889,85 +2366,199 @@ perf <- aggregate(
   na.rm = TRUE
 )
 
-perf <- perf[
+scenario_performance <- scenario_performance[
   order(
-    match(
-      perf$Scenario,
-      scenario_names
-    ),
-    match(
-      perf$Model,
-      MODEL_LEVELS
-    )
+    match(scenario_performance$Scenario, scenario_names),
+    match(scenario_performance$Model, MODEL_LEVELS)
   ),
   ,
   drop = FALSE
 ]
 
-rownames(perf) <- NULL
+scenario_performance[
+  , c(
+    "Scenario",
+    "Model",
+    "QTL_N",
+    "H2_nominal",
+    "Genetic_Correlation",
+    "Genetic_RMSE",
+    "Genetic_MAE",
+    "Genetic_Bias",
+    "Genetic_Slope",
+    "Genetic_R2"
+  )
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Primary evaluation: mean outer-split ANN performance against true genetic value",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-### 15.1 True genetic value
+Here, larger **Pearson correlation** means stronger linear association with the
+known genetic signal. Smaller RMSE and MAE indicate smaller absolute prediction
+error. Bias near zero and calibration slope near one describe calibration on the
+held-out scale.
 
-The primary evaluation compares held-out ANN predictions with the known simulated genetic value. Correlation and \(R^2\) increase with better agreement, whereas RMSE and MAE decrease with better prediction. Bias near zero and slope near one indicate better calibration.
+```{r phenotype-performance}
+scenario_performance[
+  , c(
+    "Scenario",
+    "Model",
+    "Phenotype_Correlation",
+    "Phenotype_RMSE",
+    "Phenotype_MAE",
+    "Phenotype_Bias",
+    "Phenotype_Slope",
+    "Phenotype_R2"
+  )
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Secondary evaluation: mean outer-split ANN performance against phenotype",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
 
-```{r final-genetic-performance}
-format_table(
-  perf[
-    ,
-    c(
-      "Scenario",
-      "Model",
-      "QTL_N",
-      "H2_nominal",
-      "Genetic_Correlation",
-      "Genetic_RMSE",
-      "Genetic_MAE",
-      "Genetic_Bias",
-      "Genetic_Slope",
-      "Genetic_R2"
+### 9.1 Held-out performance across outer splits
+
+The next figures display all 25 outer-split results for each scenario and ANN
+variant. Their purpose is descriptive: repeated outer folds overlap in the
+individuals used for model fitting, so the 25 values are **not treated as 25
+statistically independent replicates or as inferential uncertainty**.
+
+```{r genetic-correlation-figure, fig.cap="Held-out true genetic-value Pearson correlation for the four ANN variants across the 25 outer splits in each scenario. White diamonds indicate model means within scenario."}
+p_ann_correlation <- ggplot(
+  ok,
+  aes(
+    x = Model,
+    y = Genetic_Correlation,
+    fill = Model
+  )
+) +
+  geom_boxplot(
+    width = 0.62,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = SEED_GLOBAL + 401L
+    ),
+    alpha = 0.35,
+    size = 1.4
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 2.8,
+    fill = "white"
+  ) +
+  facet_wrap(~ Scenario, ncol = 3) +
+  scale_fill_gdocs() +
+  labs(
+    x = "ANN variant",
+    y = "Pearson correlation with true genetic value",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
     )
-  ],
-  digits = 4,
-  caption =
-    "Primary evaluation: mean outer-CV ANN performance against true genetic value",
-  row.names = FALSE
+  )
+
+print(p_ann_correlation)
+```
+
+```{r save-ann-correlation-tiff, include=FALSE}
+ggsave(
+  "output/simulated/m04/figures/ann_genetic_correlation_by_model.tiff",
+  plot = p_ann_correlation,
+  device = "tiff",
+  width = 11,
+  height = 7.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
 )
 ```
 
-### 15.2 Phenotype
-
-The secondary evaluation compares the same held-out predictions with the observed phenotype. Because phenotype also contains non-genetic variation, this target is reported separately from recovery of the simulated genetic signal.
-
-```{r final-phenotype-performance}
-format_table(
-  perf[
-    ,
-    c(
-      "Scenario",
-      "Model",
-      "QTL_N",
-      "H2_nominal",
-      "Phenotype_Correlation",
-      "Phenotype_RMSE",
-      "Phenotype_MAE",
-      "Phenotype_Bias",
-      "Phenotype_Slope",
-      "Phenotype_R2"
+```{r genetic-rmse-figure, fig.cap="Held-out true genetic-value RMSE for the four ANN variants across the 25 outer splits in each scenario. Lower values indicate smaller prediction error; white diamonds indicate model means within scenario."}
+p_ann_rmse <- ggplot(
+  ok,
+  aes(
+    x = Model,
+    y = Genetic_RMSE,
+    fill = Model
+  )
+) +
+  geom_boxplot(
+    width = 0.62,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = SEED_GLOBAL + 402L
+    ),
+    alpha = 0.35,
+    size = 1.4
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 2.8,
+    fill = "white"
+  ) +
+  facet_wrap(~ Scenario, ncol = 3) +
+  scale_fill_gdocs() +
+  labs(
+    x = "ANN variant",
+    y = "RMSE for true genetic value",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
     )
-  ],
-  digits = 4,
-  caption =
-    "Secondary evaluation: mean outer-CV ANN performance against observed phenotype",
-  row.names = FALSE
+  )
+
+print(p_ann_rmse)
+```
+
+```{r save-ann-rmse-tiff, include=FALSE}
+ggsave(
+  "output/simulated/m04/figures/ann_genetic_rmse_by_model.tiff",
+  plot = p_ann_rmse,
+  device = "tiff",
+  width = 11,
+  height = 7.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
 )
 ```
 
-### 15.3 Interpretation among ANN variants
+### 9.2 Overall ANN comparison
 
-The overall summary below averages the primary genetic-value metrics across all scenarios and outer splits for each ANN variant.
-
-```{r final-ann-overall-summary}
+```{r overall-ann-summary}
 overall_ann <- aggregate(
   cbind(
     Genetic_Correlation,
@@ -3980,41 +2571,28 @@ overall_ann <- aggregate(
 )
 
 overall_ann <- overall_ann[
-  match(
-    c(
-      "ANN_0",
-      "ANN_L1",
-      "ANN_L2",
-      "ANN_L1_L2"
-    ),
-    overall_ann$Model
-  ),
+  match(MODEL_LEVELS, overall_ann$Model),
   ,
   drop = FALSE
 ]
 
-format_table(
-  overall_ann,
-  digits = 4,
-  caption = "Overall ANN performance against true genetic value"
-)
+overall_ann |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Overall ANN performance against true genetic value",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
 ```
 
-Across all outer-CV tasks, ANN-L1+L2 has the highest mean genetic
-correlation
-(`r sprintf("%.4f", overall_ann$Genetic_Correlation[4])`) and lowest mean
-genetic RMSE
-(`r sprintf("%.4f", overall_ann$Genetic_RMSE[4])`) among the four ANN variants.
-ANN-L1 is effectively tied (correlation
-`r sprintf("%.4f", overall_ann$Genetic_Correlation[2])`; RMSE
-`r sprintf("%.4f", overall_ann$Genetic_RMSE[2])`), whereas ANN-L2 remains close
-to the unregularized ANN (correlations
-`r sprintf("%.4f", overall_ann$Genetic_Correlation[3])` and
-`r sprintf("%.4f", overall_ann$Genetic_Correlation[1])`, respectively).
-Thus, within the prespecified canonical model/architecture search space, the
-observable regularization gain is driven mainly by the L1 component. The formal
-comparison with GBLUP-ADE is presented in the next module.
+Across all outer tasks, ANN-L1+L2 has the highest mean genetic correlation and
+lowest mean genetic RMSE among the four ANN variants, but its advantage over
+ANN-L1 is very small. ANN-L2 remains close to ANN_0. Within this bounded search
+space, the observed regularization gain is therefore driven mainly by the L1
+component. The formal task-matched comparison with GBLUP-ADE is reserved for
+M05.
 
-## 16. Navigation
+## 10. Navigation
 
 [Previous: Validation design](simulated_data_validation.html) | [Parallel branch: GBLUP-ADE](simulated_data_gblup.html) | [Next: Model comparison](simulated_data_comparison.html)
