@@ -119,9 +119,9 @@ More detailed contracts are documented in:
 The project is implemented in R using R Markdown, `workflowr`, and `renv`.
 
 Routine site rendering uses the validated saved analysis outputs rather than
-repeating computationally intensive model fitting. Scientific analysis pages
-retain `sessionInfo()` so that the R session used for each render remains
-documented, while project-level package versions are recorded in `renv.lock`.
+repeating computationally intensive model fitting. The generated workflowr pages
+record repository provenance and reproducibility checks for each render, while
+project-level package versions are recorded in `renv.lock`.
 
 The generated website is stored under `docs/`, and the corresponding source
 analyses remain under `analysis/`.
