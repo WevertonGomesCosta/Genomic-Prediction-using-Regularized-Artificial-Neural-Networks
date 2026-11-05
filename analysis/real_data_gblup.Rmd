@@ -1,0 +1,1159 @@
+---
+title: "Real data: GBLUP-ADE"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+    code_folding: show
+editor_options:
+  chunk_output_type: console
+---
+
+## 1. Purpose
+
+This module fits the GBLUP-ADE benchmark to the three prepared *Coffea arabica*
+traits under the family-stratified repeated outer cross-validation defined in
+the real-data validation module.
+
+The primary comparison uses the same 25 outer held-out splits for GBLUP-ADE and
+all ANN variants. With three traits, this produces **3 x 25 = 75 primary
+trait-by-split fits**.
+
+Four principles define the analysis:
+
+- phenotype values from the outer assessment set are unavailable during fitting;
+- genotypes from all 195 individuals can be used to construct genomic
+  relationship matrices because genotype information is available at prediction
+  time and does not contain held-out phenotype;
+- the common 20,887-marker panel prepared upstream is used without additional
+  model-specific marker filtering;
+- performance is evaluated only from predictions for the 39 held-out
+  individuals in each outer split.
+
+The complementary leave-one-family-out design stored upstream is not mixed with
+the primary benchmark here. It remains available for a separate generalization
+analysis.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
+
+options(stringsAsFactors = FALSE)
+
+dir.create(
+  "output/real/gblup",
+  showWarnings = FALSE,
+  recursive = TRUE
+)
+
+dir.create(
+  "output/real/gblup/figures",
+  showWarnings = FALSE,
+  recursive = TRUE
+)
+```
+
+## 2. Packages and fixed execution settings
+
+A normal page build reads the saved GBLUP-ADE results. Setting
+`RUN_GBLUP=1` activates the complete 75-task fitting workflow and overwrites the
+saved GBLUP outputs.
+
+```{r packages, warning=FALSE, message=FALSE}
+RUN_GBLUP <- identical(Sys.getenv("RUN_GBLUP", "0"), "1")
+
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+
+if (RUN_GBLUP) {
+  suppressPackageStartupMessages(
+    library(sommer)
+  )
+}
+```
+
+```{r fitting-control}
+SEED_GLOBAL <- 20261105L
+N_ITERS_SOMMER <- 20L
+
+fitting_control <- data.frame(
+  Parameter = c(
+    "Global seed",
+    "Run new GBLUP-ADE fits",
+    "sommer iterations per fit"
+  ),
+  Value = c(
+    SEED_GLOBAL,
+    RUN_GBLUP,
+    N_ITERS_SOMMER
+  ),
+  Role = c(
+    "Reproduce the fitting workflow.",
+    "Control whether all 75 primary fits are executed.",
+    "Use one fixed fitting control for every trait and split."
+  ),
+  stringsAsFactors = FALSE
+)
+
+fitting_control |>
+  knitr::kable(
+    format = "html",
+    caption = "Fixed GBLUP-ADE execution settings",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+## 3. Canonical inputs
+
+```{r inputs}
+common <- readRDS(
+  "output/real/audit/preprocessed_real_common.rds"
+)
+
+cv <- readRDS(
+  "output/real/validation/real_cv_design.rds"
+)
+
+geno <- as.matrix(common$genotype)
+pheno <- common$phenotype
+traits <- common$traits
+
+ids <- rownames(geno)
+
+stopifnot(
+  nrow(geno) == 195L,
+  ncol(geno) == 20887L,
+  identical(ids, pheno$genotipo),
+  identical(sort(traits), sort(c("Prod.Cor", "Cer", "BM"))),
+  length(cv$outer_splits) == 25L,
+  all(is.finite(geno)),
+  all(geno %in% c(-1, 0, 1))
+)
+
+input_summary <- data.frame(
+  Object = c(
+    "Genotype matrix",
+    "Prepared phenotype",
+    "Prediction traits",
+    "Primary outer splits"
+  ),
+  Structure = c(
+    paste(dim(geno), collapse = " x "),
+    paste(dim(pheno), collapse = " x "),
+    paste(traits, collapse = ", "),
+    length(cv$outer_splits)
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Canonical objects entering GBLUP-ADE",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+The marker matrix retains the `-1, 0, 1` coding used by the genomic relationship
+matrix constructors. Quality control has already been performed upstream, so
+the GBLUP branch does not redefine the marker panel.
+
+## 4. Statistical benchmark
+
+For each trait and outer split,
+
+\[
+\mathbf{y} = \mathbf{1}\mu + \mathbf{a} + \mathbf{d} + \mathbf{e} +
+\boldsymbol{\varepsilon},
+\]
+
+with
+
+\[
+\mathbf{a}\sim N(0,\mathbf{A}\sigma_a^2),\qquad
+\mathbf{d}\sim N(0,\mathbf{D}\sigma_d^2),
+\]
+
+\[
+\mathbf{e}\sim N(0,\mathbf{E}\sigma_e^2),\qquad
+\boldsymbol{\varepsilon}\sim N(0,\mathbf{I}\sigma_\varepsilon^2).
+\]
+
+The total predicted genomic component is
+
+\[
+\widehat{G}=\widehat{a}+\widehat{d}+\widehat{e},
+\]
+
+and the held-out prediction is
+
+\[
+\widehat{y}=\widehat{\mu}+\widehat{G}.
+\]
+
+The historical field name `GEBV` is retained in saved predictions for
+compatibility with the simulated workflow, but here it represents the summed
+additive, dominance, and additive-by-additive epistatic prediction rather than
+an additive-only breeding value.
+
+## 5. Primary trait-by-split workload
+
+```{r task-table}
+outer_meta <- unique(
+  cv$outer_assignments[
+    , c("Repetition", "OuterFold", "SplitID")
+  ]
+)
+
+outer_meta <- outer_meta[
+  order(
+    outer_meta$Repetition,
+    outer_meta$OuterFold
+  ),
+]
+
+task_table <- merge(
+  data.frame(
+    Trait = traits,
+    stringsAsFactors = FALSE
+  ),
+  outer_meta,
+  by = NULL
+)
+
+task_table <- task_table[
+  order(
+    match(task_table$Trait, traits),
+    task_table$Repetition,
+    task_table$OuterFold
+  ),
+]
+
+task_table$TaskID <- paste(
+  task_table$Trait,
+  task_table$SplitID,
+  sep = "_"
+)
+
+rownames(task_table) <- NULL
+
+stopifnot(
+  nrow(task_table) == 75L,
+  length(unique(task_table$TaskID)) == 75L
+)
+
+head(task_table, 15) |>
+  knitr::kable(
+    format = "html",
+    caption = "First 15 of the 75 primary GBLUP-ADE tasks",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+## 6. Evaluation metrics
+
+Performance is calculated only in the outer assessment set. The stored metrics
+are:
+
+- Pearson correlation;
+- RMSE;
+- MAE;
+- bias, defined as `mean(predicted - observed)`;
+- calibration slope from `observed ~ predicted`;
+- predictive \(R^2 = 1 - SSE/SST\).
+
+The 25 split-level values per trait are descriptive repeated-cross-validation
+results; they are not treated as statistically independent replicates.
+
+## 7. Complete GBLUP-ADE fitting workflow
+
+The three genomic relationship matrices are constructed once from the common
+20,887-marker matrix and reused across all 75 tasks. For each task, the 39 outer
+assessment phenotypes are replaced by `NA` before fitting.
+
+```{r fit-gblup-ade, eval=RUN_GBLUP}
+set.seed(SEED_GLOBAL)
+
+run_start <- proc.time()[["elapsed"]]
+
+kernel_start <- proc.time()[["elapsed"]]
+
+A_matrix <- sommer::A.mat(
+  geno,
+  min.MAF = 0
+)
+
+D_matrix <- sommer::D.mat(
+  geno,
+  nishio = TRUE,
+  min.MAF = 0
+)
+
+E_matrix <- sommer::E.mat(
+  geno,
+  nishio = TRUE,
+  type = "A#A",
+  min.MAF = 0
+)
+
+kernel_seconds <- proc.time()[["elapsed"]] - kernel_start
+
+rownames(A_matrix) <- colnames(A_matrix) <- ids
+rownames(D_matrix) <- colnames(D_matrix) <- ids
+rownames(E_matrix) <- colnames(E_matrix) <- ids
+
+kernel_summary <- data.frame(
+  Kernel = c("Additive", "Dominance", "Epistatic_AxA"),
+  Rows = c(nrow(A_matrix), nrow(D_matrix), nrow(E_matrix)),
+  Columns = c(ncol(A_matrix), ncol(D_matrix), ncol(E_matrix)),
+  Symmetric = c(
+    isTRUE(all.equal(A_matrix, t(A_matrix), tolerance = 1e-8)),
+    isTRUE(all.equal(D_matrix, t(D_matrix), tolerance = 1e-8)),
+    isTRUE(all.equal(E_matrix, t(E_matrix), tolerance = 1e-8))
+  ),
+  Finite = c(
+    all(is.finite(A_matrix)),
+    all(is.finite(D_matrix)),
+    all(is.finite(E_matrix))
+  ),
+  Mean_diagonal = c(
+    mean(diag(A_matrix)),
+    mean(diag(D_matrix)),
+    mean(diag(E_matrix))
+  ),
+  Kernel_build_seconds = rep(kernel_seconds, 3L),
+  stringsAsFactors = FALSE
+)
+
+stopifnot(
+  all(kernel_summary$Rows == 195L),
+  all(kernel_summary$Columns == 195L),
+  all(kernel_summary$Symmetric),
+  all(kernel_summary$Finite)
+)
+
+result_list <- vector("list", nrow(task_table))
+prediction_list <- vector("list", nrow(task_table))
+
+for (i in seq_len(nrow(task_table))) {
+
+  task <- task_table[i, ]
+  trait <- task$Trait
+  split <- cv$outer_splits[[task$SplitID]]
+
+  analysis_index <- match(
+    split$analysis_ids,
+    ids
+  )
+
+  assessment_index <- match(
+    split$assessment_ids,
+    ids
+  )
+
+  stopifnot(
+    length(analysis_index) == 156L,
+    length(assessment_index) == 39L,
+    !anyNA(analysis_index),
+    !anyNA(assessment_index),
+    length(intersect(analysis_index, assessment_index)) == 0L
+  )
+
+  phenotype_vector <- pheno[[trait]]
+
+  id_factor <- factor(
+    ids,
+    levels = ids
+  )
+
+  dat <- data.frame(
+    y = phenotype_vector,
+    id = id_factor,
+    idd = id_factor,
+    ide = id_factor
+  )
+
+  dat$y[assessment_index] <- NA_real_
+
+  fit_start <- proc.time()[["elapsed"]]
+
+  task_result <- tryCatch(
+    {
+
+      fit <- sommer::mmes(
+        y ~ 1,
+        random = ~
+          vsm(ism(id),  Gu = A_matrix) +
+          vsm(ism(idd), Gu = D_matrix) +
+          vsm(ism(ide), Gu = E_matrix),
+        rcov = ~ units,
+        nIters = N_ITERS_SOMMER,
+        data = dat,
+        verbose = FALSE,
+        dateWarning = FALSE
+      )
+
+      fit_seconds <-
+        proc.time()[["elapsed"]] -
+        fit_start
+
+      prediction_start <- proc.time()[["elapsed"]]
+
+      stopifnot(length(fit$uList) >= 3L)
+
+      additive_effect <- as.matrix(
+        fit$uList[[1L]]
+      )
+
+      dominance_effect <- as.matrix(
+        fit$uList[[2L]]
+      )
+
+      epistatic_effect <- as.matrix(
+        fit$uList[[3L]]
+      )
+
+      additive_incidence <- model.matrix(
+        ~ id - 1,
+        data = dat
+      )
+
+      dominance_incidence <- model.matrix(
+        ~ idd - 1,
+        data = dat
+      )
+
+      epistatic_incidence <- model.matrix(
+        ~ ide - 1,
+        data = dat
+      )
+
+      additive <- as.numeric(
+        additive_incidence %*%
+          additive_effect[, 1L, drop = FALSE]
+      )
+
+      dominance <- as.numeric(
+        dominance_incidence %*%
+          dominance_effect[, 1L, drop = FALSE]
+      )
+
+      epistatic <- as.numeric(
+        epistatic_incidence %*%
+          epistatic_effect[, 1L, drop = FALSE]
+      )
+
+      genomic_component <-
+        additive +
+        dominance +
+        epistatic
+
+      intercept <- as.numeric(fit$b)[1L]
+
+      predicted_value <-
+        intercept +
+        genomic_component
+
+      predict_seconds <-
+        proc.time()[["elapsed"]] -
+        prediction_start
+
+      observed_test <- phenotype_vector[
+        assessment_index
+      ]
+
+      predicted_test <- predicted_value[
+        assessment_index
+      ]
+
+      genomic_component_test <- genomic_component[
+        assessment_index
+      ]
+
+      if (
+        length(unique(observed_test)) > 1L &&
+        length(unique(predicted_test)) > 1L
+      ) {
+        correlation <- cor(
+          predicted_test,
+          observed_test
+        )
+      } else {
+        correlation <- NA_real_
+      }
+
+      rmse <- sqrt(
+        mean(
+          (predicted_test - observed_test)^2
+        )
+      )
+
+      mae <- mean(
+        abs(
+          predicted_test - observed_test
+        )
+      )
+
+      bias <- mean(
+        predicted_test - observed_test
+      )
+
+      if (length(unique(predicted_test)) > 1L) {
+        slope <- as.numeric(
+          coef(
+            lm(
+              observed_test ~ predicted_test
+            )
+          )[2L]
+        )
+      } else {
+        slope <- NA_real_
+      }
+
+      sst <- sum(
+        (observed_test - mean(observed_test))^2
+      )
+
+      if (sst > 0) {
+        r2 <- 1 -
+          sum(
+            (observed_test - predicted_test)^2
+          ) / sst
+      } else {
+        r2 <- NA_real_
+      }
+
+      list(
+        result = data.frame(
+          Dataset = "real",
+          Trait = trait,
+          Repetition = task$Repetition,
+          Fold = task$OuterFold,
+          SplitID = task$SplitID,
+          TaskID = task$TaskID,
+          Model = "GBLUP_ADE",
+          N_train = length(analysis_index),
+          N_test = length(assessment_index),
+          N_pred_finite = sum(is.finite(predicted_test)),
+          Phenotype_Correlation = correlation,
+          Phenotype_RMSE = rmse,
+          Phenotype_MAE = mae,
+          Phenotype_Bias = bias,
+          Phenotype_Slope = slope,
+          Phenotype_R2 = r2,
+          Kernel_build_seconds = kernel_seconds,
+          Fit_seconds = fit_seconds,
+          Predict_seconds = predict_seconds,
+          Status = if (
+            all(is.finite(predicted_test))
+          ) "ok" else "nonfinite_prediction",
+          Error = NA_character_,
+          stringsAsFactors = FALSE
+        ),
+        prediction = data.frame(
+          Dataset = "real",
+          Trait = trait,
+          Repetition = task$Repetition,
+          Fold = task$OuterFold,
+          SplitID = task$SplitID,
+          TaskID = task$TaskID,
+          Model = "GBLUP_ADE",
+          ID = ids[assessment_index],
+          Family = common$family[
+            ids[assessment_index]
+          ],
+          Observed_Phenotype = observed_test,
+          Predicted_Value = predicted_test,
+          GEBV = genomic_component_test,
+          Additive_Prediction = additive[
+            assessment_index
+          ],
+          Dominance_Prediction = dominance[
+            assessment_index
+          ],
+          Epistatic_Prediction = epistatic[
+            assessment_index
+          ],
+          Status = if (
+            all(is.finite(predicted_test))
+          ) "ok" else "nonfinite_prediction",
+          stringsAsFactors = FALSE
+        )
+      )
+    },
+    error = function(e) {
+
+      fit_seconds <-
+        proc.time()[["elapsed"]] -
+        fit_start
+
+      list(
+        result = data.frame(
+          Dataset = "real",
+          Trait = trait,
+          Repetition = task$Repetition,
+          Fold = task$OuterFold,
+          SplitID = task$SplitID,
+          TaskID = task$TaskID,
+          Model = "GBLUP_ADE",
+          N_train = length(analysis_index),
+          N_test = length(assessment_index),
+          N_pred_finite = 0L,
+          Phenotype_Correlation = NA_real_,
+          Phenotype_RMSE = NA_real_,
+          Phenotype_MAE = NA_real_,
+          Phenotype_Bias = NA_real_,
+          Phenotype_Slope = NA_real_,
+          Phenotype_R2 = NA_real_,
+          Kernel_build_seconds = kernel_seconds,
+          Fit_seconds = fit_seconds,
+          Predict_seconds = NA_real_,
+          Status = "error",
+          Error = conditionMessage(e),
+          stringsAsFactors = FALSE
+        ),
+        prediction = NULL
+      )
+    }
+  )
+
+  result_list[[i]] <- task_result$result
+  prediction_list[[i]] <- task_result$prediction
+
+  cat(
+    sprintf(
+      "[%02d/%02d] %s | status=%s | r=%s | RMSE=%s\n",
+      i,
+      nrow(task_table),
+      task$TaskID,
+      task_result$result$Status,
+      ifelse(
+        is.finite(
+          task_result$result$Phenotype_Correlation
+        ),
+        sprintf(
+          "%.4f",
+          task_result$result$Phenotype_Correlation
+        ),
+        "NA"
+      ),
+      ifelse(
+        is.finite(
+          task_result$result$Phenotype_RMSE
+        ),
+        sprintf(
+          "%.4f",
+          task_result$result$Phenotype_RMSE
+        ),
+        "NA"
+      )
+    )
+  )
+}
+
+results <- do.call(
+  rbind,
+  result_list
+)
+
+prediction_list <- Filter(
+  Negate(is.null),
+  prediction_list
+)
+
+if (length(prediction_list) > 0L) {
+  predictions <- do.call(
+    rbind,
+    prediction_list
+  )
+} else {
+  predictions <- data.frame()
+}
+
+rownames(results) <- NULL
+rownames(predictions) <- NULL
+
+run_seconds <-
+  proc.time()[["elapsed"]] -
+  run_start
+
+run_metadata <- list(
+  dataset = "real",
+  model = "GBLUP_ADE",
+  seed_global = SEED_GLOBAL,
+  sommer_version = as.character(
+    packageVersion("sommer")
+  ),
+  nIters_sommer = N_ITERS_SOMMER,
+  marker_panel_n = ncol(geno),
+  individuals_n = nrow(geno),
+  traits = traits,
+  outer_splits = length(cv$outer_splits),
+  tasks_expected = nrow(task_table),
+  tasks_ok = sum(results$Status == "ok"),
+  tasks_error = sum(results$Status == "error"),
+  prediction_rows = nrow(predictions),
+  kernel_build_seconds = kernel_seconds,
+  total_run_seconds = run_seconds,
+  timestamp = as.character(Sys.time())
+)
+```
+
+```{r save-gblup-results, eval=RUN_GBLUP, include=FALSE}
+write.csv(
+  kernel_summary,
+  "output/real/gblup/real_gblup_ade_kernel_summary.csv",
+  row.names = FALSE
+)
+
+saveRDS(
+  results,
+  "output/real/gblup/real_gblup_ade_results.rds",
+  compress = "gzip"
+)
+
+saveRDS(
+  predictions,
+  "output/real/gblup/real_gblup_ade_predictions.rds",
+  compress = "gzip"
+)
+
+write.csv(
+  results,
+  "output/real/gblup/real_gblup_ade_results.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  predictions,
+  "output/real/gblup/real_gblup_ade_predictions.csv",
+  row.names = FALSE
+)
+
+saveRDS(
+  run_metadata,
+  "output/real/gblup/real_gblup_ade_run_metadata.rds",
+  compress = "gzip"
+)
+```
+
+## 8. Saved-run availability
+
+```{r saved-output-contract}
+result_path <-
+  "output/real/gblup/real_gblup_ade_results.rds"
+
+prediction_path <-
+  "output/real/gblup/real_gblup_ade_predictions.rds"
+
+metadata_path <-
+  "output/real/gblup/real_gblup_ade_run_metadata.rds"
+
+kernel_path <-
+  "output/real/gblup/real_gblup_ade_kernel_summary.csv"
+
+saved_outputs_available <- all(
+  file.exists(
+    c(
+      result_path,
+      prediction_path,
+      metadata_path,
+      kernel_path
+    )
+  )
+)
+
+if (!saved_outputs_available) {
+  stop(
+    paste(
+      "Saved GBLUP-ADE outputs are not available.",
+      "Run this module once with RUN_GBLUP=1."
+    )
+  )
+}
+```
+
+## 9. Genomic-kernel diagnostics
+
+```{r kernel-diagnostics}
+kernel_summary <- read.csv(
+  kernel_path,
+  stringsAsFactors = FALSE
+)
+
+kernel_summary |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Numerical structure of the real-data GBLUP-ADE kernels",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+## 10. Saved results and primary predictive performance
+
+```{r saved-results}
+results <- readRDS(
+  result_path
+)
+
+predictions <- readRDS(
+  prediction_path
+)
+
+run_metadata <- readRDS(
+  metadata_path
+)
+
+result_structure <- data.frame(
+  Quantity = c(
+    "Expected tasks",
+    "Stored task rows",
+    "Successful tasks",
+    "Errored tasks",
+    "Expected held-out predictions if all fits succeed",
+    "Stored held-out predictions"
+  ),
+  Value = c(
+    75L,
+    nrow(results),
+    sum(results$Status == "ok"),
+    sum(results$Status == "error"),
+    75L * 39L,
+    nrow(predictions)
+  ),
+  stringsAsFactors = FALSE
+)
+
+result_structure |>
+  knitr::kable(
+    format = "html",
+    caption = "Stored real-data GBLUP-ADE result structure",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+A task with `Status = "ok"` returned 39 finite held-out predictions. This status
+does not by itself constitute a formal numerical-convergence diagnostic for the
+variance-component optimizer.
+
+### 10.1 Performance by trait
+
+```{r performance-summary}
+ok_results <- results[
+  results$Status == "ok",
+  ,
+  drop = FALSE
+]
+
+if (nrow(ok_results) == 0L) {
+  stop("No successful GBLUP-ADE tasks are available.")
+}
+
+trait_performance <- aggregate(
+  cbind(
+    Phenotype_Correlation,
+    Phenotype_RMSE,
+    Phenotype_MAE,
+    Phenotype_Bias,
+    Phenotype_Slope,
+    Phenotype_R2
+  ) ~ Trait,
+  data = ok_results,
+  FUN = mean,
+  na.rm = TRUE
+)
+
+trait_performance <- trait_performance[
+  match(
+    traits,
+    trait_performance$Trait
+  ),
+  ,
+  drop = FALSE
+]
+
+trait_performance |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Mean held-out GBLUP-ADE performance across the 25 outer splits",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+### 10.2 Split-level variability
+
+```{r split-summary}
+split_summary <- do.call(
+  rbind,
+  lapply(
+    split(
+      ok_results,
+      ok_results$Trait
+    ),
+    function(x) {
+      data.frame(
+        Trait = unique(x$Trait),
+        N = nrow(x),
+        Cor_mean = mean(
+          x$Phenotype_Correlation,
+          na.rm = TRUE
+        ),
+        Cor_sd = sd(
+          x$Phenotype_Correlation,
+          na.rm = TRUE
+        ),
+        Cor_min = min(
+          x$Phenotype_Correlation,
+          na.rm = TRUE
+        ),
+        Cor_max = max(
+          x$Phenotype_Correlation,
+          na.rm = TRUE
+        ),
+        RMSE_mean = mean(
+          x$Phenotype_RMSE,
+          na.rm = TRUE
+        ),
+        RMSE_sd = sd(
+          x$Phenotype_RMSE,
+          na.rm = TRUE
+        ),
+        MAE_mean = mean(
+          x$Phenotype_MAE,
+          na.rm = TRUE
+        ),
+        Bias_mean = mean(
+          x$Phenotype_Bias,
+          na.rm = TRUE
+        ),
+        Slope_mean = mean(
+          x$Phenotype_Slope,
+          na.rm = TRUE
+        ),
+        R2_mean = mean(
+          x$Phenotype_R2,
+          na.rm = TRUE
+        ),
+        stringsAsFactors = FALSE
+      )
+    }
+  )
+)
+
+rownames(split_summary) <- NULL
+
+split_summary <- split_summary[
+  match(
+    traits,
+    split_summary$Trait
+  ),
+  ,
+  drop = FALSE
+]
+
+split_summary |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "GBLUP-ADE variability across the 25 outer splits",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+## 11. Held-out performance figures
+
+```{r correlation-figure, fig.cap="Held-out phenotype correlation for GBLUP-ADE across the 25 family-stratified outer splits. White diamonds indicate trait means."}
+p_correlation <- ggplot(
+  ok_results,
+  aes(
+    x = Trait,
+    y = Phenotype_Correlation,
+    fill = Trait
+  )
+) +
+  geom_boxplot(
+    width = 0.58,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = SEED_GLOBAL + 301L
+    ),
+    alpha = 0.45,
+    size = 1.8
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 3.2,
+    fill = "white"
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = "Trait",
+    y = "Held-out Pearson correlation",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none"
+  )
+
+print(p_correlation)
+```
+
+```{r save-correlation-tiff, include=FALSE}
+ggsave(
+  "output/real/gblup/figures/real_gblup_correlation_by_trait.tiff",
+  plot = p_correlation,
+  device = "tiff",
+  width = 8.5,
+  height = 5.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
+)
+```
+
+```{r rmse-figure, fig.cap="Held-out phenotype RMSE for GBLUP-ADE across the 25 family-stratified outer splits. White diamonds indicate trait means."}
+p_rmse <- ggplot(
+  ok_results,
+  aes(
+    x = Trait,
+    y = Phenotype_RMSE,
+    fill = Trait
+  )
+) +
+  geom_boxplot(
+    width = 0.58,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = SEED_GLOBAL + 302L
+    ),
+    alpha = 0.45,
+    size = 1.8
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 3.2,
+    fill = "white"
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = "Trait",
+    y = "Held-out RMSE",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none"
+  )
+
+print(p_rmse)
+```
+
+```{r save-rmse-tiff, include=FALSE}
+ggsave(
+  "output/real/gblup/figures/real_gblup_rmse_by_trait.tiff",
+  plot = p_rmse,
+  device = "tiff",
+  width = 8.5,
+  height = 5.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
+)
+```
+
+## 12. Computational record
+
+```{r time-summary}
+time_summary <- aggregate(
+  cbind(
+    Fit_seconds,
+    Predict_seconds
+  ) ~ Trait,
+  data = ok_results,
+  FUN = mean,
+  na.rm = TRUE
+)
+
+time_summary$Kernel_build_seconds <-
+  run_metadata$kernel_build_seconds
+
+time_summary |>
+  knitr::kable(
+    format = "html",
+    digits = 3,
+    caption = "GBLUP-ADE computational record",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+cat(
+  "Total run time:",
+  round(
+    run_metadata$total_run_seconds,
+    2
+  ),
+  "seconds.\n"
+)
+```
+
+Kernel construction is a one-time cost reused by all three traits and all 25
+outer splits.
+
+## 13. Frozen R06 contract
+
+The primary real-data GBLUP benchmark is defined by:
+
+- 195 individuals;
+- the common 20,887-marker panel;
+- three prepared phenotype targets: `Prod.Cor`, `Cer`, and `BM`;
+- 5 repetitions x 5 family-stratified outer folds;
+- 156 analysis and 39 assessment individuals per split;
+- one additive, one dominance, and one additive-by-additive epistatic genomic
+  component;
+- no use of outer-assessment phenotype during fitting;
+- one common set of held-out predictions later reused for model comparison.
+
+The ANN branch must use the same 25 outer splits. Hyperparameter selection must
+remain restricted to the nested inner folds stored in
+`real_cv_design.rds`.
+
+## 14. Navigation
+
+[Previous: Real-data validation](real_data_validation.html) | [Next: Regularized ANN](real_data_ann.html)
