@@ -68,6 +68,7 @@ penalties applied to network weights. Bias terms are not penalized.
 library(knitr)
 library(ggplot2)
 library(ggthemes)
+library(future)
 
 RUN_ANN_TUNING <- identical(
   Sys.getenv("RUN_ANN_TUNING", "0"),
@@ -77,6 +78,42 @@ RUN_ANN <- identical(
   Sys.getenv("RUN_ANN", "0"),
   "1"
 )
+
+ANN_FORCE <- identical(
+  Sys.getenv("ANN_FORCE", "0"),
+  "1"
+)
+
+ANN_WORKERS_REQUESTED <- suppressWarnings(
+  as.integer(Sys.getenv("ANN_WORKERS", "0"))
+)
+
+ANN_WORKERS <- if (
+  is.finite(ANN_WORKERS_REQUESTED) &&
+  ANN_WORKERS_REQUESTED > 0L
+) {
+  ANN_WORKERS_REQUESTED
+} else {
+  detected_cores <- suppressWarnings(
+    parallel::detectCores(
+      logical = TRUE
+    )
+  )
+
+  if (
+    is.finite(detected_cores) &&
+    detected_cores > 0L
+  ) {
+    as.integer(detected_cores)
+  } else {
+    as.integer(
+      future::availableCores()
+    )
+  }
+}
+
+ANN_WORKERS <- max(1L, ANN_WORKERS)
+
 ANN_RUNTIME_REQUIRED <- RUN_ANN_TUNING || RUN_ANN
 
 if (ANN_RUNTIME_REQUIRED) {
@@ -156,6 +193,13 @@ The 2000-epoch and 3000-epoch values are **maximum optimization caps**, not
 claims of numerical convergence and not fixed training lengths. Early stopping
 can terminate an optimization run earlier when the prespecified patience rule is
 met.
+
+Independent `Scenario x outer split` tasks are executed with
+`future::multisession`. `ANN_WORKERS` controls the number of concurrent R
+workers. When it is unset or zero, all logical CPU cores detected by R are
+eligible. The same worker rule is used for CPU and CUDA; CUDA is not restricted
+to a single worker. With multiple GPUs, tasks are distributed round-robin across
+the detected CUDA devices.
 
 ## 3. Data and validation structure
 
@@ -487,6 +531,14 @@ dir.create(
   showWarnings = FALSE
 )
 
+TUNING_CHECKPOINT_DIR <- ".local/checkpoints/simulated/ann/tuning"
+
+dir.create(
+  TUNING_CHECKPOINT_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
 outer_map <- unique(
   cv$outer_assignments[
     , c("Repetition", "OuterFold", "SplitID")
@@ -530,8 +582,110 @@ task_seconds <- numeric(nrow(task_table))
 
 run_start <- proc.time()[["elapsed"]]
 
-for (task_index in seq_len(nrow(task_table))) {
+run_simulated_ann_tuning_task <- function(task_index) {
+  suppressPackageStartupMessages(
+    library(torch)
+  )
+
+  worker_device_label <- ANN_DEVICE_LABEL
+
+  if (
+    identical(
+      ANN_DEVICE_LABEL,
+      "cuda"
+    )
+  ) {
+    gpu_count <- torch::cuda_device_count()
+
+    if (
+      is.finite(gpu_count) &&
+      gpu_count > 1L
+    ) {
+      worker_device_label <- paste0(
+        "cuda:",
+        (
+          task_index -
+          1L
+        ) %%
+          gpu_count
+      )
+    }
+  }
+
+  ANN_DEVICE <- torch::torch_device(
+    worker_device_label
+  )
+
+  TorchGenomicMLP <- torch::nn_module(
+    "TorchGenomicMLP",
+    initialize = function(input_dim, hidden_units) {
+      self$linears <- torch::nn_module_list()
+      previous <- as.integer(input_dim)
+
+      for (hidden in hidden_units) {
+        self$linears$append(
+          torch::nn_linear(
+            previous,
+            as.integer(hidden)
+          )
+        )
+        previous <- as.integer(hidden)
+      }
+
+      self$output <- torch::nn_linear(
+        previous,
+        1L
+      )
+    },
+    forward = function(x) {
+      for (layer_index in seq_len(length(self$linears))) {
+        x <- torch::nnf_relu(
+          self$linears[[layer_index]](x)
+        )
+      }
+      self$output(x)
+    }
+  )
+
   task <- task_table[task_index, , drop = FALSE]
+
+  safe_task_id <- gsub(
+    "[^A-Za-z0-9_-]",
+    "_",
+    task$TaskID
+  )
+
+  checkpoint_path <- file.path(
+    TUNING_CHECKPOINT_DIR,
+    paste0(
+      safe_task_id,
+      ".rds"
+    )
+  )
+
+  if (
+    file.exists(checkpoint_path) &&
+    !ANN_FORCE
+  ) {
+    old_checkpoint <- tryCatch(
+      readRDS(checkpoint_path),
+      error = function(e) NULL
+    )
+
+    if (
+      !is.null(old_checkpoint) &&
+      identical(
+        old_checkpoint$config_id,
+        ANN_TUNING_CONFIG_ID
+      ) &&
+      identical(
+        old_checkpoint$task_id,
+        task$TaskID
+      )
+    ) {
+      return(old_checkpoint)
+    }
+  }
   scenario_index <- match(task$Scenario, scenario_names)
   inner <- cv$inner_splits[[task$SplitID]]
   task_start <- proc.time()[["elapsed"]]
@@ -1243,24 +1397,91 @@ for (task_index in seq_len(nrow(task_table))) {
     tuning_folds[[column_name]] <- task[[column_name]]
   }
 
-  selected_task_rows[[task_index]] <- selected_table
-  candidate_task_rows[[task_index]] <- tuning_summary
-  fold_task_rows[[task_index]] <- tuning_folds
-  task_seconds[task_index] <-
+  task_seconds_current <-
     proc.time()[["elapsed"]] - task_start
 
-  cat(
-    sprintf(
-      "[%03d/%03d] %s | %.1f s | arch=%s lr=%g\n",
-      task_index,
-      nrow(task_table),
-      task$TaskID,
-      task_seconds[task_index],
-      selected_architecture,
-      selected_learning_rate
-    )
+  checkpoint <- list(
+    analysis = "simulated_ann_tuning_task",
+    config_id = ANN_TUNING_CONFIG_ID,
+    task_id = task$TaskID,
+    task_index = task_index,
+    selected_table = selected_table,
+    candidate_summary = tuning_summary,
+    fold_results = tuning_folds,
+    task_seconds = task_seconds_current,
+    device = worker_device_label,
+    timestamp = as.character(Sys.time())
   )
+
+  saveRDS(
+    checkpoint,
+    checkpoint_path,
+    compress = "gzip"
+  )
+
+  checkpoint
+
 }
+
+cat(
+  sprintf(
+    "Simulated ANN tuning parallel executor: %d tasks | %d workers | device=%s\n",
+    nrow(task_table),
+    ANN_WORKERS,
+    ANN_DEVICE_LABEL
+  )
+)
+
+future::plan(
+  future::multisession,
+  workers = ANN_WORKERS
+)
+
+tuning_futures <- lapply(
+  seq_len(nrow(task_table)),
+  function(task_index) {
+    future::future(
+      run_simulated_ann_tuning_task(
+        task_index
+      ),
+      seed = TRUE
+    )
+  }
+)
+
+tuning_task_results <- lapply(
+  tuning_futures,
+  future::value
+)
+
+future::plan(
+  future::sequential
+)
+
+selected_task_rows <- lapply(
+  tuning_task_results,
+  `[[`,
+  "selected_table"
+)
+
+candidate_task_rows <- lapply(
+  tuning_task_results,
+  `[[`,
+  "candidate_summary"
+)
+
+fold_task_rows <- lapply(
+  tuning_task_results,
+  `[[`,
+  "fold_results"
+)
+
+task_seconds <- vapply(
+  tuning_task_results,
+  function(x) x$task_seconds,
+  numeric(1)
+)
+
 
 selected_configurations <- do.call(
   rbind,
@@ -1318,6 +1539,8 @@ manifest <- list(
   torch_version = as.character(packageVersion("torch")),
   device = ANN_DEVICE_LABEL,
   cuda_available = cuda_available,
+  parallel_backend = "future::multisession",
+  parallel_workers = ANN_WORKERS,
   current_session_seconds = run_seconds,
   checkpoint_task_seconds = sum(task_seconds),
   timestamp = as.character(Sys.time())
@@ -1549,6 +1772,14 @@ dir.create(
   showWarnings = FALSE
 )
 
+FINAL_CHECKPOINT_DIR <- ".local/checkpoints/simulated/ann/final"
+
+dir.create(
+  FINAL_CHECKPOINT_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
 outer_map <- unique(
   cv$outer_assignments[
     , c("Repetition", "OuterFold", "SplitID")
@@ -1603,12 +1834,114 @@ final_task_seconds <- numeric(
 
 run_start <- proc.time()[["elapsed"]]
 
-for (task_index in seq_len(nrow(final_task_table))) {
+run_simulated_ann_final_task <- function(task_index) {
+  suppressPackageStartupMessages(
+    library(torch)
+  )
+
+  worker_device_label <- ANN_DEVICE_LABEL
+
+  if (
+    identical(
+      ANN_DEVICE_LABEL,
+      "cuda"
+    )
+  ) {
+    gpu_count <- torch::cuda_device_count()
+
+    if (
+      is.finite(gpu_count) &&
+      gpu_count > 1L
+    ) {
+      worker_device_label <- paste0(
+        "cuda:",
+        (
+          task_index -
+          1L
+        ) %%
+          gpu_count
+      )
+    }
+  }
+
+  ANN_DEVICE <- torch::torch_device(
+    worker_device_label
+  )
+
+  TorchGenomicMLP <- torch::nn_module(
+    "TorchGenomicMLP",
+    initialize = function(input_dim, hidden_units) {
+      self$linears <- torch::nn_module_list()
+      previous <- as.integer(input_dim)
+
+      for (hidden in hidden_units) {
+        self$linears$append(
+          torch::nn_linear(
+            previous,
+            as.integer(hidden)
+          )
+        )
+        previous <- as.integer(hidden)
+      }
+
+      self$output <- torch::nn_linear(
+        previous,
+        1L
+      )
+    },
+    forward = function(x) {
+      for (layer_index in seq_len(length(self$linears))) {
+        x <- torch::nnf_relu(
+          self$linears[[layer_index]](x)
+        )
+      }
+      self$output(x)
+    }
+  )
+
   task <- final_task_table[
     task_index,
     ,
     drop = FALSE
   ]
+
+  safe_task_id <- gsub(
+    "[^A-Za-z0-9_-]",
+    "_",
+    task$TaskID
+  )
+
+  checkpoint_path <- file.path(
+    FINAL_CHECKPOINT_DIR,
+    paste0(
+      safe_task_id,
+      ".rds"
+    )
+  )
+
+  if (
+    file.exists(checkpoint_path) &&
+    !ANN_FORCE
+  ) {
+    old_checkpoint <- tryCatch(
+      readRDS(checkpoint_path),
+      error = function(e) NULL
+    )
+
+    if (
+      !is.null(old_checkpoint) &&
+      identical(
+        old_checkpoint$config_id,
+        FINAL_CONFIG_ID
+      ) &&
+      identical(
+        old_checkpoint$task_id,
+        task$TaskID
+      )
+    ) {
+      return(old_checkpoint)
+    }
+  }
   scenario_index <- match(
     task$Scenario,
     scenario_names
@@ -2181,32 +2514,101 @@ for (task_index in seq_len(nrow(final_task_table))) {
     )
   }
 
-  result_task_rows[[task_index]] <- do.call(
-    rbind,
-    result_rows
-  )
-  prediction_task_rows[[task_index]] <- do.call(
-    rbind,
-    prediction_rows
-  )
-  epoch_task_rows[[task_index]] <- do.call(
-    rbind,
-    epoch_rows
-  )
-
-  final_task_seconds[task_index] <-
+  task_seconds_current <-
     proc.time()[["elapsed"]] - task_start
 
-  cat(
-    sprintf(
-      "[%03d/%03d] %s | final %.1f min\n",
-      task_index,
-      nrow(final_task_table),
-      task$TaskID,
-      final_task_seconds[task_index] / 60
-    )
+  checkpoint <- list(
+    analysis = "simulated_ann_final_task",
+    config_id = FINAL_CONFIG_ID,
+    tuning_config_id = ANN_TUNING_CONFIG_ID,
+    task_id = task$TaskID,
+    task_index = task_index,
+    results = do.call(
+      rbind,
+      result_rows
+    ),
+    predictions = do.call(
+      rbind,
+      prediction_rows
+    ),
+    epoch_selection = do.call(
+      rbind,
+      epoch_rows
+    ),
+    task_seconds = task_seconds_current,
+    device = worker_device_label,
+    timestamp = as.character(Sys.time())
   )
+
+  saveRDS(
+    checkpoint,
+    checkpoint_path,
+    compress = "gzip"
+  )
+
+  checkpoint
+
 }
+
+cat(
+  sprintf(
+    "Simulated ANN final parallel executor: %d tasks | %d workers | device=%s\n",
+    nrow(final_task_table),
+    ANN_WORKERS,
+    ANN_DEVICE_LABEL
+  )
+)
+
+future::plan(
+  future::multisession,
+  workers = ANN_WORKERS
+)
+
+final_futures <- lapply(
+  seq_len(nrow(final_task_table)),
+  function(task_index) {
+    future::future(
+      run_simulated_ann_final_task(
+        task_index
+      ),
+      seed = TRUE
+    )
+  }
+)
+
+final_task_results <- lapply(
+  final_futures,
+  future::value
+)
+
+future::plan(
+  future::sequential
+)
+
+result_task_rows <- lapply(
+  final_task_results,
+  `[[`,
+  "results"
+)
+
+prediction_task_rows <- lapply(
+  final_task_results,
+  `[[`,
+  "predictions"
+)
+
+epoch_task_rows <- lapply(
+  final_task_results,
+  `[[`,
+  "epoch_selection"
+)
+
+final_task_seconds <- vapply(
+  final_task_results,
+  function(x) x$task_seconds,
+  numeric(1)
+)
+
 
 results <- do.call(rbind, result_task_rows)
 predictions <- do.call(rbind, prediction_task_rows)
@@ -2245,6 +2647,8 @@ final_meta <- list(
   torch_version = as.character(packageVersion("torch")),
   device = ANN_DEVICE_LABEL,
   cuda_available = cuda_available,
+  parallel_backend = "future::multisession",
+  parallel_workers = ANN_WORKERS,
   current_session_seconds = run_seconds,
   checkpoint_task_seconds = sum(final_task_seconds),
   timestamp = as.character(Sys.time())

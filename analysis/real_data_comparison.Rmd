@@ -1,0 +1,1149 @@
+---
+title: "Real data: GBLUP-ADE and regularized ANN comparison"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+    code_download: true
+editor_options:
+  chunk_output_type: console
+---
+
+## 1. Purpose
+
+This module closes the real-data modeling workflow by comparing GBLUP-ADE with
+the four regularized ANN variants on exactly the same outer-assessment
+individuals defined by the frozen real-data validation design.
+
+Only previously saved model outputs are read here. No model is refitted, no
+hyperparameter is selected, and no held-out prediction is modified.
+
+Three principles define the comparison:
+
+- every method contributes the same 75 `Trait x outer split` tasks;
+- every task contains the same 39 held-out individuals for all methods;
+- paired ANN-versus-GBLUP summaries are descriptive contrasts of repeated
+  cross-validation results, not tests that treat the 25 folds per trait as
+  statistically independent replicates.
+
+Because BM, Cer, and Prod.Cor are on different scales, RMSE and MAE are compared
+**within trait** and are not averaged across traits.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
+
+options(stringsAsFactors = FALSE)
+
+dir.create(
+  "output/real/comparison/figures",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+```
+
+## 2. Inputs and frozen output contract
+
+```{r packages-and-inputs}
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+
+GBLUP_RESULTS_RDS <-
+  "output/real/gblup/real_gblup_ade_results.rds"
+GBLUP_PREDICTIONS_RDS <-
+  "output/real/gblup/real_gblup_ade_predictions.rds"
+ANN_RESULTS_RDS <-
+  "output/real/ann/final/real_ann_results.rds"
+ANN_PREDICTIONS_RDS <-
+  "output/real/ann/final/real_ann_predictions.rds"
+
+required_files <- c(
+  GBLUP_RESULTS_RDS,
+  GBLUP_PREDICTIONS_RDS,
+  ANN_RESULTS_RDS,
+  ANN_PREDICTIONS_RDS
+)
+
+stopifnot(all(file.exists(required_files)))
+
+gr <- readRDS(GBLUP_RESULTS_RDS)
+gp <- readRDS(GBLUP_PREDICTIONS_RDS)
+ar <- readRDS(ANN_RESULTS_RDS)
+ap <- readRDS(ANN_PREDICTIONS_RDS)
+
+expected_ann_models <- c(
+  "ANN_0",
+  "ANN_L1",
+  "ANN_L2",
+  "ANN_L1_L2"
+)
+
+model_order <- c(
+  "GBLUP_ADE",
+  expected_ann_models
+)
+
+expected_traits <- c(
+  "Prod.Cor",
+  "Cer",
+  "BM"
+)
+
+stopifnot(
+  nrow(gr) == 75L,
+  nrow(gp) == 2925L,
+  nrow(ar) == 300L,
+  nrow(ap) == 11700L,
+  length(unique(gr$TaskID)) == 75L,
+  length(unique(ar$TaskID)) == 75L,
+  all(gr$Status == "ok"),
+  all(ar$Status == "ok"),
+  all(is.finite(gp$Predicted_Value)),
+  all(is.finite(ap$Predicted_Value)),
+  identical(
+    sort(unique(gr$Trait)),
+    sort(expected_traits)
+  ),
+  identical(
+    sort(unique(ar$Trait)),
+    sort(expected_traits)
+  ),
+  identical(
+    sort(unique(ar$Model)),
+    sort(expected_ann_models)
+  )
+)
+
+input_summary <- data.frame(
+  Object = c(
+    "GBLUP-ADE task results",
+    "GBLUP-ADE held-out predictions",
+    "ANN task-by-model results",
+    "ANN held-out predictions"
+  ),
+  Rows = c(
+    nrow(gr),
+    nrow(gp),
+    nrow(ar),
+    nrow(ap)
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Frozen model outputs entering the real-data comparison",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+## 3. Matched evaluation design
+
+### 3.1 Task structure by model
+
+```{r model-structure}
+model_structure_rows <- vector(
+  "list",
+  length(model_order)
+)
+
+for (model_index in seq_along(model_order)) {
+  model <- model_order[model_index]
+
+  if (model == "GBLUP_ADE") {
+    result_data <- gr
+    prediction_data <- gp
+  } else {
+    result_data <- ar[
+      ar$Model == model,
+      ,
+      drop = FALSE
+    ]
+    prediction_data <- ap[
+      ap$Model == model,
+      ,
+      drop = FALSE
+    ]
+  }
+
+  predictions_per_task <- as.integer(
+    table(prediction_data$TaskID)
+  )
+
+  model_structure_rows[[model_index]] <- data.frame(
+    Model = model,
+    Tasks = length(unique(result_data$TaskID)),
+    Predictions = nrow(prediction_data),
+    Min_predictions_per_task = min(predictions_per_task),
+    Max_predictions_per_task = max(predictions_per_task),
+    stringsAsFactors = FALSE
+  )
+}
+
+model_structure <- do.call(
+  rbind,
+  model_structure_rows
+)
+
+rownames(model_structure) <- NULL
+
+stopifnot(
+  all(model_structure$Tasks == 75L),
+  model_structure$Predictions[
+    model_structure$Model == "GBLUP_ADE"
+  ] == 2925L,
+  all(
+    model_structure$Predictions[
+      model_structure$Model != "GBLUP_ADE"
+    ] == 2925L
+  ),
+  all(model_structure$Min_predictions_per_task == 39L),
+  all(model_structure$Max_predictions_per_task == 39L)
+)
+
+model_structure |>
+  knitr::kable(
+    format = "html",
+    caption = "Observed task and held-out prediction structure by model",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+### 3.2 Exact target and individual matching
+
+Predictions are aligned by trait, repetition, outer fold, split identifier,
+task identifier, and individual identifier.
+
+```{r matched-targets}
+comparison_keys <- c(
+  "Trait",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "TaskID",
+  "ID"
+)
+
+g_targets <- gp[
+  , c(
+    comparison_keys,
+    "Family",
+    "Observed_Phenotype"
+  )
+]
+
+paired_targets <- merge(
+  g_targets,
+  ap[
+    , c(
+      comparison_keys,
+      "Model",
+      "Family",
+      "Observed_Phenotype"
+    )
+  ],
+  by = comparison_keys,
+  suffixes = c("_GBLUP", "_ANN"),
+  sort = FALSE
+)
+
+paired_targets$Phenotype_difference <- abs(
+  paired_targets$Observed_Phenotype_GBLUP -
+    paired_targets$Observed_Phenotype_ANN
+)
+
+paired_targets$Family_match <-
+  paired_targets$Family_GBLUP ==
+  paired_targets$Family_ANN
+
+target_match <- aggregate(
+  Phenotype_difference ~ Model,
+  data = paired_targets,
+  FUN = max
+)
+
+family_match <- aggregate(
+  Family_match ~ Model,
+  data = paired_targets,
+  FUN = all
+)
+
+target_match <- merge(
+  target_match,
+  family_match,
+  by = "Model",
+  sort = FALSE
+)
+
+stopifnot(
+  nrow(paired_targets) == 11700L,
+  all(target_match$Phenotype_difference < 1e-12),
+  all(target_match$Family_match)
+)
+
+target_match |>
+  knitr::kable(
+    format = "html",
+    digits = 12,
+    caption = "Exact held-out target and family matching relative to GBLUP-ADE",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+Every comparison is therefore made on the same held-out phenotype for the same
+individual in the same outer split.
+
+## 4. Evaluation metrics
+
+The terminal comparison uses the same task-level metrics already calculated by
+R06 and R07.
+
+- **Pearson correlation** measures linear association between held-out
+  prediction and phenotype.
+- **RMSE** and **MAE** measure prediction error on the original trait scale;
+  smaller values are better.
+- **Bias** is `mean(prediction - phenotype)`; values nearer zero are better.
+- **Slope** is the prediction coefficient in `lm(phenotype ~ prediction)`;
+  values nearer one indicate better proportional calibration, but slope becomes
+  unstable when prediction variance is nearly zero.
+- **R-squared** is `1 - SSE/SST`; it can be negative for held-out predictions.
+
+```{r metric-definitions, include=FALSE}
+metrics <- c(
+  "Phenotype_Correlation",
+  "Phenotype_RMSE",
+  "Phenotype_MAE",
+  "Phenotype_Bias",
+  "Phenotype_Slope",
+  "Phenotype_R2"
+)
+
+higher_better <- c(
+  "Phenotype_Correlation",
+  "Phenotype_R2"
+)
+
+lower_better <- c(
+  "Phenotype_RMSE",
+  "Phenotype_MAE"
+)
+
+zero_target <- "Phenotype_Bias"
+one_target <- "Phenotype_Slope"
+```
+
+For paired contrasts, positive performance advantage always favors the ANN
+variant. Higher-is-better metrics use `ANN - GBLUP`; lower-is-better metrics use
+`GBLUP - ANN`; bias is compared by distance from zero; slope is compared by
+distance from one.
+
+## 5. Trait-specific model performance
+
+```{r trait-performance}
+analysis_cols <- c(
+  "Trait",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "TaskID",
+  "Model",
+  metrics
+)
+
+all_results <- rbind(
+  gr[, analysis_cols],
+  ar[, analysis_cols]
+)
+
+trait_summary <- aggregate(
+  all_results[, metrics],
+  by = list(
+    Trait = all_results$Trait,
+    Model = all_results$Model
+  ),
+  FUN = mean,
+  na.rm = TRUE
+)
+
+trait_summary$Trait <- factor(
+  trait_summary$Trait,
+  levels = expected_traits
+)
+
+trait_summary$Model <- factor(
+  trait_summary$Model,
+  levels = model_order
+)
+
+trait_summary <- trait_summary[
+  order(
+    trait_summary$Trait,
+    trait_summary$Model
+  ),
+  ,
+  drop = FALSE
+]
+
+trait_summary$Trait <- as.character(
+  trait_summary$Trait
+)
+trait_summary$Model <- as.character(
+  trait_summary$Model
+)
+
+trait_display <- trait_summary[
+  , c(
+    "Trait",
+    "Model",
+    "Phenotype_Correlation",
+    "Phenotype_RMSE",
+    "Phenotype_MAE",
+    "Phenotype_R2"
+  )
+]
+
+trait_display |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Mean held-out performance by trait and model",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+### 5.1 Best model by trait
+
+```{r trait-winners}
+trait_winner_rows <- vector(
+  "list",
+  length(expected_traits)
+)
+
+for (trait_index in seq_along(expected_traits)) {
+  trait <- expected_traits[trait_index]
+
+  d <- trait_summary[
+    trait_summary$Trait == trait,
+    ,
+    drop = FALSE
+  ]
+
+  trait_winner_rows[[trait_index]] <- data.frame(
+    Trait = trait,
+    Best_correlation = d$Model[
+      which.max(d$Phenotype_Correlation)
+    ],
+    Best_RMSE = d$Model[
+      which.min(d$Phenotype_RMSE)
+    ],
+    Best_MAE = d$Model[
+      which.min(d$Phenotype_MAE)
+    ],
+    Best_R2 = d$Model[
+      which.max(d$Phenotype_R2)
+    ],
+    stringsAsFactors = FALSE
+  )
+}
+
+trait_winners <- do.call(
+  rbind,
+  trait_winner_rows
+)
+
+trait_winners |>
+  knitr::kable(
+    format = "html",
+    caption = "Best mean held-out metric by trait",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+gblup_rmse_wins <- sum(
+  trait_winners$Best_RMSE == "GBLUP_ADE"
+)
+gblup_r2_wins <- sum(
+  trait_winners$Best_R2 == "GBLUP_ADE"
+)
+gblup_corr_wins <- sum(
+  trait_winners$Best_correlation == "GBLUP_ADE"
+)
+```
+
+GBLUP-ADE has the lowest mean RMSE in
+**`r gblup_rmse_wins` of `r length(expected_traits)` traits**, the highest mean
+held-out \(R^2\) in **`r gblup_r2_wins` of `r length(expected_traits)`**, and the
+highest mean Pearson correlation in
+**`r gblup_corr_wins` of `r length(expected_traits)`**. Metric-specific winners
+are retained because near-zero correlations can coexist with small differences
+in RMSE when models shrink strongly toward the trait mean.
+
+## 6. Distribution across outer tasks
+
+```{r correlation-figure, fig.cap="Held-out Pearson correlation across the 25 outer splits per trait for GBLUP-ADE and the four ANN variants. White diamonds indicate model means."}
+plot_results <- all_results
+
+plot_results$Model <- factor(
+  plot_results$Model,
+  levels = model_order,
+  labels = c(
+    "GBLUP-ADE",
+    "ANN-0",
+    "ANN-L1",
+    "ANN-L2",
+    "ANN-L1+L2"
+  )
+)
+
+p_model_correlation <- ggplot(
+  plot_results,
+  aes(
+    x = Model,
+    y = Phenotype_Correlation,
+    fill = Model
+  )
+) +
+  geom_boxplot(
+    width = 0.58,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = 20261105L + 501L
+    ),
+    alpha = 0.32,
+    size = 1.3
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 3.2,
+    fill = "white"
+  ) +
+  facet_wrap(
+    ~ Trait,
+    scales = "free_y"
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = NULL,
+    y = "Held-out Pearson correlation",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 20,
+      hjust = 1
+    )
+  )
+
+print(p_model_correlation)
+```
+
+```{r save-correlation-tiff, include=FALSE}
+ggsave(
+  "output/real/comparison/figures/real_model_correlation_comparison.tiff",
+  plot = p_model_correlation,
+  device = "tiff",
+  width = 10,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
+)
+```
+
+```{r rmse-figure, fig.cap="Held-out RMSE across the 25 outer splits per trait for GBLUP-ADE and the four ANN variants. Lower values indicate smaller prediction error; white diamonds indicate model means."}
+p_model_rmse <- ggplot(
+  plot_results,
+  aes(
+    x = Model,
+    y = Phenotype_RMSE,
+    fill = Model
+  )
+) +
+  geom_boxplot(
+    width = 0.58,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = 20261105L + 502L
+    ),
+    alpha = 0.32,
+    size = 1.3
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 3.2,
+    fill = "white"
+  ) +
+  facet_wrap(
+    ~ Trait,
+    scales = "free_y"
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = NULL,
+    y = "Held-out RMSE",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 20,
+      hjust = 1
+    )
+  )
+
+print(p_model_rmse)
+```
+
+```{r save-rmse-tiff, include=FALSE}
+ggsave(
+  "output/real/comparison/figures/real_model_rmse_comparison.tiff",
+  plot = p_model_rmse,
+  device = "tiff",
+  width = 10,
+  height = 6.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
+)
+```
+
+## 7. Matched ANN versus GBLUP-ADE contrasts
+
+Each ANN result is paired with the GBLUP-ADE result from the same trait,
+repetition, fold, split, and outer task.
+
+```{r matched-contrasts}
+task_keys <- c(
+  "Trait",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "TaskID"
+)
+
+g <- gr[
+  , c(
+    task_keys,
+    metrics
+  )
+]
+
+names(g)[-(1:length(task_keys))] <- paste0(
+  names(g)[-(1:length(task_keys))],
+  "_GBLUP"
+)
+
+paired_rows <- list()
+paired_row_index <- 0L
+
+for (model in expected_ann_models) {
+  a <- ar[
+    ar$Model == model,
+    c(
+      task_keys,
+      metrics
+    )
+  ]
+
+  matched <- merge(
+    a,
+    g,
+    by = task_keys,
+    all = FALSE,
+    sort = FALSE
+  )
+
+  stopifnot(
+    nrow(matched) == 75L
+  )
+
+  for (trait in expected_traits) {
+    trait_data <- matched[
+      matched$Trait == trait,
+      ,
+      drop = FALSE
+    ]
+
+    stopifnot(
+      nrow(trait_data) == 25L
+    )
+
+    for (metric in metrics) {
+      ann_value <- trait_data[[metric]]
+      gblup_value <- trait_data[[
+        paste0(metric, "_GBLUP")
+      ]]
+
+      raw_difference <- ann_value - gblup_value
+
+      if (metric %in% higher_better) {
+        advantage <- ann_value - gblup_value
+      } else if (metric %in% lower_better) {
+        advantage <- gblup_value - ann_value
+      } else if (metric %in% zero_target) {
+        advantage <- abs(gblup_value) - abs(ann_value)
+      } else {
+        advantage <-
+          abs(gblup_value - 1) -
+          abs(ann_value - 1)
+      }
+
+      paired_row_index <- paired_row_index + 1L
+
+      valid <- is.finite(ann_value) &
+        is.finite(gblup_value) &
+        is.finite(advantage)
+
+      paired_rows[[paired_row_index]] <- data.frame(
+        Trait = trait,
+        Model = model,
+        Metric = metric,
+        N_total = length(raw_difference),
+        N_valid = sum(valid),
+        N_missing = sum(!valid),
+        Mean_ANN = mean(ann_value, na.rm = TRUE),
+        Mean_GBLUP = mean(gblup_value, na.rm = TRUE),
+        Mean_raw_difference = mean(
+          raw_difference,
+          na.rm = TRUE
+        ),
+        Median_raw_difference = median(
+          raw_difference,
+          na.rm = TRUE
+        ),
+        Mean_performance_advantage = mean(
+          advantage,
+          na.rm = TRUE
+        ),
+        Median_performance_advantage = median(
+          advantage,
+          na.rm = TRUE
+        ),
+        ANN_better = sum(
+          advantage > 0,
+          na.rm = TRUE
+        ),
+        Equal = sum(
+          advantage == 0,
+          na.rm = TRUE
+        ),
+        GBLUP_better = sum(
+          advantage < 0,
+          na.rm = TRUE
+        ),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+}
+
+paired <- do.call(
+  rbind,
+  paired_rows
+)
+
+rownames(paired) <- NULL
+
+stopifnot(
+  all(
+    paired$N_total ==
+      paired$N_valid +
+      paired$N_missing
+  ),
+  all(
+    paired$ANN_better +
+      paired$Equal +
+      paired$GBLUP_better ==
+      paired$N_valid
+  )
+)
+
+paired_primary <- paired[
+  paired$Metric %in% c(
+    "Phenotype_Correlation",
+    "Phenotype_RMSE",
+    "Phenotype_R2"
+  ),
+  c(
+    "Trait",
+    "Model",
+    "Metric",
+    "Mean_ANN",
+    "Mean_GBLUP",
+    "Mean_performance_advantage",
+    "ANN_better",
+    "Equal",
+    "GBLUP_better"
+  )
+]
+
+paired_primary |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Matched ANN versus GBLUP-ADE contrasts; positive advantage favors ANN",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+`N_total` is the number of matched outer tasks, `N_valid` is the number with
+finite values for both methods and the derived performance advantage, and
+`N_missing` records undefined contrasts (for example, Pearson correlation when
+a prediction vector has zero variance). The win/equal/loss counts therefore sum
+to `N_valid`, not necessarily to `N_total`.
+
+The counts describe how often one model performs better on the same held-out
+outer task. They are not interpreted as independent binomial or t-test
+replicates because repeated cross-validation folds share observations across
+repetitions.
+
+## 8. Held-out prediction dispersion
+
+Prediction compression is evaluated inside each outer task for all five models.
+This avoids conflating within-fold variance with between-model or between-fold
+changes in prediction level.
+
+```{r prediction-dispersion}
+prediction_cols <- c(
+  "Trait",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "TaskID",
+  "Model",
+  "ID",
+  "Observed_Phenotype",
+  "Predicted_Value"
+)
+
+all_predictions <- rbind(
+  gp[, prediction_cols],
+  ap[, prediction_cols]
+)
+
+dispersion_groups <- split(
+  all_predictions,
+  interaction(
+    all_predictions$Trait,
+    all_predictions$Model,
+    all_predictions$TaskID,
+    drop = TRUE
+  )
+)
+
+dispersion_fold <- do.call(
+  rbind,
+  lapply(
+    dispersion_groups,
+    function(d) {
+      sd_pred <- sd(d$Predicted_Value)
+      sd_obs <- sd(d$Observed_Phenotype)
+
+      correlation <- if (
+        is.finite(sd_pred) &&
+        sd_pred > 0 &&
+        is.finite(sd_obs) &&
+        sd_obs > 0
+      ) {
+        suppressWarnings(
+          cor(
+            d$Observed_Phenotype,
+            d$Predicted_Value
+          )
+        )
+      } else {
+        NA_real_
+      }
+
+      data.frame(
+        Trait = d$Trait[1],
+        Model = d$Model[1],
+        TaskID = d$TaskID[1],
+        SD_pred = sd_pred,
+        SD_obs = sd_obs,
+        SD_ratio = sd_pred / sd_obs,
+        Correlation = correlation,
+        stringsAsFactors = FALSE
+      )
+    }
+  )
+)
+
+rownames(dispersion_fold) <- NULL
+
+stopifnot(
+  nrow(dispersion_fold) == 375L
+)
+
+dispersion_summary_groups <- split(
+  dispersion_fold,
+  interaction(
+    dispersion_fold$Trait,
+    dispersion_fold$Model,
+    drop = TRUE
+  )
+)
+
+dispersion_summary <- do.call(
+  rbind,
+  lapply(
+    dispersion_summary_groups,
+    function(d) {
+      data.frame(
+        Trait = d$Trait[1],
+        Model = d$Model[1],
+        Median_SD_ratio = median(
+          d$SD_ratio,
+          na.rm = TRUE
+        ),
+        Q25_SD_ratio = unname(
+          quantile(
+            d$SD_ratio,
+            0.25,
+            na.rm = TRUE
+          )
+        ),
+        Q75_SD_ratio = unname(
+          quantile(
+            d$SD_ratio,
+            0.75,
+            na.rm = TRUE
+          )
+        ),
+        Min_SD_ratio = min(
+          d$SD_ratio,
+          na.rm = TRUE
+        ),
+        Max_SD_ratio = max(
+          d$SD_ratio,
+          na.rm = TRUE
+        ),
+        stringsAsFactors = FALSE
+      )
+    }
+  )
+)
+
+rownames(dispersion_summary) <- NULL
+
+stopifnot(
+  nrow(dispersion_summary) == 15L
+)
+
+low_variance_counts <- aggregate(
+  I(SD_ratio < 0.10) ~ Trait + Model,
+  data = dispersion_fold,
+  FUN = sum
+)
+
+names(low_variance_counts)[3] <-
+  "Folds_SD_ratio_below_0_10"
+
+dispersion_summary |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Within-fold prediction SD relative to observed phenotype SD",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+low_variance_counts |>
+  knitr::kable(
+    format = "html",
+    caption = "Number of outer folds with prediction SD below 10% of observed SD",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+Low dispersion is interpreted together with held-out correlation and error.
+A model can obtain a modest RMSE by shrinking predictions toward the trait mean
+while providing little discrimination among individuals.
+
+## 9. Scientific interpretation
+
+The comparison is deliberately metric-specific and trait-specific. RMSE and MAE
+are not averaged across traits because BM, Cer, and Prod.Cor are measured on
+different scales.
+
+The primary interpretation uses three complementary criteria:
+
+1. held-out Pearson correlation for individual discrimination;
+2. RMSE/MAE for prediction error on the original trait scale;
+3. held-out \(R^2\) and within-fold prediction dispersion for calibration and
+   collapse diagnostics.
+
+A model is not considered predictively useful solely because it reduces RMSE
+through stronger shrinkage if its held-out correlation remains approximately
+zero. Likewise, calibration slope is interpreted cautiously in folds with
+near-zero prediction variance.
+
+In the frozen real-data results, GBLUP-ADE has the lowest mean RMSE in
+**`r gblup_rmse_wins` of `r length(expected_traits)` traits** and the highest
+mean held-out \(R^2\) in **`r gblup_r2_wins` of
+`r length(expected_traits)` traits**. It also has the highest mean Pearson
+correlation in **`r gblup_corr_wins` of `r length(expected_traits)` traits**.
+The remaining correlation winner is interpreted cautiously because the winning
+mean correlation remains close to zero. Prediction-dispersion diagnostics show
+strong shrinkage for both modeling families; L1-containing ANN variants show
+especially frequent near-constant predictions, while GBLUP-ADE also exhibits
+substantial within-fold variance compression. The real-data result therefore
+supports lower held-out error for GBLUP-ADE without demonstrating strong
+individual discrimination by any evaluated model.
+
+These conclusions are specific to the frozen real dataset, marker QC,
+family-stratified repeated nested cross-validation design, GBLUP-ADE
+specification, and prespecified ANN search space. This module does not establish
+a universal ranking between genomic mixed models and neural networks.
+
+## 10. Output contract
+
+```{r comparison-output-contract, include=FALSE}
+WRITE_COMPARISON_OUTPUTS <- identical(
+  Sys.getenv(
+    "WRITE_COMPARISON_OUTPUTS",
+    "0"
+  ),
+  "1"
+)
+
+COMPARISON_DIR <-
+  "output/real/comparison"
+
+MODEL_STRUCTURE_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_structure.csv"
+)
+
+TARGET_MATCH_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_target_match.csv"
+)
+
+TRAIT_SUMMARY_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_trait_summary.csv"
+)
+
+TRAIT_WINNERS_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_trait_winners.csv"
+)
+
+PAIRED_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_ann_vs_gblup_paired_summary.csv"
+)
+
+DISPERSION_FOLD_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_within_fold_dispersion.csv"
+)
+
+DISPERSION_SUMMARY_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_dispersion_summary.csv"
+)
+
+LOW_VARIANCE_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_low_variance_folds.csv"
+)
+```
+
+```{r write-comparison-outputs, eval=WRITE_COMPARISON_OUTPUTS, include=FALSE}
+dir.create(
+  COMPARISON_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+write.csv(
+  model_structure,
+  MODEL_STRUCTURE_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  target_match,
+  TARGET_MATCH_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  trait_summary,
+  TRAIT_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  trait_winners,
+  TRAIT_WINNERS_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  paired,
+  PAIRED_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  dispersion_fold,
+  DISPERSION_FOLD_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  dispersion_summary,
+  DISPERSION_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  low_variance_counts,
+  LOW_VARIANCE_CSV,
+  row.names = FALSE
+)
+```
+
+## 11. Navigation
+
+[GBLUP-ADE](real_data_gblup.html) | [Regularized ANN](real_data_ann.html) | [Home](index.html)

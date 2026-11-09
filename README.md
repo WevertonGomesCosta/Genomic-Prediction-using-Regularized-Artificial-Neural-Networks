@@ -10,12 +10,15 @@ high-dimensional genomic prediction problems.
 
 ## Scientific scope
 
-The validated public workflow currently covers the **simulated-data branch**,
-where true genetic values are known and can be used for independent predictive
-assessment.
+The validated workflow now contains two complementary branches:
 
-A real *Coffea arabica* extension is planned under the same validation
-principles, but it is not yet part of the canonical public analysis.
+- a **simulated-data branch**, where true genetic values are known and provide
+  an independent target for predictive assessment;
+- a **real-data branch** based on *Coffea arabica*, evaluated under the same
+  frozen outer-validation and nested ANN tuning principles.
+
+Both branches compare GBLUP-ADE with the same four ANN regularization variants
+under matched held-out partitions.
 
 ## Models
 
@@ -65,6 +68,32 @@ The modules have distinct roles:
 ANN hyperparameter tuning is part of the ANN analysis itself rather than a
 separate public module.
 
+## Canonical real-data workflow
+
+The real-data workflow follows the same terminal-comparison architecture:
+
+```text
+real_data_audit.Rmd
+        |
+        v
+real_data_validation.Rmd
+        |
+        +-------------------+
+        |                   |
+        v                   v
+real_data_gblup.Rmd       real_data_ann.Rmd
+        |                   |
+        +---------+---------+
+                  |
+                  v
+        real_data_comparison.Rmd
+```
+
+The real-data branch audits genotype and phenotype inputs, freezes the common
+outer and inner validation design, evaluates GBLUP-ADE and regularized ANN
+models independently, and performs the final task-matched comparison without
+refitting either model family.
+
 ## Validation design
 
 The simulated-data comparison uses the same frozen outer partitions for all
@@ -95,7 +124,14 @@ small margin over ANN-L1**. ANN-L2 remains close to the unregularized ANN,
 indicating that the observed regularization gain is driven mainly by the L1
 component.
 
-These results describe the frozen validation design and bounded model search
+In the real *Coffea arabica* data, predictive discrimination is weak for all
+evaluated models. GBLUP-ADE nevertheless has the lowest mean RMSE and MAE and
+the highest mean R-squared for all three traits. ANN-L2 has the highest mean
+correlation for `Prod.Cor`, but that correlation remains close to zero. Both
+modeling families show substantial prediction shrinkage, particularly the
+L1-containing ANN variants.
+
+These results describe the frozen validation designs and bounded model searches
 evaluated in this project; they do not establish a universal ranking between
 genomic mixed models and all possible neural-network architectures.
 

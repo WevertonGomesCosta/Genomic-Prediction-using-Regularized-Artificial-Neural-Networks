@@ -18,9 +18,10 @@ GBLUP-ADE genomic mixed model and artificial neural networks with no
 regularization, L1 regularization, L2 regularization, or simultaneous L1+L2
 regularization.
 
-The validated public analysis currently focuses on simulated genomic data,
-where true genetic values are known and can be used for independent predictive
-assessment.
+The validated analysis contains both simulated genomic data, where true
+genetic values are known and can be used for independent predictive assessment,
+and a real *Coffea arabica* branch evaluated under the same frozen validation
+principles.
 
 ## Scientific question
 
@@ -64,6 +65,18 @@ The simulated-data workflow is organized into five modules:
 ANN hyperparameter tuning is part of the ANN analysis rather than a separate
 public module.
 
+The real-data workflow uses the corresponding modules:
+
+1. [Real-data audit](real_data_audit.html)
+2. [Real-data validation](real_data_validation.html)
+3. Parallel modeling branches:
+   - [Real-data GBLUP-ADE](real_data_gblup.html)
+   - [Real-data regularized ANN](real_data_ann.html)
+4. [Real-data model comparison](real_data_comparison.html)
+
+The terminal real-data comparison reads the frozen model outputs and does not
+refit either model family.
+
 ## Key result
 
 Within the prespecified canonical model and ANN architecture search space,
@@ -80,13 +93,17 @@ These results describe the frozen validation design and bounded model search
 evaluated here; they do not establish a universal ranking between genomic mixed
 models and all possible neural-network architectures.
 
-## Planned real-data extension
+## Validated real-data extension
 
-A real *Coffea arabica* extension is planned under the same separation between
-data audit, validation, model fitting, and terminal comparison. Genotype
-provenance and phenotype preparation will be audited before genomic prediction.
+The *Coffea arabica* branch follows the same separation between data audit,
+validation, model fitting, and terminal comparison.
 
-This real-data branch is not yet part of the validated public workflow.
+Under the frozen real-data design, all evaluated models show weak held-out
+discrimination. GBLUP-ADE has the lowest mean RMSE and MAE and the highest mean
+R-squared for all three traits. The ANN variants do not demonstrate a useful
+predictive advantage, and prediction-dispersion diagnostics show substantial
+shrinkage in both modeling families, especially for ANN variants containing L1
+regularization.
 
 ## Reproducibility
 

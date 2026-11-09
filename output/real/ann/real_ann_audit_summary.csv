@@ -1,0 +1,22 @@
+Check,Status,Details
+Tuning checkpoints,PASS,75/75 task checkpoints.
+Final checkpoints,PASS,75/75 task checkpoints.
+Final checkpoint contract,PASS,dataset=real; analysis=real_ann_final_task; device=cuda; torch=0.16.3; one config_id and one tuning_config_id.
+Checkpoint task index,PASS,75 unique task_id values; task_index exactly covers 1:75.
+Canonical results MD5,PASS,real_ann_results.rds = 8f1aee04001d43829d0f0d810b0dbdd3.
+Checkpoint reconstruction: results,PASS,300/300 rows; maximum numeric difference 0; non-numeric columns identical; all.equal TRUE.
+Checkpoint reconstruction: predictions,PASS,11700/11700 rows; maximum numeric difference 0; non-numeric columns identical; all.equal TRUE.
+Checkpoint reconstruction: epochs,PASS,300/300 rows; maximum numeric difference 0; non-numeric columns identical; all.equal TRUE.
+Selected configurations,PASS,300/300 rows.
+Candidate summaries,PASS,5250/5250 rows.
+Inner fits,PASS,21000/21000 candidate-fold rows.
+Final results,PASS,300/300 model-task rows; all Status=ok.
+Held-out predictions,PASS,11700/11700 rows; all finite.
+Model balance,PASS,"75 results for ANN_0, ANN_L1, ANN_L2, ANN_L1_L2."
+Trait balance,PASS,"100 results for BM, Cer, and Prod.Cor."
+Validation integrity,PASS,Frozen 5 repetitions x 5 outer folds x 3 traits; 4 inner folds per outer task.
+Post-hoc model changes,PASS,"No architecture, grid, fold, or model modification after held-out inspection."
+Predictive correlation,WARN,Mean and median held-out correlations are near zero or negative across ANN variants.
+Prediction dispersion,WARN,Strong within-fold variance compression; most L1/L1+L2 folds have SD ratio <0.10.
+Grid boundary behavior,WARN,L1 and L2 optima frequently occur at the upper prespecified penalty bounds.
+ANN scientific conclusion,WARN,Regularization reduces error mainly by shrinkage; no useful ranking signal demonstrated.

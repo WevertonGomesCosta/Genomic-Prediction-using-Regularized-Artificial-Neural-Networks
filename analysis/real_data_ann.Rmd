@@ -1,0 +1,4463 @@
+---
+title: "Real data: regularized ANN"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+    code_folding: show
+editor_options:
+  chunk_output_type: console
+---
+
+## 1. Purpose
+
+This module fits four feed-forward neural-network variants to the real
+*Coffea arabica* data under the same nested validation design used by the
+real-data GBLUP-ADE benchmark:
+
+- `ANN_0`: no weight penalty;
+- `ANN_L1`: L1 weight regularization;
+- `ANN_L2`: L2 weight regularization;
+- `ANN_L1_L2`: simultaneous L1 and L2 regularization.
+
+The primary comparison contains **3 traits x 25 outer splits = 75 tasks**.
+Within every task, the 39 outer-assessment individuals remain untouched until
+the final prediction already exists.
+
+Hyperparameter selection is restricted to the four inner folds stored in
+`real_cv_design.rds`. Architecture and learning rate are first selected with
+`ANN_0` and then held fixed across the four ANN variants within the same outer
+task. The regularized variants subsequently tune only their applicable
+penalties.
+
+Task-level checkpoints are written during both tuning and final fitting.
+Rerunning either stage automatically reuses compatible completed checkpoints,
+so an interrupted run does not restart finished tasks.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
+
+options(stringsAsFactors = FALSE)
+
+dir.create(
+  "output/real/ann/figures",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+dir.create(
+  ".local/checkpoints/real/ann/tuning",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+dir.create(
+  ".local/checkpoints/real/ann/final",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+```
+
+## 2. ANN variants and fixed settings
+
+```{r packages-and-settings, warning=FALSE, message=FALSE}
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+library(future)
+
+RUN_ANN_TUNING <- identical(
+  Sys.getenv("RUN_ANN_TUNING", "0"),
+  "1"
+)
+
+RUN_ANN <- identical(
+  Sys.getenv("RUN_ANN", "0"),
+  "1"
+)
+
+ANN_FORCE <- identical(
+  Sys.getenv("ANN_FORCE", "0"),
+  "1"
+)
+
+ANN_WORKERS_REQUESTED <- suppressWarnings(
+  as.integer(Sys.getenv("ANN_WORKERS", "0"))
+)
+
+ANN_WORKERS <- if (
+  is.finite(ANN_WORKERS_REQUESTED) &&
+  ANN_WORKERS_REQUESTED > 0L
+) {
+  ANN_WORKERS_REQUESTED
+} else {
+  detected_cores <- suppressWarnings(
+    parallel::detectCores(
+      logical = TRUE
+    )
+  )
+
+  if (
+    is.finite(detected_cores) &&
+    detected_cores > 0L
+  ) {
+    as.integer(detected_cores)
+  } else {
+    as.integer(
+      future::availableCores()
+    )
+  }
+}
+
+ANN_WORKERS <- max(1L, ANN_WORKERS)
+
+ANN_RUNTIME_REQUIRED <-
+  RUN_ANN_TUNING ||
+  RUN_ANN
+
+if (ANN_RUNTIME_REQUIRED) {
+  suppressPackageStartupMessages(
+    library(torch)
+  )
+}
+
+SEED_GLOBAL <- 20261105L
+MAX_EPOCHS <- 2000L
+PATIENCE <- 25L
+MIN_DELTA <- 1e-6
+EARLY_VALIDATION_FRACTION <- 0.15
+FINAL_EPOCH_MAX_EPOCHS <- 3000L
+
+MODEL_LEVELS <- c(
+  "ANN_0",
+  "ANN_L1",
+  "ANN_L2",
+  "ANN_L1_L2"
+)
+
+ann_variants <- data.frame(
+  Model = MODEL_LEVELS,
+  L1 = c("No", "Yes", "No", "Yes"),
+  L2 = c("No", "No", "Yes", "Yes"),
+  Interpretation = c(
+    "Unregularized reference ANN.",
+    "ANN with L1 weight regularization.",
+    "ANN with L2 weight regularization.",
+    "ANN with simultaneous L1 and L2 weight regularization."
+  ),
+  stringsAsFactors = FALSE
+)
+
+ann_variants |>
+  knitr::kable(
+    format = "html",
+    caption = "ANN variants evaluated under the common real-data validation design",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+The epoch values are optimization ceilings, not fixed training lengths.
+Early stopping terminates a run after 25 epochs without the prespecified
+minimum validation-loss improvement.
+
+Independent outer tasks are executed with `future::multisession`. `ANN_WORKERS`
+controls the number of concurrent R workers; when it is unset or zero, all
+logical cores reported by `parallel::detectCores()` are eligible (with
+`future::availableCores()` as fallback). This rule is the same for CPU and
+CUDA: no artificial one-worker cap is imposed when CUDA is selected. Each
+worker creates its own Torch context and uses the deterministic task/fold
+seeds defined below.
+
+## 3. Canonical data and validation objects
+
+```{r inputs}
+common <- readRDS(
+  "output/real/audit/preprocessed_real_common.rds"
+)
+
+cv <- readRDS(
+  "output/real/validation/real_cv_design.rds"
+)
+
+geno <- as.matrix(common$genotype)
+pheno <- common$phenotype
+traits <- common$traits
+ids <- rownames(geno)
+
+stopifnot(
+  nrow(geno) == 195L,
+  ncol(geno) == 20887L,
+  identical(ids, pheno$genotipo),
+  identical(sort(traits), sort(c("Prod.Cor", "Cer", "BM"))),
+  length(cv$outer_splits) == 25L,
+  sum(vapply(cv$inner_splits, length, integer(1))) == 100L,
+  all(is.finite(geno))
+)
+
+input_summary <- data.frame(
+  Object = c(
+    "Genotype",
+    "Phenotype",
+    "Traits",
+    "Outer splits",
+    "Inner splits"
+  ),
+  Structure = c(
+    paste(dim(geno), collapse = " x "),
+    paste(dim(pheno), collapse = " x "),
+    paste(traits, collapse = ", "),
+    length(cv$outer_splits),
+    sum(vapply(cv$inner_splits, length, integer(1)))
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Objects entering the real-data ANN workflow",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+The ANN branch therefore uses exactly the same 195 individuals, 20,887 markers,
+three phenotype targets, and 25 outer held-out sets used by GBLUP-ADE.
+
+## 4. Network and regularization
+
+For standardized marker vector \(\mathbf{x}\), each hidden layer uses ReLU and
+the output layer is linear. Training minimizes
+
+\[
+\operatorname{MSE}(y,\hat y)
++
+\lambda_1\sum_j |w_j|
++
+\frac{\lambda_2}{2}\sum_j w_j^2.
+\]
+
+Bias terms are not penalized. Adam uses `weight_decay = 0`, so the L2
+coefficient enters only through the explicit penalty above.
+
+```{r runtime-and-model, eval=ANN_RUNTIME_REQUIRED}
+cuda_available <- torch::cuda_is_available()
+requested_device <- tolower(
+  Sys.getenv("ANN_DEVICE", "auto")
+)
+
+ANN_DEVICE_LABEL <- if (
+  requested_device == "cuda"
+) {
+  if (!cuda_available) {
+    stop(
+      "ANN_DEVICE=cuda was requested, but CUDA is not available."
+    )
+  }
+  "cuda"
+} else if (
+  requested_device == "cpu"
+) {
+  "cpu"
+} else if (
+  cuda_available
+) {
+  "cuda"
+} else {
+  "cpu"
+}
+
+ANN_DEVICE <- torch::torch_device(
+  ANN_DEVICE_LABEL
+)
+
+TorchGenomicMLP <- torch::nn_module(
+  "TorchGenomicMLP",
+  initialize = function(
+    input_dim,
+    hidden_units
+  ) {
+    self$linears <- torch::nn_module_list()
+    previous <- as.integer(input_dim)
+
+    for (hidden in hidden_units) {
+      self$linears$append(
+        torch::nn_linear(
+          previous,
+          as.integer(hidden)
+        )
+      )
+      previous <- as.integer(hidden)
+    }
+
+    self$output <- torch::nn_linear(
+      previous,
+      1L
+    )
+  },
+  forward = function(x) {
+    for (
+      layer_index in
+      seq_len(length(self$linears))
+    ) {
+      x <- torch::nnf_relu(
+        self$linears[[layer_index]](x)
+      )
+    }
+    self$output(x)
+  }
+)
+
+cat(
+  "ANN device:",
+  ANN_DEVICE_LABEL,
+  "| CUDA available:",
+  cuda_available,
+  "\n"
+)
+```
+
+## 5. Nested tuning search
+
+### 5.1 Prespecified search space
+
+The search space is intentionally the same as the simulated-data ANN workflow.
+
+```{r search-space}
+ARCHITECTURES <- list(
+  `2` = c(2L),
+  `4` = c(4L),
+  `8` = c(8L),
+  `16` = c(16L),
+  `32` = c(32L),
+  `8-4` = c(8L, 4L),
+  `16-8` = c(16L, 8L),
+  `32-16` = c(32L, 16L),
+  `64-32` = c(64L, 32L)
+)
+
+LEARNING_RATES <- c(
+  1.25e-4,
+  2.5e-4,
+  5e-4,
+  1e-3
+)
+
+L1_VALUES <- c(
+  1e-5,
+  1e-4,
+  1e-3,
+  1e-2,
+  3e-2,
+  1e-1
+)
+
+L2_VALUES <- c(
+  1e-5,
+  1e-4,
+  1e-3,
+  1e-2
+)
+
+L1_L2_GRID <- expand.grid(
+  L1 = L1_VALUES,
+  L2 = L2_VALUES,
+  KEEP.OUT.ATTRS = FALSE,
+  stringsAsFactors = FALSE
+)
+
+structure_grid <- expand.grid(
+  Architecture = names(ARCHITECTURES),
+  Learning_rate = LEARNING_RATES,
+  KEEP.OUT.ATTRS = FALSE,
+  stringsAsFactors = FALSE
+)
+
+structure_grid$Model <- "ANN_0"
+structure_grid$L1 <- 0
+structure_grid$L2 <- 0
+
+penalty_grid <- rbind(
+  data.frame(
+    Model = "ANN_L1",
+    L1 = L1_VALUES,
+    L2 = 0,
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    Model = "ANN_L2",
+    L1 = 0,
+    L2 = L2_VALUES,
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    Model = "ANN_L1_L2",
+    L1 = L1_L2_GRID$L1,
+    L2 = L1_L2_GRID$L2,
+    stringsAsFactors = FALSE
+  )
+)
+
+search_summary <- data.frame(
+  Stage = c(
+    "ANN_0 architecture + learning rate",
+    "ANN_L1 penalty",
+    "ANN_L2 penalty",
+    "ANN_L1_L2 penalties"
+  ),
+  Candidates = c(
+    nrow(structure_grid),
+    length(L1_VALUES),
+    length(L2_VALUES),
+    nrow(L1_L2_GRID)
+  ),
+  Inner_fits_per_outer_task = 4L * c(
+    nrow(structure_grid),
+    length(L1_VALUES),
+    length(L2_VALUES),
+    nrow(L1_L2_GRID)
+  ),
+  stringsAsFactors = FALSE
+)
+
+search_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Prespecified ANN tuning search",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+CANDIDATES_PER_TASK <-
+  nrow(structure_grid) +
+  nrow(penalty_grid)
+
+INNER_FITS_PER_TASK <-
+  4L * CANDIDATES_PER_TASK
+
+TOTAL_INNER_FITS <-
+  75L * INNER_FITS_PER_TASK
+```
+
+The complete search contains 70 candidates per outer task and four inner folds:
+**280 candidate-fold fits per task and 21,000 inner fits across the 75 primary
+real-data tasks**.
+
+### 5.2 Output and checkpoint contract
+
+```{r paths, include=FALSE}
+TUNING_DIR <- "output/real/ann/tuning"
+TUNING_CHECKPOINT_DIR <- ".local/checkpoints/real/ann/tuning"
+
+SELECTED_RDS <- file.path(
+  TUNING_DIR,
+  "real_ann_tuning_selected_configurations.rds"
+)
+CANDIDATE_RDS <- file.path(
+  TUNING_DIR,
+  "real_ann_tuning_candidate_summary.rds"
+)
+FOLD_RDS <- file.path(
+  TUNING_DIR,
+  "real_ann_tuning_fold_results.rds"
+)
+TUNING_META_RDS <- file.path(
+  TUNING_DIR,
+  "real_ann_tuning_run_metadata.rds"
+)
+
+SELECTED_CSV <- file.path(
+  TUNING_DIR,
+  "real_ann_tuning_selected_configurations.csv"
+)
+CANDIDATE_CSV <- file.path(
+  TUNING_DIR,
+  "real_ann_tuning_candidate_summary.csv"
+)
+FOLD_CSV <- file.path(
+  TUNING_DIR,
+  "real_ann_tuning_fold_results.csv"
+)
+
+FINAL_DIR <- "output/real/ann/final"
+FINAL_CHECKPOINT_DIR <- ".local/checkpoints/real/ann/final"
+
+FINAL_RESULTS_RDS <- file.path(
+  FINAL_DIR,
+  "real_ann_results.rds"
+)
+FINAL_PREDICTIONS_RDS <- file.path(
+  FINAL_DIR,
+  "real_ann_predictions.rds"
+)
+FINAL_EPOCH_RDS <- file.path(
+  FINAL_DIR,
+  "real_ann_epoch_selection.rds"
+)
+FINAL_META_RDS <- file.path(
+  FINAL_DIR,
+  "real_ann_run_metadata.rds"
+)
+
+FINAL_RESULTS_CSV <- file.path(
+  FINAL_DIR,
+  "real_ann_results.csv"
+)
+FINAL_PREDICTIONS_CSV <- file.path(
+  FINAL_DIR,
+  "real_ann_predictions.csv"
+)
+FINAL_EPOCH_CSV <- file.path(
+  FINAL_DIR,
+  "real_ann_epoch_selection.csv"
+)
+
+ANN_TUNING_CONFIG_ID <- paste(
+  "REAL_ANN_TUNING_V1",
+  paste(names(ARCHITECTURES), collapse = "-"),
+  paste(LEARNING_RATES, collapse = "-"),
+  paste(L1_VALUES, collapse = "-"),
+  paste(L2_VALUES, collapse = "-"),
+  MAX_EPOCHS,
+  PATIENCE,
+  MIN_DELTA,
+  EARLY_VALIDATION_FRACTION,
+  sep = "__"
+)
+
+FINAL_CONFIG_ID <- paste0(
+  "REAL_ANN_FINAL_V1__FROM__",
+  ANN_TUNING_CONFIG_ID,
+  "__FINAL_EPOCH_CAP_",
+  FINAL_EPOCH_MAX_EPOCHS
+)
+```
+
+## 6. Tuning
+
+For each inner fold, the 117 inner-analysis individuals are split again only
+for optimization. Approximately 15% are reserved for early stopping, while the
+39 inner-assessment individuals remain untouched until a candidate checkpoint
+has been selected.
+
+Marker means, marker standard deviations, phenotype mean, and phenotype
+standard deviation are estimated only from the current fitting subset. The same
+transformations are then applied to early-validation and inner-assessment data.
+A marker that is constant in the current fitting subset receives unit scale.
+
+```{r run-tuning, eval=RUN_ANN_TUNING}
+dir.create(
+  TUNING_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+dir.create(
+  TUNING_CHECKPOINT_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+outer_map <- unique(
+  cv$outer_assignments[
+    , c(
+      "Repetition",
+      "OuterFold",
+      "SplitID"
+    )
+  ]
+)
+
+outer_map <- outer_map[
+  order(
+    outer_map$Repetition,
+    outer_map$OuterFold
+  ),
+  ,
+  drop = FALSE
+]
+
+task_table <- merge(
+  data.frame(
+    Trait = traits,
+    stringsAsFactors = FALSE
+  ),
+  outer_map,
+  by = NULL
+)
+
+task_table <- task_table[
+  order(
+    match(task_table$Trait, traits),
+    task_table$Repetition,
+    task_table$OuterFold
+  ),
+  ,
+  drop = FALSE
+]
+
+task_table$TaskID <- paste(
+  task_table$Trait,
+  task_table$SplitID,
+  sep = "_"
+)
+
+rownames(task_table) <- NULL
+
+stopifnot(
+  nrow(task_table) == 75L,
+  length(unique(task_table$TaskID)) == 75L
+)
+
+run_start <- proc.time()[["elapsed"]]
+
+run_real_ann_tuning_task <- function(task_index) {
+  suppressPackageStartupMessages(
+    library(torch)
+  )
+
+  worker_device_label <- ANN_DEVICE_LABEL
+
+  if (
+    identical(
+      ANN_DEVICE_LABEL,
+      "cuda"
+    )
+  ) {
+    gpu_count <- torch::cuda_device_count()
+
+    if (
+      is.finite(gpu_count) &&
+      gpu_count > 1L
+    ) {
+      worker_device_label <- paste0(
+        "cuda:",
+        (
+          task_index -
+          1L
+        ) %%
+          gpu_count
+      )
+    }
+  }
+
+  worker_device <- torch::torch_device(
+    worker_device_label
+  )
+
+  ANN_DEVICE <- worker_device
+
+  TorchGenomicMLP <- torch::nn_module(
+    "TorchGenomicMLP",
+    initialize = function(
+      input_dim,
+      hidden_units
+    ) {
+      self$linears <- torch::nn_module_list()
+      previous <- as.integer(input_dim)
+
+      for (hidden in hidden_units) {
+        self$linears$append(
+          torch::nn_linear(
+            previous,
+            as.integer(hidden)
+          )
+        )
+        previous <- as.integer(hidden)
+      }
+
+      self$output <- torch::nn_linear(
+        previous,
+        1L
+      )
+    },
+    forward = function(x) {
+      for (
+        layer_index in
+        seq_len(length(self$linears))
+      ) {
+        x <- torch::nnf_relu(
+          self$linears[[layer_index]](x)
+        )
+      }
+
+      self$output(x)
+    }
+  )
+
+  task <- task_table[
+    task_index,
+    ,
+    drop = FALSE
+  ]
+
+  safe_task_id <- gsub(
+    "[^A-Za-z0-9_-]",
+    "_",
+    task$TaskID
+  )
+
+  checkpoint_path <- file.path(
+    TUNING_CHECKPOINT_DIR,
+    paste0(
+      safe_task_id,
+      ".rds"
+    )
+  )
+
+  if (
+    file.exists(checkpoint_path) &&
+    !ANN_FORCE
+  ) {
+    old_checkpoint <- tryCatch(
+      readRDS(checkpoint_path),
+      error = function(e) NULL
+    )
+
+    if (
+      !is.null(old_checkpoint) &&
+      identical(
+        old_checkpoint$config_id,
+        ANN_TUNING_CONFIG_ID
+      ) &&
+      identical(
+        old_checkpoint$task_id,
+        task$TaskID
+      )
+    ) {
+      return(checkpoint_path)
+    }
+  }
+
+  trait_index <- match(
+    task$Trait,
+    traits
+  )
+
+  phenotype_vector <- pheno[[
+      task$Trait
+    ]]
+
+  inner <- cv$inner_splits[[
+      task$SplitID
+    ]]
+
+  task_start <- proc.time()[["elapsed"]]
+
+  bundles <- vector(
+    "list",
+    4L
+  )
+
+  for (
+    inner_fold in
+    seq_len(4L)
+  ) {
+
+    inner_split <- inner[[
+        paste0(
+          "I",
+          inner_fold
+        )
+      ]]
+
+    stopifnot(
+      length(
+        inner_split$analysis_ids
+      ) == 117L,
+      length(
+        inner_split$assessment_ids
+      ) == 39L
+    )
+
+    validation_seed <-
+      SEED_GLOBAL +
+      trait_index * 1000000L +
+      task$Repetition * 10000L +
+      task$OuterFold * 1000L +
+      inner_fold * 10L
+
+    set.seed(
+      validation_seed
+    )
+
+    n_validation <- as.integer(
+      round(
+        length(
+          inner_split$analysis_ids
+        ) *
+          EARLY_VALIDATION_FRACTION
+      )
+    )
+
+    validation_ids <- sort(
+      sample(
+        inner_split$analysis_ids,
+        n_validation,
+        replace = FALSE
+      )
+    )
+
+    fit_ids <- sort(
+      setdiff(
+        inner_split$analysis_ids,
+        validation_ids
+      )
+    )
+
+    fit_index <- match(
+      fit_ids,
+      ids
+    )
+
+    validation_index <- match(
+      validation_ids,
+      ids
+    )
+
+    assessment_index <- match(
+      inner_split$assessment_ids,
+      ids
+    )
+
+    stopifnot(
+      !anyNA(fit_index),
+      !anyNA(validation_index),
+      !anyNA(assessment_index)
+    )
+
+    x_center <- colMeans(
+      geno[
+        fit_index,
+        ,
+        drop = FALSE
+      ]
+    )
+
+    x_scale <- apply(
+      geno[
+        fit_index,
+        ,
+        drop = FALSE
+      ],
+      2,
+      sd
+    )
+
+    zero_variance <- (
+      !is.finite(x_scale) |
+      x_scale < 1e-8
+    )
+
+    x_scale[
+      zero_variance
+    ] <- 1
+
+    y_center <- mean(
+      phenotype_vector[
+        fit_index
+      ]
+    )
+
+    y_scale <- max(
+      sd(
+        phenotype_vector[
+          fit_index
+        ]
+      ),
+      1e-8
+    )
+
+    x_fit <- sweep(
+      sweep(
+        geno[
+          fit_index,
+          ,
+          drop = FALSE
+        ],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+
+    x_validation <- sweep(
+      sweep(
+        geno[
+          validation_index,
+          ,
+          drop = FALSE
+        ],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+
+    x_assessment <- sweep(
+      sweep(
+        geno[
+          assessment_index,
+          ,
+          drop = FALSE
+        ],
+        2,
+        x_center,
+        "-"
+      ),
+      2,
+      x_scale,
+      "/"
+    )
+
+    y_fit <-
+      (
+        phenotype_vector[
+          fit_index
+        ] -
+          y_center
+      ) /
+      y_scale
+
+    y_validation <-
+      (
+        phenotype_vector[
+          validation_index
+        ] -
+          y_center
+      ) /
+      y_scale
+
+    x_fit_tensor <- torch::torch_tensor(
+      x_fit,
+      dtype = torch::torch_float()
+    )$to(
+      device = ANN_DEVICE
+    )
+
+    y_fit_tensor <- torch::torch_tensor(
+      matrix(
+        y_fit,
+        ncol = 1
+      ),
+      dtype = torch::torch_float()
+    )$to(
+      device = ANN_DEVICE
+    )
+
+    x_validation_tensor <- torch::torch_tensor(
+      x_validation,
+      dtype = torch::torch_float()
+    )$to(
+      device = ANN_DEVICE
+    )
+
+    y_validation_tensor <- torch::torch_tensor(
+      matrix(
+        y_validation,
+        ncol = 1
+      ),
+      dtype = torch::torch_float()
+    )$to(
+      device = ANN_DEVICE
+    )
+
+    x_assessment_tensor <- torch::torch_tensor(
+      x_assessment,
+      dtype = torch::torch_float()
+    )$to(
+      device = ANN_DEVICE
+    )
+
+    bundles[[
+        inner_fold
+      ]] <- list(
+      x_fit_tensor = x_fit_tensor,
+      y_fit_tensor = y_fit_tensor,
+      x_validation_tensor =
+        x_validation_tensor,
+      y_validation_tensor =
+        y_validation_tensor,
+      x_assessment_tensor =
+        x_assessment_tensor,
+      y_assessment =
+        phenotype_vector[
+          assessment_index
+        ],
+      y_center = y_center,
+      y_scale = y_scale,
+      zero_variance_markers =
+        sum(zero_variance),
+      n_fit = length(fit_index),
+      n_validation =
+        length(validation_index),
+      n_assessment =
+        length(assessment_index)
+    )
+
+    rm(
+      x_fit,
+      x_validation,
+      x_assessment
+    )
+
+    invisible(
+      gc()
+    )
+  }
+
+  base_seed <-
+    SEED_GLOBAL +
+    trait_index * 10000000L +
+    task$Repetition * 100000L +
+    task$OuterFold * 10000L
+
+  structure_candidate_rows <- vector(
+    "list",
+    nrow(structure_grid)
+  )
+
+  structure_fold_rows <- vector(
+    "list",
+    nrow(structure_grid)
+  )
+
+  for (
+    candidate_index in
+    seq_len(nrow(structure_grid))
+  ) {
+
+    candidate <- structure_grid[
+      candidate_index,
+      ,
+      drop = FALSE
+    ]
+
+    candidate_id <- sprintf(
+      "S%02d",
+      candidate_index
+    )
+
+    fold_rows <- vector(
+      "list",
+      4L
+    )
+
+    for (
+      inner_fold in
+      seq_len(4L)
+    ) {
+
+      bundle <- bundles[[
+          inner_fold
+        ]]
+
+      fit_seed <-
+        base_seed +
+        1000000L +
+        inner_fold
+
+      set.seed(
+        as.integer(fit_seed)
+      )
+
+      torch::torch_manual_seed(
+        as.integer(fit_seed)
+      )
+
+      model <- TorchGenomicMLP(
+        ncol(geno),
+        ARCHITECTURES[[
+            candidate$Architecture
+          ]]
+      )$to(
+        device = ANN_DEVICE
+      )
+
+      optimizer <- torch::optim_adam(
+        params = model$parameters,
+        lr = candidate$Learning_rate,
+        weight_decay = 0
+      )
+
+      best_validation_loss <- Inf
+      best_epoch <- 1L
+
+      state <- model$state_dict()
+      best_state <- state
+
+      for (
+        state_name in
+        names(state)
+      ) {
+        best_state[[
+            state_name
+          ]] <-
+          state[[
+              state_name
+            ]]$detach()$clone()
+      }
+
+      stale_epochs <- 0L
+      last_epoch <- 0L
+      stopped_by_patience <- FALSE
+
+      if (
+        ANN_DEVICE_LABEL == "cuda"
+      ) {
+        torch::cuda_synchronize()
+      }
+
+      fit_start <- proc.time()[["elapsed"]]
+
+      for (
+        epoch in
+        seq_len(MAX_EPOCHS)
+      ) {
+
+        last_epoch <- epoch
+
+        model$train()
+        optimizer$zero_grad()
+
+        prediction <- model(
+          bundle$x_fit_tensor
+        )
+
+        loss <- torch::nnf_mse_loss(
+          prediction,
+          bundle$y_fit_tensor
+        )
+
+        loss$backward()
+        optimizer$step()
+
+        model$eval()
+
+        validation_loss <- torch::with_no_grad({
+          torch::nnf_mse_loss(
+            model(
+              bundle$x_validation_tensor
+            ),
+            bundle$y_validation_tensor
+          )
+        })
+
+        validation_value <- as.numeric(
+          validation_loss$to(
+            device =
+              torch::torch_device(
+                "cpu"
+              )
+          )
+        )
+
+        improved <-
+          validation_value <
+          best_validation_loss -
+          MIN_DELTA
+
+        if (improved) {
+          best_validation_loss <-
+            validation_value
+
+          best_epoch <- epoch
+
+          state <- model$state_dict()
+          best_state <- state
+
+          for (
+            state_name in
+            names(state)
+          ) {
+            best_state[[
+                state_name
+              ]] <-
+              state[[
+                  state_name
+                ]]$detach()$clone()
+          }
+
+          stale_epochs <- 0L
+        } else {
+          stale_epochs <-
+            stale_epochs + 1L
+        }
+
+        if (
+          stale_epochs >=
+          PATIENCE
+        ) {
+          stopped_by_patience <-
+            TRUE
+          break
+        }
+      }
+
+      if (
+        ANN_DEVICE_LABEL == "cuda"
+      ) {
+        torch::cuda_synchronize()
+      }
+
+      fit_seconds <-
+        proc.time()[["elapsed"]] -
+        fit_start
+
+      model$load_state_dict(
+        best_state
+      )
+
+      model$eval()
+
+      predicted_scaled <- torch::with_no_grad({
+        as.numeric(
+          model(
+            bundle$x_assessment_tensor
+          )$to(
+            device =
+              torch::torch_device(
+                "cpu"
+              )
+          )
+        )
+      })
+
+      predicted <-
+        predicted_scaled *
+        bundle$y_scale +
+        bundle$y_center
+
+      observed <-
+        bundle$y_assessment
+
+      rmse <- sqrt(
+        mean(
+          (
+            predicted -
+            observed
+          )^2
+        )
+      )
+
+      mae <- mean(
+        abs(
+          predicted -
+          observed
+        )
+      )
+
+      correlation <- if (
+        length(
+          unique(predicted)
+        ) > 1L &&
+        length(
+          unique(observed)
+        ) > 1L
+      ) {
+        cor(
+          predicted,
+          observed
+        )
+      } else {
+        NA_real_
+      }
+
+      fold_rows[[
+          inner_fold
+        ]] <- data.frame(
+        Dataset = "real",
+        Trait = task$Trait,
+        Repetition =
+          task$Repetition,
+        OuterFold =
+          task$OuterFold,
+        SplitID =
+          task$SplitID,
+        TaskID =
+          task$TaskID,
+        Stage =
+          "structure",
+        Model =
+          "ANN_0",
+        CandidateID =
+          candidate_id,
+        Architecture =
+          candidate$Architecture,
+        Learning_rate =
+          candidate$Learning_rate,
+        L1 = 0,
+        L2 = 0,
+        InnerFold =
+          inner_fold,
+        Inner_RMSE =
+          rmse,
+        Inner_Correlation =
+          correlation,
+        Inner_MAE =
+          mae,
+        EarlyStop_epoch =
+          best_epoch,
+        Last_epoch =
+          last_epoch,
+        Stopped_by_patience =
+          stopped_by_patience,
+        Hit_epoch_ceiling =
+          last_epoch >=
+          MAX_EPOCHS &&
+          !stopped_by_patience,
+        N_zero_variance_markers =
+          bundle$zero_variance_markers,
+        N_fit =
+          bundle$n_fit,
+        N_early_validation =
+          bundle$n_validation,
+        N_inner_assessment =
+          bundle$n_assessment,
+        Fit_seconds =
+          fit_seconds,
+        stringsAsFactors = FALSE
+      )
+    }
+
+    candidate_folds <- do.call(
+      rbind,
+      fold_rows
+    )
+
+    hidden_units <- ARCHITECTURES[[
+        candidate$Architecture
+      ]]
+
+    previous <- ncol(geno)
+    parameter_count <- 0L
+
+    for (
+      hidden in
+      hidden_units
+    ) {
+      parameter_count <-
+        parameter_count +
+        previous * hidden +
+        hidden
+
+      previous <- hidden
+    }
+
+    parameter_count <-
+      parameter_count +
+      previous +
+      1L
+
+    structure_candidate_rows[[
+        candidate_index
+      ]] <- data.frame(
+      Dataset = "real",
+      Trait = task$Trait,
+      Repetition =
+        task$Repetition,
+      OuterFold =
+        task$OuterFold,
+      SplitID =
+        task$SplitID,
+      TaskID =
+        task$TaskID,
+      Stage =
+        "structure",
+      Model =
+        "ANN_0",
+      CandidateID =
+        candidate_id,
+      Architecture =
+        candidate$Architecture,
+      Learning_rate =
+        candidate$Learning_rate,
+      L1 = 0,
+      L2 = 0,
+      Parameters =
+        parameter_count,
+      Inner_RMSE =
+        mean(
+          candidate_folds$Inner_RMSE,
+          na.rm = TRUE
+        ),
+      Inner_Correlation =
+        mean(
+          candidate_folds$Inner_Correlation,
+          na.rm = TRUE
+        ),
+      Inner_MAE =
+        mean(
+          candidate_folds$Inner_MAE,
+          na.rm = TRUE
+        ),
+      stringsAsFactors = FALSE
+    )
+
+    structure_fold_rows[[
+        candidate_index
+      ]] <- candidate_folds
+  }
+
+  structure_summary <- do.call(
+    rbind,
+    structure_candidate_rows
+  )
+
+  structure_folds <- do.call(
+    rbind,
+    structure_fold_rows
+  )
+
+  correlation_rank <- ifelse(
+    is.finite(
+      structure_summary$Inner_Correlation
+    ),
+    structure_summary$Inner_Correlation,
+    -Inf
+  )
+
+  structure_order <- order(
+    structure_summary$Inner_RMSE,
+    -correlation_rank,
+    structure_summary$Parameters,
+    structure_summary$Learning_rate,
+    structure_summary$CandidateID
+  )
+
+  selected_structure <-
+    structure_summary[
+      structure_order[1L],
+      ,
+      drop = FALSE
+    ]
+
+  selected_architecture <-
+    selected_structure$Architecture
+
+  selected_learning_rate <-
+    selected_structure$Learning_rate
+
+  penalty_candidate_rows <- vector(
+    "list",
+    nrow(penalty_grid)
+  )
+
+  penalty_fold_rows <- vector(
+    "list",
+    nrow(penalty_grid)
+  )
+
+  for (
+    candidate_index in
+    seq_len(nrow(penalty_grid))
+  ) {
+
+    candidate <- penalty_grid[
+      candidate_index,
+      ,
+      drop = FALSE
+    ]
+
+    candidate_id <- sprintf(
+      "P%02d",
+      candidate_index
+    )
+
+    model_stage_index <- match(
+      candidate$Model,
+      MODEL_LEVELS
+    )
+
+    fold_rows <- vector(
+      "list",
+      4L
+    )
+
+    for (
+      inner_fold in
+      seq_len(4L)
+    ) {
+
+      bundle <- bundles[[
+          inner_fold
+        ]]
+
+      fit_seed <-
+        base_seed +
+        2000000L +
+        model_stage_index *
+        10000L +
+        inner_fold
+
+      set.seed(
+        as.integer(fit_seed)
+      )
+
+      torch::torch_manual_seed(
+        as.integer(fit_seed)
+      )
+
+      model <- TorchGenomicMLP(
+        ncol(geno),
+        ARCHITECTURES[[
+            selected_architecture
+          ]]
+      )$to(
+        device = ANN_DEVICE
+      )
+
+      optimizer <- torch::optim_adam(
+        params = model$parameters,
+        lr = selected_learning_rate,
+        weight_decay = 0
+      )
+
+      best_validation_loss <- Inf
+      best_epoch <- 1L
+
+      state <- model$state_dict()
+      best_state <- state
+
+      for (
+        state_name in
+        names(state)
+      ) {
+        best_state[[
+            state_name
+          ]] <-
+          state[[
+              state_name
+            ]]$detach()$clone()
+      }
+
+      stale_epochs <- 0L
+      last_epoch <- 0L
+      stopped_by_patience <- FALSE
+
+      if (
+        ANN_DEVICE_LABEL == "cuda"
+      ) {
+        torch::cuda_synchronize()
+      }
+
+      fit_start <- proc.time()[["elapsed"]]
+
+      for (
+        epoch in
+        seq_len(MAX_EPOCHS)
+      ) {
+
+        last_epoch <- epoch
+
+        model$train()
+        optimizer$zero_grad()
+
+        prediction <- model(
+          bundle$x_fit_tensor
+        )
+
+        penalty_l1 <-
+          prediction$sum() * 0
+
+        penalty_l2 <-
+          prediction$sum() * 0
+
+        for (
+          layer_index in
+          seq_len(
+            length(
+              model$linears
+            )
+          )
+        ) {
+          weight <-
+            model$linears[[
+                layer_index
+              ]]$weight
+
+          penalty_l1 <-
+            penalty_l1 +
+            weight$abs()$sum()
+
+          penalty_l2 <-
+            penalty_l2 +
+            weight$pow(2)$sum()
+        }
+
+        output_weight <-
+          model$output$weight
+
+        penalty_l1 <-
+          penalty_l1 +
+          output_weight$abs()$sum()
+
+        penalty_l2 <-
+          penalty_l2 +
+          output_weight$pow(2)$sum()
+
+        loss <-
+          torch::nnf_mse_loss(
+            prediction,
+            bundle$y_fit_tensor
+          ) +
+          candidate$L1 *
+          penalty_l1 +
+          (
+            candidate$L2 /
+            2
+          ) *
+          penalty_l2
+
+        loss$backward()
+        optimizer$step()
+
+        model$eval()
+
+        validation_loss <- torch::with_no_grad({
+          torch::nnf_mse_loss(
+            model(
+              bundle$x_validation_tensor
+            ),
+            bundle$y_validation_tensor
+          )
+        })
+
+        validation_value <- as.numeric(
+          validation_loss$to(
+            device =
+              torch::torch_device(
+                "cpu"
+              )
+          )
+        )
+
+        improved <-
+          validation_value <
+          best_validation_loss -
+          MIN_DELTA
+
+        if (improved) {
+          best_validation_loss <-
+            validation_value
+
+          best_epoch <- epoch
+
+          state <- model$state_dict()
+          best_state <- state
+
+          for (
+            state_name in
+            names(state)
+          ) {
+            best_state[[
+                state_name
+              ]] <-
+              state[[
+                  state_name
+                ]]$detach()$clone()
+          }
+
+          stale_epochs <- 0L
+        } else {
+          stale_epochs <-
+            stale_epochs + 1L
+        }
+
+        if (
+          stale_epochs >=
+          PATIENCE
+        ) {
+          stopped_by_patience <-
+            TRUE
+          break
+        }
+      }
+
+      if (
+        ANN_DEVICE_LABEL == "cuda"
+      ) {
+        torch::cuda_synchronize()
+      }
+
+      fit_seconds <-
+        proc.time()[["elapsed"]] -
+        fit_start
+
+      model$load_state_dict(
+        best_state
+      )
+
+      model$eval()
+
+      predicted_scaled <- torch::with_no_grad({
+        as.numeric(
+          model(
+            bundle$x_assessment_tensor
+          )$to(
+            device =
+              torch::torch_device(
+                "cpu"
+              )
+          )
+        )
+      })
+
+      predicted <-
+        predicted_scaled *
+        bundle$y_scale +
+        bundle$y_center
+
+      observed <-
+        bundle$y_assessment
+
+      rmse <- sqrt(
+        mean(
+          (
+            predicted -
+            observed
+          )^2
+        )
+      )
+
+      mae <- mean(
+        abs(
+          predicted -
+          observed
+        )
+      )
+
+      correlation <- if (
+        length(
+          unique(predicted)
+        ) > 1L &&
+        length(
+          unique(observed)
+        ) > 1L
+      ) {
+        cor(
+          predicted,
+          observed
+        )
+      } else {
+        NA_real_
+      }
+
+      fold_rows[[
+          inner_fold
+        ]] <- data.frame(
+        Dataset = "real",
+        Trait = task$Trait,
+        Repetition =
+          task$Repetition,
+        OuterFold =
+          task$OuterFold,
+        SplitID =
+          task$SplitID,
+        TaskID =
+          task$TaskID,
+        Stage =
+          "penalty",
+        Model =
+          candidate$Model,
+        CandidateID =
+          candidate_id,
+        Architecture =
+          selected_architecture,
+        Learning_rate =
+          selected_learning_rate,
+        L1 =
+          candidate$L1,
+        L2 =
+          candidate$L2,
+        InnerFold =
+          inner_fold,
+        Inner_RMSE =
+          rmse,
+        Inner_Correlation =
+          correlation,
+        Inner_MAE =
+          mae,
+        EarlyStop_epoch =
+          best_epoch,
+        Last_epoch =
+          last_epoch,
+        Stopped_by_patience =
+          stopped_by_patience,
+        Hit_epoch_ceiling =
+          last_epoch >=
+          MAX_EPOCHS &&
+          !stopped_by_patience,
+        N_zero_variance_markers =
+          bundle$zero_variance_markers,
+        N_fit =
+          bundle$n_fit,
+        N_early_validation =
+          bundle$n_validation,
+        N_inner_assessment =
+          bundle$n_assessment,
+        Fit_seconds =
+          fit_seconds,
+        stringsAsFactors = FALSE
+      )
+    }
+
+    candidate_folds <- do.call(
+      rbind,
+      fold_rows
+    )
+
+    hidden_units <- ARCHITECTURES[[
+        selected_architecture
+      ]]
+
+    previous <- ncol(geno)
+    parameter_count <- 0L
+
+    for (
+      hidden in
+      hidden_units
+    ) {
+      parameter_count <-
+        parameter_count +
+        previous * hidden +
+        hidden
+
+      previous <- hidden
+    }
+
+    parameter_count <-
+      parameter_count +
+      previous +
+      1L
+
+    penalty_candidate_rows[[
+        candidate_index
+      ]] <- data.frame(
+      Dataset = "real",
+      Trait = task$Trait,
+      Repetition =
+        task$Repetition,
+      OuterFold =
+        task$OuterFold,
+      SplitID =
+        task$SplitID,
+      TaskID =
+        task$TaskID,
+      Stage =
+        "penalty",
+      Model =
+        candidate$Model,
+      CandidateID =
+        candidate_id,
+      Architecture =
+        selected_architecture,
+      Learning_rate =
+        selected_learning_rate,
+      L1 =
+        candidate$L1,
+      L2 =
+        candidate$L2,
+      Parameters =
+        parameter_count,
+      Inner_RMSE =
+        mean(
+          candidate_folds$Inner_RMSE,
+          na.rm = TRUE
+        ),
+      Inner_Correlation =
+        mean(
+          candidate_folds$Inner_Correlation,
+          na.rm = TRUE
+        ),
+      Inner_MAE =
+        mean(
+          candidate_folds$Inner_MAE,
+          na.rm = TRUE
+        ),
+      stringsAsFactors = FALSE
+    )
+
+    penalty_fold_rows[[
+        candidate_index
+      ]] <- candidate_folds
+  }
+
+  penalty_summary <- do.call(
+    rbind,
+    penalty_candidate_rows
+  )
+
+  penalty_folds <- do.call(
+    rbind,
+    penalty_fold_rows
+  )
+
+  selected_rows <- list()
+
+  selected_rows[[
+      "ANN_0"
+    ]] <- data.frame(
+    Dataset = "real",
+    Trait = task$Trait,
+    Repetition =
+      task$Repetition,
+    OuterFold =
+      task$OuterFold,
+    SplitID =
+      task$SplitID,
+    TaskID =
+      task$TaskID,
+    Model =
+      "ANN_0",
+    Architecture =
+      selected_architecture,
+    Learning_rate =
+      selected_learning_rate,
+    L1 = 0,
+    L2 = 0,
+    Inner_RMSE =
+      selected_structure$Inner_RMSE,
+    Inner_Correlation =
+      selected_structure$Inner_Correlation,
+    Inner_MAE =
+      selected_structure$Inner_MAE,
+    stringsAsFactors = FALSE
+  )
+
+  for (
+    model_name in
+    c(
+      "ANN_L1",
+      "ANN_L2",
+      "ANN_L1_L2"
+    )
+  ) {
+
+    current <- penalty_summary[
+      penalty_summary$Model ==
+        model_name,
+      ,
+      drop = FALSE
+    ]
+
+    correlation_rank <- ifelse(
+      is.finite(
+        current$Inner_Correlation
+      ),
+      current$Inner_Correlation,
+      -Inf
+    )
+
+    current_order <- order(
+      current$Inner_RMSE,
+      -correlation_rank,
+      current$Parameters,
+      current$L1 +
+        current$L2,
+      current$Learning_rate,
+      current$CandidateID
+    )
+
+    best <- current[
+      current_order[1L],
+      ,
+      drop = FALSE
+    ]
+
+    selected_rows[[
+        model_name
+      ]] <- data.frame(
+      Dataset = "real",
+      Trait = task$Trait,
+      Repetition =
+        task$Repetition,
+      OuterFold =
+        task$OuterFold,
+      SplitID =
+        task$SplitID,
+      TaskID =
+        task$TaskID,
+      Model =
+        model_name,
+      Architecture =
+        selected_architecture,
+      Learning_rate =
+        selected_learning_rate,
+      L1 =
+        best$L1,
+      L2 =
+        best$L2,
+      Inner_RMSE =
+        best$Inner_RMSE,
+      Inner_Correlation =
+        best$Inner_Correlation,
+      Inner_MAE =
+        best$Inner_MAE,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  selected_configurations <- do.call(
+    rbind,
+    selected_rows
+  )
+
+  candidate_summary <- rbind(
+    structure_summary,
+    penalty_summary
+  )
+
+  fold_results <- rbind(
+    structure_folds,
+    penalty_folds
+  )
+
+  task_seconds <-
+    proc.time()[["elapsed"]] -
+    task_start
+
+  checkpoint <- list(
+    dataset = "real",
+    analysis =
+      "real_ann_tuning_task",
+    config_id =
+      ANN_TUNING_CONFIG_ID,
+    task_id =
+      task$TaskID,
+    task_index =
+      task_index,
+    selected_configurations =
+      selected_configurations,
+    candidate_summary =
+      candidate_summary,
+    fold_results =
+      fold_results,
+    task_seconds =
+      task_seconds,
+    torch_version =
+      as.character(
+        packageVersion("torch")
+      ),
+    device =
+      worker_device_label,
+    timestamp =
+      as.character(
+        Sys.time()
+      )
+  )
+
+  saveRDS(
+    checkpoint,
+    checkpoint_path,
+    compress = "gzip"
+  )
+
+  rm(
+    bundles,
+    structure_summary,
+    structure_folds,
+    penalty_summary,
+    penalty_folds
+  )
+
+  invisible(
+    gc()
+  )
+
+  checkpoint_path
+}
+
+cat(
+  sprintf(
+    "ANN tuning parallel executor: %d tasks | %d workers | device=%s\n",
+    nrow(task_table),
+    ANN_WORKERS,
+    ANN_DEVICE_LABEL
+  )
+)
+
+future::plan(
+  future::multisession,
+  workers = ANN_WORKERS
+)
+
+tuning_futures <- lapply(
+  seq_len(nrow(task_table)),
+  function(task_index) {
+    future::future(
+      run_real_ann_tuning_task(
+        task_index
+      ),
+      seed = TRUE
+    )
+  }
+)
+
+tuning_checkpoint_paths <- lapply(
+  tuning_futures,
+  future::value
+)
+
+future::plan(
+  future::sequential
+)
+
+invisible(
+  gc()
+)
+
+checkpoint_files <- list.files(
+  TUNING_CHECKPOINT_DIR,
+  pattern = "\\.rds$",
+  full.names = TRUE
+)
+
+checkpoint_objects <- lapply(
+  checkpoint_files,
+  function(path) {
+    x <- tryCatch(
+      readRDS(path),
+      error = function(e) NULL
+    )
+
+    if (
+      is.null(x) ||
+      !identical(
+        x$config_id,
+        ANN_TUNING_CONFIG_ID
+      )
+    ) {
+      return(NULL)
+    }
+
+    x
+  }
+)
+
+checkpoint_objects <- Filter(
+  Negate(is.null),
+  checkpoint_objects
+)
+
+checkpoint_task_ids <- vapply(
+  checkpoint_objects,
+  function(x) x$task_id,
+  character(1)
+)
+
+checkpoint_objects <-
+  checkpoint_objects[
+    match(
+      task_table$TaskID,
+      checkpoint_task_ids,
+      nomatch = 0L
+    )
+  ]
+
+checkpoint_objects <- Filter(
+  Negate(is.null),
+  checkpoint_objects
+)
+
+if (
+  length(checkpoint_objects) !=
+  nrow(task_table)
+) {
+  stop(
+    paste(
+      "ANN tuning is incomplete:",
+      length(checkpoint_objects),
+      "of",
+      nrow(task_table),
+      "compatible task checkpoints are available.",
+      "Rerun with RUN_ANN_TUNING=1 to resume."
+    )
+  )
+}
+
+selected_configurations <- do.call(
+  rbind,
+  lapply(
+    checkpoint_objects,
+    `[[`,
+    "selected_configurations"
+  )
+)
+
+candidate_summary <- do.call(
+  rbind,
+  lapply(
+    checkpoint_objects,
+    `[[`,
+    "candidate_summary"
+  )
+)
+
+fold_results <- do.call(
+  rbind,
+  lapply(
+    checkpoint_objects,
+    `[[`,
+    "fold_results"
+  )
+)
+
+rownames(selected_configurations) <- NULL
+rownames(candidate_summary) <- NULL
+rownames(fold_results) <- NULL
+
+stopifnot(
+  nrow(selected_configurations) ==
+    75L * 4L,
+  length(
+    unique(
+      selected_configurations$TaskID
+    )
+  ) == 75L,
+  nrow(candidate_summary) ==
+    75L * 70L,
+  nrow(fold_results) ==
+    75L * 70L * 4L
+)
+
+run_seconds <-
+  proc.time()[["elapsed"]] -
+  run_start
+
+tuning_metadata <- list(
+  dataset = "real",
+  analysis =
+    "canonical_real_ann_tuning",
+  config_id =
+    ANN_TUNING_CONFIG_ID,
+  seed_global =
+    SEED_GLOBAL,
+  models =
+    MODEL_LEVELS,
+  architectures =
+    ARCHITECTURES,
+  learning_rates =
+    LEARNING_RATES,
+  l1_values =
+    L1_VALUES,
+  l2_values =
+    L2_VALUES,
+  optimizer =
+    "Adam",
+  activation =
+    "ReLU",
+  max_epochs =
+    MAX_EPOCHS,
+  patience =
+    PATIENCE,
+  min_delta =
+    MIN_DELTA,
+  early_validation_fraction =
+    EARLY_VALIDATION_FRACTION,
+  primary_tuning_metric =
+    "mean inner-assessment RMSE",
+  secondary_tuning_metric =
+    "mean inner-assessment correlation",
+  outer_assessment_used =
+    FALSE,
+  architecture_lr_shared_across_models =
+    TRUE,
+  candidates_per_task =
+    CANDIDATES_PER_TASK,
+  inner_fits_per_task =
+    INNER_FITS_PER_TASK,
+  total_inner_fits =
+    nrow(fold_results),
+  number_tasks =
+    length(
+      unique(
+        selected_configurations$TaskID
+      )
+    ),
+  selected_rows =
+    nrow(selected_configurations),
+  candidate_rows =
+    nrow(candidate_summary),
+  fold_rows =
+    nrow(fold_results),
+  torch_version =
+    as.character(
+      packageVersion("torch")
+    ),
+  device =
+    ANN_DEVICE_LABEL,
+  cuda_available =
+    cuda_available,
+  parallel_backend =
+    "future::multisession",
+  parallel_workers =
+    ANN_WORKERS,
+  parallel_backend =
+    "future::multisession",
+  parallel_workers =
+    ANN_WORKERS,
+  current_session_seconds =
+    run_seconds,
+  checkpoint_task_seconds =
+    sum(
+      vapply(
+        checkpoint_objects,
+        function(x) x$task_seconds,
+        numeric(1)
+      )
+    ),
+  timestamp =
+    as.character(
+      Sys.time()
+    )
+)
+
+saveRDS(
+  selected_configurations,
+  SELECTED_RDS,
+  compress = "gzip"
+)
+
+saveRDS(
+  candidate_summary,
+  CANDIDATE_RDS,
+  compress = "gzip"
+)
+
+saveRDS(
+  fold_results,
+  FOLD_RDS,
+  compress = "gzip"
+)
+
+saveRDS(
+  tuning_metadata,
+  TUNING_META_RDS,
+  compress = "gzip"
+)
+
+write.csv(
+  selected_configurations,
+  SELECTED_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  candidate_summary,
+  CANDIDATE_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  fold_results,
+  FOLD_CSV,
+  row.names = FALSE
+)
+```
+
+## 7. Tuning outputs
+
+```{r tuning-output-summary}
+tuning_available <- all(
+  file.exists(
+    c(
+      SELECTED_RDS,
+      CANDIDATE_RDS,
+      FOLD_RDS,
+      TUNING_META_RDS
+    )
+  )
+)
+
+if (tuning_available) {
+
+  selected_configurations <- readRDS(
+    SELECTED_RDS
+  )
+
+  candidate_summary <- readRDS(
+    CANDIDATE_RDS
+  )
+
+  fold_results <- readRDS(
+    FOLD_RDS
+  )
+
+  tuning_metadata <- readRDS(
+    TUNING_META_RDS
+  )
+
+  tuning_summary <- data.frame(
+    Object = c(
+      "Selected model configurations",
+      "Candidate summaries",
+      "Inner candidate-fold results"
+    ),
+    Rows = c(
+      nrow(selected_configurations),
+      nrow(candidate_summary),
+      nrow(fold_results)
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  tuning_summary |>
+    knitr::kable(
+      format = "html",
+      caption = "Stored real-data ANN tuning outputs",
+      row.names = FALSE,
+      table.attr = 'class="table table-striped table-hover table-bordered"'
+    )
+
+  task_structure <- unique(
+    selected_configurations[
+      ,
+      c(
+        "TaskID",
+        "Architecture",
+        "Learning_rate"
+      )
+    ]
+  )
+
+  architecture_frequency <- as.data.frame(
+    table(
+      task_structure$Architecture
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  names(
+    architecture_frequency
+  ) <- c(
+    "Architecture",
+    "Selected_tasks"
+  )
+
+  architecture_frequency |>
+    knitr::kable(
+      format = "html",
+      caption = "Selected shared ANN architecture across outer tasks",
+      row.names = FALSE,
+      table.attr = 'class="table table-striped table-hover table-bordered"'
+    )
+
+  tuning_diagnostics <- data.frame(
+    Diagnostic = c(
+      "Inner candidate-fold fits",
+      "Median best early-stop epoch",
+      "Median last epoch",
+      "Fits stopped by patience",
+      "Fits reaching epoch ceiling"
+    ),
+    Value = c(
+      nrow(fold_results),
+      median(
+        fold_results$EarlyStop_epoch,
+        na.rm = TRUE
+      ),
+      median(
+        fold_results$Last_epoch,
+        na.rm = TRUE
+      ),
+      sum(
+        fold_results$Stopped_by_patience,
+        na.rm = TRUE
+      ),
+      sum(
+        fold_results$Hit_epoch_ceiling,
+        na.rm = TRUE
+      )
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  tuning_diagnostics |>
+    knitr::kable(
+      format = "html",
+      caption = "ANN tuning optimization diagnostics",
+      row.names = FALSE,
+      table.attr = 'class="table table-striped table-hover table-bordered"'
+    )
+
+} else {
+
+  cat(
+    "Canonical tuning outputs are not yet available. ",
+    "Run this module with RUN_ANN_TUNING=1.\n"
+  )
+}
+```
+
+## 8. Final fitting
+
+The selected configuration for each `Trait x outer split x model` is fixed before
+outer-assessment prediction.
+
+Within each model-task:
+
+1. only the 156 outer-analysis individuals are used to select the final epoch;
+2. an early-validation subset is drawn from those 156 individuals;
+3. the network is reinitialized after epoch selection;
+4. the network is refitted on all 156 outer-analysis individuals for exactly
+   the selected number of epochs;
+5. the 39 untouched outer-assessment individuals are predicted;
+6. outer-assessment phenotype is accessed only after prediction exists.
+
+```{r run-final-ann, eval=RUN_ANN}
+if (
+  !all(
+    file.exists(
+      c(
+        SELECTED_RDS,
+        TUNING_META_RDS
+      )
+    )
+  )
+) {
+  stop(
+    paste(
+      "Canonical ANN tuning outputs are required before final fitting.",
+      "Run with RUN_ANN_TUNING=1 first."
+    )
+  )
+}
+
+selected_configurations <- readRDS(
+  SELECTED_RDS
+)
+
+tuning_metadata <- readRDS(
+  TUNING_META_RDS
+)
+
+if (
+  !identical(
+    tuning_metadata$config_id,
+    ANN_TUNING_CONFIG_ID
+  )
+) {
+  stop(
+    "Saved tuning outputs do not match the current ANN tuning contract."
+  )
+}
+
+dir.create(
+  FINAL_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+dir.create(
+  FINAL_CHECKPOINT_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+outer_map <- unique(
+  cv$outer_assignments[
+    , c(
+      "Repetition",
+      "OuterFold",
+      "SplitID"
+    )
+  ]
+)
+
+outer_map <- outer_map[
+  order(
+    outer_map$Repetition,
+    outer_map$OuterFold
+  ),
+  ,
+  drop = FALSE
+]
+
+final_task_table <- merge(
+  data.frame(
+    Trait = traits,
+    stringsAsFactors = FALSE
+  ),
+  outer_map,
+  by = NULL
+)
+
+final_task_table <- final_task_table[
+  order(
+    match(
+      final_task_table$Trait,
+      traits
+    ),
+    final_task_table$Repetition,
+    final_task_table$OuterFold
+  ),
+  ,
+  drop = FALSE
+]
+
+final_task_table$TaskID <- paste(
+  final_task_table$Trait,
+  final_task_table$SplitID,
+  sep = "_"
+)
+
+rownames(final_task_table) <- NULL
+
+run_start <- proc.time()[["elapsed"]]
+
+run_real_ann_final_task <- function(task_index) {
+  suppressPackageStartupMessages(
+    library(torch)
+  )
+
+  worker_device_label <- ANN_DEVICE_LABEL
+
+  if (
+    identical(
+      ANN_DEVICE_LABEL,
+      "cuda"
+    )
+  ) {
+    gpu_count <- torch::cuda_device_count()
+
+    if (
+      is.finite(gpu_count) &&
+      gpu_count > 1L
+    ) {
+      worker_device_label <- paste0(
+        "cuda:",
+        (
+          task_index -
+          1L
+        ) %%
+          gpu_count
+      )
+    }
+  }
+
+  worker_device <- torch::torch_device(
+    worker_device_label
+  )
+
+  ANN_DEVICE <- worker_device
+
+  TorchGenomicMLP <- torch::nn_module(
+    "TorchGenomicMLP",
+    initialize = function(
+      input_dim,
+      hidden_units
+    ) {
+      self$linears <- torch::nn_module_list()
+      previous <- as.integer(input_dim)
+
+      for (hidden in hidden_units) {
+        self$linears$append(
+          torch::nn_linear(
+            previous,
+            as.integer(hidden)
+          )
+        )
+        previous <- as.integer(hidden)
+      }
+
+      self$output <- torch::nn_linear(
+        previous,
+        1L
+      )
+    },
+    forward = function(x) {
+      for (
+        layer_index in
+        seq_len(length(self$linears))
+      ) {
+        x <- torch::nnf_relu(
+          self$linears[[layer_index]](x)
+        )
+      }
+
+      self$output(x)
+    }
+  )
+
+  task <- final_task_table[
+    task_index,
+    ,
+    drop = FALSE
+  ]
+
+  safe_task_id <- gsub(
+    "[^A-Za-z0-9_-]",
+    "_",
+    task$TaskID
+  )
+
+  checkpoint_path <- file.path(
+    FINAL_CHECKPOINT_DIR,
+    paste0(
+      safe_task_id,
+      ".rds"
+    )
+  )
+
+  if (
+    file.exists(checkpoint_path) &&
+    !ANN_FORCE
+  ) {
+    old_checkpoint <- tryCatch(
+      readRDS(checkpoint_path),
+      error = function(e) NULL
+    )
+
+    if (
+      !is.null(old_checkpoint) &&
+      identical(
+        old_checkpoint$config_id,
+        FINAL_CONFIG_ID
+      ) &&
+      identical(
+        old_checkpoint$task_id,
+        task$TaskID
+      )
+    ) {
+      return(checkpoint_path)
+    }
+  }
+
+  trait_index <- match(
+    task$Trait,
+    traits
+  )
+
+  phenotype_vector <- pheno[[
+      task$Trait
+    ]]
+
+  outer <- cv$outer_splits[[
+      task$SplitID
+    ]]
+
+  selected_for_task <- selected_configurations[
+    selected_configurations$TaskID ==
+      task$TaskID,
+    ,
+    drop = FALSE
+  ]
+
+  stopifnot(
+    nrow(selected_for_task) == 4L,
+    setequal(
+      selected_for_task$Model,
+      MODEL_LEVELS
+    ),
+    length(
+      outer$analysis_ids
+    ) == 156L,
+    length(
+      outer$assessment_ids
+    ) == 39L
+  )
+
+  seed_base <-
+    SEED_GLOBAL +
+    trait_index * 10000000L +
+    task$Repetition * 100000L +
+    task$OuterFold * 10000L
+
+  split_seed <-
+    seed_base +
+    8000000L
+
+  epoch_seed <-
+    seed_base +
+    8100000L
+
+  final_fit_seed <-
+    seed_base +
+    8200000L
+
+  set.seed(
+    split_seed
+  )
+
+  n_validation <- as.integer(
+    round(
+      length(
+        outer$analysis_ids
+      ) *
+        EARLY_VALIDATION_FRACTION
+    )
+  )
+
+  validation_ids <- sort(
+    sample(
+      outer$analysis_ids,
+      n_validation,
+      replace = FALSE
+    )
+  )
+
+  fit_ids <- sort(
+    setdiff(
+      outer$analysis_ids,
+      validation_ids
+    )
+  )
+
+  fit_index <- match(
+    fit_ids,
+    ids
+  )
+
+  validation_index <- match(
+    validation_ids,
+    ids
+  )
+
+  train_index <- match(
+    outer$analysis_ids,
+    ids
+  )
+
+  assessment_index <- match(
+    outer$assessment_ids,
+    ids
+  )
+
+  stopifnot(
+    !anyNA(fit_index),
+    !anyNA(validation_index),
+    !anyNA(train_index),
+    !anyNA(assessment_index)
+  )
+
+  x_center_epoch <- colMeans(
+    geno[
+      fit_index,
+      ,
+      drop = FALSE
+    ]
+  )
+
+  x_scale_epoch <- apply(
+    geno[
+      fit_index,
+      ,
+      drop = FALSE
+    ],
+    2,
+    sd
+  )
+
+  x_scale_epoch[
+    !is.finite(
+      x_scale_epoch
+    ) |
+    x_scale_epoch < 1e-8
+  ] <- 1
+
+  y_center_epoch <- mean(
+    phenotype_vector[
+      fit_index
+    ]
+  )
+
+  y_scale_epoch <- max(
+    sd(
+      phenotype_vector[
+        fit_index
+      ]
+    ),
+    1e-8
+  )
+
+  x_fit <- sweep(
+    sweep(
+      geno[
+        fit_index,
+        ,
+        drop = FALSE
+      ],
+      2,
+      x_center_epoch,
+      "-"
+    ),
+    2,
+    x_scale_epoch,
+    "/"
+  )
+
+  x_validation <- sweep(
+    sweep(
+      geno[
+        validation_index,
+        ,
+        drop = FALSE
+      ],
+      2,
+      x_center_epoch,
+      "-"
+    ),
+    2,
+    x_scale_epoch,
+    "/"
+  )
+
+  y_fit <-
+    (
+      phenotype_vector[
+        fit_index
+      ] -
+        y_center_epoch
+    ) /
+    y_scale_epoch
+
+  y_validation <-
+    (
+      phenotype_vector[
+        validation_index
+      ] -
+        y_center_epoch
+    ) /
+    y_scale_epoch
+
+  x_fit_tensor <- torch::torch_tensor(
+    x_fit,
+    dtype = torch::torch_float()
+  )$to(
+    device = ANN_DEVICE
+  )
+
+  y_fit_tensor <- torch::torch_tensor(
+    matrix(
+      y_fit,
+      ncol = 1
+    ),
+    dtype = torch::torch_float()
+  )$to(
+    device = ANN_DEVICE
+  )
+
+  x_validation_tensor <- torch::torch_tensor(
+    x_validation,
+    dtype = torch::torch_float()
+  )$to(
+    device = ANN_DEVICE
+  )
+
+  y_validation_tensor <- torch::torch_tensor(
+    matrix(
+      y_validation,
+      ncol = 1
+    ),
+    dtype = torch::torch_float()
+  )$to(
+    device = ANN_DEVICE
+  )
+
+  x_center_final <- colMeans(
+    geno[
+      train_index,
+      ,
+      drop = FALSE
+    ]
+  )
+
+  x_scale_final <- apply(
+    geno[
+      train_index,
+      ,
+      drop = FALSE
+    ],
+    2,
+    sd
+  )
+
+  zero_variance_final <- (
+    !is.finite(
+      x_scale_final
+    ) |
+    x_scale_final < 1e-8
+  )
+
+  x_scale_final[
+    zero_variance_final
+  ] <- 1
+
+  y_center_final <- mean(
+    phenotype_vector[
+      train_index
+    ]
+  )
+
+  y_scale_final <- max(
+    sd(
+      phenotype_vector[
+        train_index
+      ]
+    ),
+    1e-8
+  )
+
+  x_train <- sweep(
+    sweep(
+      geno[
+        train_index,
+        ,
+        drop = FALSE
+      ],
+      2,
+      x_center_final,
+      "-"
+    ),
+    2,
+    x_scale_final,
+    "/"
+  )
+
+  x_assessment <- sweep(
+    sweep(
+      geno[
+        assessment_index,
+        ,
+        drop = FALSE
+      ],
+      2,
+      x_center_final,
+      "-"
+    ),
+    2,
+    x_scale_final,
+    "/"
+  )
+
+  y_train <-
+    (
+      phenotype_vector[
+        train_index
+      ] -
+        y_center_final
+    ) /
+    y_scale_final
+
+  x_train_tensor <- torch::torch_tensor(
+    x_train,
+    dtype = torch::torch_float()
+  )$to(
+    device = ANN_DEVICE
+  )
+
+  y_train_tensor <- torch::torch_tensor(
+    matrix(
+      y_train,
+      ncol = 1
+    ),
+    dtype = torch::torch_float()
+  )$to(
+    device = ANN_DEVICE
+  )
+
+  x_assessment_tensor <- torch::torch_tensor(
+    x_assessment,
+    dtype = torch::torch_float()
+  )$to(
+    device = ANN_DEVICE
+  )
+
+  task_start <- proc.time()[["elapsed"]]
+
+  result_rows <- vector(
+    "list",
+    length(MODEL_LEVELS)
+  )
+
+  prediction_rows <- vector(
+    "list",
+    length(MODEL_LEVELS)
+  )
+
+  epoch_rows <- vector(
+    "list",
+    length(MODEL_LEVELS)
+  )
+
+  for (
+    model_index in
+    seq_along(MODEL_LEVELS)
+  ) {
+
+    model_name <-
+      MODEL_LEVELS[
+        model_index
+      ]
+
+    config <- selected_for_task[
+      selected_for_task$Model ==
+        model_name,
+      ,
+      drop = FALSE
+    ]
+
+    stopifnot(
+      nrow(config) == 1L
+    )
+
+    set.seed(
+      as.integer(epoch_seed)
+    )
+
+    torch::torch_manual_seed(
+      as.integer(epoch_seed)
+    )
+
+    model <- TorchGenomicMLP(
+      ncol(geno),
+      ARCHITECTURES[[
+          config$Architecture
+        ]]
+    )$to(
+      device = ANN_DEVICE
+    )
+
+    optimizer <- torch::optim_adam(
+      params = model$parameters,
+      lr =
+        config$Learning_rate,
+      weight_decay = 0
+    )
+
+    best_validation_loss <- Inf
+    best_epoch <- 1L
+
+    state <- model$state_dict()
+    best_state <- state
+
+    for (
+      state_name in
+      names(state)
+    ) {
+      best_state[[
+          state_name
+        ]] <-
+        state[[
+            state_name
+          ]]$detach()$clone()
+    }
+
+    stale_epochs <- 0L
+    last_epoch <- 0L
+    stopped_by_patience <- FALSE
+
+    if (
+      ANN_DEVICE_LABEL == "cuda"
+    ) {
+      torch::cuda_synchronize()
+    }
+
+    epoch_fit_start <- proc.time()[["elapsed"]]
+
+    for (
+      epoch in
+      seq_len(
+        FINAL_EPOCH_MAX_EPOCHS
+      )
+    ) {
+
+      last_epoch <- epoch
+
+      model$train()
+      optimizer$zero_grad()
+
+      prediction <- model(
+        x_fit_tensor
+      )
+
+      penalty_l1 <-
+        prediction$sum() * 0
+
+      penalty_l2 <-
+        prediction$sum() * 0
+
+      for (
+        layer_index in
+        seq_len(
+          length(
+            model$linears
+          )
+        )
+      ) {
+        weight <-
+          model$linears[[
+              layer_index
+            ]]$weight
+
+        penalty_l1 <-
+          penalty_l1 +
+          weight$abs()$sum()
+
+        penalty_l2 <-
+          penalty_l2 +
+          weight$pow(2)$sum()
+      }
+
+      output_weight <-
+        model$output$weight
+
+      penalty_l1 <-
+        penalty_l1 +
+        output_weight$abs()$sum()
+
+      penalty_l2 <-
+        penalty_l2 +
+        output_weight$pow(2)$sum()
+
+      loss <-
+        torch::nnf_mse_loss(
+          prediction,
+          y_fit_tensor
+        ) +
+        config$L1 *
+        penalty_l1 +
+        (
+          config$L2 /
+          2
+        ) *
+        penalty_l2
+
+      loss$backward()
+      optimizer$step()
+
+      model$eval()
+
+      validation_loss <- torch::with_no_grad({
+        torch::nnf_mse_loss(
+          model(
+            x_validation_tensor
+          ),
+          y_validation_tensor
+        )
+      })
+
+      validation_value <- as.numeric(
+        validation_loss$to(
+          device =
+            torch::torch_device(
+              "cpu"
+            )
+        )
+      )
+
+      improved <-
+        validation_value <
+        best_validation_loss -
+        MIN_DELTA
+
+      if (improved) {
+        best_validation_loss <-
+          validation_value
+
+        best_epoch <- epoch
+
+        state <- model$state_dict()
+        best_state <- state
+
+        for (
+          state_name in
+          names(state)
+        ) {
+          best_state[[
+              state_name
+            ]] <-
+            state[[
+                state_name
+              ]]$detach()$clone()
+        }
+
+        stale_epochs <- 0L
+      } else {
+        stale_epochs <-
+          stale_epochs + 1L
+      }
+
+      if (
+        stale_epochs >=
+        PATIENCE
+      ) {
+        stopped_by_patience <-
+          TRUE
+        break
+      }
+    }
+
+    if (
+      ANN_DEVICE_LABEL == "cuda"
+    ) {
+      torch::cuda_synchronize()
+    }
+
+    epoch_fit_seconds <-
+      proc.time()[["elapsed"]] -
+      epoch_fit_start
+
+    model$load_state_dict(
+      best_state
+    )
+
+    model$eval()
+
+    validation_prediction_scaled <- torch::with_no_grad({
+      as.numeric(
+        model(
+          x_validation_tensor
+        )$to(
+          device =
+            torch::torch_device(
+              "cpu"
+            )
+        )
+      )
+    })
+
+    validation_prediction <-
+      validation_prediction_scaled *
+      y_scale_epoch +
+      y_center_epoch
+
+    validation_observed <-
+      phenotype_vector[
+        validation_index
+      ]
+
+    validation_rmse <- sqrt(
+      mean(
+        (
+          validation_prediction -
+          validation_observed
+        )^2
+      )
+    )
+
+    validation_correlation <- if (
+      length(
+        unique(
+          validation_prediction
+        )
+      ) > 1L &&
+      length(
+        unique(
+          validation_observed
+        )
+      ) > 1L
+    ) {
+      cor(
+        validation_prediction,
+        validation_observed
+      )
+    } else {
+      NA_real_
+    }
+
+    set.seed(
+      as.integer(
+        final_fit_seed
+      )
+    )
+
+    torch::torch_manual_seed(
+      as.integer(
+        final_fit_seed
+      )
+    )
+
+    model <- TorchGenomicMLP(
+      ncol(geno),
+      ARCHITECTURES[[
+          config$Architecture
+        ]]
+    )$to(
+      device = ANN_DEVICE
+    )
+
+    optimizer <- torch::optim_adam(
+      params = model$parameters,
+      lr =
+        config$Learning_rate,
+      weight_decay = 0
+    )
+
+    if (
+      ANN_DEVICE_LABEL == "cuda"
+    ) {
+      torch::cuda_synchronize()
+    }
+
+    final_fit_start <- proc.time()[["elapsed"]]
+
+    for (
+      epoch in
+      seq_len(
+        as.integer(
+          best_epoch
+        )
+      )
+    ) {
+
+      model$train()
+      optimizer$zero_grad()
+
+      prediction <- model(
+        x_train_tensor
+      )
+
+      penalty_l1 <-
+        prediction$sum() * 0
+
+      penalty_l2 <-
+        prediction$sum() * 0
+
+      for (
+        layer_index in
+        seq_len(
+          length(
+            model$linears
+          )
+        )
+      ) {
+        weight <-
+          model$linears[[
+              layer_index
+            ]]$weight
+
+        penalty_l1 <-
+          penalty_l1 +
+          weight$abs()$sum()
+
+        penalty_l2 <-
+          penalty_l2 +
+          weight$pow(2)$sum()
+      }
+
+      output_weight <-
+        model$output$weight
+
+      penalty_l1 <-
+        penalty_l1 +
+        output_weight$abs()$sum()
+
+      penalty_l2 <-
+        penalty_l2 +
+        output_weight$pow(2)$sum()
+
+      loss <-
+        torch::nnf_mse_loss(
+          prediction,
+          y_train_tensor
+        ) +
+        config$L1 *
+        penalty_l1 +
+        (
+          config$L2 /
+          2
+        ) *
+        penalty_l2
+
+      loss$backward()
+      optimizer$step()
+    }
+
+    if (
+      ANN_DEVICE_LABEL == "cuda"
+    ) {
+      torch::cuda_synchronize()
+    }
+
+    final_fit_seconds <-
+      proc.time()[["elapsed"]] -
+      final_fit_start
+
+    model$eval()
+
+    prediction_start <- proc.time()[["elapsed"]]
+
+    predicted_scaled <- torch::with_no_grad({
+      as.numeric(
+        model(
+          x_assessment_tensor
+        )$to(
+          device =
+            torch::torch_device(
+              "cpu"
+            )
+        )
+      )
+    })
+
+    prediction_seconds <-
+      proc.time()[["elapsed"]] -
+      prediction_start
+
+    predicted_value <-
+      predicted_scaled *
+      y_scale_final +
+      y_center_final
+
+    observed <-
+      phenotype_vector[
+        assessment_index
+      ]
+
+    correlation <- if (
+      length(
+        unique(
+          predicted_value
+        )
+      ) > 1L &&
+      length(
+        unique(
+          observed
+        )
+      ) > 1L
+    ) {
+      cor(
+        predicted_value,
+        observed
+      )
+    } else {
+      NA_real_
+    }
+
+    rmse <- sqrt(
+      mean(
+        (
+          predicted_value -
+          observed
+        )^2
+      )
+    )
+
+    mae <- mean(
+      abs(
+        predicted_value -
+        observed
+      )
+    )
+
+    bias <- mean(
+      predicted_value -
+      observed
+    )
+
+    slope <- if (
+      length(
+        unique(
+          predicted_value
+        )
+      ) > 1L
+    ) {
+      as.numeric(
+        coef(
+          lm(
+            observed ~
+              predicted_value
+          )
+        )[2L]
+      )
+    } else {
+      NA_real_
+    }
+
+    sst <- sum(
+      (
+        observed -
+        mean(observed)
+      )^2
+    )
+
+    r2 <- if (
+      sst > 0
+    ) {
+      1 -
+        sum(
+          (
+            observed -
+            predicted_value
+          )^2
+        ) /
+        sst
+    } else {
+      NA_real_
+    }
+
+    result_rows[[
+        model_index
+      ]] <- data.frame(
+      Dataset = "real",
+      Trait = task$Trait,
+      Repetition =
+        task$Repetition,
+      Fold =
+        task$OuterFold,
+      SplitID =
+        task$SplitID,
+      TaskID =
+        task$TaskID,
+      Model =
+        model_name,
+      Architecture =
+        config$Architecture,
+      Learning_rate =
+        config$Learning_rate,
+      L1 =
+        config$L1,
+      L2 =
+        config$L2,
+      Best_epoch =
+        as.integer(
+          best_epoch
+        ),
+      Epoch_Last =
+        as.integer(
+          last_epoch
+        ),
+      Epoch_Stopped_by_patience =
+        stopped_by_patience,
+      Epoch_Hit_ceiling =
+        last_epoch >=
+        FINAL_EPOCH_MAX_EPOCHS &&
+        !stopped_by_patience,
+      Inner_RMSE =
+        config$Inner_RMSE,
+      Inner_Correlation =
+        config$Inner_Correlation,
+      Inner_MAE =
+        config$Inner_MAE,
+      N_train =
+        length(train_index),
+      N_test =
+        length(
+          assessment_index
+        ),
+      N_pred_finite =
+        sum(
+          is.finite(
+            predicted_value
+          )
+        ),
+      N_zero_variance_markers =
+        sum(
+          zero_variance_final
+        ),
+      Phenotype_Correlation =
+        correlation,
+      Phenotype_RMSE =
+        rmse,
+      Phenotype_MAE =
+        mae,
+      Phenotype_Bias =
+        bias,
+      Phenotype_Slope =
+        slope,
+      Phenotype_R2 =
+        r2,
+      Epoch_selection_seconds =
+        epoch_fit_seconds,
+      Final_fit_seconds =
+        final_fit_seconds,
+      Predict_seconds =
+        prediction_seconds,
+      Status = if (
+        all(
+          is.finite(
+            predicted_value
+          )
+        )
+      ) {
+        "ok"
+      } else {
+        "nonfinite_prediction"
+      },
+      Error =
+        NA_character_,
+      stringsAsFactors = FALSE
+    )
+
+    prediction_rows[[
+        model_index
+      ]] <- data.frame(
+      Dataset = "real",
+      Trait = task$Trait,
+      Repetition =
+        task$Repetition,
+      Fold =
+        task$OuterFold,
+      SplitID =
+        task$SplitID,
+      TaskID =
+        task$TaskID,
+      Model =
+        model_name,
+      Architecture =
+        config$Architecture,
+      Learning_rate =
+        config$Learning_rate,
+      L1 =
+        config$L1,
+      L2 =
+        config$L2,
+      Best_epoch =
+        as.integer(
+          best_epoch
+        ),
+      ID =
+        ids[
+          assessment_index
+        ],
+      Family =
+        unname(
+          common$family[
+            ids[
+              assessment_index
+            ]]
+        ),
+      Observed_Phenotype =
+        observed,
+      Predicted_Value =
+        predicted_value,
+      Status = if (
+        all(
+          is.finite(
+            predicted_value
+          )
+        )
+      ) {
+        "ok"
+      } else {
+        "nonfinite_prediction"
+      },
+      stringsAsFactors = FALSE
+    )
+
+    epoch_rows[[
+        model_index
+      ]] <- data.frame(
+      Dataset = "real",
+      Trait = task$Trait,
+      Repetition =
+        task$Repetition,
+      Fold =
+        task$OuterFold,
+      SplitID =
+        task$SplitID,
+      TaskID =
+        task$TaskID,
+      Model =
+        model_name,
+      Architecture =
+        config$Architecture,
+      Learning_rate =
+        config$Learning_rate,
+      L1 =
+        config$L1,
+      L2 =
+        config$L2,
+      Best_epoch =
+        as.integer(
+          best_epoch
+        ),
+      Last_epoch =
+        as.integer(
+          last_epoch
+        ),
+      Stopped_by_patience =
+        stopped_by_patience,
+      Hit_epoch_ceiling =
+        last_epoch >=
+        FINAL_EPOCH_MAX_EPOCHS &&
+        !stopped_by_patience,
+      Validation_RMSE =
+        validation_rmse,
+      Validation_Correlation =
+        validation_correlation,
+      N_epoch_fit =
+        length(fit_index),
+      N_epoch_validation =
+        length(
+          validation_index
+        ),
+      Fit_seconds =
+        epoch_fit_seconds,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  task_seconds <-
+    proc.time()[["elapsed"]] -
+    task_start
+
+  checkpoint <- list(
+    dataset = "real",
+    analysis =
+      "real_ann_final_task",
+    config_id =
+      FINAL_CONFIG_ID,
+    tuning_config_id =
+      ANN_TUNING_CONFIG_ID,
+    task_id =
+      task$TaskID,
+    task_index =
+      task_index,
+    results =
+      do.call(
+        rbind,
+        result_rows
+      ),
+    predictions =
+      do.call(
+        rbind,
+        prediction_rows
+      ),
+    epoch_selection =
+      do.call(
+        rbind,
+        epoch_rows
+      ),
+    task_seconds =
+      task_seconds,
+    torch_version =
+      as.character(
+        packageVersion("torch")
+      ),
+    device =
+      worker_device_label,
+    timestamp =
+      as.character(
+        Sys.time()
+      )
+  )
+
+  saveRDS(
+    checkpoint,
+    checkpoint_path,
+    compress = "gzip"
+  )
+
+  rm(
+    x_fit,
+    x_validation,
+    x_train,
+    x_assessment,
+    x_fit_tensor,
+    y_fit_tensor,
+    x_validation_tensor,
+    y_validation_tensor,
+    x_train_tensor,
+    y_train_tensor,
+    x_assessment_tensor
+  )
+
+  invisible(
+    gc()
+  )
+
+  checkpoint_path
+}
+
+cat(
+  sprintf(
+    "ANN final parallel executor: %d tasks | %d workers | device=%s\n",
+    nrow(final_task_table),
+    ANN_WORKERS,
+    ANN_DEVICE_LABEL
+  )
+)
+
+future::plan(
+  future::multisession,
+  workers = ANN_WORKERS
+)
+
+final_futures <- lapply(
+  seq_len(nrow(final_task_table)),
+  function(task_index) {
+    future::future(
+      run_real_ann_final_task(
+        task_index
+      ),
+      seed = TRUE
+    )
+  }
+)
+
+final_checkpoint_paths <- lapply(
+  final_futures,
+  future::value
+)
+
+future::plan(
+  future::sequential
+)
+
+invisible(
+  gc()
+)
+
+checkpoint_files <- list.files(
+  FINAL_CHECKPOINT_DIR,
+  pattern = "\\.rds$",
+  full.names = TRUE
+)
+
+checkpoint_objects <- lapply(
+  checkpoint_files,
+  function(path) {
+    x <- tryCatch(
+      readRDS(path),
+      error = function(e) NULL
+    )
+
+    if (
+      is.null(x) ||
+      !identical(
+        x$config_id,
+        FINAL_CONFIG_ID
+      ) ||
+      !identical(
+        x$tuning_config_id,
+        ANN_TUNING_CONFIG_ID
+      )
+    ) {
+      return(NULL)
+    }
+
+    x
+  }
+)
+
+checkpoint_objects <- Filter(
+  Negate(is.null),
+  checkpoint_objects
+)
+
+checkpoint_task_ids <- vapply(
+  checkpoint_objects,
+  function(x) x$task_id,
+  character(1)
+)
+
+checkpoint_objects <-
+  checkpoint_objects[
+    match(
+      final_task_table$TaskID,
+      checkpoint_task_ids,
+      nomatch = 0L
+    )
+  ]
+
+checkpoint_objects <- Filter(
+  Negate(is.null),
+  checkpoint_objects
+)
+
+if (
+  length(checkpoint_objects) !=
+  nrow(final_task_table)
+) {
+  stop(
+    paste(
+      "Final ANN fitting is incomplete:",
+      length(checkpoint_objects),
+      "of",
+      nrow(final_task_table),
+      "compatible task checkpoints are available.",
+      "Rerun with RUN_ANN=1 to resume."
+    )
+  )
+}
+
+results <- do.call(
+  rbind,
+  lapply(
+    checkpoint_objects,
+    `[[`,
+    "results"
+  )
+)
+
+predictions <- do.call(
+  rbind,
+  lapply(
+    checkpoint_objects,
+    `[[`,
+    "predictions"
+  )
+)
+
+epoch_selection <- do.call(
+  rbind,
+  lapply(
+    checkpoint_objects,
+    `[[`,
+    "epoch_selection"
+  )
+)
+
+rownames(results) <- NULL
+rownames(predictions) <- NULL
+rownames(epoch_selection) <- NULL
+
+stopifnot(
+  nrow(results) ==
+    75L * 4L,
+  nrow(predictions) ==
+    75L * 4L * 39L,
+  nrow(epoch_selection) ==
+    75L * 4L,
+  length(
+    unique(
+      results$TaskID
+    )
+  ) == 75L,
+  all(
+    results$N_train ==
+      156L
+  ),
+  all(
+    results$N_test ==
+      39L
+  )
+)
+
+run_seconds <-
+  proc.time()[["elapsed"]] -
+  run_start
+
+final_metadata <- list(
+  dataset = "real",
+  analysis =
+    "canonical_real_ann",
+  config_id =
+    FINAL_CONFIG_ID,
+  tuning_config_id =
+    ANN_TUNING_CONFIG_ID,
+  seed_global =
+    SEED_GLOBAL,
+  models =
+    MODEL_LEVELS,
+  tuning_max_epochs =
+    MAX_EPOCHS,
+  final_epoch_max_epochs =
+    FINAL_EPOCH_MAX_EPOCHS,
+  patience =
+    PATIENCE,
+  min_delta =
+    MIN_DELTA,
+  early_validation_fraction =
+    EARLY_VALIDATION_FRACTION,
+  final_refit_rule =
+    "Best_epoch selected within outer analysis, then refit on all 156 outer-analysis individuals",
+  outer_assessment_used_in_tuning =
+    FALSE,
+  outer_assessment_used_in_epoch_selection =
+    FALSE,
+  number_tasks =
+    length(
+      unique(
+        results$TaskID
+      )
+    ),
+  model_task_rows =
+    nrow(results),
+  prediction_rows =
+    nrow(predictions),
+  epoch_selection_rows =
+    nrow(epoch_selection),
+  torch_version =
+    as.character(
+      packageVersion("torch")
+    ),
+  device =
+    ANN_DEVICE_LABEL,
+  cuda_available =
+    cuda_available,
+  current_session_seconds =
+    run_seconds,
+  checkpoint_task_seconds =
+    sum(
+      vapply(
+        checkpoint_objects,
+        function(x) x$task_seconds,
+        numeric(1)
+      )
+    ),
+  timestamp =
+    as.character(
+      Sys.time()
+    )
+)
+
+saveRDS(
+  results,
+  FINAL_RESULTS_RDS,
+  compress = "gzip"
+)
+
+saveRDS(
+  predictions,
+  FINAL_PREDICTIONS_RDS,
+  compress = "gzip"
+)
+
+saveRDS(
+  epoch_selection,
+  FINAL_EPOCH_RDS,
+  compress = "gzip"
+)
+
+saveRDS(
+  final_metadata,
+  FINAL_META_RDS,
+  compress = "gzip"
+)
+
+write.csv(
+  results,
+  FINAL_RESULTS_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  predictions,
+  FINAL_PREDICTIONS_CSV,
+  row.names = FALSE
+)
+
+write.csv(
+  epoch_selection,
+  FINAL_EPOCH_CSV,
+  row.names = FALSE
+)
+```
+
+## 9. Final ANN results
+
+```{r final-output-summary}
+final_available <- all(
+  file.exists(
+    c(
+      FINAL_RESULTS_RDS,
+      FINAL_PREDICTIONS_RDS,
+      FINAL_EPOCH_RDS,
+      FINAL_META_RDS
+    )
+  )
+)
+
+if (final_available) {
+
+  results <- readRDS(
+    FINAL_RESULTS_RDS
+  )
+
+  predictions <- readRDS(
+    FINAL_PREDICTIONS_RDS
+  )
+
+  epoch_selection <- readRDS(
+    FINAL_EPOCH_RDS
+  )
+
+  final_metadata <- readRDS(
+    FINAL_META_RDS
+  )
+
+  final_output_summary <- data.frame(
+    Object = c(
+      "Model-task results",
+      "Held-out predictions",
+      "Epoch selections"
+    ),
+    Rows = c(
+      nrow(results),
+      nrow(predictions),
+      nrow(epoch_selection)
+    ),
+    Unique_tasks = c(
+      length(
+        unique(
+          results$TaskID
+        )
+      ),
+      length(
+        unique(
+          predictions$TaskID
+        )
+      ),
+      length(
+        unique(
+          epoch_selection$TaskID
+        )
+      )
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  final_output_summary |>
+    knitr::kable(
+      format = "html",
+      caption = "Stored final real-data ANN outputs",
+      row.names = FALSE,
+      table.attr = 'class="table table-striped table-hover table-bordered"'
+    )
+
+} else {
+
+  cat(
+    "Canonical final ANN outputs are not yet available. ",
+    "Complete tuning and then run this module with RUN_ANN=1.\n"
+  )
+}
+```
+
+## 10. Predictive performance
+
+```{r performance-summary}
+if (final_available) {
+
+  ok <- results[
+    results$Status == "ok",
+    ,
+    drop = FALSE
+  ]
+
+  performance <- aggregate(
+    cbind(
+      Phenotype_Correlation,
+      Phenotype_RMSE,
+      Phenotype_MAE,
+      Phenotype_Bias,
+      Phenotype_Slope,
+      Phenotype_R2
+    ) ~ Trait + Model,
+    data = ok,
+    FUN = mean,
+    na.rm = TRUE
+  )
+
+  performance <- performance[
+    order(
+      match(
+        performance$Trait,
+        traits
+      ),
+      match(
+        performance$Model,
+        MODEL_LEVELS
+      )
+    ),
+    ,
+    drop = FALSE
+  ]
+
+  performance |>
+    knitr::kable(
+      format = "html",
+      digits = 4,
+      caption = "Mean held-out ANN performance across the 25 outer splits",
+      row.names = FALSE,
+      table.attr = 'class="table table-striped table-hover table-bordered"'
+    )
+}
+```
+
+### 10.1 Correlation across outer splits
+
+```{r correlation-figure, fig.cap="Held-out phenotype correlation for the four ANN variants across the 25 family-stratified outer splits. White diamonds indicate model means within trait."}
+if (final_available) {
+
+  p_ann_correlation <- ggplot(
+    ok,
+    aes(
+      x = Model,
+      y = Phenotype_Correlation,
+      fill = Model
+    )
+  ) +
+    geom_boxplot(
+      width = 0.62,
+      outlier.shape = NA,
+      alpha = 0.70
+    ) +
+    geom_point(
+      position = position_jitter(
+        width = 0.10,
+        height = 0,
+        seed = SEED_GLOBAL + 401L
+      ),
+      alpha = 0.35,
+      size = 1.4
+    ) +
+    stat_summary(
+      fun = mean,
+      geom = "point",
+      shape = 23,
+      size = 2.8,
+      fill = "white"
+    ) +
+    facet_wrap(
+      ~ Trait,
+      scales = "free_y"
+    ) +
+    scale_fill_gdocs() +
+    labs(
+      x = "ANN variant",
+      y = "Held-out Pearson correlation",
+      fill = NULL
+    ) +
+    theme_gdocs() +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        angle = 35,
+        hjust = 1
+      )
+    )
+
+  print(
+    p_ann_correlation
+  )
+}
+```
+
+```{r save-correlation-tiff, include=FALSE}
+if (final_available) {
+  ggsave(
+    "output/real/ann/figures/real_ann_correlation_by_model.tiff",
+    plot = p_ann_correlation,
+    device = "tiff",
+    width = 10,
+    height = 6.5,
+    units = "in",
+    dpi = 300,
+    compression = "lzw"
+  )
+}
+```
+
+### 10.2 RMSE across outer splits
+
+```{r rmse-figure, fig.cap="Held-out phenotype RMSE for the four ANN variants across the 25 family-stratified outer splits. White diamonds indicate model means within trait."}
+if (final_available) {
+
+  p_ann_rmse <- ggplot(
+    ok,
+    aes(
+      x = Model,
+      y = Phenotype_RMSE,
+      fill = Model
+    )
+  ) +
+    geom_boxplot(
+      width = 0.62,
+      outlier.shape = NA,
+      alpha = 0.70
+    ) +
+    geom_point(
+      position = position_jitter(
+        width = 0.10,
+        height = 0,
+        seed = SEED_GLOBAL + 402L
+      ),
+      alpha = 0.35,
+      size = 1.4
+    ) +
+    stat_summary(
+      fun = mean,
+      geom = "point",
+      shape = 23,
+      size = 2.8,
+      fill = "white"
+    ) +
+    facet_wrap(
+      ~ Trait,
+      scales = "free_y"
+    ) +
+    scale_fill_gdocs() +
+    labs(
+      x = "ANN variant",
+      y = "Held-out RMSE",
+      fill = NULL
+    ) +
+    theme_gdocs() +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        angle = 35,
+        hjust = 1
+      )
+    )
+
+  print(
+    p_ann_rmse
+  )
+}
+```
+
+```{r save-rmse-tiff, include=FALSE}
+if (final_available) {
+  ggsave(
+    "output/real/ann/figures/real_ann_rmse_by_model.tiff",
+    plot = p_ann_rmse,
+    device = "tiff",
+    width = 10,
+    height = 6.5,
+    units = "in",
+    dpi = 300,
+    compression = "lzw"
+  )
+}
+```
+
+## 11. Frozen R07 contract
+
+The primary real-data ANN benchmark is defined by:
+
+- 195 individuals;
+- 20,887 common post-QC markers;
+- three prepared phenotype targets;
+- the same 25 family-stratified outer splits used by GBLUP-ADE;
+- four inner folds restricted to the corresponding outer-analysis set;
+- ANN architecture and learning rate selected with `ANN_0`;
+- the selected structure shared across all four ANN variants within an outer
+  task;
+- model-specific L1/L2 coefficients tuned only inside the inner folds;
+- preprocessing estimated only from the current fitting subset;
+- final epoch selected only inside the outer-analysis set;
+- 39 outer-assessment individuals untouched until final prediction;
+- task-level checkpoints for deterministic resume.
+
+When complete, the expected final output contains **300 model-task rows** and
+**11,700 held-out predictions**.
+
+## 12. Navigation
+
+[Previous: GBLUP-ADE](real_data_gblup.html) | [Next: Model comparison](real_data_comparison.html)

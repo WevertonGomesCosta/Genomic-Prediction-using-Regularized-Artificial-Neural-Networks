@@ -14,28 +14,31 @@ directory.
 
 ```text
 output/
-└── simulated/
+├── simulated/
+│   ├── audit/
+│   ├── validation/
+│   ├── gblup/
+│   ├── ann/
+│   │   ├── tuning/
+│   │   └── final/
+│   ├── comparison/
+│   └── m01/ ... m05/
+│       └── figures/
+└── real/
     ├── audit/
     ├── validation/
     ├── gblup/
     ├── ann/
+    │   ├── figures/
     │   ├── tuning/
     │   └── final/
-    ├── comparison/
-    ├── m01/
-    │   └── figures/
-    ├── m02/
-    │   └── figures/
-    ├── m03/
-    │   └── figures/
-    ├── m04/
-    │   └── figures/
-    └── m05/
+    └── comparison/
         └── figures/
 ```
 
-A future real-data workflow should use `output/real/` and follow the same
-dataset-first organization.
+The simulated and real-data branches therefore follow the same dataset-first
+organization. Operational checkpoints are excluded from `output/` and are kept
+under the ignored `.local/checkpoints/` hierarchy.
 
 ## Simulated-data audit and preprocessing
 
