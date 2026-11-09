@@ -1,0 +1,2847 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Weverton Gomes da Costa" />
+
+<meta name="date" content="2026-11-09" />
+
+<title>Real data: GBLUP-ADE</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Regularized ANN Genomic Prediction</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Simulated data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="simulated_data_audit.html">Data audit</a>
+    </li>
+    <li>
+      <a href="simulated_data_validation.html">Validation design</a>
+    </li>
+    <li>
+      <a href="simulated_data_gblup.html">GBLUP-ADE</a>
+    </li>
+    <li>
+      <a href="simulated_data_ann.html">ANN</a>
+    </li>
+    <li>
+      <a href="simulated_data_comparison.html">Model comparison</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+<li role="separator" class="divider"></li>
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Real data: GBLUP-ADE</h1>
+<h4 class="author">Weverton Gomes da Costa</h4>
+<h4 class="date">2026-11-09</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-11-09
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/</code>
+<span class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20260821code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20260821)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20260821code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20260821)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed16aa18779a7295de69a4b36d48678f3b0c45b03targetblankd16aa18a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d16aa18779a7295de69a4b36d48678f3b0c45b03" target="_blank">d16aa18</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed16aa18779a7295de69a4b36d48678f3b0c45b03targetblankd16aa18a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d16aa18779a7295de69a4b36d48678f3b0c45b03" target="_blank">d16aa18</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .github/
+    Ignored:    .local/
+    Ignored:    code/legacy/
+    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica (1).xlsx
+    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica.xlsx
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.indv
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.pos
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.indv.txt
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.pos.txt
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.txt
+    Ignored:    data/dados_reais/Rótulos C. arabica_Proj_Piloto.xlsx
+    Ignored:    data/dados_reais/Rótulos Novos SNPs.xls
+    Ignored:    data/dados_reais/dados_cafe.xlsx
+    Ignored:    data/dados_reais/fpls-09-01934.pdf
+    Ignored:    data/dados_reais/geno_real.rds
+    Ignored:    data/dados_reais/pheno_real.rds
+    Ignored:    data/dados_reais/plants-13-01876-v2.pdf
+    Ignored:    data/dados_reais/pos_geno_real.rds
+    Ignored:    renv/library/
+    Ignored:    renv/staging/
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/real_data_gblup.Rmd</code>) and
+HTML (<code>docs/real_data_gblup.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/4fa5d7caefab014a232aacf96ca974999589066c/analysis/real_data_gblup.Rmd" target="_blank">4fa5d7c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-05
+</td>
+<td>
+Add audited real-data workflow through GBLUP-ADE
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="purpose" class="section level2">
+<h2>1. Purpose</h2>
+<p>This module fits the GBLUP-ADE benchmark to the three prepared
+<em>Coffea arabica</em> traits under the family-stratified repeated
+outer cross-validation defined in the real-data validation module.</p>
+<p>The primary comparison uses the same 25 outer held-out splits for
+GBLUP-ADE and all ANN variants. With three traits, this produces
+<strong>3 x 25 = 75 primary trait-by-split fits</strong>.</p>
+<p>Four principles define the analysis:</p>
+<ul>
+<li>phenotype values from the outer assessment set are unavailable
+during fitting;</li>
+<li>genotypes from all 195 individuals can be used to construct genomic
+relationship matrices because genotype information is available at
+prediction time and does not contain held-out phenotype;</li>
+<li>the common 20,887-marker panel prepared upstream is used without
+additional model-specific marker filtering;</li>
+<li>performance is evaluated only from predictions for the 39 held-out
+individuals in each outer split.</li>
+</ul>
+<p>The complementary leave-one-family-out design stored upstream is not
+mixed with the primary benchmark here. It remains available for a
+separate generalization analysis.</p>
+</div>
+<div id="packages-and-fixed-execution-settings" class="section level2">
+<h2>2. Packages and fixed execution settings</h2>
+<p>A normal page build reads the saved GBLUP-ADE results. Setting
+<code>RUN_GBLUP=1</code> activates the complete 75-task fitting workflow
+and overwrites the saved GBLUP outputs.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>RUN_GBLUP <span class="ot">&lt;-</span> <span class="fu">identical</span>(<span class="fu">Sys.getenv</span>(<span class="st">&quot;RUN_GBLUP&quot;</span>, <span class="st">&quot;0&quot;</span>), <span class="st">&quot;1&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(ggthemes)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="cf">if</span> (RUN_GBLUP) {</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>  <span class="fu">suppressPackageStartupMessages</span>(</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>    <span class="fu">library</span>(sommer)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>  )</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20261105</span><span class="dt">L</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>N_ITERS_SOMMER <span class="ot">&lt;-</span> <span class="dv">20</span><span class="dt">L</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>fitting_control <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">Parameter =</span> <span class="fu">c</span>(</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    <span class="st">&quot;Global seed&quot;</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>    <span class="st">&quot;Run new GBLUP-ADE fits&quot;</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>    <span class="st">&quot;sommer iterations per fit&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  ),</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>    SEED_GLOBAL,</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>    RUN_GBLUP,</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>    N_ITERS_SOMMER</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  ),</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  <span class="at">Role =</span> <span class="fu">c</span>(</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>    <span class="st">&quot;Reproduce the fitting workflow.&quot;</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>    <span class="st">&quot;Control whether all 75 primary fits are executed.&quot;</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>    <span class="st">&quot;Use one fixed fitting control for every trait and split.&quot;</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  ),</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>)</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>fitting_control <span class="sc">|&gt;</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Fixed GBLUP-ADE execution settings&quot;</span>,</span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Fixed GBLUP-ADE execution settings
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Parameter
+</th>
+<th style="text-align:right;">
+Value
+</th>
+<th style="text-align:left;">
+Role
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Global seed
+</td>
+<td style="text-align:right;">
+20261105
+</td>
+<td style="text-align:left;">
+Reproduce the fitting workflow.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Run new GBLUP-ADE fits
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+Control whether all 75 primary fits are executed.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sommer iterations per fit
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:left;">
+Use one fixed fitting control for every trait and split.
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="canonical-inputs" class="section level2">
+<h2>3. Canonical inputs</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>common <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="st">&quot;output/real/audit/preprocessed_real_common.rds&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>cv <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="st">&quot;output/real/validation/real_cv_design.rds&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>geno <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(common<span class="sc">$</span>genotype)</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>pheno <span class="ot">&lt;-</span> common<span class="sc">$</span>phenotype</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>traits <span class="ot">&lt;-</span> common<span class="sc">$</span>traits</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>ids <span class="ot">&lt;-</span> <span class="fu">rownames</span>(geno)</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="fu">nrow</span>(geno) <span class="sc">==</span> <span class="dv">195</span><span class="dt">L</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="fu">ncol</span>(geno) <span class="sc">==</span> <span class="dv">20887</span><span class="dt">L</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="fu">identical</span>(ids, pheno<span class="sc">$</span>genotipo),</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>  <span class="fu">identical</span>(<span class="fu">sort</span>(traits), <span class="fu">sort</span>(<span class="fu">c</span>(<span class="st">&quot;Prod.Cor&quot;</span>, <span class="st">&quot;Cer&quot;</span>, <span class="st">&quot;BM&quot;</span>))),</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>  <span class="fu">length</span>(cv<span class="sc">$</span>outer_splits) <span class="sc">==</span> <span class="dv">25</span><span class="dt">L</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  <span class="fu">all</span>(<span class="fu">is.finite</span>(geno)),</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>  <span class="fu">all</span>(geno <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>)</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>input_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>  <span class="at">Object =</span> <span class="fu">c</span>(</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>    <span class="st">&quot;Genotype matrix&quot;</span>,</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>    <span class="st">&quot;Prepared phenotype&quot;</span>,</span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>    <span class="st">&quot;Prediction traits&quot;</span>,</span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>    <span class="st">&quot;Primary outer splits&quot;</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>  ),</span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>  <span class="at">Structure =</span> <span class="fu">c</span>(</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>    <span class="fu">paste</span>(<span class="fu">dim</span>(geno), <span class="at">collapse =</span> <span class="st">&quot; x &quot;</span>),</span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>    <span class="fu">paste</span>(<span class="fu">dim</span>(pheno), <span class="at">collapse =</span> <span class="st">&quot; x &quot;</span>),</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>    <span class="fu">paste</span>(traits, <span class="at">collapse =</span> <span class="st">&quot;, &quot;</span>),</span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>    <span class="fu">length</span>(cv<span class="sc">$</span>outer_splits)</span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>  ),</span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a>)</span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>input_summary <span class="sc">|&gt;</span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Canonical objects entering GBLUP-ADE&quot;</span>,</span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Canonical objects entering GBLUP-ADE
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Object
+</th>
+<th style="text-align:left;">
+Structure
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Genotype matrix
+</td>
+<td style="text-align:left;">
+195 x 20887
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prepared phenotype
+</td>
+<td style="text-align:left;">
+195 x 5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prediction traits
+</td>
+<td style="text-align:left;">
+Prod.Cor, Cer, BM
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Primary outer splits
+</td>
+<td style="text-align:left;">
+25
+</td>
+</tr>
+</tbody>
+</table>
+<p>The marker matrix retains the <code>-1, 0, 1</code> coding used by
+the genomic relationship matrix constructors. Quality control has
+already been performed upstream, so the GBLUP branch does not redefine
+the marker panel.</p>
+</div>
+<div id="statistical-benchmark" class="section level2">
+<h2>4. Statistical benchmark</h2>
+<p>For each trait and outer split,</p>
+<p><span class="math display">\[
+\mathbf{y} = \mathbf{1}\mu + \mathbf{a} + \mathbf{d} + \mathbf{e} +
+\boldsymbol{\varepsilon},
+\]</span></p>
+<p>with</p>
+<p><span class="math display">\[
+\mathbf{a}\sim N(0,\mathbf{A}\sigma_a^2),\qquad
+\mathbf{d}\sim N(0,\mathbf{D}\sigma_d^2),
+\]</span></p>
+<p><span class="math display">\[
+\mathbf{e}\sim N(0,\mathbf{E}\sigma_e^2),\qquad
+\boldsymbol{\varepsilon}\sim N(0,\mathbf{I}\sigma_\varepsilon^2).
+\]</span></p>
+<p>The total predicted genomic component is</p>
+<p><span class="math display">\[
+\widehat{G}=\widehat{a}+\widehat{d}+\widehat{e},
+\]</span></p>
+<p>and the held-out prediction is</p>
+<p><span class="math display">\[
+\widehat{y}=\widehat{\mu}+\widehat{G}.
+\]</span></p>
+<p>The historical field name <code>GEBV</code> is retained in saved
+predictions for compatibility with the simulated workflow, but here it
+represents the summed additive, dominance, and additive-by-additive
+epistatic prediction rather than an additive-only breeding value.</p>
+</div>
+<div id="primary-trait-by-split-workload" class="section level2">
+<h2>5. Primary trait-by-split workload</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>outer_meta <span class="ot">&lt;-</span> <span class="fu">unique</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  cv<span class="sc">$</span>outer_assignments[</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    , <span class="fu">c</span>(<span class="st">&quot;Repetition&quot;</span>, <span class="st">&quot;OuterFold&quot;</span>, <span class="st">&quot;SplitID&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  ]</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>)</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>outer_meta <span class="ot">&lt;-</span> outer_meta[</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="fu">order</span>(</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>    outer_meta<span class="sc">$</span>Repetition,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>    outer_meta<span class="sc">$</span>OuterFold</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  ),</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>]</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>task_table <span class="ot">&lt;-</span> <span class="fu">merge</span>(</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>    <span class="at">Trait =</span> traits,</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>  ),</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>  outer_meta,</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>  <span class="at">by =</span> <span class="cn">NULL</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>)</span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>task_table <span class="ot">&lt;-</span> task_table[</span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>  <span class="fu">order</span>(</span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>    <span class="fu">match</span>(task_table<span class="sc">$</span>Trait, traits),</span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>    task_table<span class="sc">$</span>Repetition,</span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>    task_table<span class="sc">$</span>OuterFold</span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>  ),</span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>]</span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a></span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a>task_table<span class="sc">$</span>TaskID <span class="ot">&lt;-</span> <span class="fu">paste</span>(</span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a>  task_table<span class="sc">$</span>Trait,</span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a>  task_table<span class="sc">$</span>SplitID,</span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a>  <span class="at">sep =</span> <span class="st">&quot;_&quot;</span></span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a>)</span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a></span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a><span class="fu">rownames</span>(task_table) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a></span>
+<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a>  <span class="fu">nrow</span>(task_table) <span class="sc">==</span> <span class="dv">75</span><span class="dt">L</span>,</span>
+<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a>  <span class="fu">length</span>(<span class="fu">unique</span>(task_table<span class="sc">$</span>TaskID)) <span class="sc">==</span> <span class="dv">75</span><span class="dt">L</span></span>
+<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a>)</span>
+<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a></span>
+<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a><span class="fu">head</span>(task_table, <span class="dv">15</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb4-47"><a href="#cb4-47" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;First 15 of the 75 primary GBLUP-ADE tasks&quot;</span>,</span>
+<span id="cb4-48"><a href="#cb4-48" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb4-49"><a href="#cb4-49" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb4-50"><a href="#cb4-50" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+First 15 of the 75 primary GBLUP-ADE tasks
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+Repetition
+</th>
+<th style="text-align:right;">
+OuterFold
+</th>
+<th style="text-align:left;">
+SplitID
+</th>
+<th style="text-align:left;">
+TaskID
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+R01_F01
+</td>
+<td style="text-align:left;">
+Prod.Cor_R01_F01
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+R01_F02
+</td>
+<td style="text-align:left;">
+Prod.Cor_R01_F02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+R01_F03
+</td>
+<td style="text-align:left;">
+Prod.Cor_R01_F03
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+R01_F04
+</td>
+<td style="text-align:left;">
+Prod.Cor_R01_F04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+R01_F05
+</td>
+<td style="text-align:left;">
+Prod.Cor_R01_F05
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+R02_F01
+</td>
+<td style="text-align:left;">
+Prod.Cor_R02_F01
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+R02_F02
+</td>
+<td style="text-align:left;">
+Prod.Cor_R02_F02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+R02_F03
+</td>
+<td style="text-align:left;">
+Prod.Cor_R02_F03
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+R02_F04
+</td>
+<td style="text-align:left;">
+Prod.Cor_R02_F04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+R02_F05
+</td>
+<td style="text-align:left;">
+Prod.Cor_R02_F05
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+R03_F01
+</td>
+<td style="text-align:left;">
+Prod.Cor_R03_F01
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+R03_F02
+</td>
+<td style="text-align:left;">
+Prod.Cor_R03_F02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+R03_F03
+</td>
+<td style="text-align:left;">
+Prod.Cor_R03_F03
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+R03_F04
+</td>
+<td style="text-align:left;">
+Prod.Cor_R03_F04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+R03_F05
+</td>
+<td style="text-align:left;">
+Prod.Cor_R03_F05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="evaluation-metrics" class="section level2">
+<h2>6. Evaluation metrics</h2>
+<p>Performance is calculated only in the outer assessment set. The
+stored metrics are:</p>
+<ul>
+<li>Pearson correlation;</li>
+<li>RMSE;</li>
+<li>MAE;</li>
+<li>bias, defined as <code>mean(predicted - observed)</code>;</li>
+<li>calibration slope from <code>observed ~ predicted</code>;</li>
+<li>predictive <span class="math inline">\(R^2 = 1 -
+SSE/SST\)</span>.</li>
+</ul>
+<p>The 25 split-level values per trait are descriptive
+repeated-cross-validation results; they are not treated as statistically
+independent replicates.</p>
+</div>
+<div id="complete-gblup-ade-fitting-workflow" class="section level2">
+<h2>7. Complete GBLUP-ADE fitting workflow</h2>
+<p>The three genomic relationship matrices are constructed once from the
+common 20,887-marker matrix and reused across all 75 tasks. For each
+task, the 39 outer assessment phenotypes are replaced by <code>NA</code>
+before fitting.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">set.seed</span>(SEED_GLOBAL)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>run_start <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>kernel_start <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>A_matrix <span class="ot">&lt;-</span> sommer<span class="sc">::</span><span class="fu">A.mat</span>(</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  geno,</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">min.MAF =</span> <span class="dv">0</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>)</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>D_matrix <span class="ot">&lt;-</span> sommer<span class="sc">::</span><span class="fu">D.mat</span>(</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  geno,</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">nishio =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="at">min.MAF =</span> <span class="dv">0</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>)</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>E_matrix <span class="ot">&lt;-</span> sommer<span class="sc">::</span><span class="fu">E.mat</span>(</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>  geno,</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>  <span class="at">nishio =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">&quot;A#A&quot;</span>,</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>  <span class="at">min.MAF =</span> <span class="dv">0</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>)</span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>kernel_seconds <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span> kernel_start</span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="fu">rownames</span>(A_matrix) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(A_matrix) <span class="ot">&lt;-</span> ids</span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="fu">rownames</span>(D_matrix) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(D_matrix) <span class="ot">&lt;-</span> ids</span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="fu">rownames</span>(E_matrix) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(E_matrix) <span class="ot">&lt;-</span> ids</span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a>kernel_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a>  <span class="at">Kernel =</span> <span class="fu">c</span>(<span class="st">&quot;Additive&quot;</span>, <span class="st">&quot;Dominance&quot;</span>, <span class="st">&quot;Epistatic_AxA&quot;</span>),</span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a>  <span class="at">Rows =</span> <span class="fu">c</span>(<span class="fu">nrow</span>(A_matrix), <span class="fu">nrow</span>(D_matrix), <span class="fu">nrow</span>(E_matrix)),</span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a>  <span class="at">Columns =</span> <span class="fu">c</span>(<span class="fu">ncol</span>(A_matrix), <span class="fu">ncol</span>(D_matrix), <span class="fu">ncol</span>(E_matrix)),</span>
+<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a>  <span class="at">Symmetric =</span> <span class="fu">c</span>(</span>
+<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a>    <span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(A_matrix, <span class="fu">t</span>(A_matrix), <span class="at">tolerance =</span> <span class="fl">1e-8</span>)),</span>
+<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a>    <span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(D_matrix, <span class="fu">t</span>(D_matrix), <span class="at">tolerance =</span> <span class="fl">1e-8</span>)),</span>
+<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a>    <span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(E_matrix, <span class="fu">t</span>(E_matrix), <span class="at">tolerance =</span> <span class="fl">1e-8</span>))</span>
+<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a>  ),</span>
+<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a>  <span class="at">Finite =</span> <span class="fu">c</span>(</span>
+<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a>    <span class="fu">all</span>(<span class="fu">is.finite</span>(A_matrix)),</span>
+<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a>    <span class="fu">all</span>(<span class="fu">is.finite</span>(D_matrix)),</span>
+<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a>    <span class="fu">all</span>(<span class="fu">is.finite</span>(E_matrix))</span>
+<span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a>  ),</span>
+<span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a>  <span class="at">Mean_diagonal =</span> <span class="fu">c</span>(</span>
+<span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a>    <span class="fu">mean</span>(<span class="fu">diag</span>(A_matrix)),</span>
+<span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a>    <span class="fu">mean</span>(<span class="fu">diag</span>(D_matrix)),</span>
+<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a>    <span class="fu">mean</span>(<span class="fu">diag</span>(E_matrix))</span>
+<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a>  ),</span>
+<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a>  <span class="at">Kernel_build_seconds =</span> <span class="fu">rep</span>(kernel_seconds, <span class="dv">3</span><span class="dt">L</span>),</span>
+<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a>)</span>
+<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a></span>
+<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a>  <span class="fu">all</span>(kernel_summary<span class="sc">$</span>Rows <span class="sc">==</span> <span class="dv">195</span><span class="dt">L</span>),</span>
+<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a>  <span class="fu">all</span>(kernel_summary<span class="sc">$</span>Columns <span class="sc">==</span> <span class="dv">195</span><span class="dt">L</span>),</span>
+<span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a>  <span class="fu">all</span>(kernel_summary<span class="sc">$</span>Symmetric),</span>
+<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a>  <span class="fu">all</span>(kernel_summary<span class="sc">$</span>Finite)</span>
+<span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a>)</span>
+<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a></span>
+<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a>result_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">nrow</span>(task_table))</span>
+<span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a>prediction_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">nrow</span>(task_table))</span>
+<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a></span>
+<span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(task_table))) {</span>
+<span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a></span>
+<span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a>  task <span class="ot">&lt;-</span> task_table[i, ]</span>
+<span id="cb5-67"><a href="#cb5-67" tabindex="-1"></a>  trait <span class="ot">&lt;-</span> task<span class="sc">$</span>Trait</span>
+<span id="cb5-68"><a href="#cb5-68" tabindex="-1"></a>  split <span class="ot">&lt;-</span> cv<span class="sc">$</span>outer_splits[[task<span class="sc">$</span>SplitID]]</span>
+<span id="cb5-69"><a href="#cb5-69" tabindex="-1"></a></span>
+<span id="cb5-70"><a href="#cb5-70" tabindex="-1"></a>  analysis_index <span class="ot">&lt;-</span> <span class="fu">match</span>(</span>
+<span id="cb5-71"><a href="#cb5-71" tabindex="-1"></a>    split<span class="sc">$</span>analysis_ids,</span>
+<span id="cb5-72"><a href="#cb5-72" tabindex="-1"></a>    ids</span>
+<span id="cb5-73"><a href="#cb5-73" tabindex="-1"></a>  )</span>
+<span id="cb5-74"><a href="#cb5-74" tabindex="-1"></a></span>
+<span id="cb5-75"><a href="#cb5-75" tabindex="-1"></a>  assessment_index <span class="ot">&lt;-</span> <span class="fu">match</span>(</span>
+<span id="cb5-76"><a href="#cb5-76" tabindex="-1"></a>    split<span class="sc">$</span>assessment_ids,</span>
+<span id="cb5-77"><a href="#cb5-77" tabindex="-1"></a>    ids</span>
+<span id="cb5-78"><a href="#cb5-78" tabindex="-1"></a>  )</span>
+<span id="cb5-79"><a href="#cb5-79" tabindex="-1"></a></span>
+<span id="cb5-80"><a href="#cb5-80" tabindex="-1"></a>  <span class="fu">stopifnot</span>(</span>
+<span id="cb5-81"><a href="#cb5-81" tabindex="-1"></a>    <span class="fu">length</span>(analysis_index) <span class="sc">==</span> <span class="dv">156</span><span class="dt">L</span>,</span>
+<span id="cb5-82"><a href="#cb5-82" tabindex="-1"></a>    <span class="fu">length</span>(assessment_index) <span class="sc">==</span> <span class="dv">39</span><span class="dt">L</span>,</span>
+<span id="cb5-83"><a href="#cb5-83" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">anyNA</span>(analysis_index),</span>
+<span id="cb5-84"><a href="#cb5-84" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">anyNA</span>(assessment_index),</span>
+<span id="cb5-85"><a href="#cb5-85" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">intersect</span>(analysis_index, assessment_index)) <span class="sc">==</span> <span class="dv">0</span><span class="dt">L</span></span>
+<span id="cb5-86"><a href="#cb5-86" tabindex="-1"></a>  )</span>
+<span id="cb5-87"><a href="#cb5-87" tabindex="-1"></a></span>
+<span id="cb5-88"><a href="#cb5-88" tabindex="-1"></a>  phenotype_vector <span class="ot">&lt;-</span> pheno[[trait]]</span>
+<span id="cb5-89"><a href="#cb5-89" tabindex="-1"></a></span>
+<span id="cb5-90"><a href="#cb5-90" tabindex="-1"></a>  id_factor <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
+<span id="cb5-91"><a href="#cb5-91" tabindex="-1"></a>    ids,</span>
+<span id="cb5-92"><a href="#cb5-92" tabindex="-1"></a>    <span class="at">levels =</span> ids</span>
+<span id="cb5-93"><a href="#cb5-93" tabindex="-1"></a>  )</span>
+<span id="cb5-94"><a href="#cb5-94" tabindex="-1"></a></span>
+<span id="cb5-95"><a href="#cb5-95" tabindex="-1"></a>  dat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-96"><a href="#cb5-96" tabindex="-1"></a>    <span class="at">y =</span> phenotype_vector,</span>
+<span id="cb5-97"><a href="#cb5-97" tabindex="-1"></a>    <span class="at">id =</span> id_factor,</span>
+<span id="cb5-98"><a href="#cb5-98" tabindex="-1"></a>    <span class="at">idd =</span> id_factor,</span>
+<span id="cb5-99"><a href="#cb5-99" tabindex="-1"></a>    <span class="at">ide =</span> id_factor</span>
+<span id="cb5-100"><a href="#cb5-100" tabindex="-1"></a>  )</span>
+<span id="cb5-101"><a href="#cb5-101" tabindex="-1"></a></span>
+<span id="cb5-102"><a href="#cb5-102" tabindex="-1"></a>  dat<span class="sc">$</span>y[assessment_index] <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
+<span id="cb5-103"><a href="#cb5-103" tabindex="-1"></a></span>
+<span id="cb5-104"><a href="#cb5-104" tabindex="-1"></a>  fit_start <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
+<span id="cb5-105"><a href="#cb5-105" tabindex="-1"></a></span>
+<span id="cb5-106"><a href="#cb5-106" tabindex="-1"></a>  task_result <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
+<span id="cb5-107"><a href="#cb5-107" tabindex="-1"></a>    {</span>
+<span id="cb5-108"><a href="#cb5-108" tabindex="-1"></a></span>
+<span id="cb5-109"><a href="#cb5-109" tabindex="-1"></a>      fit <span class="ot">&lt;-</span> sommer<span class="sc">::</span><span class="fu">mmes</span>(</span>
+<span id="cb5-110"><a href="#cb5-110" tabindex="-1"></a>        y <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb5-111"><a href="#cb5-111" tabindex="-1"></a>        <span class="at">random =</span> <span class="sc">~</span></span>
+<span id="cb5-112"><a href="#cb5-112" tabindex="-1"></a>          <span class="fu">vsm</span>(<span class="fu">ism</span>(id),  <span class="at">Gu =</span> A_matrix) <span class="sc">+</span></span>
+<span id="cb5-113"><a href="#cb5-113" tabindex="-1"></a>          <span class="fu">vsm</span>(<span class="fu">ism</span>(idd), <span class="at">Gu =</span> D_matrix) <span class="sc">+</span></span>
+<span id="cb5-114"><a href="#cb5-114" tabindex="-1"></a>          <span class="fu">vsm</span>(<span class="fu">ism</span>(ide), <span class="at">Gu =</span> E_matrix),</span>
+<span id="cb5-115"><a href="#cb5-115" tabindex="-1"></a>        <span class="at">rcov =</span> <span class="sc">~</span> units,</span>
+<span id="cb5-116"><a href="#cb5-116" tabindex="-1"></a>        <span class="at">nIters =</span> N_ITERS_SOMMER,</span>
+<span id="cb5-117"><a href="#cb5-117" tabindex="-1"></a>        <span class="at">data =</span> dat,</span>
+<span id="cb5-118"><a href="#cb5-118" tabindex="-1"></a>        <span class="at">verbose =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb5-119"><a href="#cb5-119" tabindex="-1"></a>        <span class="at">dateWarning =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-120"><a href="#cb5-120" tabindex="-1"></a>      )</span>
+<span id="cb5-121"><a href="#cb5-121" tabindex="-1"></a></span>
+<span id="cb5-122"><a href="#cb5-122" tabindex="-1"></a>      fit_seconds <span class="ot">&lt;-</span></span>
+<span id="cb5-123"><a href="#cb5-123" tabindex="-1"></a>        <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span></span>
+<span id="cb5-124"><a href="#cb5-124" tabindex="-1"></a>        fit_start</span>
+<span id="cb5-125"><a href="#cb5-125" tabindex="-1"></a></span>
+<span id="cb5-126"><a href="#cb5-126" tabindex="-1"></a>      prediction_start <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]]</span>
+<span id="cb5-127"><a href="#cb5-127" tabindex="-1"></a></span>
+<span id="cb5-128"><a href="#cb5-128" tabindex="-1"></a>      <span class="fu">stopifnot</span>(<span class="fu">length</span>(fit<span class="sc">$</span>uList) <span class="sc">&gt;=</span> <span class="dv">3</span><span class="dt">L</span>)</span>
+<span id="cb5-129"><a href="#cb5-129" tabindex="-1"></a></span>
+<span id="cb5-130"><a href="#cb5-130" tabindex="-1"></a>      additive_effect <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(</span>
+<span id="cb5-131"><a href="#cb5-131" tabindex="-1"></a>        fit<span class="sc">$</span>uList[[<span class="dv">1</span><span class="dt">L</span>]]</span>
+<span id="cb5-132"><a href="#cb5-132" tabindex="-1"></a>      )</span>
+<span id="cb5-133"><a href="#cb5-133" tabindex="-1"></a></span>
+<span id="cb5-134"><a href="#cb5-134" tabindex="-1"></a>      dominance_effect <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(</span>
+<span id="cb5-135"><a href="#cb5-135" tabindex="-1"></a>        fit<span class="sc">$</span>uList[[<span class="dv">2</span><span class="dt">L</span>]]</span>
+<span id="cb5-136"><a href="#cb5-136" tabindex="-1"></a>      )</span>
+<span id="cb5-137"><a href="#cb5-137" tabindex="-1"></a></span>
+<span id="cb5-138"><a href="#cb5-138" tabindex="-1"></a>      epistatic_effect <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(</span>
+<span id="cb5-139"><a href="#cb5-139" tabindex="-1"></a>        fit<span class="sc">$</span>uList[[<span class="dv">3</span><span class="dt">L</span>]]</span>
+<span id="cb5-140"><a href="#cb5-140" tabindex="-1"></a>      )</span>
+<span id="cb5-141"><a href="#cb5-141" tabindex="-1"></a></span>
+<span id="cb5-142"><a href="#cb5-142" tabindex="-1"></a>      additive_incidence <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
+<span id="cb5-143"><a href="#cb5-143" tabindex="-1"></a>        <span class="sc">~</span> id <span class="sc">-</span> <span class="dv">1</span>,</span>
+<span id="cb5-144"><a href="#cb5-144" tabindex="-1"></a>        <span class="at">data =</span> dat</span>
+<span id="cb5-145"><a href="#cb5-145" tabindex="-1"></a>      )</span>
+<span id="cb5-146"><a href="#cb5-146" tabindex="-1"></a></span>
+<span id="cb5-147"><a href="#cb5-147" tabindex="-1"></a>      dominance_incidence <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
+<span id="cb5-148"><a href="#cb5-148" tabindex="-1"></a>        <span class="sc">~</span> idd <span class="sc">-</span> <span class="dv">1</span>,</span>
+<span id="cb5-149"><a href="#cb5-149" tabindex="-1"></a>        <span class="at">data =</span> dat</span>
+<span id="cb5-150"><a href="#cb5-150" tabindex="-1"></a>      )</span>
+<span id="cb5-151"><a href="#cb5-151" tabindex="-1"></a></span>
+<span id="cb5-152"><a href="#cb5-152" tabindex="-1"></a>      epistatic_incidence <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
+<span id="cb5-153"><a href="#cb5-153" tabindex="-1"></a>        <span class="sc">~</span> ide <span class="sc">-</span> <span class="dv">1</span>,</span>
+<span id="cb5-154"><a href="#cb5-154" tabindex="-1"></a>        <span class="at">data =</span> dat</span>
+<span id="cb5-155"><a href="#cb5-155" tabindex="-1"></a>      )</span>
+<span id="cb5-156"><a href="#cb5-156" tabindex="-1"></a></span>
+<span id="cb5-157"><a href="#cb5-157" tabindex="-1"></a>      additive <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
+<span id="cb5-158"><a href="#cb5-158" tabindex="-1"></a>        additive_incidence <span class="sc">%*%</span></span>
+<span id="cb5-159"><a href="#cb5-159" tabindex="-1"></a>          additive_effect[, <span class="dv">1</span><span class="dt">L</span>, <span class="at">drop =</span> <span class="cn">FALSE</span>]</span>
+<span id="cb5-160"><a href="#cb5-160" tabindex="-1"></a>      )</span>
+<span id="cb5-161"><a href="#cb5-161" tabindex="-1"></a></span>
+<span id="cb5-162"><a href="#cb5-162" tabindex="-1"></a>      dominance <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
+<span id="cb5-163"><a href="#cb5-163" tabindex="-1"></a>        dominance_incidence <span class="sc">%*%</span></span>
+<span id="cb5-164"><a href="#cb5-164" tabindex="-1"></a>          dominance_effect[, <span class="dv">1</span><span class="dt">L</span>, <span class="at">drop =</span> <span class="cn">FALSE</span>]</span>
+<span id="cb5-165"><a href="#cb5-165" tabindex="-1"></a>      )</span>
+<span id="cb5-166"><a href="#cb5-166" tabindex="-1"></a></span>
+<span id="cb5-167"><a href="#cb5-167" tabindex="-1"></a>      epistatic <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
+<span id="cb5-168"><a href="#cb5-168" tabindex="-1"></a>        epistatic_incidence <span class="sc">%*%</span></span>
+<span id="cb5-169"><a href="#cb5-169" tabindex="-1"></a>          epistatic_effect[, <span class="dv">1</span><span class="dt">L</span>, <span class="at">drop =</span> <span class="cn">FALSE</span>]</span>
+<span id="cb5-170"><a href="#cb5-170" tabindex="-1"></a>      )</span>
+<span id="cb5-171"><a href="#cb5-171" tabindex="-1"></a></span>
+<span id="cb5-172"><a href="#cb5-172" tabindex="-1"></a>      genomic_component <span class="ot">&lt;-</span></span>
+<span id="cb5-173"><a href="#cb5-173" tabindex="-1"></a>        additive <span class="sc">+</span></span>
+<span id="cb5-174"><a href="#cb5-174" tabindex="-1"></a>        dominance <span class="sc">+</span></span>
+<span id="cb5-175"><a href="#cb5-175" tabindex="-1"></a>        epistatic</span>
+<span id="cb5-176"><a href="#cb5-176" tabindex="-1"></a></span>
+<span id="cb5-177"><a href="#cb5-177" tabindex="-1"></a>      intercept <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(fit<span class="sc">$</span>b)[<span class="dv">1</span><span class="dt">L</span>]</span>
+<span id="cb5-178"><a href="#cb5-178" tabindex="-1"></a></span>
+<span id="cb5-179"><a href="#cb5-179" tabindex="-1"></a>      predicted_value <span class="ot">&lt;-</span></span>
+<span id="cb5-180"><a href="#cb5-180" tabindex="-1"></a>        intercept <span class="sc">+</span></span>
+<span id="cb5-181"><a href="#cb5-181" tabindex="-1"></a>        genomic_component</span>
+<span id="cb5-182"><a href="#cb5-182" tabindex="-1"></a></span>
+<span id="cb5-183"><a href="#cb5-183" tabindex="-1"></a>      predict_seconds <span class="ot">&lt;-</span></span>
+<span id="cb5-184"><a href="#cb5-184" tabindex="-1"></a>        <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span></span>
+<span id="cb5-185"><a href="#cb5-185" tabindex="-1"></a>        prediction_start</span>
+<span id="cb5-186"><a href="#cb5-186" tabindex="-1"></a></span>
+<span id="cb5-187"><a href="#cb5-187" tabindex="-1"></a>      observed_test <span class="ot">&lt;-</span> phenotype_vector[</span>
+<span id="cb5-188"><a href="#cb5-188" tabindex="-1"></a>        assessment_index</span>
+<span id="cb5-189"><a href="#cb5-189" tabindex="-1"></a>      ]</span>
+<span id="cb5-190"><a href="#cb5-190" tabindex="-1"></a></span>
+<span id="cb5-191"><a href="#cb5-191" tabindex="-1"></a>      predicted_test <span class="ot">&lt;-</span> predicted_value[</span>
+<span id="cb5-192"><a href="#cb5-192" tabindex="-1"></a>        assessment_index</span>
+<span id="cb5-193"><a href="#cb5-193" tabindex="-1"></a>      ]</span>
+<span id="cb5-194"><a href="#cb5-194" tabindex="-1"></a></span>
+<span id="cb5-195"><a href="#cb5-195" tabindex="-1"></a>      genomic_component_test <span class="ot">&lt;-</span> genomic_component[</span>
+<span id="cb5-196"><a href="#cb5-196" tabindex="-1"></a>        assessment_index</span>
+<span id="cb5-197"><a href="#cb5-197" tabindex="-1"></a>      ]</span>
+<span id="cb5-198"><a href="#cb5-198" tabindex="-1"></a></span>
+<span id="cb5-199"><a href="#cb5-199" tabindex="-1"></a>      <span class="cf">if</span> (</span>
+<span id="cb5-200"><a href="#cb5-200" tabindex="-1"></a>        <span class="fu">length</span>(<span class="fu">unique</span>(observed_test)) <span class="sc">&gt;</span> <span class="dv">1</span><span class="dt">L</span> <span class="sc">&amp;&amp;</span></span>
+<span id="cb5-201"><a href="#cb5-201" tabindex="-1"></a>        <span class="fu">length</span>(<span class="fu">unique</span>(predicted_test)) <span class="sc">&gt;</span> <span class="dv">1</span><span class="dt">L</span></span>
+<span id="cb5-202"><a href="#cb5-202" tabindex="-1"></a>      ) {</span>
+<span id="cb5-203"><a href="#cb5-203" tabindex="-1"></a>        correlation <span class="ot">&lt;-</span> <span class="fu">cor</span>(</span>
+<span id="cb5-204"><a href="#cb5-204" tabindex="-1"></a>          predicted_test,</span>
+<span id="cb5-205"><a href="#cb5-205" tabindex="-1"></a>          observed_test</span>
+<span id="cb5-206"><a href="#cb5-206" tabindex="-1"></a>        )</span>
+<span id="cb5-207"><a href="#cb5-207" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb5-208"><a href="#cb5-208" tabindex="-1"></a>        correlation <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
+<span id="cb5-209"><a href="#cb5-209" tabindex="-1"></a>      }</span>
+<span id="cb5-210"><a href="#cb5-210" tabindex="-1"></a></span>
+<span id="cb5-211"><a href="#cb5-211" tabindex="-1"></a>      rmse <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(</span>
+<span id="cb5-212"><a href="#cb5-212" tabindex="-1"></a>        <span class="fu">mean</span>(</span>
+<span id="cb5-213"><a href="#cb5-213" tabindex="-1"></a>          (predicted_test <span class="sc">-</span> observed_test)<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb5-214"><a href="#cb5-214" tabindex="-1"></a>        )</span>
+<span id="cb5-215"><a href="#cb5-215" tabindex="-1"></a>      )</span>
+<span id="cb5-216"><a href="#cb5-216" tabindex="-1"></a></span>
+<span id="cb5-217"><a href="#cb5-217" tabindex="-1"></a>      mae <span class="ot">&lt;-</span> <span class="fu">mean</span>(</span>
+<span id="cb5-218"><a href="#cb5-218" tabindex="-1"></a>        <span class="fu">abs</span>(</span>
+<span id="cb5-219"><a href="#cb5-219" tabindex="-1"></a>          predicted_test <span class="sc">-</span> observed_test</span>
+<span id="cb5-220"><a href="#cb5-220" tabindex="-1"></a>        )</span>
+<span id="cb5-221"><a href="#cb5-221" tabindex="-1"></a>      )</span>
+<span id="cb5-222"><a href="#cb5-222" tabindex="-1"></a></span>
+<span id="cb5-223"><a href="#cb5-223" tabindex="-1"></a>      bias <span class="ot">&lt;-</span> <span class="fu">mean</span>(</span>
+<span id="cb5-224"><a href="#cb5-224" tabindex="-1"></a>        predicted_test <span class="sc">-</span> observed_test</span>
+<span id="cb5-225"><a href="#cb5-225" tabindex="-1"></a>      )</span>
+<span id="cb5-226"><a href="#cb5-226" tabindex="-1"></a></span>
+<span id="cb5-227"><a href="#cb5-227" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">length</span>(<span class="fu">unique</span>(predicted_test)) <span class="sc">&gt;</span> <span class="dv">1</span><span class="dt">L</span>) {</span>
+<span id="cb5-228"><a href="#cb5-228" tabindex="-1"></a>        slope <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
+<span id="cb5-229"><a href="#cb5-229" tabindex="-1"></a>          <span class="fu">coef</span>(</span>
+<span id="cb5-230"><a href="#cb5-230" tabindex="-1"></a>            <span class="fu">lm</span>(</span>
+<span id="cb5-231"><a href="#cb5-231" tabindex="-1"></a>              observed_test <span class="sc">~</span> predicted_test</span>
+<span id="cb5-232"><a href="#cb5-232" tabindex="-1"></a>            )</span>
+<span id="cb5-233"><a href="#cb5-233" tabindex="-1"></a>          )[<span class="dv">2</span><span class="dt">L</span>]</span>
+<span id="cb5-234"><a href="#cb5-234" tabindex="-1"></a>        )</span>
+<span id="cb5-235"><a href="#cb5-235" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb5-236"><a href="#cb5-236" tabindex="-1"></a>        slope <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
+<span id="cb5-237"><a href="#cb5-237" tabindex="-1"></a>      }</span>
+<span id="cb5-238"><a href="#cb5-238" tabindex="-1"></a></span>
+<span id="cb5-239"><a href="#cb5-239" tabindex="-1"></a>      sst <span class="ot">&lt;-</span> <span class="fu">sum</span>(</span>
+<span id="cb5-240"><a href="#cb5-240" tabindex="-1"></a>        (observed_test <span class="sc">-</span> <span class="fu">mean</span>(observed_test))<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb5-241"><a href="#cb5-241" tabindex="-1"></a>      )</span>
+<span id="cb5-242"><a href="#cb5-242" tabindex="-1"></a></span>
+<span id="cb5-243"><a href="#cb5-243" tabindex="-1"></a>      <span class="cf">if</span> (sst <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb5-244"><a href="#cb5-244" tabindex="-1"></a>        r2 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span></span>
+<span id="cb5-245"><a href="#cb5-245" tabindex="-1"></a>          <span class="fu">sum</span>(</span>
+<span id="cb5-246"><a href="#cb5-246" tabindex="-1"></a>            (observed_test <span class="sc">-</span> predicted_test)<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb5-247"><a href="#cb5-247" tabindex="-1"></a>          ) <span class="sc">/</span> sst</span>
+<span id="cb5-248"><a href="#cb5-248" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb5-249"><a href="#cb5-249" tabindex="-1"></a>        r2 <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
+<span id="cb5-250"><a href="#cb5-250" tabindex="-1"></a>      }</span>
+<span id="cb5-251"><a href="#cb5-251" tabindex="-1"></a></span>
+<span id="cb5-252"><a href="#cb5-252" tabindex="-1"></a>      <span class="fu">list</span>(</span>
+<span id="cb5-253"><a href="#cb5-253" tabindex="-1"></a>        <span class="at">result =</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-254"><a href="#cb5-254" tabindex="-1"></a>          <span class="at">Dataset =</span> <span class="st">&quot;real&quot;</span>,</span>
+<span id="cb5-255"><a href="#cb5-255" tabindex="-1"></a>          <span class="at">Trait =</span> trait,</span>
+<span id="cb5-256"><a href="#cb5-256" tabindex="-1"></a>          <span class="at">Repetition =</span> task<span class="sc">$</span>Repetition,</span>
+<span id="cb5-257"><a href="#cb5-257" tabindex="-1"></a>          <span class="at">Fold =</span> task<span class="sc">$</span>OuterFold,</span>
+<span id="cb5-258"><a href="#cb5-258" tabindex="-1"></a>          <span class="at">SplitID =</span> task<span class="sc">$</span>SplitID,</span>
+<span id="cb5-259"><a href="#cb5-259" tabindex="-1"></a>          <span class="at">TaskID =</span> task<span class="sc">$</span>TaskID,</span>
+<span id="cb5-260"><a href="#cb5-260" tabindex="-1"></a>          <span class="at">Model =</span> <span class="st">&quot;GBLUP_ADE&quot;</span>,</span>
+<span id="cb5-261"><a href="#cb5-261" tabindex="-1"></a>          <span class="at">N_train =</span> <span class="fu">length</span>(analysis_index),</span>
+<span id="cb5-262"><a href="#cb5-262" tabindex="-1"></a>          <span class="at">N_test =</span> <span class="fu">length</span>(assessment_index),</span>
+<span id="cb5-263"><a href="#cb5-263" tabindex="-1"></a>          <span class="at">N_pred_finite =</span> <span class="fu">sum</span>(<span class="fu">is.finite</span>(predicted_test)),</span>
+<span id="cb5-264"><a href="#cb5-264" tabindex="-1"></a>          <span class="at">Phenotype_Correlation =</span> correlation,</span>
+<span id="cb5-265"><a href="#cb5-265" tabindex="-1"></a>          <span class="at">Phenotype_RMSE =</span> rmse,</span>
+<span id="cb5-266"><a href="#cb5-266" tabindex="-1"></a>          <span class="at">Phenotype_MAE =</span> mae,</span>
+<span id="cb5-267"><a href="#cb5-267" tabindex="-1"></a>          <span class="at">Phenotype_Bias =</span> bias,</span>
+<span id="cb5-268"><a href="#cb5-268" tabindex="-1"></a>          <span class="at">Phenotype_Slope =</span> slope,</span>
+<span id="cb5-269"><a href="#cb5-269" tabindex="-1"></a>          <span class="at">Phenotype_R2 =</span> r2,</span>
+<span id="cb5-270"><a href="#cb5-270" tabindex="-1"></a>          <span class="at">Kernel_build_seconds =</span> kernel_seconds,</span>
+<span id="cb5-271"><a href="#cb5-271" tabindex="-1"></a>          <span class="at">Fit_seconds =</span> fit_seconds,</span>
+<span id="cb5-272"><a href="#cb5-272" tabindex="-1"></a>          <span class="at">Predict_seconds =</span> predict_seconds,</span>
+<span id="cb5-273"><a href="#cb5-273" tabindex="-1"></a>          <span class="at">Status =</span> <span class="cf">if</span> (</span>
+<span id="cb5-274"><a href="#cb5-274" tabindex="-1"></a>            <span class="fu">all</span>(<span class="fu">is.finite</span>(predicted_test))</span>
+<span id="cb5-275"><a href="#cb5-275" tabindex="-1"></a>          ) <span class="st">&quot;ok&quot;</span> <span class="cf">else</span> <span class="st">&quot;nonfinite_prediction&quot;</span>,</span>
+<span id="cb5-276"><a href="#cb5-276" tabindex="-1"></a>          <span class="at">Error =</span> <span class="cn">NA_character_</span>,</span>
+<span id="cb5-277"><a href="#cb5-277" tabindex="-1"></a>          <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-278"><a href="#cb5-278" tabindex="-1"></a>        ),</span>
+<span id="cb5-279"><a href="#cb5-279" tabindex="-1"></a>        <span class="at">prediction =</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-280"><a href="#cb5-280" tabindex="-1"></a>          <span class="at">Dataset =</span> <span class="st">&quot;real&quot;</span>,</span>
+<span id="cb5-281"><a href="#cb5-281" tabindex="-1"></a>          <span class="at">Trait =</span> trait,</span>
+<span id="cb5-282"><a href="#cb5-282" tabindex="-1"></a>          <span class="at">Repetition =</span> task<span class="sc">$</span>Repetition,</span>
+<span id="cb5-283"><a href="#cb5-283" tabindex="-1"></a>          <span class="at">Fold =</span> task<span class="sc">$</span>OuterFold,</span>
+<span id="cb5-284"><a href="#cb5-284" tabindex="-1"></a>          <span class="at">SplitID =</span> task<span class="sc">$</span>SplitID,</span>
+<span id="cb5-285"><a href="#cb5-285" tabindex="-1"></a>          <span class="at">TaskID =</span> task<span class="sc">$</span>TaskID,</span>
+<span id="cb5-286"><a href="#cb5-286" tabindex="-1"></a>          <span class="at">Model =</span> <span class="st">&quot;GBLUP_ADE&quot;</span>,</span>
+<span id="cb5-287"><a href="#cb5-287" tabindex="-1"></a>          <span class="at">ID =</span> ids[assessment_index],</span>
+<span id="cb5-288"><a href="#cb5-288" tabindex="-1"></a>          <span class="at">Family =</span> common<span class="sc">$</span>family[</span>
+<span id="cb5-289"><a href="#cb5-289" tabindex="-1"></a>            ids[assessment_index]</span>
+<span id="cb5-290"><a href="#cb5-290" tabindex="-1"></a>          ],</span>
+<span id="cb5-291"><a href="#cb5-291" tabindex="-1"></a>          <span class="at">Observed_Phenotype =</span> observed_test,</span>
+<span id="cb5-292"><a href="#cb5-292" tabindex="-1"></a>          <span class="at">Predicted_Value =</span> predicted_test,</span>
+<span id="cb5-293"><a href="#cb5-293" tabindex="-1"></a>          <span class="at">GEBV =</span> genomic_component_test,</span>
+<span id="cb5-294"><a href="#cb5-294" tabindex="-1"></a>          <span class="at">Additive_Prediction =</span> additive[</span>
+<span id="cb5-295"><a href="#cb5-295" tabindex="-1"></a>            assessment_index</span>
+<span id="cb5-296"><a href="#cb5-296" tabindex="-1"></a>          ],</span>
+<span id="cb5-297"><a href="#cb5-297" tabindex="-1"></a>          <span class="at">Dominance_Prediction =</span> dominance[</span>
+<span id="cb5-298"><a href="#cb5-298" tabindex="-1"></a>            assessment_index</span>
+<span id="cb5-299"><a href="#cb5-299" tabindex="-1"></a>          ],</span>
+<span id="cb5-300"><a href="#cb5-300" tabindex="-1"></a>          <span class="at">Epistatic_Prediction =</span> epistatic[</span>
+<span id="cb5-301"><a href="#cb5-301" tabindex="-1"></a>            assessment_index</span>
+<span id="cb5-302"><a href="#cb5-302" tabindex="-1"></a>          ],</span>
+<span id="cb5-303"><a href="#cb5-303" tabindex="-1"></a>          <span class="at">Status =</span> <span class="cf">if</span> (</span>
+<span id="cb5-304"><a href="#cb5-304" tabindex="-1"></a>            <span class="fu">all</span>(<span class="fu">is.finite</span>(predicted_test))</span>
+<span id="cb5-305"><a href="#cb5-305" tabindex="-1"></a>          ) <span class="st">&quot;ok&quot;</span> <span class="cf">else</span> <span class="st">&quot;nonfinite_prediction&quot;</span>,</span>
+<span id="cb5-306"><a href="#cb5-306" tabindex="-1"></a>          <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-307"><a href="#cb5-307" tabindex="-1"></a>        )</span>
+<span id="cb5-308"><a href="#cb5-308" tabindex="-1"></a>      )</span>
+<span id="cb5-309"><a href="#cb5-309" tabindex="-1"></a>    },</span>
+<span id="cb5-310"><a href="#cb5-310" tabindex="-1"></a>    <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb5-311"><a href="#cb5-311" tabindex="-1"></a></span>
+<span id="cb5-312"><a href="#cb5-312" tabindex="-1"></a>      fit_seconds <span class="ot">&lt;-</span></span>
+<span id="cb5-313"><a href="#cb5-313" tabindex="-1"></a>        <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span></span>
+<span id="cb5-314"><a href="#cb5-314" tabindex="-1"></a>        fit_start</span>
+<span id="cb5-315"><a href="#cb5-315" tabindex="-1"></a></span>
+<span id="cb5-316"><a href="#cb5-316" tabindex="-1"></a>      <span class="fu">list</span>(</span>
+<span id="cb5-317"><a href="#cb5-317" tabindex="-1"></a>        <span class="at">result =</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-318"><a href="#cb5-318" tabindex="-1"></a>          <span class="at">Dataset =</span> <span class="st">&quot;real&quot;</span>,</span>
+<span id="cb5-319"><a href="#cb5-319" tabindex="-1"></a>          <span class="at">Trait =</span> trait,</span>
+<span id="cb5-320"><a href="#cb5-320" tabindex="-1"></a>          <span class="at">Repetition =</span> task<span class="sc">$</span>Repetition,</span>
+<span id="cb5-321"><a href="#cb5-321" tabindex="-1"></a>          <span class="at">Fold =</span> task<span class="sc">$</span>OuterFold,</span>
+<span id="cb5-322"><a href="#cb5-322" tabindex="-1"></a>          <span class="at">SplitID =</span> task<span class="sc">$</span>SplitID,</span>
+<span id="cb5-323"><a href="#cb5-323" tabindex="-1"></a>          <span class="at">TaskID =</span> task<span class="sc">$</span>TaskID,</span>
+<span id="cb5-324"><a href="#cb5-324" tabindex="-1"></a>          <span class="at">Model =</span> <span class="st">&quot;GBLUP_ADE&quot;</span>,</span>
+<span id="cb5-325"><a href="#cb5-325" tabindex="-1"></a>          <span class="at">N_train =</span> <span class="fu">length</span>(analysis_index),</span>
+<span id="cb5-326"><a href="#cb5-326" tabindex="-1"></a>          <span class="at">N_test =</span> <span class="fu">length</span>(assessment_index),</span>
+<span id="cb5-327"><a href="#cb5-327" tabindex="-1"></a>          <span class="at">N_pred_finite =</span> <span class="dv">0</span><span class="dt">L</span>,</span>
+<span id="cb5-328"><a href="#cb5-328" tabindex="-1"></a>          <span class="at">Phenotype_Correlation =</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb5-329"><a href="#cb5-329" tabindex="-1"></a>          <span class="at">Phenotype_RMSE =</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb5-330"><a href="#cb5-330" tabindex="-1"></a>          <span class="at">Phenotype_MAE =</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb5-331"><a href="#cb5-331" tabindex="-1"></a>          <span class="at">Phenotype_Bias =</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb5-332"><a href="#cb5-332" tabindex="-1"></a>          <span class="at">Phenotype_Slope =</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb5-333"><a href="#cb5-333" tabindex="-1"></a>          <span class="at">Phenotype_R2 =</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb5-334"><a href="#cb5-334" tabindex="-1"></a>          <span class="at">Kernel_build_seconds =</span> kernel_seconds,</span>
+<span id="cb5-335"><a href="#cb5-335" tabindex="-1"></a>          <span class="at">Fit_seconds =</span> fit_seconds,</span>
+<span id="cb5-336"><a href="#cb5-336" tabindex="-1"></a>          <span class="at">Predict_seconds =</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb5-337"><a href="#cb5-337" tabindex="-1"></a>          <span class="at">Status =</span> <span class="st">&quot;error&quot;</span>,</span>
+<span id="cb5-338"><a href="#cb5-338" tabindex="-1"></a>          <span class="at">Error =</span> <span class="fu">conditionMessage</span>(e),</span>
+<span id="cb5-339"><a href="#cb5-339" tabindex="-1"></a>          <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-340"><a href="#cb5-340" tabindex="-1"></a>        ),</span>
+<span id="cb5-341"><a href="#cb5-341" tabindex="-1"></a>        <span class="at">prediction =</span> <span class="cn">NULL</span></span>
+<span id="cb5-342"><a href="#cb5-342" tabindex="-1"></a>      )</span>
+<span id="cb5-343"><a href="#cb5-343" tabindex="-1"></a>    }</span>
+<span id="cb5-344"><a href="#cb5-344" tabindex="-1"></a>  )</span>
+<span id="cb5-345"><a href="#cb5-345" tabindex="-1"></a></span>
+<span id="cb5-346"><a href="#cb5-346" tabindex="-1"></a>  result_list[[i]] <span class="ot">&lt;-</span> task_result<span class="sc">$</span>result</span>
+<span id="cb5-347"><a href="#cb5-347" tabindex="-1"></a>  prediction_list[[i]] <span class="ot">&lt;-</span> task_result<span class="sc">$</span>prediction</span>
+<span id="cb5-348"><a href="#cb5-348" tabindex="-1"></a></span>
+<span id="cb5-349"><a href="#cb5-349" tabindex="-1"></a>  <span class="fu">cat</span>(</span>
+<span id="cb5-350"><a href="#cb5-350" tabindex="-1"></a>    <span class="fu">sprintf</span>(</span>
+<span id="cb5-351"><a href="#cb5-351" tabindex="-1"></a>      <span class="st">&quot;[%02d/%02d] %s | status=%s | r=%s | RMSE=%s</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb5-352"><a href="#cb5-352" tabindex="-1"></a>      i,</span>
+<span id="cb5-353"><a href="#cb5-353" tabindex="-1"></a>      <span class="fu">nrow</span>(task_table),</span>
+<span id="cb5-354"><a href="#cb5-354" tabindex="-1"></a>      task<span class="sc">$</span>TaskID,</span>
+<span id="cb5-355"><a href="#cb5-355" tabindex="-1"></a>      task_result<span class="sc">$</span>result<span class="sc">$</span>Status,</span>
+<span id="cb5-356"><a href="#cb5-356" tabindex="-1"></a>      <span class="fu">ifelse</span>(</span>
+<span id="cb5-357"><a href="#cb5-357" tabindex="-1"></a>        <span class="fu">is.finite</span>(</span>
+<span id="cb5-358"><a href="#cb5-358" tabindex="-1"></a>          task_result<span class="sc">$</span>result<span class="sc">$</span>Phenotype_Correlation</span>
+<span id="cb5-359"><a href="#cb5-359" tabindex="-1"></a>        ),</span>
+<span id="cb5-360"><a href="#cb5-360" tabindex="-1"></a>        <span class="fu">sprintf</span>(</span>
+<span id="cb5-361"><a href="#cb5-361" tabindex="-1"></a>          <span class="st">&quot;%.4f&quot;</span>,</span>
+<span id="cb5-362"><a href="#cb5-362" tabindex="-1"></a>          task_result<span class="sc">$</span>result<span class="sc">$</span>Phenotype_Correlation</span>
+<span id="cb5-363"><a href="#cb5-363" tabindex="-1"></a>        ),</span>
+<span id="cb5-364"><a href="#cb5-364" tabindex="-1"></a>        <span class="st">&quot;NA&quot;</span></span>
+<span id="cb5-365"><a href="#cb5-365" tabindex="-1"></a>      ),</span>
+<span id="cb5-366"><a href="#cb5-366" tabindex="-1"></a>      <span class="fu">ifelse</span>(</span>
+<span id="cb5-367"><a href="#cb5-367" tabindex="-1"></a>        <span class="fu">is.finite</span>(</span>
+<span id="cb5-368"><a href="#cb5-368" tabindex="-1"></a>          task_result<span class="sc">$</span>result<span class="sc">$</span>Phenotype_RMSE</span>
+<span id="cb5-369"><a href="#cb5-369" tabindex="-1"></a>        ),</span>
+<span id="cb5-370"><a href="#cb5-370" tabindex="-1"></a>        <span class="fu">sprintf</span>(</span>
+<span id="cb5-371"><a href="#cb5-371" tabindex="-1"></a>          <span class="st">&quot;%.4f&quot;</span>,</span>
+<span id="cb5-372"><a href="#cb5-372" tabindex="-1"></a>          task_result<span class="sc">$</span>result<span class="sc">$</span>Phenotype_RMSE</span>
+<span id="cb5-373"><a href="#cb5-373" tabindex="-1"></a>        ),</span>
+<span id="cb5-374"><a href="#cb5-374" tabindex="-1"></a>        <span class="st">&quot;NA&quot;</span></span>
+<span id="cb5-375"><a href="#cb5-375" tabindex="-1"></a>      )</span>
+<span id="cb5-376"><a href="#cb5-376" tabindex="-1"></a>    )</span>
+<span id="cb5-377"><a href="#cb5-377" tabindex="-1"></a>  )</span>
+<span id="cb5-378"><a href="#cb5-378" tabindex="-1"></a>}</span>
+<span id="cb5-379"><a href="#cb5-379" tabindex="-1"></a></span>
+<span id="cb5-380"><a href="#cb5-380" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb5-381"><a href="#cb5-381" tabindex="-1"></a>  rbind,</span>
+<span id="cb5-382"><a href="#cb5-382" tabindex="-1"></a>  result_list</span>
+<span id="cb5-383"><a href="#cb5-383" tabindex="-1"></a>)</span>
+<span id="cb5-384"><a href="#cb5-384" tabindex="-1"></a></span>
+<span id="cb5-385"><a href="#cb5-385" tabindex="-1"></a>prediction_list <span class="ot">&lt;-</span> <span class="fu">Filter</span>(</span>
+<span id="cb5-386"><a href="#cb5-386" tabindex="-1"></a>  <span class="fu">Negate</span>(is.null),</span>
+<span id="cb5-387"><a href="#cb5-387" tabindex="-1"></a>  prediction_list</span>
+<span id="cb5-388"><a href="#cb5-388" tabindex="-1"></a>)</span>
+<span id="cb5-389"><a href="#cb5-389" tabindex="-1"></a></span>
+<span id="cb5-390"><a href="#cb5-390" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(prediction_list) <span class="sc">&gt;</span> <span class="dv">0</span><span class="dt">L</span>) {</span>
+<span id="cb5-391"><a href="#cb5-391" tabindex="-1"></a>  predictions <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb5-392"><a href="#cb5-392" tabindex="-1"></a>    rbind,</span>
+<span id="cb5-393"><a href="#cb5-393" tabindex="-1"></a>    prediction_list</span>
+<span id="cb5-394"><a href="#cb5-394" tabindex="-1"></a>  )</span>
+<span id="cb5-395"><a href="#cb5-395" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb5-396"><a href="#cb5-396" tabindex="-1"></a>  predictions <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb5-397"><a href="#cb5-397" tabindex="-1"></a>}</span>
+<span id="cb5-398"><a href="#cb5-398" tabindex="-1"></a></span>
+<span id="cb5-399"><a href="#cb5-399" tabindex="-1"></a><span class="fu">rownames</span>(results) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb5-400"><a href="#cb5-400" tabindex="-1"></a><span class="fu">rownames</span>(predictions) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb5-401"><a href="#cb5-401" tabindex="-1"></a></span>
+<span id="cb5-402"><a href="#cb5-402" tabindex="-1"></a>run_seconds <span class="ot">&lt;-</span></span>
+<span id="cb5-403"><a href="#cb5-403" tabindex="-1"></a>  <span class="fu">proc.time</span>()[[<span class="st">&quot;elapsed&quot;</span>]] <span class="sc">-</span></span>
+<span id="cb5-404"><a href="#cb5-404" tabindex="-1"></a>  run_start</span>
+<span id="cb5-405"><a href="#cb5-405" tabindex="-1"></a></span>
+<span id="cb5-406"><a href="#cb5-406" tabindex="-1"></a>run_metadata <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb5-407"><a href="#cb5-407" tabindex="-1"></a>  <span class="at">dataset =</span> <span class="st">&quot;real&quot;</span>,</span>
+<span id="cb5-408"><a href="#cb5-408" tabindex="-1"></a>  <span class="at">model =</span> <span class="st">&quot;GBLUP_ADE&quot;</span>,</span>
+<span id="cb5-409"><a href="#cb5-409" tabindex="-1"></a>  <span class="at">seed_global =</span> SEED_GLOBAL,</span>
+<span id="cb5-410"><a href="#cb5-410" tabindex="-1"></a>  <span class="at">sommer_version =</span> <span class="fu">as.character</span>(</span>
+<span id="cb5-411"><a href="#cb5-411" tabindex="-1"></a>    <span class="fu">packageVersion</span>(<span class="st">&quot;sommer&quot;</span>)</span>
+<span id="cb5-412"><a href="#cb5-412" tabindex="-1"></a>  ),</span>
+<span id="cb5-413"><a href="#cb5-413" tabindex="-1"></a>  <span class="at">nIters_sommer =</span> N_ITERS_SOMMER,</span>
+<span id="cb5-414"><a href="#cb5-414" tabindex="-1"></a>  <span class="at">marker_panel_n =</span> <span class="fu">ncol</span>(geno),</span>
+<span id="cb5-415"><a href="#cb5-415" tabindex="-1"></a>  <span class="at">individuals_n =</span> <span class="fu">nrow</span>(geno),</span>
+<span id="cb5-416"><a href="#cb5-416" tabindex="-1"></a>  <span class="at">traits =</span> traits,</span>
+<span id="cb5-417"><a href="#cb5-417" tabindex="-1"></a>  <span class="at">outer_splits =</span> <span class="fu">length</span>(cv<span class="sc">$</span>outer_splits),</span>
+<span id="cb5-418"><a href="#cb5-418" tabindex="-1"></a>  <span class="at">tasks_expected =</span> <span class="fu">nrow</span>(task_table),</span>
+<span id="cb5-419"><a href="#cb5-419" tabindex="-1"></a>  <span class="at">tasks_ok =</span> <span class="fu">sum</span>(results<span class="sc">$</span>Status <span class="sc">==</span> <span class="st">&quot;ok&quot;</span>),</span>
+<span id="cb5-420"><a href="#cb5-420" tabindex="-1"></a>  <span class="at">tasks_error =</span> <span class="fu">sum</span>(results<span class="sc">$</span>Status <span class="sc">==</span> <span class="st">&quot;error&quot;</span>),</span>
+<span id="cb5-421"><a href="#cb5-421" tabindex="-1"></a>  <span class="at">prediction_rows =</span> <span class="fu">nrow</span>(predictions),</span>
+<span id="cb5-422"><a href="#cb5-422" tabindex="-1"></a>  <span class="at">kernel_build_seconds =</span> kernel_seconds,</span>
+<span id="cb5-423"><a href="#cb5-423" tabindex="-1"></a>  <span class="at">total_run_seconds =</span> run_seconds,</span>
+<span id="cb5-424"><a href="#cb5-424" tabindex="-1"></a>  <span class="at">timestamp =</span> <span class="fu">as.character</span>(<span class="fu">Sys.time</span>())</span>
+<span id="cb5-425"><a href="#cb5-425" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="saved-run-availability" class="section level2">
+<h2>8. Saved-run availability</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>result_path <span class="ot">&lt;-</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="st">&quot;output/real/gblup/real_gblup_ade_results.rds&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>prediction_path <span class="ot">&lt;-</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="st">&quot;output/real/gblup/real_gblup_ade_predictions.rds&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>metadata_path <span class="ot">&lt;-</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="st">&quot;output/real/gblup/real_gblup_ade_run_metadata.rds&quot;</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>kernel_path <span class="ot">&lt;-</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  <span class="st">&quot;output/real/gblup/real_gblup_ade_kernel_summary.csv&quot;</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>saved_outputs_available <span class="ot">&lt;-</span> <span class="fu">all</span>(</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>  <span class="fu">file.exists</span>(</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>    <span class="fu">c</span>(</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>      result_path,</span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>      prediction_path,</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>      metadata_path,</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>      kernel_path</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>    )</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>  )</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>)</span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>saved_outputs_available) {</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>  <span class="fu">stop</span>(</span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>    <span class="fu">paste</span>(</span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>      <span class="st">&quot;Saved GBLUP-ADE outputs are not available.&quot;</span>,</span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>      <span class="st">&quot;Run this module once with RUN_GBLUP=1.&quot;</span></span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>    )</span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>  )</span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="genomic-kernel-diagnostics" class="section level2">
+<h2>9. Genomic-kernel diagnostics</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>kernel_summary <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  kernel_path,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>kernel_summary <span class="sc">|&gt;</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Numerical structure of the real-data GBLUP-ADE kernels&quot;</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Numerical structure of the real-data GBLUP-ADE kernels
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Kernel
+</th>
+<th style="text-align:right;">
+Rows
+</th>
+<th style="text-align:right;">
+Columns
+</th>
+<th style="text-align:left;">
+Symmetric
+</th>
+<th style="text-align:left;">
+Finite
+</th>
+<th style="text-align:right;">
+Mean_diagonal
+</th>
+<th style="text-align:right;">
+Kernel_build_seconds
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Additive
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:right;">
+0.3396
+</td>
+<td style="text-align:right;">
+1.54
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dominance
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:right;">
+0.6318
+</td>
+<td style="text-align:right;">
+1.54
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Epistatic_AxA
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:right;">
+0.1401
+</td>
+<td style="text-align:right;">
+1.54
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="saved-results-and-primary-predictive-performance"
+class="section level2">
+<h2>10. Saved results and primary predictive performance</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  result_path</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  prediction_path</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>)</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>run_metadata <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  metadata_path</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>)</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>result_structure <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  <span class="at">Quantity =</span> <span class="fu">c</span>(</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    <span class="st">&quot;Expected tasks&quot;</span>,</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    <span class="st">&quot;Stored task rows&quot;</span>,</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>    <span class="st">&quot;Successful tasks&quot;</span>,</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    <span class="st">&quot;Errored tasks&quot;</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>    <span class="st">&quot;Expected held-out predictions if all fits succeed&quot;</span>,</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>    <span class="st">&quot;Stored held-out predictions&quot;</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>  ),</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>    <span class="dv">75</span><span class="dt">L</span>,</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>    <span class="fu">nrow</span>(results),</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>    <span class="fu">sum</span>(results<span class="sc">$</span>Status <span class="sc">==</span> <span class="st">&quot;ok&quot;</span>),</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>    <span class="fu">sum</span>(results<span class="sc">$</span>Status <span class="sc">==</span> <span class="st">&quot;error&quot;</span>),</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>    <span class="dv">75</span><span class="dt">L</span> <span class="sc">*</span> <span class="dv">39</span><span class="dt">L</span>,</span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>    <span class="fu">nrow</span>(predictions)</span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>  ),</span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>)</span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a></span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>result_structure <span class="sc">|&gt;</span></span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Stored real-data GBLUP-ADE result structure&quot;</span>,</span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Stored real-data GBLUP-ADE result structure
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Quantity
+</th>
+<th style="text-align:right;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Expected tasks
+</td>
+<td style="text-align:right;">
+75
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Stored task rows
+</td>
+<td style="text-align:right;">
+75
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Successful tasks
+</td>
+<td style="text-align:right;">
+75
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Errored tasks
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Expected held-out predictions if all fits succeed
+</td>
+<td style="text-align:right;">
+2925
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Stored held-out predictions
+</td>
+<td style="text-align:right;">
+2925
+</td>
+</tr>
+</tbody>
+</table>
+<p>A task with <code>Status = "ok"</code> returned 39 finite held-out
+predictions. This status does not by itself constitute a formal
+numerical-convergence diagnostic for the variance-component
+optimizer.</p>
+<div id="performance-by-trait" class="section level3">
+<h3>10.1 Performance by trait</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>ok_results <span class="ot">&lt;-</span> results[</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  results<span class="sc">$</span>Status <span class="sc">==</span> <span class="st">&quot;ok&quot;</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  ,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>]</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">nrow</span>(ok_results) <span class="sc">==</span> <span class="dv">0</span><span class="dt">L</span>) {</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">&quot;No successful GBLUP-ADE tasks are available.&quot;</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>}</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>trait_performance <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  <span class="fu">cbind</span>(</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>    Phenotype_Correlation,</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>    Phenotype_RMSE,</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>    Phenotype_MAE,</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>    Phenotype_Bias,</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>    Phenotype_Slope,</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>    Phenotype_R2</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>  ) <span class="sc">~</span> Trait,</span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>  <span class="at">data =</span> ok_results,</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>  <span class="at">FUN =</span> mean,</span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>  <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>)</span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>trait_performance <span class="ot">&lt;-</span> trait_performance[</span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>  <span class="fu">match</span>(</span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>    traits,</span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>    trait_performance<span class="sc">$</span>Trait</span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>  ),</span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>  ,</span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>  drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>]</span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a></span>
+<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a>trait_performance <span class="sc">|&gt;</span></span>
+<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Mean held-out GBLUP-ADE performance across the 25 outer splits&quot;</span>,</span>
+<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb9-40"><a href="#cb9-40" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb9-41"><a href="#cb9-41" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Mean held-out GBLUP-ADE performance across the 25 outer splits
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+Phenotype_Correlation
+</th>
+<th style="text-align:right;">
+Phenotype_RMSE
+</th>
+<th style="text-align:right;">
+Phenotype_MAE
+</th>
+<th style="text-align:right;">
+Phenotype_Bias
+</th>
+<th style="text-align:right;">
+Phenotype_Slope
+</th>
+<th style="text-align:right;">
+Phenotype_R2
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+-0.1008
+</td>
+<td style="text-align:right;">
+3.0145
+</td>
+<td style="text-align:right;">
+2.3396
+</td>
+<td style="text-align:right;">
+-0.0032
+</td>
+<td style="text-align:right;">
+-3.7249
+</td>
+<td style="text-align:right;">
+-0.0440
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+0.1032
+</td>
+<td style="text-align:right;">
+0.5701
+</td>
+<td style="text-align:right;">
+0.4674
+</td>
+<td style="text-align:right;">
+-0.0004
+</td>
+<td style="text-align:right;">
+0.6566
+</td>
+<td style="text-align:right;">
+-0.0233
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+0.0081
+</td>
+<td style="text-align:right;">
+0.5233
+</td>
+<td style="text-align:right;">
+0.4199
+</td>
+<td style="text-align:right;">
+-0.0091
+</td>
+<td style="text-align:right;">
+2.9036
+</td>
+<td style="text-align:right;">
+-0.0419
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="split-level-variability" class="section level3">
+<h3>10.2 Split-level variability</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>split_summary <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  rbind,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="fu">lapply</span>(</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>    <span class="fu">split</span>(</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>      ok_results,</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>      ok_results<span class="sc">$</span>Trait</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>    ),</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>    <span class="cf">function</span>(x) {</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>      <span class="fu">data.frame</span>(</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>        <span class="at">Trait =</span> <span class="fu">unique</span>(x<span class="sc">$</span>Trait),</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>        <span class="at">N =</span> <span class="fu">nrow</span>(x),</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>        <span class="at">Cor_mean =</span> <span class="fu">mean</span>(</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_Correlation,</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>        ),</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>        <span class="at">Cor_sd =</span> <span class="fu">sd</span>(</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_Correlation,</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>        ),</span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>        <span class="at">Cor_min =</span> <span class="fu">min</span>(</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_Correlation,</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>        ),</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>        <span class="at">Cor_max =</span> <span class="fu">max</span>(</span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_Correlation,</span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>        ),</span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a>        <span class="at">RMSE_mean =</span> <span class="fu">mean</span>(</span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_RMSE,</span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>        ),</span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a>        <span class="at">RMSE_sd =</span> <span class="fu">sd</span>(</span>
+<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_RMSE,</span>
+<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>        ),</span>
+<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a>        <span class="at">MAE_mean =</span> <span class="fu">mean</span>(</span>
+<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_MAE,</span>
+<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a>        ),</span>
+<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a>        <span class="at">Bias_mean =</span> <span class="fu">mean</span>(</span>
+<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_Bias,</span>
+<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a>        ),</span>
+<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a>        <span class="at">Slope_mean =</span> <span class="fu">mean</span>(</span>
+<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_Slope,</span>
+<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a>        ),</span>
+<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a>        <span class="at">R2_mean =</span> <span class="fu">mean</span>(</span>
+<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a>          x<span class="sc">$</span>Phenotype_R2,</span>
+<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a>        ),</span>
+<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a>        <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb10-53"><a href="#cb10-53" tabindex="-1"></a>      )</span>
+<span id="cb10-54"><a href="#cb10-54" tabindex="-1"></a>    }</span>
+<span id="cb10-55"><a href="#cb10-55" tabindex="-1"></a>  )</span>
+<span id="cb10-56"><a href="#cb10-56" tabindex="-1"></a>)</span>
+<span id="cb10-57"><a href="#cb10-57" tabindex="-1"></a></span>
+<span id="cb10-58"><a href="#cb10-58" tabindex="-1"></a><span class="fu">rownames</span>(split_summary) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb10-59"><a href="#cb10-59" tabindex="-1"></a></span>
+<span id="cb10-60"><a href="#cb10-60" tabindex="-1"></a>split_summary <span class="ot">&lt;-</span> split_summary[</span>
+<span id="cb10-61"><a href="#cb10-61" tabindex="-1"></a>  <span class="fu">match</span>(</span>
+<span id="cb10-62"><a href="#cb10-62" tabindex="-1"></a>    traits,</span>
+<span id="cb10-63"><a href="#cb10-63" tabindex="-1"></a>    split_summary<span class="sc">$</span>Trait</span>
+<span id="cb10-64"><a href="#cb10-64" tabindex="-1"></a>  ),</span>
+<span id="cb10-65"><a href="#cb10-65" tabindex="-1"></a>  ,</span>
+<span id="cb10-66"><a href="#cb10-66" tabindex="-1"></a>  drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb10-67"><a href="#cb10-67" tabindex="-1"></a>]</span>
+<span id="cb10-68"><a href="#cb10-68" tabindex="-1"></a></span>
+<span id="cb10-69"><a href="#cb10-69" tabindex="-1"></a>split_summary <span class="sc">|&gt;</span></span>
+<span id="cb10-70"><a href="#cb10-70" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb10-71"><a href="#cb10-71" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb10-72"><a href="#cb10-72" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
+<span id="cb10-73"><a href="#cb10-73" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;GBLUP-ADE variability across the 25 outer splits&quot;</span>,</span>
+<span id="cb10-74"><a href="#cb10-74" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb10-75"><a href="#cb10-75" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb10-76"><a href="#cb10-76" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+GBLUP-ADE variability across the 25 outer splits
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+N
+</th>
+<th style="text-align:right;">
+Cor_mean
+</th>
+<th style="text-align:right;">
+Cor_sd
+</th>
+<th style="text-align:right;">
+Cor_min
+</th>
+<th style="text-align:right;">
+Cor_max
+</th>
+<th style="text-align:right;">
+RMSE_mean
+</th>
+<th style="text-align:right;">
+RMSE_sd
+</th>
+<th style="text-align:right;">
+MAE_mean
+</th>
+<th style="text-align:right;">
+Bias_mean
+</th>
+<th style="text-align:right;">
+Slope_mean
+</th>
+<th style="text-align:right;">
+R2_mean
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+-0.1008
+</td>
+<td style="text-align:right;">
+0.1238
+</td>
+<td style="text-align:right;">
+-0.3717
+</td>
+<td style="text-align:right;">
+0.1121
+</td>
+<td style="text-align:right;">
+3.0145
+</td>
+<td style="text-align:right;">
+0.3097
+</td>
+<td style="text-align:right;">
+2.3396
+</td>
+<td style="text-align:right;">
+-0.0032
+</td>
+<td style="text-align:right;">
+-3.7249
+</td>
+<td style="text-align:right;">
+-0.0440
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1032
+</td>
+<td style="text-align:right;">
+0.1659
+</td>
+<td style="text-align:right;">
+-0.4000
+</td>
+<td style="text-align:right;">
+0.3092
+</td>
+<td style="text-align:right;">
+0.5701
+</td>
+<td style="text-align:right;">
+0.0646
+</td>
+<td style="text-align:right;">
+0.4674
+</td>
+<td style="text-align:right;">
+-0.0004
+</td>
+<td style="text-align:right;">
+0.6566
+</td>
+<td style="text-align:right;">
+-0.0233
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.0081
+</td>
+<td style="text-align:right;">
+0.1226
+</td>
+<td style="text-align:right;">
+-0.2551
+</td>
+<td style="text-align:right;">
+0.2543
+</td>
+<td style="text-align:right;">
+0.5202
+</td>
+<td style="text-align:right;">
+0.0382
+</td>
+<td style="text-align:right;">
+0.4177
+</td>
+<td style="text-align:right;">
+-0.0003
+</td>
+<td style="text-align:right;">
+2.9036
+</td>
+<td style="text-align:right;">
+-0.0421
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="held-out-performance-figures" class="section level2">
+<h2>11. Held-out performance figures</h2>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>p_correlation <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  ok_results,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>    <span class="at">x =</span> Trait,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>    <span class="at">y =</span> Phenotype_Correlation,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>    <span class="at">fill =</span> Trait</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  )</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>    <span class="at">width =</span> <span class="fl">0.58</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>    <span class="at">outlier.shape =</span> <span class="cn">NA</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.70</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>    <span class="at">position =</span> <span class="fu">position_jitter</span>(</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>      <span class="at">width =</span> <span class="fl">0.10</span>,</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>      <span class="at">height =</span> <span class="dv">0</span>,</span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>      <span class="at">seed =</span> SEED_GLOBAL <span class="sc">+</span> <span class="dv">301</span><span class="dt">L</span></span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>    ),</span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.45</span>,</span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">1.8</span></span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>  <span class="fu">stat_summary</span>(</span>
+<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a>    <span class="at">fun =</span> mean,</span>
+<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a>    <span class="at">geom =</span> <span class="st">&quot;point&quot;</span>,</span>
+<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a>    <span class="at">shape =</span> <span class="dv">23</span>,</span>
+<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">3.2</span>,</span>
+<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">&quot;white&quot;</span></span>
+<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb11-30"><a href="#cb11-30" tabindex="-1"></a>  <span class="fu">scale_fill_gdocs</span>() <span class="sc">+</span></span>
+<span id="cb11-31"><a href="#cb11-31" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb11-32"><a href="#cb11-32" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Trait&quot;</span>,</span>
+<span id="cb11-33"><a href="#cb11-33" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;Held-out Pearson correlation&quot;</span>,</span>
+<span id="cb11-34"><a href="#cb11-34" tabindex="-1"></a>    <span class="at">fill =</span> <span class="cn">NULL</span></span>
+<span id="cb11-35"><a href="#cb11-35" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb11-36"><a href="#cb11-36" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>() <span class="sc">+</span></span>
+<span id="cb11-37"><a href="#cb11-37" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb11-38"><a href="#cb11-38" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span></span>
+<span id="cb11-39"><a href="#cb11-39" tabindex="-1"></a>  )</span>
+<span id="cb11-40"><a href="#cb11-40" tabindex="-1"></a></span>
+<span id="cb11-41"><a href="#cb11-41" tabindex="-1"></a><span class="fu">print</span>(p_correlation)</span></code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="figure/real_data_gblup.Rmd/correlation-figure-1.png" alt="Held-out phenotype correlation for GBLUP-ADE across the 25 family-stratified outer splits. White diamonds indicate trait means." width="100%" />
+<p class="caption">
+Held-out phenotype correlation for GBLUP-ADE across the 25
+family-stratified outer splits. White diamonds indicate trait means.
+</p>
+</div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>p_rmse <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  ok_results,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    <span class="at">x =</span> Trait,</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>    <span class="at">y =</span> Phenotype_RMSE,</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>    <span class="at">fill =</span> Trait</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  )</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>    <span class="at">width =</span> <span class="fl">0.58</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>    <span class="at">outlier.shape =</span> <span class="cn">NA</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.70</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>    <span class="at">position =</span> <span class="fu">position_jitter</span>(</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>      <span class="at">width =</span> <span class="fl">0.10</span>,</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>      <span class="at">height =</span> <span class="dv">0</span>,</span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>      <span class="at">seed =</span> SEED_GLOBAL <span class="sc">+</span> <span class="dv">302</span><span class="dt">L</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>    ),</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.45</span>,</span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">1.8</span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>  <span class="fu">stat_summary</span>(</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>    <span class="at">fun =</span> mean,</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>    <span class="at">geom =</span> <span class="st">&quot;point&quot;</span>,</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>    <span class="at">shape =</span> <span class="dv">23</span>,</span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">3.2</span>,</span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">&quot;white&quot;</span></span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>  <span class="fu">scale_fill_gdocs</span>() <span class="sc">+</span></span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Trait&quot;</span>,</span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;Held-out RMSE&quot;</span>,</span>
+<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a>    <span class="at">fill =</span> <span class="cn">NULL</span></span>
+<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>() <span class="sc">+</span></span>
+<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span></span>
+<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a>  )</span>
+<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a></span>
+<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a><span class="fu">print</span>(p_rmse)</span></code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="figure/real_data_gblup.Rmd/rmse-figure-1.png" alt="Held-out phenotype RMSE for GBLUP-ADE across the 25 family-stratified outer splits. White diamonds indicate trait means." width="100%" />
+<p class="caption">
+Held-out phenotype RMSE for GBLUP-ADE across the 25 family-stratified
+outer splits. White diamonds indicate trait means.
+</p>
+</div>
+</div>
+<div id="computational-record" class="section level2">
+<h2>12. Computational record</h2>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>time_summary <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="fu">cbind</span>(</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>    Fit_seconds,</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>    Predict_seconds</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  ) <span class="sc">~</span> Trait,</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="at">data =</span> ok_results,</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  <span class="at">FUN =</span> mean,</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  <span class="at">na.rm =</span> <span class="cn">TRUE</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>)</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>time_summary<span class="sc">$</span>Kernel_build_seconds <span class="ot">&lt;-</span></span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>  run_metadata<span class="sc">$</span>kernel_build_seconds</span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>time_summary <span class="sc">|&gt;</span></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;GBLUP-ADE computational record&quot;</span>,</span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+GBLUP-ADE computational record
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+Fit_seconds
+</th>
+<th style="text-align:right;">
+Predict_seconds
+</th>
+<th style="text-align:right;">
+Kernel_build_seconds
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+0.146
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+<td style="text-align:right;">
+1.54
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+0.145
+</td>
+<td style="text-align:right;">
+0.002
+</td>
+<td style="text-align:right;">
+1.54
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor
+</td>
+<td style="text-align:right;">
+0.149
+</td>
+<td style="text-align:right;">
+0.001
+</td>
+<td style="text-align:right;">
+1.54
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="st">&quot;Total run time:&quot;</span>,</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="fu">round</span>(</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>    run_metadata<span class="sc">$</span>total_run_seconds,</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>    <span class="dv">2</span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>  ),</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>  <span class="st">&quot;seconds.</span><span class="sc">\n</span><span class="st">&quot;</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>Total run time: 12.92 seconds.</code></pre>
+<p>Kernel construction is a one-time cost reused by all three traits and
+all 25 outer splits.</p>
+</div>
+<div id="frozen-r06-contract" class="section level2">
+<h2>13. Frozen R06 contract</h2>
+<p>The primary real-data GBLUP benchmark is defined by:</p>
+<ul>
+<li>195 individuals;</li>
+<li>the common 20,887-marker panel;</li>
+<li>three prepared phenotype targets: <code>Prod.Cor</code>,
+<code>Cer</code>, and <code>BM</code>;</li>
+<li>5 repetitions x 5 family-stratified outer folds;</li>
+<li>156 analysis and 39 assessment individuals per split;</li>
+<li>one additive, one dominance, and one additive-by-additive epistatic
+genomic component;</li>
+<li>no use of outer-assessment phenotype during fitting;</li>
+<li>one common set of held-out predictions later reused for model
+comparison.</li>
+</ul>
+<p>The ANN branch must use the same 25 outer splits. Hyperparameter
+selection must remain restricted to the nested inner folds stored in
+<code>real_cv_design.rds</code>.</p>
+</div>
+<div id="navigation" class="section level2">
+<h2>14. Navigation</h2>
+<p><a href="real_data_validation.html">Previous: Real-data
+validation</a> | <a href="real_data_ann.html">Next: Regularized
+ANN</a></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26300)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices datasets  utils     methods   base     
+
+other attached packages:
+[1] ggthemes_6.0.0  ggplot2_4.0.3   knitr_1.50      workflowr_1.7.2
+
+loaded via a namespace (and not attached):
+ [1] gtable_0.3.6       jsonlite_2.0.0     compiler_4.5.1     renv_1.1.8        
+ [5] promises_1.5.0     Rcpp_1.1.2         stringr_1.6.0      git2r_0.36.2      
+ [9] callr_3.7.6        later_1.4.4        jquerylib_0.1.4    scales_1.4.0      
+[13] yaml_2.3.12        fastmap_1.2.0      R6_2.6.1           labeling_0.4.3    
+[17] tibble_3.3.1       rprojroot_2.1.1    RColorBrewer_1.1-3 bslib_0.9.0       
+[21] pillar_1.11.1      rlang_1.1.7        cachem_1.1.0       stringi_1.8.7     
+[25] httpuv_1.6.16      xfun_0.54          S7_0.2.2           getPass_0.2-4     
+[29] fs_1.6.6           sass_0.4.10        otel_0.2.0         cli_3.6.5         
+[33] withr_3.0.2        magrittr_2.0.4     ps_1.9.1           grid_4.5.1        
+[37] digest_0.6.39      processx_3.8.6     rstudioapi_0.17.1  lifecycle_1.0.5   
+[41] vctrs_0.7.1        evaluate_1.0.5     glue_1.8.0         farver_2.1.2      
+[45] whisker_0.4.1      purrr_1.2.2        rmarkdown_2.30     httr_1.4.7        
+[49] tools_4.5.1        pkgconfig_2.0.3    htmltools_0.5.9   </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUmVhbCBkYXRhOiBHQkxVUC1BREUiCmF1dGhvcjoKICAtIFdldmVydG9uIEdvbWVzIGRhIENvc3RhCmRhdGU6ICJgciBTeXMuRGF0ZSgpYCIKc2l0ZTogd29ya2Zsb3dyOjp3Zmxvd19zaXRlCm91dHB1dDoKICB3b3JrZmxvd3I6OndmbG93X2h0bWw6CiAgICB0b2M6IHRydWUKICAgIHRvY19kZXB0aDogMwogICAgdG9jX2Zsb2F0OiB0cnVlCiAgICBjb2RlX2Rvd25sb2FkOiB0cnVlCiAgICBjb2RlX2ZvbGRpbmc6IHNob3cKZWRpdG9yX29wdGlvbnM6CiAgY2h1bmtfb3V0cHV0X3R5cGU6IGNvbnNvbGUKLS0tCgojIyAxLiBQdXJwb3NlCgpUaGlzIG1vZHVsZSBmaXRzIHRoZSBHQkxVUC1BREUgYmVuY2htYXJrIHRvIHRoZSB0aHJlZSBwcmVwYXJlZCAqQ29mZmVhIGFyYWJpY2EqCnRyYWl0cyB1bmRlciB0aGUgZmFtaWx5LXN0cmF0aWZpZWQgcmVwZWF0ZWQgb3V0ZXIgY3Jvc3MtdmFsaWRhdGlvbiBkZWZpbmVkIGluCnRoZSByZWFsLWRhdGEgdmFsaWRhdGlvbiBtb2R1bGUuCgpUaGUgcHJpbWFyeSBjb21wYXJpc29uIHVzZXMgdGhlIHNhbWUgMjUgb3V0ZXIgaGVsZC1vdXQgc3BsaXRzIGZvciBHQkxVUC1BREUgYW5kCmFsbCBBTk4gdmFyaWFudHMuIFdpdGggdGhyZWUgdHJhaXRzLCB0aGlzIHByb2R1Y2VzICoqMyB4IDI1ID0gNzUgcHJpbWFyeQp0cmFpdC1ieS1zcGxpdCBmaXRzKiouCgpGb3VyIHByaW5jaXBsZXMgZGVmaW5lIHRoZSBhbmFseXNpczoKCi0gcGhlbm90eXBlIHZhbHVlcyBmcm9tIHRoZSBvdXRlciBhc3Nlc3NtZW50IHNldCBhcmUgdW5hdmFpbGFibGUgZHVyaW5nIGZpdHRpbmc7Ci0gZ2Vub3R5cGVzIGZyb20gYWxsIDE5NSBpbmRpdmlkdWFscyBjYW4gYmUgdXNlZCB0byBjb25zdHJ1Y3QgZ2Vub21pYwogIHJlbGF0aW9uc2hpcCBtYXRyaWNlcyBiZWNhdXNlIGdlbm90eXBlIGluZm9ybWF0aW9uIGlzIGF2YWlsYWJsZSBhdCBwcmVkaWN0aW9uCiAgdGltZSBhbmQgZG9lcyBub3QgY29udGFpbiBoZWxkLW91dCBwaGVub3R5cGU7Ci0gdGhlIGNvbW1vbiAyMCw4ODctbWFya2VyIHBhbmVsIHByZXBhcmVkIHVwc3RyZWFtIGlzIHVzZWQgd2l0aG91dCBhZGRpdGlvbmFsCiAgbW9kZWwtc3BlY2lmaWMgbWFya2VyIGZpbHRlcmluZzsKLSBwZXJmb3JtYW5jZSBpcyBldmFsdWF0ZWQgb25seSBmcm9tIHByZWRpY3Rpb25zIGZvciB0aGUgMzkgaGVsZC1vdXQKICBpbmRpdmlkdWFscyBpbiBlYWNoIG91dGVyIHNwbGl0LgoKVGhlIGNvbXBsZW1lbnRhcnkgbGVhdmUtb25lLWZhbWlseS1vdXQgZGVzaWduIHN0b3JlZCB1cHN0cmVhbSBpcyBub3QgbWl4ZWQgd2l0aAp0aGUgcHJpbWFyeSBiZW5jaG1hcmsgaGVyZS4gSXQgcmVtYWlucyBhdmFpbGFibGUgZm9yIGEgc2VwYXJhdGUgZ2VuZXJhbGl6YXRpb24KYW5hbHlzaXMuCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KAogIGVjaG8gPSBUUlVFLAogIHdhcm5pbmcgPSBGQUxTRSwKICBtZXNzYWdlID0gRkFMU0UsCiAgY2FjaGUgPSBGQUxTRSwKICBmaWcuYWxpZ24gPSAiY2VudGVyIiwKICBvdXQud2lkdGggPSAiMTAwJSIKKQoKb3B0aW9ucyhzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UpCgpkaXIuY3JlYXRlKAogICJvdXRwdXQvcmVhbC9nYmx1cCIsCiAgc2hvd1dhcm5pbmdzID0gRkFMU0UsCiAgcmVjdXJzaXZlID0gVFJVRQopCgpkaXIuY3JlYXRlKAogICJvdXRwdXQvcmVhbC9nYmx1cC9maWd1cmVzIiwKICBzaG93V2FybmluZ3MgPSBGQUxTRSwKICByZWN1cnNpdmUgPSBUUlVFCikKYGBgCgojIyAyLiBQYWNrYWdlcyBhbmQgZml4ZWQgZXhlY3V0aW9uIHNldHRpbmdzCgpBIG5vcm1hbCBwYWdlIGJ1aWxkIHJlYWRzIHRoZSBzYXZlZCBHQkxVUC1BREUgcmVzdWx0cy4gU2V0dGluZwpgUlVOX0dCTFVQPTFgIGFjdGl2YXRlcyB0aGUgY29tcGxldGUgNzUtdGFzayBmaXR0aW5nIHdvcmtmbG93IGFuZCBvdmVyd3JpdGVzIHRoZQpzYXZlZCBHQkxVUCBvdXRwdXRzLgoKYGBge3IgcGFja2FnZXMsIHdhcm5pbmc9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9ClJVTl9HQkxVUCA8LSBpZGVudGljYWwoU3lzLmdldGVudigiUlVOX0dCTFVQIiwgIjAiKSwgIjEiKQoKbGlicmFyeShrbml0cikKbGlicmFyeShnZ3Bsb3QyKQpsaWJyYXJ5KGdndGhlbWVzKQoKaWYgKFJVTl9HQkxVUCkgewogIHN1cHByZXNzUGFja2FnZVN0YXJ0dXBNZXNzYWdlcygKICAgIGxpYnJhcnkoc29tbWVyKQogICkKfQpgYGAKCmBgYHtyIGZpdHRpbmctY29udHJvbH0KU0VFRF9HTE9CQUwgPC0gMjAyNjExMDVMCk5fSVRFUlNfU09NTUVSIDwtIDIwTAoKZml0dGluZ19jb250cm9sIDwtIGRhdGEuZnJhbWUoCiAgUGFyYW1ldGVyID0gYygKICAgICJHbG9iYWwgc2VlZCIsCiAgICAiUnVuIG5ldyBHQkxVUC1BREUgZml0cyIsCiAgICAic29tbWVyIGl0ZXJhdGlvbnMgcGVyIGZpdCIKICApLAogIFZhbHVlID0gYygKICAgIFNFRURfR0xPQkFMLAogICAgUlVOX0dCTFVQLAogICAgTl9JVEVSU19TT01NRVIKICApLAogIFJvbGUgPSBjKAogICAgIlJlcHJvZHVjZSB0aGUgZml0dGluZyB3b3JrZmxvdy4iLAogICAgIkNvbnRyb2wgd2hldGhlciBhbGwgNzUgcHJpbWFyeSBmaXRzIGFyZSBleGVjdXRlZC4iLAogICAgIlVzZSBvbmUgZml4ZWQgZml0dGluZyBjb250cm9sIGZvciBldmVyeSB0cmFpdCBhbmQgc3BsaXQuIgogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCmZpdHRpbmdfY29udHJvbCB8PgogIGtuaXRyOjprYWJsZSgKICAgIGZvcm1hdCA9ICJodG1sIiwKICAgIGNhcHRpb24gPSAiRml4ZWQgR0JMVVAtQURFIGV4ZWN1dGlvbiBzZXR0aW5ncyIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiJwogICkKYGBgCgojIyAzLiBDYW5vbmljYWwgaW5wdXRzCgpgYGB7ciBpbnB1dHN9CmNvbW1vbiA8LSByZWFkUkRTKAogICJvdXRwdXQvcmVhbC9hdWRpdC9wcmVwcm9jZXNzZWRfcmVhbF9jb21tb24ucmRzIgopCgpjdiA8LSByZWFkUkRTKAogICJvdXRwdXQvcmVhbC92YWxpZGF0aW9uL3JlYWxfY3ZfZGVzaWduLnJkcyIKKQoKZ2VubyA8LSBhcy5tYXRyaXgoY29tbW9uJGdlbm90eXBlKQpwaGVubyA8LSBjb21tb24kcGhlbm90eXBlCnRyYWl0cyA8LSBjb21tb24kdHJhaXRzCgppZHMgPC0gcm93bmFtZXMoZ2VubykKCnN0b3BpZm5vdCgKICBucm93KGdlbm8pID09IDE5NUwsCiAgbmNvbChnZW5vKSA9PSAyMDg4N0wsCiAgaWRlbnRpY2FsKGlkcywgcGhlbm8kZ2Vub3RpcG8pLAogIGlkZW50aWNhbChzb3J0KHRyYWl0cyksIHNvcnQoYygiUHJvZC5Db3IiLCAiQ2VyIiwgIkJNIikpKSwKICBsZW5ndGgoY3Ykb3V0ZXJfc3BsaXRzKSA9PSAyNUwsCiAgYWxsKGlzLmZpbml0ZShnZW5vKSksCiAgYWxsKGdlbm8gJWluJSBjKC0xLCAwLCAxKSkKKQoKaW5wdXRfc3VtbWFyeSA8LSBkYXRhLmZyYW1lKAogIE9iamVjdCA9IGMoCiAgICAiR2Vub3R5cGUgbWF0cml4IiwKICAgICJQcmVwYXJlZCBwaGVub3R5cGUiLAogICAgIlByZWRpY3Rpb24gdHJhaXRzIiwKICAgICJQcmltYXJ5IG91dGVyIHNwbGl0cyIKICApLAogIFN0cnVjdHVyZSA9IGMoCiAgICBwYXN0ZShkaW0oZ2VubyksIGNvbGxhcHNlID0gIiB4ICIpLAogICAgcGFzdGUoZGltKHBoZW5vKSwgY29sbGFwc2UgPSAiIHggIiksCiAgICBwYXN0ZSh0cmFpdHMsIGNvbGxhcHNlID0gIiwgIiksCiAgICBsZW5ndGgoY3Ykb3V0ZXJfc3BsaXRzKQogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCmlucHV0X3N1bW1hcnkgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBjYXB0aW9uID0gIkNhbm9uaWNhbCBvYmplY3RzIGVudGVyaW5nIEdCTFVQLUFERSIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiJwogICkKYGBgCgpUaGUgbWFya2VyIG1hdHJpeCByZXRhaW5zIHRoZSBgLTEsIDAsIDFgIGNvZGluZyB1c2VkIGJ5IHRoZSBnZW5vbWljIHJlbGF0aW9uc2hpcAptYXRyaXggY29uc3RydWN0b3JzLiBRdWFsaXR5IGNvbnRyb2wgaGFzIGFscmVhZHkgYmVlbiBwZXJmb3JtZWQgdXBzdHJlYW0sIHNvCnRoZSBHQkxVUCBicmFuY2ggZG9lcyBub3QgcmVkZWZpbmUgdGhlIG1hcmtlciBwYW5lbC4KCiMjIDQuIFN0YXRpc3RpY2FsIGJlbmNobWFyawoKRm9yIGVhY2ggdHJhaXQgYW5kIG91dGVyIHNwbGl0LAoKXFsKXG1hdGhiZnt5fSA9IFxtYXRoYmZ7MX1cbXUgKyBcbWF0aGJme2F9ICsgXG1hdGhiZntkfSArIFxtYXRoYmZ7ZX0gKwpcYm9sZHN5bWJvbHtcdmFyZXBzaWxvbn0sClxdCgp3aXRoCgpcWwpcbWF0aGJme2F9XHNpbSBOKDAsXG1hdGhiZntBfVxzaWdtYV9hXjIpLFxxcXVhZApcbWF0aGJme2R9XHNpbSBOKDAsXG1hdGhiZntEfVxzaWdtYV9kXjIpLApcXQoKXFsKXG1hdGhiZntlfVxzaW0gTigwLFxtYXRoYmZ7RX1cc2lnbWFfZV4yKSxccXF1YWQKXGJvbGRzeW1ib2x7XHZhcmVwc2lsb259XHNpbSBOKDAsXG1hdGhiZntJfVxzaWdtYV9cdmFyZXBzaWxvbl4yKS4KXF0KClRoZSB0b3RhbCBwcmVkaWN0ZWQgZ2Vub21pYyBjb21wb25lbnQgaXMKClxbClx3aWRlaGF0e0d9PVx3aWRlaGF0e2F9K1x3aWRlaGF0e2R9K1x3aWRlaGF0e2V9LApcXQoKYW5kIHRoZSBoZWxkLW91dCBwcmVkaWN0aW9uIGlzCgpcWwpcd2lkZWhhdHt5fT1cd2lkZWhhdHtcbXV9K1x3aWRlaGF0e0d9LgpcXQoKVGhlIGhpc3RvcmljYWwgZmllbGQgbmFtZSBgR0VCVmAgaXMgcmV0YWluZWQgaW4gc2F2ZWQgcHJlZGljdGlvbnMgZm9yCmNvbXBhdGliaWxpdHkgd2l0aCB0aGUgc2ltdWxhdGVkIHdvcmtmbG93LCBidXQgaGVyZSBpdCByZXByZXNlbnRzIHRoZSBzdW1tZWQKYWRkaXRpdmUsIGRvbWluYW5jZSwgYW5kIGFkZGl0aXZlLWJ5LWFkZGl0aXZlIGVwaXN0YXRpYyBwcmVkaWN0aW9uIHJhdGhlciB0aGFuCmFuIGFkZGl0aXZlLW9ubHkgYnJlZWRpbmcgdmFsdWUuCgojIyA1LiBQcmltYXJ5IHRyYWl0LWJ5LXNwbGl0IHdvcmtsb2FkCgpgYGB7ciB0YXNrLXRhYmxlfQpvdXRlcl9tZXRhIDwtIHVuaXF1ZSgKICBjdiRvdXRlcl9hc3NpZ25tZW50c1sKICAgICwgYygiUmVwZXRpdGlvbiIsICJPdXRlckZvbGQiLCAiU3BsaXRJRCIpCiAgXQopCgpvdXRlcl9tZXRhIDwtIG91dGVyX21ldGFbCiAgb3JkZXIoCiAgICBvdXRlcl9tZXRhJFJlcGV0aXRpb24sCiAgICBvdXRlcl9tZXRhJE91dGVyRm9sZAogICksCl0KCnRhc2tfdGFibGUgPC0gbWVyZ2UoCiAgZGF0YS5mcmFtZSgKICAgIFRyYWl0ID0gdHJhaXRzLAogICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgKSwKICBvdXRlcl9tZXRhLAogIGJ5ID0gTlVMTAopCgp0YXNrX3RhYmxlIDwtIHRhc2tfdGFibGVbCiAgb3JkZXIoCiAgICBtYXRjaCh0YXNrX3RhYmxlJFRyYWl0LCB0cmFpdHMpLAogICAgdGFza190YWJsZSRSZXBldGl0aW9uLAogICAgdGFza190YWJsZSRPdXRlckZvbGQKICApLApdCgp0YXNrX3RhYmxlJFRhc2tJRCA8LSBwYXN0ZSgKICB0YXNrX3RhYmxlJFRyYWl0LAogIHRhc2tfdGFibGUkU3BsaXRJRCwKICBzZXAgPSAiXyIKKQoKcm93bmFtZXModGFza190YWJsZSkgPC0gTlVMTAoKc3RvcGlmbm90KAogIG5yb3codGFza190YWJsZSkgPT0gNzVMLAogIGxlbmd0aCh1bmlxdWUodGFza190YWJsZSRUYXNrSUQpKSA9PSA3NUwKKQoKaGVhZCh0YXNrX3RhYmxlLCAxNSkgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBjYXB0aW9uID0gIkZpcnN0IDE1IG9mIHRoZSA3NSBwcmltYXJ5IEdCTFVQLUFERSB0YXNrcyIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiJwogICkKYGBgCgojIyA2LiBFdmFsdWF0aW9uIG1ldHJpY3MKClBlcmZvcm1hbmNlIGlzIGNhbGN1bGF0ZWQgb25seSBpbiB0aGUgb3V0ZXIgYXNzZXNzbWVudCBzZXQuIFRoZSBzdG9yZWQgbWV0cmljcwphcmU6CgotIFBlYXJzb24gY29ycmVsYXRpb247Ci0gUk1TRTsKLSBNQUU7Ci0gYmlhcywgZGVmaW5lZCBhcyBgbWVhbihwcmVkaWN0ZWQgLSBvYnNlcnZlZClgOwotIGNhbGlicmF0aW9uIHNsb3BlIGZyb20gYG9ic2VydmVkIH4gcHJlZGljdGVkYDsKLSBwcmVkaWN0aXZlIFwoUl4yID0gMSAtIFNTRS9TU1RcKS4KClRoZSAyNSBzcGxpdC1sZXZlbCB2YWx1ZXMgcGVyIHRyYWl0IGFyZSBkZXNjcmlwdGl2ZSByZXBlYXRlZC1jcm9zcy12YWxpZGF0aW9uCnJlc3VsdHM7IHRoZXkgYXJlIG5vdCB0cmVhdGVkIGFzIHN0YXRpc3RpY2FsbHkgaW5kZXBlbmRlbnQgcmVwbGljYXRlcy4KCiMjIDcuIENvbXBsZXRlIEdCTFVQLUFERSBmaXR0aW5nIHdvcmtmbG93CgpUaGUgdGhyZWUgZ2Vub21pYyByZWxhdGlvbnNoaXAgbWF0cmljZXMgYXJlIGNvbnN0cnVjdGVkIG9uY2UgZnJvbSB0aGUgY29tbW9uCjIwLDg4Ny1tYXJrZXIgbWF0cml4IGFuZCByZXVzZWQgYWNyb3NzIGFsbCA3NSB0YXNrcy4gRm9yIGVhY2ggdGFzaywgdGhlIDM5IG91dGVyCmFzc2Vzc21lbnQgcGhlbm90eXBlcyBhcmUgcmVwbGFjZWQgYnkgYE5BYCBiZWZvcmUgZml0dGluZy4KCmBgYHtyIGZpdC1nYmx1cC1hZGUsIGV2YWw9UlVOX0dCTFVQfQpzZXQuc2VlZChTRUVEX0dMT0JBTCkKCnJ1bl9zdGFydCA8LSBwcm9jLnRpbWUoKVtbImVsYXBzZWQiXV0KCmtlcm5lbF9zdGFydCA8LSBwcm9jLnRpbWUoKVtbImVsYXBzZWQiXV0KCkFfbWF0cml4IDwtIHNvbW1lcjo6QS5tYXQoCiAgZ2VubywKICBtaW4uTUFGID0gMAopCgpEX21hdHJpeCA8LSBzb21tZXI6OkQubWF0KAogIGdlbm8sCiAgbmlzaGlvID0gVFJVRSwKICBtaW4uTUFGID0gMAopCgpFX21hdHJpeCA8LSBzb21tZXI6OkUubWF0KAogIGdlbm8sCiAgbmlzaGlvID0gVFJVRSwKICB0eXBlID0gIkEjQSIsCiAgbWluLk1BRiA9IDAKKQoKa2VybmVsX3NlY29uZHMgPC0gcHJvYy50aW1lKClbWyJlbGFwc2VkIl1dIC0ga2VybmVsX3N0YXJ0Cgpyb3duYW1lcyhBX21hdHJpeCkgPC0gY29sbmFtZXMoQV9tYXRyaXgpIDwtIGlkcwpyb3duYW1lcyhEX21hdHJpeCkgPC0gY29sbmFtZXMoRF9tYXRyaXgpIDwtIGlkcwpyb3duYW1lcyhFX21hdHJpeCkgPC0gY29sbmFtZXMoRV9tYXRyaXgpIDwtIGlkcwoKa2VybmVsX3N1bW1hcnkgPC0gZGF0YS5mcmFtZSgKICBLZXJuZWwgPSBjKCJBZGRpdGl2ZSIsICJEb21pbmFuY2UiLCAiRXBpc3RhdGljX0F4QSIpLAogIFJvd3MgPSBjKG5yb3coQV9tYXRyaXgpLCBucm93KERfbWF0cml4KSwgbnJvdyhFX21hdHJpeCkpLAogIENvbHVtbnMgPSBjKG5jb2woQV9tYXRyaXgpLCBuY29sKERfbWF0cml4KSwgbmNvbChFX21hdHJpeCkpLAogIFN5bW1ldHJpYyA9IGMoCiAgICBpc1RSVUUoYWxsLmVxdWFsKEFfbWF0cml4LCB0KEFfbWF0cml4KSwgdG9sZXJhbmNlID0gMWUtOCkpLAogICAgaXNUUlVFKGFsbC5lcXVhbChEX21hdHJpeCwgdChEX21hdHJpeCksIHRvbGVyYW5jZSA9IDFlLTgpKSwKICAgIGlzVFJVRShhbGwuZXF1YWwoRV9tYXRyaXgsIHQoRV9tYXRyaXgpLCB0b2xlcmFuY2UgPSAxZS04KSkKICApLAogIEZpbml0ZSA9IGMoCiAgICBhbGwoaXMuZmluaXRlKEFfbWF0cml4KSksCiAgICBhbGwoaXMuZmluaXRlKERfbWF0cml4KSksCiAgICBhbGwoaXMuZmluaXRlKEVfbWF0cml4KSkKICApLAogIE1lYW5fZGlhZ29uYWwgPSBjKAogICAgbWVhbihkaWFnKEFfbWF0cml4KSksCiAgICBtZWFuKGRpYWcoRF9tYXRyaXgpKSwKICAgIG1lYW4oZGlhZyhFX21hdHJpeCkpCiAgKSwKICBLZXJuZWxfYnVpbGRfc2Vjb25kcyA9IHJlcChrZXJuZWxfc2Vjb25kcywgM0wpLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpzdG9waWZub3QoCiAgYWxsKGtlcm5lbF9zdW1tYXJ5JFJvd3MgPT0gMTk1TCksCiAgYWxsKGtlcm5lbF9zdW1tYXJ5JENvbHVtbnMgPT0gMTk1TCksCiAgYWxsKGtlcm5lbF9zdW1tYXJ5JFN5bW1ldHJpYyksCiAgYWxsKGtlcm5lbF9zdW1tYXJ5JEZpbml0ZSkKKQoKcmVzdWx0X2xpc3QgPC0gdmVjdG9yKCJsaXN0IiwgbnJvdyh0YXNrX3RhYmxlKSkKcHJlZGljdGlvbl9saXN0IDwtIHZlY3RvcigibGlzdCIsIG5yb3codGFza190YWJsZSkpCgpmb3IgKGkgaW4gc2VxX2xlbihucm93KHRhc2tfdGFibGUpKSkgewoKICB0YXNrIDwtIHRhc2tfdGFibGVbaSwgXQogIHRyYWl0IDwtIHRhc2skVHJhaXQKICBzcGxpdCA8LSBjdiRvdXRlcl9zcGxpdHNbW3Rhc2skU3BsaXRJRF1dCgogIGFuYWx5c2lzX2luZGV4IDwtIG1hdGNoKAogICAgc3BsaXQkYW5hbHlzaXNfaWRzLAogICAgaWRzCiAgKQoKICBhc3Nlc3NtZW50X2luZGV4IDwtIG1hdGNoKAogICAgc3BsaXQkYXNzZXNzbWVudF9pZHMsCiAgICBpZHMKICApCgogIHN0b3BpZm5vdCgKICAgIGxlbmd0aChhbmFseXNpc19pbmRleCkgPT0gMTU2TCwKICAgIGxlbmd0aChhc3Nlc3NtZW50X2luZGV4KSA9PSAzOUwsCiAgICAhYW55TkEoYW5hbHlzaXNfaW5kZXgpLAogICAgIWFueU5BKGFzc2Vzc21lbnRfaW5kZXgpLAogICAgbGVuZ3RoKGludGVyc2VjdChhbmFseXNpc19pbmRleCwgYXNzZXNzbWVudF9pbmRleCkpID09IDBMCiAgKQoKICBwaGVub3R5cGVfdmVjdG9yIDwtIHBoZW5vW1t0cmFpdF1dCgogIGlkX2ZhY3RvciA8LSBmYWN0b3IoCiAgICBpZHMsCiAgICBsZXZlbHMgPSBpZHMKICApCgogIGRhdCA8LSBkYXRhLmZyYW1lKAogICAgeSA9IHBoZW5vdHlwZV92ZWN0b3IsCiAgICBpZCA9IGlkX2ZhY3RvciwKICAgIGlkZCA9IGlkX2ZhY3RvciwKICAgIGlkZSA9IGlkX2ZhY3RvcgogICkKCiAgZGF0JHlbYXNzZXNzbWVudF9pbmRleF0gPC0gTkFfcmVhbF8KCiAgZml0X3N0YXJ0IDwtIHByb2MudGltZSgpW1siZWxhcHNlZCJdXQoKICB0YXNrX3Jlc3VsdCA8LSB0cnlDYXRjaCgKICAgIHsKCiAgICAgIGZpdCA8LSBzb21tZXI6Om1tZXMoCiAgICAgICAgeSB+IDEsCiAgICAgICAgcmFuZG9tID0gfgogICAgICAgICAgdnNtKGlzbShpZCksICBHdSA9IEFfbWF0cml4KSArCiAgICAgICAgICB2c20oaXNtKGlkZCksIEd1ID0gRF9tYXRyaXgpICsKICAgICAgICAgIHZzbShpc20oaWRlKSwgR3UgPSBFX21hdHJpeCksCiAgICAgICAgcmNvdiA9IH4gdW5pdHMsCiAgICAgICAgbkl0ZXJzID0gTl9JVEVSU19TT01NRVIsCiAgICAgICAgZGF0YSA9IGRhdCwKICAgICAgICB2ZXJib3NlID0gRkFMU0UsCiAgICAgICAgZGF0ZVdhcm5pbmcgPSBGQUxTRQogICAgICApCgogICAgICBmaXRfc2Vjb25kcyA8LQogICAgICAgIHByb2MudGltZSgpW1siZWxhcHNlZCJdXSAtCiAgICAgICAgZml0X3N0YXJ0CgogICAgICBwcmVkaWN0aW9uX3N0YXJ0IDwtIHByb2MudGltZSgpW1siZWxhcHNlZCJdXQoKICAgICAgc3RvcGlmbm90KGxlbmd0aChmaXQkdUxpc3QpID49IDNMKQoKICAgICAgYWRkaXRpdmVfZWZmZWN0IDwtIGFzLm1hdHJpeCgKICAgICAgICBmaXQkdUxpc3RbWzFMXV0KICAgICAgKQoKICAgICAgZG9taW5hbmNlX2VmZmVjdCA8LSBhcy5tYXRyaXgoCiAgICAgICAgZml0JHVMaXN0W1syTF1dCiAgICAgICkKCiAgICAgIGVwaXN0YXRpY19lZmZlY3QgPC0gYXMubWF0cml4KAogICAgICAgIGZpdCR1TGlzdFtbM0xdXQogICAgICApCgogICAgICBhZGRpdGl2ZV9pbmNpZGVuY2UgPC0gbW9kZWwubWF0cml4KAogICAgICAgIH4gaWQgLSAxLAogICAgICAgIGRhdGEgPSBkYXQKICAgICAgKQoKICAgICAgZG9taW5hbmNlX2luY2lkZW5jZSA8LSBtb2RlbC5tYXRyaXgoCiAgICAgICAgfiBpZGQgLSAxLAogICAgICAgIGRhdGEgPSBkYXQKICAgICAgKQoKICAgICAgZXBpc3RhdGljX2luY2lkZW5jZSA8LSBtb2RlbC5tYXRyaXgoCiAgICAgICAgfiBpZGUgLSAxLAogICAgICAgIGRhdGEgPSBkYXQKICAgICAgKQoKICAgICAgYWRkaXRpdmUgPC0gYXMubnVtZXJpYygKICAgICAgICBhZGRpdGl2ZV9pbmNpZGVuY2UgJSolCiAgICAgICAgICBhZGRpdGl2ZV9lZmZlY3RbLCAxTCwgZHJvcCA9IEZBTFNFXQogICAgICApCgogICAgICBkb21pbmFuY2UgPC0gYXMubnVtZXJpYygKICAgICAgICBkb21pbmFuY2VfaW5jaWRlbmNlICUqJQogICAgICAgICAgZG9taW5hbmNlX2VmZmVjdFssIDFMLCBkcm9wID0gRkFMU0VdCiAgICAgICkKCiAgICAgIGVwaXN0YXRpYyA8LSBhcy5udW1lcmljKAogICAgICAgIGVwaXN0YXRpY19pbmNpZGVuY2UgJSolCiAgICAgICAgICBlcGlzdGF0aWNfZWZmZWN0WywgMUwsIGRyb3AgPSBGQUxTRV0KICAgICAgKQoKICAgICAgZ2Vub21pY19jb21wb25lbnQgPC0KICAgICAgICBhZGRpdGl2ZSArCiAgICAgICAgZG9taW5hbmNlICsKICAgICAgICBlcGlzdGF0aWMKCiAgICAgIGludGVyY2VwdCA8LSBhcy5udW1lcmljKGZpdCRiKVsxTF0KCiAgICAgIHByZWRpY3RlZF92YWx1ZSA8LQogICAgICAgIGludGVyY2VwdCArCiAgICAgICAgZ2Vub21pY19jb21wb25lbnQKCiAgICAgIHByZWRpY3Rfc2Vjb25kcyA8LQogICAgICAgIHByb2MudGltZSgpW1siZWxhcHNlZCJdXSAtCiAgICAgICAgcHJlZGljdGlvbl9zdGFydAoKICAgICAgb2JzZXJ2ZWRfdGVzdCA8LSBwaGVub3R5cGVfdmVjdG9yWwogICAgICAgIGFzc2Vzc21lbnRfaW5kZXgKICAgICAgXQoKICAgICAgcHJlZGljdGVkX3Rlc3QgPC0gcHJlZGljdGVkX3ZhbHVlWwogICAgICAgIGFzc2Vzc21lbnRfaW5kZXgKICAgICAgXQoKICAgICAgZ2Vub21pY19jb21wb25lbnRfdGVzdCA8LSBnZW5vbWljX2NvbXBvbmVudFsKICAgICAgICBhc3Nlc3NtZW50X2luZGV4CiAgICAgIF0KCiAgICAgIGlmICgKICAgICAgICBsZW5ndGgodW5pcXVlKG9ic2VydmVkX3Rlc3QpKSA+IDFMICYmCiAgICAgICAgbGVuZ3RoKHVuaXF1ZShwcmVkaWN0ZWRfdGVzdCkpID4gMUwKICAgICAgKSB7CiAgICAgICAgY29ycmVsYXRpb24gPC0gY29yKAogICAgICAgICAgcHJlZGljdGVkX3Rlc3QsCiAgICAgICAgICBvYnNlcnZlZF90ZXN0CiAgICAgICAgKQogICAgICB9IGVsc2UgewogICAgICAgIGNvcnJlbGF0aW9uIDwtIE5BX3JlYWxfCiAgICAgIH0KCiAgICAgIHJtc2UgPC0gc3FydCgKICAgICAgICBtZWFuKAogICAgICAgICAgKHByZWRpY3RlZF90ZXN0IC0gb2JzZXJ2ZWRfdGVzdCleMgogICAgICAgICkKICAgICAgKQoKICAgICAgbWFlIDwtIG1lYW4oCiAgICAgICAgYWJzKAogICAgICAgICAgcHJlZGljdGVkX3Rlc3QgLSBvYnNlcnZlZF90ZXN0CiAgICAgICAgKQogICAgICApCgogICAgICBiaWFzIDwtIG1lYW4oCiAgICAgICAgcHJlZGljdGVkX3Rlc3QgLSBvYnNlcnZlZF90ZXN0CiAgICAgICkKCiAgICAgIGlmIChsZW5ndGgodW5pcXVlKHByZWRpY3RlZF90ZXN0KSkgPiAxTCkgewogICAgICAgIHNsb3BlIDwtIGFzLm51bWVyaWMoCiAgICAgICAgICBjb2VmKAogICAgICAgICAgICBsbSgKICAgICAgICAgICAgICBvYnNlcnZlZF90ZXN0IH4gcHJlZGljdGVkX3Rlc3QKICAgICAgICAgICAgKQogICAgICAgICAgKVsyTF0KICAgICAgICApCiAgICAgIH0gZWxzZSB7CiAgICAgICAgc2xvcGUgPC0gTkFfcmVhbF8KICAgICAgfQoKICAgICAgc3N0IDwtIHN1bSgKICAgICAgICAob2JzZXJ2ZWRfdGVzdCAtIG1lYW4ob2JzZXJ2ZWRfdGVzdCkpXjIKICAgICAgKQoKICAgICAgaWYgKHNzdCA+IDApIHsKICAgICAgICByMiA8LSAxIC0KICAgICAgICAgIHN1bSgKICAgICAgICAgICAgKG9ic2VydmVkX3Rlc3QgLSBwcmVkaWN0ZWRfdGVzdCleMgogICAgICAgICAgKSAvIHNzdAogICAgICB9IGVsc2UgewogICAgICAgIHIyIDwtIE5BX3JlYWxfCiAgICAgIH0KCiAgICAgIGxpc3QoCiAgICAgICAgcmVzdWx0ID0gZGF0YS5mcmFtZSgKICAgICAgICAgIERhdGFzZXQgPSAicmVhbCIsCiAgICAgICAgICBUcmFpdCA9IHRyYWl0LAogICAgICAgICAgUmVwZXRpdGlvbiA9IHRhc2skUmVwZXRpdGlvbiwKICAgICAgICAgIEZvbGQgPSB0YXNrJE91dGVyRm9sZCwKICAgICAgICAgIFNwbGl0SUQgPSB0YXNrJFNwbGl0SUQsCiAgICAgICAgICBUYXNrSUQgPSB0YXNrJFRhc2tJRCwKICAgICAgICAgIE1vZGVsID0gIkdCTFVQX0FERSIsCiAgICAgICAgICBOX3RyYWluID0gbGVuZ3RoKGFuYWx5c2lzX2luZGV4KSwKICAgICAgICAgIE5fdGVzdCA9IGxlbmd0aChhc3Nlc3NtZW50X2luZGV4KSwKICAgICAgICAgIE5fcHJlZF9maW5pdGUgPSBzdW0oaXMuZmluaXRlKHByZWRpY3RlZF90ZXN0KSksCiAgICAgICAgICBQaGVub3R5cGVfQ29ycmVsYXRpb24gPSBjb3JyZWxhdGlvbiwKICAgICAgICAgIFBoZW5vdHlwZV9STVNFID0gcm1zZSwKICAgICAgICAgIFBoZW5vdHlwZV9NQUUgPSBtYWUsCiAgICAgICAgICBQaGVub3R5cGVfQmlhcyA9IGJpYXMsCiAgICAgICAgICBQaGVub3R5cGVfU2xvcGUgPSBzbG9wZSwKICAgICAgICAgIFBoZW5vdHlwZV9SMiA9IHIyLAogICAgICAgICAgS2VybmVsX2J1aWxkX3NlY29uZHMgPSBrZXJuZWxfc2Vjb25kcywKICAgICAgICAgIEZpdF9zZWNvbmRzID0gZml0X3NlY29uZHMsCiAgICAgICAgICBQcmVkaWN0X3NlY29uZHMgPSBwcmVkaWN0X3NlY29uZHMsCiAgICAgICAgICBTdGF0dXMgPSBpZiAoCiAgICAgICAgICAgIGFsbChpcy5maW5pdGUocHJlZGljdGVkX3Rlc3QpKQogICAgICAgICAgKSAib2siIGVsc2UgIm5vbmZpbml0ZV9wcmVkaWN0aW9uIiwKICAgICAgICAgIEVycm9yID0gTkFfY2hhcmFjdGVyXywKICAgICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICAgICAgICksCiAgICAgICAgcHJlZGljdGlvbiA9IGRhdGEuZnJhbWUoCiAgICAgICAgICBEYXRhc2V0ID0gInJlYWwiLAogICAgICAgICAgVHJhaXQgPSB0cmFpdCwKICAgICAgICAgIFJlcGV0aXRpb24gPSB0YXNrJFJlcGV0aXRpb24sCiAgICAgICAgICBGb2xkID0gdGFzayRPdXRlckZvbGQsCiAgICAgICAgICBTcGxpdElEID0gdGFzayRTcGxpdElELAogICAgICAgICAgVGFza0lEID0gdGFzayRUYXNrSUQsCiAgICAgICAgICBNb2RlbCA9ICJHQkxVUF9BREUiLAogICAgICAgICAgSUQgPSBpZHNbYXNzZXNzbWVudF9pbmRleF0sCiAgICAgICAgICBGYW1pbHkgPSBjb21tb24kZmFtaWx5WwogICAgICAgICAgICBpZHNbYXNzZXNzbWVudF9pbmRleF0KICAgICAgICAgIF0sCiAgICAgICAgICBPYnNlcnZlZF9QaGVub3R5cGUgPSBvYnNlcnZlZF90ZXN0LAogICAgICAgICAgUHJlZGljdGVkX1ZhbHVlID0gcHJlZGljdGVkX3Rlc3QsCiAgICAgICAgICBHRUJWID0gZ2Vub21pY19jb21wb25lbnRfdGVzdCwKICAgICAgICAgIEFkZGl0aXZlX1ByZWRpY3Rpb24gPSBhZGRpdGl2ZVsKICAgICAgICAgICAgYXNzZXNzbWVudF9pbmRleAogICAgICAgICAgXSwKICAgICAgICAgIERvbWluYW5jZV9QcmVkaWN0aW9uID0gZG9taW5hbmNlWwogICAgICAgICAgICBhc3Nlc3NtZW50X2luZGV4CiAgICAgICAgICBdLAogICAgICAgICAgRXBpc3RhdGljX1ByZWRpY3Rpb24gPSBlcGlzdGF0aWNbCiAgICAgICAgICAgIGFzc2Vzc21lbnRfaW5kZXgKICAgICAgICAgIF0sCiAgICAgICAgICBTdGF0dXMgPSBpZiAoCiAgICAgICAgICAgIGFsbChpcy5maW5pdGUocHJlZGljdGVkX3Rlc3QpKQogICAgICAgICAgKSAib2siIGVsc2UgIm5vbmZpbml0ZV9wcmVkaWN0aW9uIiwKICAgICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICAgICAgICkKICAgICAgKQogICAgfSwKICAgIGVycm9yID0gZnVuY3Rpb24oZSkgewoKICAgICAgZml0X3NlY29uZHMgPC0KICAgICAgICBwcm9jLnRpbWUoKVtbImVsYXBzZWQiXV0gLQogICAgICAgIGZpdF9zdGFydAoKICAgICAgbGlzdCgKICAgICAgICByZXN1bHQgPSBkYXRhLmZyYW1lKAogICAgICAgICAgRGF0YXNldCA9ICJyZWFsIiwKICAgICAgICAgIFRyYWl0ID0gdHJhaXQsCiAgICAgICAgICBSZXBldGl0aW9uID0gdGFzayRSZXBldGl0aW9uLAogICAgICAgICAgRm9sZCA9IHRhc2skT3V0ZXJGb2xkLAogICAgICAgICAgU3BsaXRJRCA9IHRhc2skU3BsaXRJRCwKICAgICAgICAgIFRhc2tJRCA9IHRhc2skVGFza0lELAogICAgICAgICAgTW9kZWwgPSAiR0JMVVBfQURFIiwKICAgICAgICAgIE5fdHJhaW4gPSBsZW5ndGgoYW5hbHlzaXNfaW5kZXgpLAogICAgICAgICAgTl90ZXN0ID0gbGVuZ3RoKGFzc2Vzc21lbnRfaW5kZXgpLAogICAgICAgICAgTl9wcmVkX2Zpbml0ZSA9IDBMLAogICAgICAgICAgUGhlbm90eXBlX0NvcnJlbGF0aW9uID0gTkFfcmVhbF8sCiAgICAgICAgICBQaGVub3R5cGVfUk1TRSA9IE5BX3JlYWxfLAogICAgICAgICAgUGhlbm90eXBlX01BRSA9IE5BX3JlYWxfLAogICAgICAgICAgUGhlbm90eXBlX0JpYXMgPSBOQV9yZWFsXywKICAgICAgICAgIFBoZW5vdHlwZV9TbG9wZSA9IE5BX3JlYWxfLAogICAgICAgICAgUGhlbm90eXBlX1IyID0gTkFfcmVhbF8sCiAgICAgICAgICBLZXJuZWxfYnVpbGRfc2Vjb25kcyA9IGtlcm5lbF9zZWNvbmRzLAogICAgICAgICAgRml0X3NlY29uZHMgPSBmaXRfc2Vjb25kcywKICAgICAgICAgIFByZWRpY3Rfc2Vjb25kcyA9IE5BX3JlYWxfLAogICAgICAgICAgU3RhdHVzID0gImVycm9yIiwKICAgICAgICAgIEVycm9yID0gY29uZGl0aW9uTWVzc2FnZShlKSwKICAgICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICAgICAgICksCiAgICAgICAgcHJlZGljdGlvbiA9IE5VTEwKICAgICAgKQogICAgfQogICkKCiAgcmVzdWx0X2xpc3RbW2ldXSA8LSB0YXNrX3Jlc3VsdCRyZXN1bHQKICBwcmVkaWN0aW9uX2xpc3RbW2ldXSA8LSB0YXNrX3Jlc3VsdCRwcmVkaWN0aW9uCgogIGNhdCgKICAgIHNwcmludGYoCiAgICAgICJbJTAyZC8lMDJkXSAlcyB8IHN0YXR1cz0lcyB8IHI9JXMgfCBSTVNFPSVzXG4iLAogICAgICBpLAogICAgICBucm93KHRhc2tfdGFibGUpLAogICAgICB0YXNrJFRhc2tJRCwKICAgICAgdGFza19yZXN1bHQkcmVzdWx0JFN0YXR1cywKICAgICAgaWZlbHNlKAogICAgICAgIGlzLmZpbml0ZSgKICAgICAgICAgIHRhc2tfcmVzdWx0JHJlc3VsdCRQaGVub3R5cGVfQ29ycmVsYXRpb24KICAgICAgICApLAogICAgICAgIHNwcmludGYoCiAgICAgICAgICAiJS40ZiIsCiAgICAgICAgICB0YXNrX3Jlc3VsdCRyZXN1bHQkUGhlbm90eXBlX0NvcnJlbGF0aW9uCiAgICAgICAgKSwKICAgICAgICAiTkEiCiAgICAgICksCiAgICAgIGlmZWxzZSgKICAgICAgICBpcy5maW5pdGUoCiAgICAgICAgICB0YXNrX3Jlc3VsdCRyZXN1bHQkUGhlbm90eXBlX1JNU0UKICAgICAgICApLAogICAgICAgIHNwcmludGYoCiAgICAgICAgICAiJS40ZiIsCiAgICAgICAgICB0YXNrX3Jlc3VsdCRyZXN1bHQkUGhlbm90eXBlX1JNU0UKICAgICAgICApLAogICAgICAgICJOQSIKICAgICAgKQogICAgKQogICkKfQoKcmVzdWx0cyA8LSBkby5jYWxsKAogIHJiaW5kLAogIHJlc3VsdF9saXN0CikKCnByZWRpY3Rpb25fbGlzdCA8LSBGaWx0ZXIoCiAgTmVnYXRlKGlzLm51bGwpLAogIHByZWRpY3Rpb25fbGlzdAopCgppZiAobGVuZ3RoKHByZWRpY3Rpb25fbGlzdCkgPiAwTCkgewogIHByZWRpY3Rpb25zIDwtIGRvLmNhbGwoCiAgICByYmluZCwKICAgIHByZWRpY3Rpb25fbGlzdAogICkKfSBlbHNlIHsKICBwcmVkaWN0aW9ucyA8LSBkYXRhLmZyYW1lKCkKfQoKcm93bmFtZXMocmVzdWx0cykgPC0gTlVMTApyb3duYW1lcyhwcmVkaWN0aW9ucykgPC0gTlVMTAoKcnVuX3NlY29uZHMgPC0KICBwcm9jLnRpbWUoKVtbImVsYXBzZWQiXV0gLQogIHJ1bl9zdGFydAoKcnVuX21ldGFkYXRhIDwtIGxpc3QoCiAgZGF0YXNldCA9ICJyZWFsIiwKICBtb2RlbCA9ICJHQkxVUF9BREUiLAogIHNlZWRfZ2xvYmFsID0gU0VFRF9HTE9CQUwsCiAgc29tbWVyX3ZlcnNpb24gPSBhcy5jaGFyYWN0ZXIoCiAgICBwYWNrYWdlVmVyc2lvbigic29tbWVyIikKICApLAogIG5JdGVyc19zb21tZXIgPSBOX0lURVJTX1NPTU1FUiwKICBtYXJrZXJfcGFuZWxfbiA9IG5jb2woZ2VubyksCiAgaW5kaXZpZHVhbHNfbiA9IG5yb3coZ2VubyksCiAgdHJhaXRzID0gdHJhaXRzLAogIG91dGVyX3NwbGl0cyA9IGxlbmd0aChjdiRvdXRlcl9zcGxpdHMpLAogIHRhc2tzX2V4cGVjdGVkID0gbnJvdyh0YXNrX3RhYmxlKSwKICB0YXNrc19vayA9IHN1bShyZXN1bHRzJFN0YXR1cyA9PSAib2siKSwKICB0YXNrc19lcnJvciA9IHN1bShyZXN1bHRzJFN0YXR1cyA9PSAiZXJyb3IiKSwKICBwcmVkaWN0aW9uX3Jvd3MgPSBucm93KHByZWRpY3Rpb25zKSwKICBrZXJuZWxfYnVpbGRfc2Vjb25kcyA9IGtlcm5lbF9zZWNvbmRzLAogIHRvdGFsX3J1bl9zZWNvbmRzID0gcnVuX3NlY29uZHMsCiAgdGltZXN0YW1wID0gYXMuY2hhcmFjdGVyKFN5cy50aW1lKCkpCikKYGBgCgpgYGB7ciBzYXZlLWdibHVwLXJlc3VsdHMsIGV2YWw9UlVOX0dCTFVQLCBpbmNsdWRlPUZBTFNFfQp3cml0ZS5jc3YoCiAga2VybmVsX3N1bW1hcnksCiAgIm91dHB1dC9yZWFsL2dibHVwL3JlYWxfZ2JsdXBfYWRlX2tlcm5lbF9zdW1tYXJ5LmNzdiIsCiAgcm93Lm5hbWVzID0gRkFMU0UKKQoKc2F2ZVJEUygKICByZXN1bHRzLAogICJvdXRwdXQvcmVhbC9nYmx1cC9yZWFsX2dibHVwX2FkZV9yZXN1bHRzLnJkcyIsCiAgY29tcHJlc3MgPSAiZ3ppcCIKKQoKc2F2ZVJEUygKICBwcmVkaWN0aW9ucywKICAib3V0cHV0L3JlYWwvZ2JsdXAvcmVhbF9nYmx1cF9hZGVfcHJlZGljdGlvbnMucmRzIiwKICBjb21wcmVzcyA9ICJnemlwIgopCgp3cml0ZS5jc3YoCiAgcmVzdWx0cywKICAib3V0cHV0L3JlYWwvZ2JsdXAvcmVhbF9nYmx1cF9hZGVfcmVzdWx0cy5jc3YiLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKCndyaXRlLmNzdigKICBwcmVkaWN0aW9ucywKICAib3V0cHV0L3JlYWwvZ2JsdXAvcmVhbF9nYmx1cF9hZGVfcHJlZGljdGlvbnMuY3N2IiwKICByb3cubmFtZXMgPSBGQUxTRQopCgpzYXZlUkRTKAogIHJ1bl9tZXRhZGF0YSwKICAib3V0cHV0L3JlYWwvZ2JsdXAvcmVhbF9nYmx1cF9hZGVfcnVuX21ldGFkYXRhLnJkcyIsCiAgY29tcHJlc3MgPSAiZ3ppcCIKKQpgYGAKCiMjIDguIFNhdmVkLXJ1biBhdmFpbGFiaWxpdHkKCmBgYHtyIHNhdmVkLW91dHB1dC1jb250cmFjdH0KcmVzdWx0X3BhdGggPC0KICAib3V0cHV0L3JlYWwvZ2JsdXAvcmVhbF9nYmx1cF9hZGVfcmVzdWx0cy5yZHMiCgpwcmVkaWN0aW9uX3BhdGggPC0KICAib3V0cHV0L3JlYWwvZ2JsdXAvcmVhbF9nYmx1cF9hZGVfcHJlZGljdGlvbnMucmRzIgoKbWV0YWRhdGFfcGF0aCA8LQogICJvdXRwdXQvcmVhbC9nYmx1cC9yZWFsX2dibHVwX2FkZV9ydW5fbWV0YWRhdGEucmRzIgoKa2VybmVsX3BhdGggPC0KICAib3V0cHV0L3JlYWwvZ2JsdXAvcmVhbF9nYmx1cF9hZGVfa2VybmVsX3N1bW1hcnkuY3N2IgoKc2F2ZWRfb3V0cHV0c19hdmFpbGFibGUgPC0gYWxsKAogIGZpbGUuZXhpc3RzKAogICAgYygKICAgICAgcmVzdWx0X3BhdGgsCiAgICAgIHByZWRpY3Rpb25fcGF0aCwKICAgICAgbWV0YWRhdGFfcGF0aCwKICAgICAga2VybmVsX3BhdGgKICAgICkKICApCikKCmlmICghc2F2ZWRfb3V0cHV0c19hdmFpbGFibGUpIHsKICBzdG9wKAogICAgcGFzdGUoCiAgICAgICJTYXZlZCBHQkxVUC1BREUgb3V0cHV0cyBhcmUgbm90IGF2YWlsYWJsZS4iLAogICAgICAiUnVuIHRoaXMgbW9kdWxlIG9uY2Ugd2l0aCBSVU5fR0JMVVA9MS4iCiAgICApCiAgKQp9CmBgYAoKIyMgOS4gR2Vub21pYy1rZXJuZWwgZGlhZ25vc3RpY3MKCmBgYHtyIGtlcm5lbC1kaWFnbm9zdGljc30Ka2VybmVsX3N1bW1hcnkgPC0gcmVhZC5jc3YoCiAga2VybmVsX3BhdGgsCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCmtlcm5lbF9zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgZGlnaXRzID0gNCwKICAgIGNhcHRpb24gPSAiTnVtZXJpY2FsIHN0cnVjdHVyZSBvZiB0aGUgcmVhbC1kYXRhIEdCTFVQLUFERSBrZXJuZWxzIiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCInCiAgKQpgYGAKCiMjIDEwLiBTYXZlZCByZXN1bHRzIGFuZCBwcmltYXJ5IHByZWRpY3RpdmUgcGVyZm9ybWFuY2UKCmBgYHtyIHNhdmVkLXJlc3VsdHN9CnJlc3VsdHMgPC0gcmVhZFJEUygKICByZXN1bHRfcGF0aAopCgpwcmVkaWN0aW9ucyA8LSByZWFkUkRTKAogIHByZWRpY3Rpb25fcGF0aAopCgpydW5fbWV0YWRhdGEgPC0gcmVhZFJEUygKICBtZXRhZGF0YV9wYXRoCikKCnJlc3VsdF9zdHJ1Y3R1cmUgPC0gZGF0YS5mcmFtZSgKICBRdWFudGl0eSA9IGMoCiAgICAiRXhwZWN0ZWQgdGFza3MiLAogICAgIlN0b3JlZCB0YXNrIHJvd3MiLAogICAgIlN1Y2Nlc3NmdWwgdGFza3MiLAogICAgIkVycm9yZWQgdGFza3MiLAogICAgIkV4cGVjdGVkIGhlbGQtb3V0IHByZWRpY3Rpb25zIGlmIGFsbCBmaXRzIHN1Y2NlZWQiLAogICAgIlN0b3JlZCBoZWxkLW91dCBwcmVkaWN0aW9ucyIKICApLAogIFZhbHVlID0gYygKICAgIDc1TCwKICAgIG5yb3cocmVzdWx0cyksCiAgICBzdW0ocmVzdWx0cyRTdGF0dXMgPT0gIm9rIiksCiAgICBzdW0ocmVzdWx0cyRTdGF0dXMgPT0gImVycm9yIiksCiAgICA3NUwgKiAzOUwsCiAgICBucm93KHByZWRpY3Rpb25zKQogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCnJlc3VsdF9zdHJ1Y3R1cmUgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBjYXB0aW9uID0gIlN0b3JlZCByZWFsLWRhdGEgR0JMVVAtQURFIHJlc3VsdCBzdHJ1Y3R1cmUiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIicKICApCmBgYAoKQSB0YXNrIHdpdGggYFN0YXR1cyA9ICJvayJgIHJldHVybmVkIDM5IGZpbml0ZSBoZWxkLW91dCBwcmVkaWN0aW9ucy4gVGhpcyBzdGF0dXMKZG9lcyBub3QgYnkgaXRzZWxmIGNvbnN0aXR1dGUgYSBmb3JtYWwgbnVtZXJpY2FsLWNvbnZlcmdlbmNlIGRpYWdub3N0aWMgZm9yIHRoZQp2YXJpYW5jZS1jb21wb25lbnQgb3B0aW1pemVyLgoKIyMjIDEwLjEgUGVyZm9ybWFuY2UgYnkgdHJhaXQKCmBgYHtyIHBlcmZvcm1hbmNlLXN1bW1hcnl9Cm9rX3Jlc3VsdHMgPC0gcmVzdWx0c1sKICByZXN1bHRzJFN0YXR1cyA9PSAib2siLAogICwKICBkcm9wID0gRkFMU0UKXQoKaWYgKG5yb3cob2tfcmVzdWx0cykgPT0gMEwpIHsKICBzdG9wKCJObyBzdWNjZXNzZnVsIEdCTFVQLUFERSB0YXNrcyBhcmUgYXZhaWxhYmxlLiIpCn0KCnRyYWl0X3BlcmZvcm1hbmNlIDwtIGFnZ3JlZ2F0ZSgKICBjYmluZCgKICAgIFBoZW5vdHlwZV9Db3JyZWxhdGlvbiwKICAgIFBoZW5vdHlwZV9STVNFLAogICAgUGhlbm90eXBlX01BRSwKICAgIFBoZW5vdHlwZV9CaWFzLAogICAgUGhlbm90eXBlX1Nsb3BlLAogICAgUGhlbm90eXBlX1IyCiAgKSB+IFRyYWl0LAogIGRhdGEgPSBva19yZXN1bHRzLAogIEZVTiA9IG1lYW4sCiAgbmEucm0gPSBUUlVFCikKCnRyYWl0X3BlcmZvcm1hbmNlIDwtIHRyYWl0X3BlcmZvcm1hbmNlWwogIG1hdGNoKAogICAgdHJhaXRzLAogICAgdHJhaXRfcGVyZm9ybWFuY2UkVHJhaXQKICApLAogICwKICBkcm9wID0gRkFMU0UKXQoKdHJhaXRfcGVyZm9ybWFuY2UgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBkaWdpdHMgPSA0LAogICAgY2FwdGlvbiA9ICJNZWFuIGhlbGQtb3V0IEdCTFVQLUFERSBwZXJmb3JtYW5jZSBhY3Jvc3MgdGhlIDI1IG91dGVyIHNwbGl0cyIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiJwogICkKYGBgCgojIyMgMTAuMiBTcGxpdC1sZXZlbCB2YXJpYWJpbGl0eQoKYGBge3Igc3BsaXQtc3VtbWFyeX0Kc3BsaXRfc3VtbWFyeSA8LSBkby5jYWxsKAogIHJiaW5kLAogIGxhcHBseSgKICAgIHNwbGl0KAogICAgICBva19yZXN1bHRzLAogICAgICBva19yZXN1bHRzJFRyYWl0CiAgICApLAogICAgZnVuY3Rpb24oeCkgewogICAgICBkYXRhLmZyYW1lKAogICAgICAgIFRyYWl0ID0gdW5pcXVlKHgkVHJhaXQpLAogICAgICAgIE4gPSBucm93KHgpLAogICAgICAgIENvcl9tZWFuID0gbWVhbigKICAgICAgICAgIHgkUGhlbm90eXBlX0NvcnJlbGF0aW9uLAogICAgICAgICAgbmEucm0gPSBUUlVFCiAgICAgICAgKSwKICAgICAgICBDb3Jfc2QgPSBzZCgKICAgICAgICAgIHgkUGhlbm90eXBlX0NvcnJlbGF0aW9uLAogICAgICAgICAgbmEucm0gPSBUUlVFCiAgICAgICAgKSwKICAgICAgICBDb3JfbWluID0gbWluKAogICAgICAgICAgeCRQaGVub3R5cGVfQ29ycmVsYXRpb24sCiAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICApLAogICAgICAgIENvcl9tYXggPSBtYXgoCiAgICAgICAgICB4JFBoZW5vdHlwZV9Db3JyZWxhdGlvbiwKICAgICAgICAgIG5hLnJtID0gVFJVRQogICAgICAgICksCiAgICAgICAgUk1TRV9tZWFuID0gbWVhbigKICAgICAgICAgIHgkUGhlbm90eXBlX1JNU0UsCiAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICApLAogICAgICAgIFJNU0Vfc2QgPSBzZCgKICAgICAgICAgIHgkUGhlbm90eXBlX1JNU0UsCiAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICApLAogICAgICAgIE1BRV9tZWFuID0gbWVhbigKICAgICAgICAgIHgkUGhlbm90eXBlX01BRSwKICAgICAgICAgIG5hLnJtID0gVFJVRQogICAgICAgICksCiAgICAgICAgQmlhc19tZWFuID0gbWVhbigKICAgICAgICAgIHgkUGhlbm90eXBlX0JpYXMsCiAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICApLAogICAgICAgIFNsb3BlX21lYW4gPSBtZWFuKAogICAgICAgICAgeCRQaGVub3R5cGVfU2xvcGUsCiAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICApLAogICAgICAgIFIyX21lYW4gPSBtZWFuKAogICAgICAgICAgeCRQaGVub3R5cGVfUjIsCiAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICApLAogICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICAgICApCiAgICB9CiAgKQopCgpyb3duYW1lcyhzcGxpdF9zdW1tYXJ5KSA8LSBOVUxMCgpzcGxpdF9zdW1tYXJ5IDwtIHNwbGl0X3N1bW1hcnlbCiAgbWF0Y2goCiAgICB0cmFpdHMsCiAgICBzcGxpdF9zdW1tYXJ5JFRyYWl0CiAgKSwKICAsCiAgZHJvcCA9IEZBTFNFCl0KCnNwbGl0X3N1bW1hcnkgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBkaWdpdHMgPSA0LAogICAgY2FwdGlvbiA9ICJHQkxVUC1BREUgdmFyaWFiaWxpdHkgYWNyb3NzIHRoZSAyNSBvdXRlciBzcGxpdHMiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIicKICApCmBgYAoKIyMgMTEuIEhlbGQtb3V0IHBlcmZvcm1hbmNlIGZpZ3VyZXMKCmBgYHtyIGNvcnJlbGF0aW9uLWZpZ3VyZSwgZmlnLmNhcD0iSGVsZC1vdXQgcGhlbm90eXBlIGNvcnJlbGF0aW9uIGZvciBHQkxVUC1BREUgYWNyb3NzIHRoZSAyNSBmYW1pbHktc3RyYXRpZmllZCBvdXRlciBzcGxpdHMuIFdoaXRlIGRpYW1vbmRzIGluZGljYXRlIHRyYWl0IG1lYW5zLiJ9CnBfY29ycmVsYXRpb24gPC0gZ2dwbG90KAogIG9rX3Jlc3VsdHMsCiAgYWVzKAogICAgeCA9IFRyYWl0LAogICAgeSA9IFBoZW5vdHlwZV9Db3JyZWxhdGlvbiwKICAgIGZpbGwgPSBUcmFpdAogICkKKSArCiAgZ2VvbV9ib3hwbG90KAogICAgd2lkdGggPSAwLjU4LAogICAgb3V0bGllci5zaGFwZSA9IE5BLAogICAgYWxwaGEgPSAwLjcwCiAgKSArCiAgZ2VvbV9wb2ludCgKICAgIHBvc2l0aW9uID0gcG9zaXRpb25faml0dGVyKAogICAgICB3aWR0aCA9IDAuMTAsCiAgICAgIGhlaWdodCA9IDAsCiAgICAgIHNlZWQgPSBTRUVEX0dMT0JBTCArIDMwMUwKICAgICksCiAgICBhbHBoYSA9IDAuNDUsCiAgICBzaXplID0gMS44CiAgKSArCiAgc3RhdF9zdW1tYXJ5KAogICAgZnVuID0gbWVhbiwKICAgIGdlb20gPSAicG9pbnQiLAogICAgc2hhcGUgPSAyMywKICAgIHNpemUgPSAzLjIsCiAgICBmaWxsID0gIndoaXRlIgogICkgKwogIHNjYWxlX2ZpbGxfZ2RvY3MoKSArCiAgbGFicygKICAgIHggPSAiVHJhaXQiLAogICAgeSA9ICJIZWxkLW91dCBQZWFyc29uIGNvcnJlbGF0aW9uIiwKICAgIGZpbGwgPSBOVUxMCiAgKSArCiAgdGhlbWVfZ2RvY3MoKSArCiAgdGhlbWUoCiAgICBsZWdlbmQucG9zaXRpb24gPSAibm9uZSIKICApCgpwcmludChwX2NvcnJlbGF0aW9uKQpgYGAKCmBgYHtyIHNhdmUtY29ycmVsYXRpb24tdGlmZiwgaW5jbHVkZT1GQUxTRX0KZ2dzYXZlKAogICJvdXRwdXQvcmVhbC9nYmx1cC9maWd1cmVzL3JlYWxfZ2JsdXBfY29ycmVsYXRpb25fYnlfdHJhaXQudGlmZiIsCiAgcGxvdCA9IHBfY29ycmVsYXRpb24sCiAgZGV2aWNlID0gInRpZmYiLAogIHdpZHRoID0gOC41LAogIGhlaWdodCA9IDUuNSwKICB1bml0cyA9ICJpbiIsCiAgZHBpID0gMzAwLAogIGNvbXByZXNzaW9uID0gImx6dyIKKQpgYGAKCmBgYHtyIHJtc2UtZmlndXJlLCBmaWcuY2FwPSJIZWxkLW91dCBwaGVub3R5cGUgUk1TRSBmb3IgR0JMVVAtQURFIGFjcm9zcyB0aGUgMjUgZmFtaWx5LXN0cmF0aWZpZWQgb3V0ZXIgc3BsaXRzLiBXaGl0ZSBkaWFtb25kcyBpbmRpY2F0ZSB0cmFpdCBtZWFucy4ifQpwX3Jtc2UgPC0gZ2dwbG90KAogIG9rX3Jlc3VsdHMsCiAgYWVzKAogICAgeCA9IFRyYWl0LAogICAgeSA9IFBoZW5vdHlwZV9STVNFLAogICAgZmlsbCA9IFRyYWl0CiAgKQopICsKICBnZW9tX2JveHBsb3QoCiAgICB3aWR0aCA9IDAuNTgsCiAgICBvdXRsaWVyLnNoYXBlID0gTkEsCiAgICBhbHBoYSA9IDAuNzAKICApICsKICBnZW9tX3BvaW50KAogICAgcG9zaXRpb24gPSBwb3NpdGlvbl9qaXR0ZXIoCiAgICAgIHdpZHRoID0gMC4xMCwKICAgICAgaGVpZ2h0ID0gMCwKICAgICAgc2VlZCA9IFNFRURfR0xPQkFMICsgMzAyTAogICAgKSwKICAgIGFscGhhID0gMC40NSwKICAgIHNpemUgPSAxLjgKICApICsKICBzdGF0X3N1bW1hcnkoCiAgICBmdW4gPSBtZWFuLAogICAgZ2VvbSA9ICJwb2ludCIsCiAgICBzaGFwZSA9IDIzLAogICAgc2l6ZSA9IDMuMiwKICAgIGZpbGwgPSAid2hpdGUiCiAgKSArCiAgc2NhbGVfZmlsbF9nZG9jcygpICsKICBsYWJzKAogICAgeCA9ICJUcmFpdCIsCiAgICB5ID0gIkhlbGQtb3V0IFJNU0UiLAogICAgZmlsbCA9IE5VTEwKICApICsKICB0aGVtZV9nZG9jcygpICsKICB0aGVtZSgKICAgIGxlZ2VuZC5wb3NpdGlvbiA9ICJub25lIgogICkKCnByaW50KHBfcm1zZSkKYGBgCgpgYGB7ciBzYXZlLXJtc2UtdGlmZiwgaW5jbHVkZT1GQUxTRX0KZ2dzYXZlKAogICJvdXRwdXQvcmVhbC9nYmx1cC9maWd1cmVzL3JlYWxfZ2JsdXBfcm1zZV9ieV90cmFpdC50aWZmIiwKICBwbG90ID0gcF9ybXNlLAogIGRldmljZSA9ICJ0aWZmIiwKICB3aWR0aCA9IDguNSwKICBoZWlnaHQgPSA1LjUsCiAgdW5pdHMgPSAiaW4iLAogIGRwaSA9IDMwMCwKICBjb21wcmVzc2lvbiA9ICJsenciCikKYGBgCgojIyAxMi4gQ29tcHV0YXRpb25hbCByZWNvcmQKCmBgYHtyIHRpbWUtc3VtbWFyeX0KdGltZV9zdW1tYXJ5IDwtIGFnZ3JlZ2F0ZSgKICBjYmluZCgKICAgIEZpdF9zZWNvbmRzLAogICAgUHJlZGljdF9zZWNvbmRzCiAgKSB+IFRyYWl0LAogIGRhdGEgPSBva19yZXN1bHRzLAogIEZVTiA9IG1lYW4sCiAgbmEucm0gPSBUUlVFCikKCnRpbWVfc3VtbWFyeSRLZXJuZWxfYnVpbGRfc2Vjb25kcyA8LQogIHJ1bl9tZXRhZGF0YSRrZXJuZWxfYnVpbGRfc2Vjb25kcwoKdGltZV9zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgZGlnaXRzID0gMywKICAgIGNhcHRpb24gPSAiR0JMVVAtQURFIGNvbXB1dGF0aW9uYWwgcmVjb3JkIiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCInCiAgKQoKY2F0KAogICJUb3RhbCBydW4gdGltZToiLAogIHJvdW5kKAogICAgcnVuX21ldGFkYXRhJHRvdGFsX3J1bl9zZWNvbmRzLAogICAgMgogICksCiAgInNlY29uZHMuXG4iCikKYGBgCgpLZXJuZWwgY29uc3RydWN0aW9uIGlzIGEgb25lLXRpbWUgY29zdCByZXVzZWQgYnkgYWxsIHRocmVlIHRyYWl0cyBhbmQgYWxsIDI1Cm91dGVyIHNwbGl0cy4KCiMjIDEzLiBGcm96ZW4gUjA2IGNvbnRyYWN0CgpUaGUgcHJpbWFyeSByZWFsLWRhdGEgR0JMVVAgYmVuY2htYXJrIGlzIGRlZmluZWQgYnk6CgotIDE5NSBpbmRpdmlkdWFsczsKLSB0aGUgY29tbW9uIDIwLDg4Ny1tYXJrZXIgcGFuZWw7Ci0gdGhyZWUgcHJlcGFyZWQgcGhlbm90eXBlIHRhcmdldHM6IGBQcm9kLkNvcmAsIGBDZXJgLCBhbmQgYEJNYDsKLSA1IHJlcGV0aXRpb25zIHggNSBmYW1pbHktc3RyYXRpZmllZCBvdXRlciBmb2xkczsKLSAxNTYgYW5hbHlzaXMgYW5kIDM5IGFzc2Vzc21lbnQgaW5kaXZpZHVhbHMgcGVyIHNwbGl0OwotIG9uZSBhZGRpdGl2ZSwgb25lIGRvbWluYW5jZSwgYW5kIG9uZSBhZGRpdGl2ZS1ieS1hZGRpdGl2ZSBlcGlzdGF0aWMgZ2Vub21pYwogIGNvbXBvbmVudDsKLSBubyB1c2Ugb2Ygb3V0ZXItYXNzZXNzbWVudCBwaGVub3R5cGUgZHVyaW5nIGZpdHRpbmc7Ci0gb25lIGNvbW1vbiBzZXQgb2YgaGVsZC1vdXQgcHJlZGljdGlvbnMgbGF0ZXIgcmV1c2VkIGZvciBtb2RlbCBjb21wYXJpc29uLgoKVGhlIEFOTiBicmFuY2ggbXVzdCB1c2UgdGhlIHNhbWUgMjUgb3V0ZXIgc3BsaXRzLiBIeXBlcnBhcmFtZXRlciBzZWxlY3Rpb24gbXVzdApyZW1haW4gcmVzdHJpY3RlZCB0byB0aGUgbmVzdGVkIGlubmVyIGZvbGRzIHN0b3JlZCBpbgpgcmVhbF9jdl9kZXNpZ24ucmRzYC4KCiMjIDE0LiBOYXZpZ2F0aW9uCgpbUHJldmlvdXM6IFJlYWwtZGF0YSB2YWxpZGF0aW9uXShyZWFsX2RhdGFfdmFsaWRhdGlvbi5odG1sKSB8IFtOZXh0OiBSZWd1bGFyaXplZCBBTk5dKHJlYWxfZGF0YV9hbm4uaHRtbCkK</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("real_data_gblup.Rmd");
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

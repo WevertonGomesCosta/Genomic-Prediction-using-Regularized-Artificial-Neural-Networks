@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Weverton Gomes da Costa" />
+
+<meta name="date" content="2026-11-09" />
+
+<title>Real data: nested validation design</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Regularized ANN Genomic Prediction</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Simulated data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="simulated_data_audit.html">Data audit</a>
+    </li>
+    <li>
+      <a href="simulated_data_validation.html">Validation design</a>
+    </li>
+    <li>
+      <a href="simulated_data_gblup.html">GBLUP-ADE</a>
+    </li>
+    <li>
+      <a href="simulated_data_ann.html">ANN</a>
+    </li>
+    <li>
+      <a href="simulated_data_comparison.html">Model comparison</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+<li role="separator" class="divider"></li>
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Real data: nested validation design</h1>
+<h4 class="author">Weverton Gomes da Costa</h4>
+<h4 class="date">2026-11-09</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-11-09
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/</code>
+<span class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20260821code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20260821)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20260821code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20260821)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed16aa18779a7295de69a4b36d48678f3b0c45b03targetblankd16aa18a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d16aa18779a7295de69a4b36d48678f3b0c45b03" target="_blank">d16aa18</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed16aa18779a7295de69a4b36d48678f3b0c45b03targetblankd16aa18a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d16aa18779a7295de69a4b36d48678f3b0c45b03" target="_blank">d16aa18</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .github/
+    Ignored:    .local/
+    Ignored:    code/legacy/
+    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica (1).xlsx
+    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica.xlsx
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.indv
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.pos
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.indv.txt
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.pos.txt
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.txt
+    Ignored:    data/dados_reais/Rótulos C. arabica_Proj_Piloto.xlsx
+    Ignored:    data/dados_reais/Rótulos Novos SNPs.xls
+    Ignored:    data/dados_reais/dados_cafe.xlsx
+    Ignored:    data/dados_reais/fpls-09-01934.pdf
+    Ignored:    data/dados_reais/geno_real.rds
+    Ignored:    data/dados_reais/pheno_real.rds
+    Ignored:    data/dados_reais/plants-13-01876-v2.pdf
+    Ignored:    data/dados_reais/pos_geno_real.rds
+    Ignored:    renv/library/
+    Ignored:    renv/staging/
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/real_data_validation.Rmd</code>)
+and HTML (<code>docs/real_data_validation.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/4fa5d7caefab014a232aacf96ca974999589066c/analysis/real_data_validation.Rmd" target="_blank">4fa5d7c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-05
+</td>
+<td>
+Add audited real-data workflow through GBLUP-ADE
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="purpose" class="section level2">
+<h2>1. Purpose</h2>
+<p>This module creates the common validation design used by every
+prediction method fitted to the real <em>Coffea arabica</em> population.
+The partitions are generated <strong>before model fitting</strong> and
+are reused unchanged by GBLUP and all ANN variants.</p>
+<p>The primary validation design is a family-stratified nested
+cross-validation:</p>
+<ul>
+<li><strong>outer validation:</strong> 5 repetitions of 5 folds,
+producing 25 held-out evaluations;</li>
+<li><strong>outer balance:</strong> each assessment fold contains
+exactly 3 individuals from each of the 13 progenies;</li>
+<li><strong>inner validation:</strong> 4 folds created only within the
+corresponding outer analysis set;</li>
+<li><strong>inner balance:</strong> each inner assessment fold also
+contains exactly 3 individuals from each progeny;</li>
+<li><strong>information separation:</strong> phenotype values and
+prediction-model identity do not participate in fold generation.</li>
+</ul>
+<p>A complementary leave-one-family-out (LOFO) design is also stored for
+later evaluation of between-family generalization, but it does not
+replace the prespecified primary nested design.</p>
+</div>
+<div id="packages-and-fixed-settings" class="section level2">
+<h2>2. Packages and fixed settings</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(knitr)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20261105</span><span class="dt">L</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>N_OUTER_REPEATS <span class="ot">&lt;-</span> <span class="dv">5</span><span class="dt">L</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>N_OUTER_FOLDS <span class="ot">&lt;-</span> <span class="dv">5</span><span class="dt">L</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>N_INNER_FOLDS <span class="ot">&lt;-</span> <span class="dv">4</span><span class="dt">L</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>validation_parameters <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">Parameter =</span> <span class="fu">c</span>(</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>    <span class="st">&quot;Global seed&quot;</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    <span class="st">&quot;Outer repetitions&quot;</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>    <span class="st">&quot;Outer folds per repetition&quot;</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>    <span class="st">&quot;Inner folds per outer split&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  ),</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>    SEED_GLOBAL,</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>    N_OUTER_REPEATS,</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>    N_OUTER_FOLDS,</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>    N_INNER_FOLDS</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>  ),</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  <span class="at">Role =</span> <span class="fu">c</span>(</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>    <span class="st">&quot;reproducible partition generation&quot;</span>,</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>    <span class="st">&quot;repeat held-out evaluation&quot;</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>    <span class="st">&quot;primary held-out assessment&quot;</span>,</span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>    <span class="st">&quot;ANN hyperparameter selection inside outer analysis&quot;</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>  ),</span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>)</span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>validation_parameters <span class="sc">|&gt;</span></span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Fixed real-data validation settings&quot;</span>,</span>
+<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Fixed real-data validation settings
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Parameter
+</th>
+<th style="text-align:right;">
+Value
+</th>
+<th style="text-align:left;">
+Role
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Global seed
+</td>
+<td style="text-align:right;">
+20261105
+</td>
+<td style="text-align:left;">
+reproducible partition generation
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer repetitions
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+repeat held-out evaluation
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer folds per repetition
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+primary held-out assessment
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inner folds per outer split
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+ANN hyperparameter selection inside outer analysis
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="population-used-for-partitioning" class="section level2">
+<h2>3. Population used for partitioning</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>common <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="st">&quot;output/real/audit/preprocessed_real_common.rds&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>ids <span class="ot">&lt;-</span> <span class="fu">rownames</span>(common<span class="sc">$</span>genotype)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>family <span class="ot">&lt;-</span> <span class="fu">unname</span>(common<span class="sc">$</span>family[ids])</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="fu">length</span>(ids) <span class="sc">==</span> <span class="dv">195</span><span class="dt">L</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="fu">length</span>(<span class="fu">unique</span>(ids)) <span class="sc">==</span> <span class="dv">195</span><span class="dt">L</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="fu">length</span>(<span class="fu">unique</span>(family)) <span class="sc">==</span> <span class="dv">13</span><span class="dt">L</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="fu">all</span>(<span class="fu">table</span>(family) <span class="sc">==</span> <span class="dv">15</span><span class="dt">L</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>)</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>population_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="at">Quantity =</span> <span class="fu">c</span>(</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>    <span class="st">&quot;Individuals&quot;</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>    <span class="st">&quot;Families&quot;</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>    <span class="st">&quot;Individuals per family&quot;</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>    <span class="st">&quot;Markers after common QC&quot;</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  ),</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>    <span class="fu">length</span>(ids),</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(family)),</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>    <span class="fu">unique</span>(<span class="fu">as.integer</span>(<span class="fu">table</span>(family))),</span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>    <span class="fu">ncol</span>(common<span class="sc">$</span>genotype)</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>  ),</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>)</span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>population_summary <span class="sc">|&gt;</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Population entering validation&quot;</span>,</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Population entering validation
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Quantity
+</th>
+<th style="text-align:right;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Individuals
+</td>
+<td style="text-align:right;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Families
+</td>
+<td style="text-align:right;">
+13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Individuals per family
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Markers after common QC
+</td>
+<td style="text-align:right;">
+20887
+</td>
+</tr>
+</tbody>
+</table>
+<p>Only individual ID, family label, and deterministic seeds are used to
+generate folds. The three phenotype traits remain outside partition
+generation.</p>
+</div>
+<div id="repeated-family-stratified-outer-cross-validation"
+class="section level2">
+<h2>4. Repeated family-stratified outer cross-validation</h2>
+<p>Each family contains 15 individuals. Within each repetition, the 15
+members of each family are shuffled reproducibly and assigned as 3
+individuals to each of the five outer folds. Consequently, every outer
+assessment set contains 39 individuals and every outer analysis set
+contains 156 individuals.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>outer_assignment_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, N_OUTER_REPEATS)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>outer_splits <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="cf">for</span> (rep_id <span class="cf">in</span> <span class="fu">seq_len</span>(N_OUTER_REPEATS)) {</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="fu">set.seed</span>(SEED_GLOBAL <span class="sc">+</span> rep_id)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  fold_by_row <span class="ot">&lt;-</span> <span class="fu">integer</span>(<span class="fu">length</span>(ids))</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  <span class="cf">for</span> (family_id <span class="cf">in</span> <span class="fu">unique</span>(family)) {</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>    family_rows <span class="ot">&lt;-</span> <span class="fu">which</span>(family <span class="sc">==</span> family_id)</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>    shuffled_rows <span class="ot">&lt;-</span> <span class="fu">sample</span>(family_rows, <span class="fu">length</span>(family_rows), <span class="at">replace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>    fold_by_row[shuffled_rows] <span class="ot">&lt;-</span> <span class="fu">rep</span>(</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>      <span class="fu">seq_len</span>(N_OUTER_FOLDS),</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>      <span class="at">each =</span> <span class="dv">3</span><span class="dt">L</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>    )</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>  }</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>  outer_assignment_list[[rep_id]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>    <span class="at">Repetition =</span> rep_id,</span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>    <span class="at">ID =</span> ids,</span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>    <span class="at">Family =</span> family,</span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>    <span class="at">OuterFold =</span> fold_by_row,</span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>  )</span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a></span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>  <span class="cf">for</span> (outer_fold <span class="cf">in</span> <span class="fu">seq_len</span>(N_OUTER_FOLDS)) {</span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a></span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a>    split_id <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">&quot;R%02d_F%02d&quot;</span>, rep_id, outer_fold)</span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a>    assessment_index <span class="ot">&lt;-</span> <span class="fu">which</span>(fold_by_row <span class="sc">==</span> outer_fold)</span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a>    analysis_index <span class="ot">&lt;-</span> <span class="fu">which</span>(fold_by_row <span class="sc">!=</span> outer_fold)</span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a></span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a>    outer_splits[[split_id]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a>      <span class="at">split_id =</span> split_id,</span>
+<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a>      <span class="at">repetition =</span> rep_id,</span>
+<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a>      <span class="at">outer_fold =</span> outer_fold,</span>
+<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a>      <span class="at">analysis_ids =</span> ids[analysis_index],</span>
+<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a>      <span class="at">assessment_ids =</span> ids[assessment_index]</span>
+<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a>    )</span>
+<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a>  }</span>
+<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a>}</span>
+<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a></span>
+<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a>outer_assignments <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, outer_assignment_list)</span>
+<span id="cb4-47"><a href="#cb4-47" tabindex="-1"></a><span class="fu">rownames</span>(outer_assignments) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb4-48"><a href="#cb4-48" tabindex="-1"></a></span>
+<span id="cb4-49"><a href="#cb4-49" tabindex="-1"></a>outer_assignments<span class="sc">$</span>SplitID <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(</span>
+<span id="cb4-50"><a href="#cb4-50" tabindex="-1"></a>  <span class="st">&quot;R%02d_F%02d&quot;</span>,</span>
+<span id="cb4-51"><a href="#cb4-51" tabindex="-1"></a>  outer_assignments<span class="sc">$</span>Repetition,</span>
+<span id="cb4-52"><a href="#cb4-52" tabindex="-1"></a>  outer_assignments<span class="sc">$</span>OuterFold</span>
+<span id="cb4-53"><a href="#cb4-53" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>outer_sizes <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  rbind,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">lapply</span>(outer_splits, <span class="cf">function</span>(x) {</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>      <span class="at">SplitID =</span> x<span class="sc">$</span>split_id,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>      <span class="at">Analysis_N =</span> <span class="fu">length</span>(x<span class="sc">$</span>analysis_ids),</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>      <span class="at">Assessment_N =</span> <span class="fu">length</span>(x<span class="sc">$</span>assessment_ids),</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>      <span class="at">Overlap_N =</span> <span class="fu">length</span>(<span class="fu">intersect</span>(x<span class="sc">$</span>analysis_ids, x<span class="sc">$</span>assessment_ids)),</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>    )</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  })</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>)</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>outer_family_balance <span class="ot">&lt;-</span> <span class="fu">all</span>(</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  <span class="fu">vapply</span>(</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>    outer_splits,</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>    <span class="cf">function</span>(x) {</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>      <span class="fu">all</span>(<span class="fu">table</span>(family[<span class="fu">match</span>(x<span class="sc">$</span>assessment_ids, ids)]) <span class="sc">==</span> <span class="dv">3</span><span class="dt">L</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>    },</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>    <span class="fu">logical</span>(<span class="dv">1</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>  )</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>)</span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>outer_coverage <span class="ot">&lt;-</span> <span class="fu">all</span>(</span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>  <span class="fu">vapply</span>(</span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a>    <span class="fu">seq_len</span>(N_OUTER_REPEATS),</span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>    <span class="cf">function</span>(rep_id) {</span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>      split_ids <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(</span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a>        <span class="st">&quot;R%02d_F%02d&quot;</span>,</span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>        rep_id,</span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a>        <span class="fu">seq_len</span>(N_OUTER_FOLDS)</span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a>      )</span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a></span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a>      assessed <span class="ot">&lt;-</span> <span class="fu">unlist</span>(</span>
+<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a>        <span class="fu">lapply</span>(outer_splits[split_ids], <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, <span class="st">&quot;assessment_ids&quot;</span>),</span>
+<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a>        <span class="at">use.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a>      )</span>
+<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a></span>
+<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a>      <span class="fu">identical</span>(<span class="fu">sort</span>(assessed), <span class="fu">sort</span>(ids)) <span class="sc">&amp;&amp;</span></span>
+<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a>        <span class="fu">all</span>(<span class="fu">table</span>(assessed) <span class="sc">==</span> <span class="dv">1</span><span class="dt">L</span>)</span>
+<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a>    },</span>
+<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a>    <span class="fu">logical</span>(<span class="dv">1</span>)</span>
+<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a>  )</span>
+<span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a>)</span>
+<span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a></span>
+<span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a>outer_contract <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a>  <span class="at">Check =</span> <span class="fu">c</span>(</span>
+<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a>    <span class="st">&quot;25 outer splits&quot;</span>,</span>
+<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a>    <span class="st">&quot;156 analysis individuals per split&quot;</span>,</span>
+<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a>    <span class="st">&quot;39 assessment individuals per split&quot;</span>,</span>
+<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a>    <span class="st">&quot;No analysis-assessment overlap&quot;</span>,</span>
+<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a>    <span class="st">&quot;Exactly 3 assessment individuals per family&quot;</span>,</span>
+<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a>    <span class="st">&quot;Every individual assessed exactly once per repetition&quot;</span></span>
+<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a>  ),</span>
+<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a>  <span class="at">Passed =</span> <span class="fu">c</span>(</span>
+<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a>    <span class="fu">length</span>(outer_splits) <span class="sc">==</span> <span class="dv">25</span><span class="dt">L</span>,</span>
+<span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a>    <span class="fu">all</span>(outer_sizes<span class="sc">$</span>Analysis_N <span class="sc">==</span> <span class="dv">156</span><span class="dt">L</span>),</span>
+<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a>    <span class="fu">all</span>(outer_sizes<span class="sc">$</span>Assessment_N <span class="sc">==</span> <span class="dv">39</span><span class="dt">L</span>),</span>
+<span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a>    <span class="fu">all</span>(outer_sizes<span class="sc">$</span>Overlap_N <span class="sc">==</span> <span class="dv">0</span><span class="dt">L</span>),</span>
+<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a>    outer_family_balance,</span>
+<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a>    outer_coverage</span>
+<span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a>  ),</span>
+<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a>)</span>
+<span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a></span>
+<span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a>outer_contract <span class="sc">|&gt;</span></span>
+<span id="cb5-67"><a href="#cb5-67" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb5-68"><a href="#cb5-68" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb5-69"><a href="#cb5-69" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Outer validation contract&quot;</span>,</span>
+<span id="cb5-70"><a href="#cb5-70" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb5-71"><a href="#cb5-71" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb5-72"><a href="#cb5-72" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Outer validation contract
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Check
+</th>
+<th style="text-align:left;">
+Passed
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+25 outer splits
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+156 analysis individuals per split
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+39 assessment individuals per split
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No analysis-assessment overlap
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Exactly 3 assessment individuals per family
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Every individual assessed exactly once per repetition
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">all</span>(outer_contract<span class="sc">$</span>Passed))</span></code></pre></div>
+<p>The coverage check explicitly removes list-generated names before
+comparison, avoiding the false negative that can occur when
+<code>unlist()</code> names are compared with an unnamed vector.</p>
+</div>
+<div id="nested-inner-cross-validation" class="section level2">
+<h2>5. Nested inner cross-validation</h2>
+<p>Each outer analysis set contains 12 individuals from every family.
+Those 12 individuals are divided into four inner folds of 3 individuals
+per family. Thus every inner assessment set contains 39 individuals and
+every inner analysis set contains 117 individuals.</p>
+<p>The outer assessment individuals never participate in inner partition
+generation.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>inner_assignments_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>inner_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(outer_splits)),</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="fu">names</span>(outer_splits)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="cf">for</span> (split_id <span class="cf">in</span> <span class="fu">names</span>(outer_splits)) {</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  outer_split <span class="ot">&lt;-</span> outer_splits[[split_id]]</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  rep_id <span class="ot">&lt;-</span> outer_split<span class="sc">$</span>repetition</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  outer_fold <span class="ot">&lt;-</span> outer_split<span class="sc">$</span>outer_fold</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  outer_analysis_ids <span class="ot">&lt;-</span> outer_split<span class="sc">$</span>analysis_ids</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  outer_analysis_index <span class="ot">&lt;-</span> <span class="fu">match</span>(outer_analysis_ids, ids)</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  outer_analysis_family <span class="ot">&lt;-</span> family[outer_analysis_index]</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="fu">set.seed</span>(</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>    SEED_GLOBAL <span class="sc">+</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>      <span class="dv">100000</span><span class="dt">L</span> <span class="sc">+</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>      rep_id <span class="sc">*</span> <span class="dv">100</span><span class="dt">L</span> <span class="sc">+</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>      outer_fold</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  )</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>  inner_fold_by_row <span class="ot">&lt;-</span> <span class="fu">integer</span>(<span class="fu">length</span>(outer_analysis_ids))</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>  <span class="cf">for</span> (family_id <span class="cf">in</span> <span class="fu">unique</span>(outer_analysis_family)) {</span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>    family_rows <span class="ot">&lt;-</span> <span class="fu">which</span>(outer_analysis_family <span class="sc">==</span> family_id)</span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>    shuffled_rows <span class="ot">&lt;-</span> <span class="fu">sample</span>(family_rows, <span class="fu">length</span>(family_rows), <span class="at">replace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>    inner_fold_by_row[shuffled_rows] <span class="ot">&lt;-</span> <span class="fu">rep</span>(</span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>      <span class="fu">seq_len</span>(N_INNER_FOLDS),</span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>      <span class="at">each =</span> <span class="dv">3</span><span class="dt">L</span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>    )</span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>  }</span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>  inner_assignments_list[[split_id]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>    <span class="at">SplitID =</span> split_id,</span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>    <span class="at">Repetition =</span> rep_id,</span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a>    <span class="at">OuterFold =</span> outer_fold,</span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>    <span class="at">ID =</span> outer_analysis_ids,</span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>    <span class="at">Family =</span> outer_analysis_family,</span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a>    <span class="at">InnerFold =</span> inner_fold_by_row,</span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a>  )</span>
+<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a></span>
+<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>  current_inner_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
+<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a>    <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, N_INNER_FOLDS),</span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">&quot;I&quot;</span>, <span class="fu">seq_len</span>(N_INNER_FOLDS))</span>
+<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>  )</span>
+<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a></span>
+<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a>  <span class="cf">for</span> (inner_fold <span class="cf">in</span> <span class="fu">seq_len</span>(N_INNER_FOLDS)) {</span>
+<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a></span>
+<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a>    assessment_rows <span class="ot">&lt;-</span> <span class="fu">which</span>(inner_fold_by_row <span class="sc">==</span> inner_fold)</span>
+<span id="cb7-56"><a href="#cb7-56" tabindex="-1"></a>    analysis_rows <span class="ot">&lt;-</span> <span class="fu">which</span>(inner_fold_by_row <span class="sc">!=</span> inner_fold)</span>
+<span id="cb7-57"><a href="#cb7-57" tabindex="-1"></a></span>
+<span id="cb7-58"><a href="#cb7-58" tabindex="-1"></a>    current_inner_splits[[<span class="fu">paste0</span>(<span class="st">&quot;I&quot;</span>, inner_fold)]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a>      <span class="at">split_id =</span> split_id,</span>
+<span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a>      <span class="at">inner_fold =</span> inner_fold,</span>
+<span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a>      <span class="at">analysis_ids =</span> outer_analysis_ids[analysis_rows],</span>
+<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a>      <span class="at">assessment_ids =</span> outer_analysis_ids[assessment_rows]</span>
+<span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a>    )</span>
+<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a>  }</span>
+<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a></span>
+<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a>  inner_splits[[split_id]] <span class="ot">&lt;-</span> current_inner_splits</span>
+<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a>}</span>
+<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a></span>
+<span id="cb7-69"><a href="#cb7-69" tabindex="-1"></a>inner_assignments <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, inner_assignments_list)</span>
+<span id="cb7-70"><a href="#cb7-70" tabindex="-1"></a><span class="fu">rownames</span>(inner_assignments) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>inner_size_rows <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>row_id <span class="ot">&lt;-</span> <span class="dv">1</span><span class="dt">L</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="cf">for</span> (split_id <span class="cf">in</span> <span class="fu">names</span>(inner_splits)) {</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="cf">for</span> (inner_name <span class="cf">in</span> <span class="fu">names</span>(inner_splits[[split_id]])) {</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    x <span class="ot">&lt;-</span> inner_splits[[split_id]][[inner_name]]</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    inner_size_rows[[row_id]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>      <span class="at">SplitID =</span> split_id,</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>      <span class="at">InnerFold =</span> x<span class="sc">$</span>inner_fold,</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>      <span class="at">Analysis_N =</span> <span class="fu">length</span>(x<span class="sc">$</span>analysis_ids),</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>      <span class="at">Assessment_N =</span> <span class="fu">length</span>(x<span class="sc">$</span>assessment_ids),</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>      <span class="at">Overlap_N =</span> <span class="fu">length</span>(<span class="fu">intersect</span>(x<span class="sc">$</span>analysis_ids, x<span class="sc">$</span>assessment_ids)),</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    )</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    row_id <span class="ot">&lt;-</span> row_id <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>  }</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>}</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>inner_sizes <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, inner_size_rows)</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="fu">rownames</span>(inner_sizes) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>inner_family_balance <span class="ot">&lt;-</span> <span class="fu">all</span>(</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>  <span class="fu">vapply</span>(</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>    <span class="fu">names</span>(inner_splits),</span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>    <span class="cf">function</span>(split_id) {</span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>      <span class="fu">all</span>(</span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>        <span class="fu">vapply</span>(</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>          inner_splits[[split_id]],</span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>          <span class="cf">function</span>(x) {</span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>            assessment_family <span class="ot">&lt;-</span> family[<span class="fu">match</span>(x<span class="sc">$</span>assessment_ids, ids)]</span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>            <span class="fu">all</span>(<span class="fu">table</span>(assessment_family) <span class="sc">==</span> <span class="dv">3</span><span class="dt">L</span>)</span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>          },</span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>          <span class="fu">logical</span>(<span class="dv">1</span>)</span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a>        )</span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a>      )</span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>    },</span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>    <span class="fu">logical</span>(<span class="dv">1</span>)</span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>  )</span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>)</span>
+<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a></span>
+<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>outer_leakage <span class="ot">&lt;-</span> <span class="fu">any</span>(</span>
+<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>  <span class="fu">vapply</span>(</span>
+<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a>    <span class="fu">names</span>(outer_splits),</span>
+<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a>    <span class="cf">function</span>(split_id) {</span>
+<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a></span>
+<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a>      outer_assessment <span class="ot">&lt;-</span> outer_splits[[split_id]]<span class="sc">$</span>assessment_ids</span>
+<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a></span>
+<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a>      <span class="fu">any</span>(</span>
+<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a>        <span class="fu">vapply</span>(</span>
+<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a>          inner_splits[[split_id]],</span>
+<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a>          <span class="cf">function</span>(x) {</span>
+<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a>            <span class="fu">length</span>(</span>
+<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a>              <span class="fu">intersect</span>(</span>
+<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a>                outer_assessment,</span>
+<span id="cb8-58"><a href="#cb8-58" tabindex="-1"></a>                <span class="fu">c</span>(x<span class="sc">$</span>analysis_ids, x<span class="sc">$</span>assessment_ids)</span>
+<span id="cb8-59"><a href="#cb8-59" tabindex="-1"></a>              )</span>
+<span id="cb8-60"><a href="#cb8-60" tabindex="-1"></a>            ) <span class="sc">&gt;</span> <span class="dv">0</span><span class="dt">L</span></span>
+<span id="cb8-61"><a href="#cb8-61" tabindex="-1"></a>          },</span>
+<span id="cb8-62"><a href="#cb8-62" tabindex="-1"></a>          <span class="fu">logical</span>(<span class="dv">1</span>)</span>
+<span id="cb8-63"><a href="#cb8-63" tabindex="-1"></a>        )</span>
+<span id="cb8-64"><a href="#cb8-64" tabindex="-1"></a>      )</span>
+<span id="cb8-65"><a href="#cb8-65" tabindex="-1"></a>    },</span>
+<span id="cb8-66"><a href="#cb8-66" tabindex="-1"></a>    <span class="fu">logical</span>(<span class="dv">1</span>)</span>
+<span id="cb8-67"><a href="#cb8-67" tabindex="-1"></a>  )</span>
+<span id="cb8-68"><a href="#cb8-68" tabindex="-1"></a>)</span>
+<span id="cb8-69"><a href="#cb8-69" tabindex="-1"></a></span>
+<span id="cb8-70"><a href="#cb8-70" tabindex="-1"></a>inner_contract <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-71"><a href="#cb8-71" tabindex="-1"></a>  <span class="at">Check =</span> <span class="fu">c</span>(</span>
+<span id="cb8-72"><a href="#cb8-72" tabindex="-1"></a>    <span class="st">&quot;100 inner splits&quot;</span>,</span>
+<span id="cb8-73"><a href="#cb8-73" tabindex="-1"></a>    <span class="st">&quot;117 inner-analysis individuals per split&quot;</span>,</span>
+<span id="cb8-74"><a href="#cb8-74" tabindex="-1"></a>    <span class="st">&quot;39 inner-assessment individuals per split&quot;</span>,</span>
+<span id="cb8-75"><a href="#cb8-75" tabindex="-1"></a>    <span class="st">&quot;No inner analysis-assessment overlap&quot;</span>,</span>
+<span id="cb8-76"><a href="#cb8-76" tabindex="-1"></a>    <span class="st">&quot;Exactly 3 inner-assessment individuals per family&quot;</span>,</span>
+<span id="cb8-77"><a href="#cb8-77" tabindex="-1"></a>    <span class="st">&quot;No outer-assessment individual appears in inner validation&quot;</span></span>
+<span id="cb8-78"><a href="#cb8-78" tabindex="-1"></a>  ),</span>
+<span id="cb8-79"><a href="#cb8-79" tabindex="-1"></a>  <span class="at">Passed =</span> <span class="fu">c</span>(</span>
+<span id="cb8-80"><a href="#cb8-80" tabindex="-1"></a>    <span class="fu">nrow</span>(inner_sizes) <span class="sc">==</span> <span class="dv">100</span><span class="dt">L</span>,</span>
+<span id="cb8-81"><a href="#cb8-81" tabindex="-1"></a>    <span class="fu">all</span>(inner_sizes<span class="sc">$</span>Analysis_N <span class="sc">==</span> <span class="dv">117</span><span class="dt">L</span>),</span>
+<span id="cb8-82"><a href="#cb8-82" tabindex="-1"></a>    <span class="fu">all</span>(inner_sizes<span class="sc">$</span>Assessment_N <span class="sc">==</span> <span class="dv">39</span><span class="dt">L</span>),</span>
+<span id="cb8-83"><a href="#cb8-83" tabindex="-1"></a>    <span class="fu">all</span>(inner_sizes<span class="sc">$</span>Overlap_N <span class="sc">==</span> <span class="dv">0</span><span class="dt">L</span>),</span>
+<span id="cb8-84"><a href="#cb8-84" tabindex="-1"></a>    inner_family_balance,</span>
+<span id="cb8-85"><a href="#cb8-85" tabindex="-1"></a>    <span class="sc">!</span>outer_leakage</span>
+<span id="cb8-86"><a href="#cb8-86" tabindex="-1"></a>  ),</span>
+<span id="cb8-87"><a href="#cb8-87" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-88"><a href="#cb8-88" tabindex="-1"></a>)</span>
+<span id="cb8-89"><a href="#cb8-89" tabindex="-1"></a></span>
+<span id="cb8-90"><a href="#cb8-90" tabindex="-1"></a>inner_contract <span class="sc">|&gt;</span></span>
+<span id="cb8-91"><a href="#cb8-91" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb8-92"><a href="#cb8-92" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb8-93"><a href="#cb8-93" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Nested inner-validation contract&quot;</span>,</span>
+<span id="cb8-94"><a href="#cb8-94" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb8-95"><a href="#cb8-95" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb8-96"><a href="#cb8-96" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Nested inner-validation contract
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Check
+</th>
+<th style="text-align:left;">
+Passed
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+100 inner splits
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+117 inner-analysis individuals per split
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+39 inner-assessment individuals per split
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No inner analysis-assessment overlap
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Exactly 3 inner-assessment individuals per family
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No outer-assessment individual appears in inner validation
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">all</span>(inner_contract<span class="sc">$</span>Passed))</span></code></pre></div>
+</div>
+<div id="complementary-leave-one-family-out-design"
+class="section level2">
+<h2>6. Complementary leave-one-family-out design</h2>
+<p>The primary nested cross-validation estimates predictive performance
+when all 13 progenies are represented in model development. A
+complementary LOFO design is stored separately to evaluate the more
+demanding setting in which one complete progeny is absent from
+training.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>family_levels <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(family))</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>lofo_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(family_levels)),</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  family_levels</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>)</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>lofo_assignments <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>  <span class="at">ID =</span> ids,</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>  <span class="at">Family =</span> family,</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>)</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="cf">for</span> (family_id <span class="cf">in</span> family_levels) {</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>  assessment_ids <span class="ot">&lt;-</span> ids[family <span class="sc">==</span> family_id]</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>  analysis_ids <span class="ot">&lt;-</span> ids[family <span class="sc">!=</span> family_id]</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>  lofo_splits[[family_id]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>    <span class="at">held_out_family =</span> family_id,</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>    <span class="at">analysis_ids =</span> analysis_ids,</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>    <span class="at">assessment_ids =</span> assessment_ids</span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>  )</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>}</span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>lofo_sizes <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>  rbind,</span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a>  <span class="fu">lapply</span>(lofo_splits, <span class="cf">function</span>(x) {</span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>      <span class="at">Held_out_family =</span> x<span class="sc">$</span>held_out_family,</span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>      <span class="at">Analysis_N =</span> <span class="fu">length</span>(x<span class="sc">$</span>analysis_ids),</span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a>      <span class="at">Assessment_N =</span> <span class="fu">length</span>(x<span class="sc">$</span>assessment_ids),</span>
+<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>      <span class="at">Overlap_N =</span> <span class="fu">length</span>(<span class="fu">intersect</span>(x<span class="sc">$</span>analysis_ids, x<span class="sc">$</span>assessment_ids)),</span>
+<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>    )</span>
+<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a>  })</span>
+<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>)</span>
+<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a></span>
+<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a>  <span class="fu">length</span>(lofo_splits) <span class="sc">==</span> <span class="dv">13</span><span class="dt">L</span>,</span>
+<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a>  <span class="fu">all</span>(lofo_sizes<span class="sc">$</span>Analysis_N <span class="sc">==</span> <span class="dv">180</span><span class="dt">L</span>),</span>
+<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a>  <span class="fu">all</span>(lofo_sizes<span class="sc">$</span>Assessment_N <span class="sc">==</span> <span class="dv">15</span><span class="dt">L</span>),</span>
+<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a>  <span class="fu">all</span>(lofo_sizes<span class="sc">$</span>Overlap_N <span class="sc">==</span> <span class="dv">0</span><span class="dt">L</span>)</span>
+<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a>)</span>
+<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a></span>
+<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a>lofo_sizes <span class="sc">|&gt;</span></span>
+<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Complementary leave-one-family-out splits&quot;</span>,</span>
+<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Complementary leave-one-family-out splits
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Held_out_family
+</th>
+<th style="text-align:right;">
+Analysis_N
+</th>
+<th style="text-align:right;">
+Assessment_N
+</th>
+<th style="text-align:right;">
+Overlap_N
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+PROG 1
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 10
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 11
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 12
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 13
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 2
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 3
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 4
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 5
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 6
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 7
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 8
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 9
+</td>
+<td style="text-align:right;">
+180
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="information-excluded-from-partition-generation"
+class="section level2">
+<h2>7. Information excluded from partition generation</h2>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>partition_information <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">Information =</span> <span class="fu">c</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>    <span class="st">&quot;Individual ID&quot;</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>    <span class="st">&quot;Family label&quot;</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>    <span class="st">&quot;Deterministic seed&quot;</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>    <span class="st">&quot;Prod.Cor phenotype&quot;</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>    <span class="st">&quot;Cer phenotype&quot;</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>    <span class="st">&quot;BM phenotype&quot;</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>    <span class="st">&quot;Prediction model&quot;</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>  ),</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>  <span class="at">Partition_role =</span> <span class="fu">c</span>(</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>    <span class="st">&quot;Used&quot;</span>,</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>    <span class="st">&quot;Used for balance&quot;</span>,</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>    <span class="st">&quot;Used&quot;</span>,</span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>    <span class="st">&quot;Not used&quot;</span>,</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>    <span class="st">&quot;Not used&quot;</span>,</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>    <span class="st">&quot;Not used&quot;</span>,</span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>    <span class="st">&quot;Not used&quot;</span></span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>  ),</span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>)</span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a></span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>partition_information <span class="sc">|&gt;</span></span>
+<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Information used and excluded during partition generation&quot;</span>,</span>
+<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Information used and excluded during partition generation
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Information
+</th>
+<th style="text-align:left;">
+Partition_role
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Individual ID
+</td>
+<td style="text-align:left;">
+Used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Family label
+</td>
+<td style="text-align:left;">
+Used for balance
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Deterministic seed
+</td>
+<td style="text-align:left;">
+Used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prod.Cor phenotype
+</td>
+<td style="text-align:left;">
+Not used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cer phenotype
+</td>
+<td style="text-align:left;">
+Not used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM phenotype
+</td>
+<td style="text-align:left;">
+Not used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prediction model
+</td>
+<td style="text-align:left;">
+Not used
+</td>
+</tr>
+</tbody>
+</table>
+<p>The same stored partitions are therefore valid for all three traits
+and all prediction methods.</p>
+</div>
+<div id="validation-design-summary" class="section level2">
+<h2>8. Validation design summary</h2>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>design_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>    <span class="st">&quot;Individuals&quot;</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    <span class="st">&quot;Families&quot;</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>    <span class="st">&quot;Outer repetitions&quot;</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>    <span class="st">&quot;Outer folds per repetition&quot;</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>    <span class="st">&quot;Total outer splits&quot;</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>    <span class="st">&quot;Outer analysis N&quot;</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>    <span class="st">&quot;Outer assessment N&quot;</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>    <span class="st">&quot;Individuals per family in each outer assessment&quot;</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>    <span class="st">&quot;Inner folds per outer split&quot;</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>    <span class="st">&quot;Total inner splits&quot;</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>    <span class="st">&quot;Inner analysis N&quot;</span>,</span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>    <span class="st">&quot;Inner assessment N&quot;</span>,</span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>    <span class="st">&quot;Individuals per family in each inner assessment&quot;</span>,</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>    <span class="st">&quot;LOFO splits&quot;</span>,</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>    <span class="st">&quot;LOFO analysis N&quot;</span>,</span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>    <span class="st">&quot;LOFO assessment N&quot;</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>  ),</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a>    <span class="dv">195</span><span class="dt">L</span>,</span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>    <span class="dv">13</span><span class="dt">L</span>,</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>    N_OUTER_REPEATS,</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>    N_OUTER_FOLDS,</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>    <span class="fu">length</span>(outer_splits),</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>    <span class="dv">156</span><span class="dt">L</span>,</span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>    <span class="dv">39</span><span class="dt">L</span>,</span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>    <span class="dv">3</span><span class="dt">L</span>,</span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>    N_INNER_FOLDS,</span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>    <span class="fu">nrow</span>(inner_sizes),</span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a>    <span class="dv">117</span><span class="dt">L</span>,</span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a>    <span class="dv">39</span><span class="dt">L</span>,</span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>    <span class="dv">3</span><span class="dt">L</span>,</span>
+<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a>    <span class="fu">length</span>(lofo_splits),</span>
+<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a>    <span class="dv">180</span><span class="dt">L</span>,</span>
+<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a>    <span class="dv">15</span><span class="dt">L</span></span>
+<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a>  ),</span>
+<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a>)</span>
+<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a></span>
+<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a>design_summary <span class="sc">|&gt;</span></span>
+<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Frozen real-data validation design&quot;</span>,</span>
+<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb12-47"><a href="#cb12-47" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Frozen real-data validation design
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Item
+</th>
+<th style="text-align:right;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Individuals
+</td>
+<td style="text-align:right;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Families
+</td>
+<td style="text-align:right;">
+13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer repetitions
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer folds per repetition
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Total outer splits
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer analysis N
+</td>
+<td style="text-align:right;">
+156
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer assessment N
+</td>
+<td style="text-align:right;">
+39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Individuals per family in each outer assessment
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inner folds per outer split
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Total inner splits
+</td>
+<td style="text-align:right;">
+100
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inner analysis N
+</td>
+<td style="text-align:right;">
+117
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inner assessment N
+</td>
+<td style="text-align:right;">
+39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Individuals per family in each inner assessment
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LOFO splits
+</td>
+<td style="text-align:right;">
+13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LOFO analysis N
+</td>
+<td style="text-align:right;">
+180
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LOFO assessment N
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="save-the-common-validation-object" class="section level2">
+<h2>9. Save the common validation object</h2>
+</div>
+<div id="frozen-validation-contract" class="section level2">
+<h2>10. Frozen validation contract</h2>
+<p>The primary real-data comparison is based on the same 25
+family-stratified outer assessments for GBLUP and every ANN variant. ANN
+hyperparameter selection is restricted to the corresponding 100 inner
+splits; outer-assessment phenotypes remain unavailable during model
+development.</p>
+<p>The complementary 13-fold LOFO design is stored independently and can
+later be used to quantify generalization to progenies absent from model
+training without changing the primary model-comparison contract.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26300)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices datasets  utils     methods   base     
+
+other attached packages:
+[1] knitr_1.50      workflowr_1.7.2
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.7.1       httr_1.4.7        cli_3.6.5         rlang_1.1.7      
+ [5] xfun_0.54         stringi_1.8.7     otel_0.2.0        processx_3.8.6   
+ [9] renv_1.1.8        promises_1.5.0    jsonlite_2.0.0    glue_1.8.0       
+[13] rprojroot_2.1.1   git2r_0.36.2      htmltools_0.5.9   httpuv_1.6.16    
+[17] ps_1.9.1          sass_0.4.10       rmarkdown_2.30    jquerylib_0.1.4  
+[21] tibble_3.3.1      evaluate_1.0.5    fastmap_1.2.0     yaml_2.3.12      
+[25] lifecycle_1.0.5   whisker_0.4.1     stringr_1.6.0     compiler_4.5.1   
+[29] fs_1.6.6          pkgconfig_2.0.3   Rcpp_1.1.2        rstudioapi_0.17.1
+[33] later_1.4.4       digest_0.6.39     R6_2.6.1          pillar_1.11.1    
+[37] callr_3.7.6       magrittr_2.0.4    bslib_0.9.0       tools_4.5.1      
+[41] cachem_1.1.0      getPass_0.2-4    </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUmVhbCBkYXRhOiBuZXN0ZWQgdmFsaWRhdGlvbiBkZXNpZ24iCmF1dGhvcjoKICAtIFdldmVydG9uIEdvbWVzIGRhIENvc3RhCmRhdGU6ICJgciBTeXMuRGF0ZSgpYCIKc2l0ZTogd29ya2Zsb3dyOjp3Zmxvd19zaXRlCm91dHB1dDoKICB3b3JrZmxvd3I6OndmbG93X2h0bWw6CiAgICB0b2M6IHRydWUKICAgIHRvY19kZXB0aDogMwogICAgdG9jX2Zsb2F0OiB0cnVlCiAgICBjb2RlX2Rvd25sb2FkOiB0cnVlCiAgICBjb2RlX2ZvbGRpbmc6IHNob3cKZWRpdG9yX29wdGlvbnM6CiAgY2h1bmtfb3V0cHV0X3R5cGU6IGNvbnNvbGUKLS0tCgojIyAxLiBQdXJwb3NlCgpUaGlzIG1vZHVsZSBjcmVhdGVzIHRoZSBjb21tb24gdmFsaWRhdGlvbiBkZXNpZ24gdXNlZCBieSBldmVyeSBwcmVkaWN0aW9uIG1ldGhvZCBmaXR0ZWQgdG8gdGhlIHJlYWwgKkNvZmZlYSBhcmFiaWNhKiBwb3B1bGF0aW9uLiBUaGUgcGFydGl0aW9ucyBhcmUgZ2VuZXJhdGVkICoqYmVmb3JlIG1vZGVsIGZpdHRpbmcqKiBhbmQgYXJlIHJldXNlZCB1bmNoYW5nZWQgYnkgR0JMVVAgYW5kIGFsbCBBTk4gdmFyaWFudHMuCgpUaGUgcHJpbWFyeSB2YWxpZGF0aW9uIGRlc2lnbiBpcyBhIGZhbWlseS1zdHJhdGlmaWVkIG5lc3RlZCBjcm9zcy12YWxpZGF0aW9uOgoKLSAqKm91dGVyIHZhbGlkYXRpb246KiogNSByZXBldGl0aW9ucyBvZiA1IGZvbGRzLCBwcm9kdWNpbmcgMjUgaGVsZC1vdXQgZXZhbHVhdGlvbnM7Ci0gKipvdXRlciBiYWxhbmNlOioqIGVhY2ggYXNzZXNzbWVudCBmb2xkIGNvbnRhaW5zIGV4YWN0bHkgMyBpbmRpdmlkdWFscyBmcm9tIGVhY2ggb2YgdGhlIDEzIHByb2dlbmllczsKLSAqKmlubmVyIHZhbGlkYXRpb246KiogNCBmb2xkcyBjcmVhdGVkIG9ubHkgd2l0aGluIHRoZSBjb3JyZXNwb25kaW5nIG91dGVyIGFuYWx5c2lzIHNldDsKLSAqKmlubmVyIGJhbGFuY2U6KiogZWFjaCBpbm5lciBhc3Nlc3NtZW50IGZvbGQgYWxzbyBjb250YWlucyBleGFjdGx5IDMgaW5kaXZpZHVhbHMgZnJvbSBlYWNoIHByb2dlbnk7Ci0gKippbmZvcm1hdGlvbiBzZXBhcmF0aW9uOioqIHBoZW5vdHlwZSB2YWx1ZXMgYW5kIHByZWRpY3Rpb24tbW9kZWwgaWRlbnRpdHkgZG8gbm90IHBhcnRpY2lwYXRlIGluIGZvbGQgZ2VuZXJhdGlvbi4KCkEgY29tcGxlbWVudGFyeSBsZWF2ZS1vbmUtZmFtaWx5LW91dCAoTE9GTykgZGVzaWduIGlzIGFsc28gc3RvcmVkIGZvciBsYXRlciBldmFsdWF0aW9uIG9mIGJldHdlZW4tZmFtaWx5IGdlbmVyYWxpemF0aW9uLCBidXQgaXQgZG9lcyBub3QgcmVwbGFjZSB0aGUgcHJlc3BlY2lmaWVkIHByaW1hcnkgbmVzdGVkIGRlc2lnbi4KCmBgYHtyIHNldHVwLCBpbmNsdWRlPUZBTFNFfQprbml0cjo6b3B0c19jaHVuayRzZXQoCiAgZWNobyA9IFRSVUUsCiAgd2FybmluZyA9IEZBTFNFLAogIG1lc3NhZ2UgPSBGQUxTRSwKICBjYWNoZSA9IEZBTFNFLAogIGZpZy5hbGlnbiA9ICJjZW50ZXIiLAogIG91dC53aWR0aCA9ICIxMDAlIgopCgpvcHRpb25zKHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRSkKCmRpci5jcmVhdGUoCiAgIm91dHB1dC9yZWFsL3ZhbGlkYXRpb24iLAogIHNob3dXYXJuaW5ncyA9IEZBTFNFLAogIHJlY3Vyc2l2ZSA9IFRSVUUKKQpgYGAKCiMjIDIuIFBhY2thZ2VzIGFuZCBmaXhlZCBzZXR0aW5ncwoKYGBge3IgcGFja2FnZXMsIHdhcm5pbmc9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CmxpYnJhcnkoa25pdHIpCmBgYAoKYGBge3IgdmFsaWRhdGlvbi1wYXJhbWV0ZXJzfQpTRUVEX0dMT0JBTCA8LSAyMDI2MTEwNUwKTl9PVVRFUl9SRVBFQVRTIDwtIDVMCk5fT1VURVJfRk9MRFMgPC0gNUwKTl9JTk5FUl9GT0xEUyA8LSA0TAoKdmFsaWRhdGlvbl9wYXJhbWV0ZXJzIDwtIGRhdGEuZnJhbWUoCiAgUGFyYW1ldGVyID0gYygKICAgICJHbG9iYWwgc2VlZCIsCiAgICAiT3V0ZXIgcmVwZXRpdGlvbnMiLAogICAgIk91dGVyIGZvbGRzIHBlciByZXBldGl0aW9uIiwKICAgICJJbm5lciBmb2xkcyBwZXIgb3V0ZXIgc3BsaXQiCiAgKSwKICBWYWx1ZSA9IGMoCiAgICBTRUVEX0dMT0JBTCwKICAgIE5fT1VURVJfUkVQRUFUUywKICAgIE5fT1VURVJfRk9MRFMsCiAgICBOX0lOTkVSX0ZPTERTCiAgKSwKICBSb2xlID0gYygKICAgICJyZXByb2R1Y2libGUgcGFydGl0aW9uIGdlbmVyYXRpb24iLAogICAgInJlcGVhdCBoZWxkLW91dCBldmFsdWF0aW9uIiwKICAgICJwcmltYXJ5IGhlbGQtb3V0IGFzc2Vzc21lbnQiLAogICAgIkFOTiBoeXBlcnBhcmFtZXRlciBzZWxlY3Rpb24gaW5zaWRlIG91dGVyIGFuYWx5c2lzIgogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCnZhbGlkYXRpb25fcGFyYW1ldGVycyB8PgogIGtuaXRyOjprYWJsZSgKICAgIGZvcm1hdCA9ICJodG1sIiwKICAgIGNhcHRpb24gPSAiRml4ZWQgcmVhbC1kYXRhIHZhbGlkYXRpb24gc2V0dGluZ3MiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIicKICApCmBgYAoKIyMgMy4gUG9wdWxhdGlvbiB1c2VkIGZvciBwYXJ0aXRpb25pbmcKCmBgYHtyIHZhbGlkYXRpb24taW5wdXR9CmNvbW1vbiA8LSByZWFkUkRTKAogICJvdXRwdXQvcmVhbC9hdWRpdC9wcmVwcm9jZXNzZWRfcmVhbF9jb21tb24ucmRzIgopCgppZHMgPC0gcm93bmFtZXMoY29tbW9uJGdlbm90eXBlKQpmYW1pbHkgPC0gdW5uYW1lKGNvbW1vbiRmYW1pbHlbaWRzXSkKCnN0b3BpZm5vdCgKICBsZW5ndGgoaWRzKSA9PSAxOTVMLAogIGxlbmd0aCh1bmlxdWUoaWRzKSkgPT0gMTk1TCwKICBsZW5ndGgodW5pcXVlKGZhbWlseSkpID09IDEzTCwKICBhbGwodGFibGUoZmFtaWx5KSA9PSAxNUwpCikKCnBvcHVsYXRpb25fc3VtbWFyeSA8LSBkYXRhLmZyYW1lKAogIFF1YW50aXR5ID0gYygKICAgICJJbmRpdmlkdWFscyIsCiAgICAiRmFtaWxpZXMiLAogICAgIkluZGl2aWR1YWxzIHBlciBmYW1pbHkiLAogICAgIk1hcmtlcnMgYWZ0ZXIgY29tbW9uIFFDIgogICksCiAgVmFsdWUgPSBjKAogICAgbGVuZ3RoKGlkcyksCiAgICBsZW5ndGgodW5pcXVlKGZhbWlseSkpLAogICAgdW5pcXVlKGFzLmludGVnZXIodGFibGUoZmFtaWx5KSkpLAogICAgbmNvbChjb21tb24kZ2Vub3R5cGUpCiAgKSwKICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKKQoKcG9wdWxhdGlvbl9zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJQb3B1bGF0aW9uIGVudGVyaW5nIHZhbGlkYXRpb24iLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIicKICApCmBgYAoKT25seSBpbmRpdmlkdWFsIElELCBmYW1pbHkgbGFiZWwsIGFuZCBkZXRlcm1pbmlzdGljIHNlZWRzIGFyZSB1c2VkIHRvIGdlbmVyYXRlIGZvbGRzLiBUaGUgdGhyZWUgcGhlbm90eXBlIHRyYWl0cyByZW1haW4gb3V0c2lkZSBwYXJ0aXRpb24gZ2VuZXJhdGlvbi4KCiMjIDQuIFJlcGVhdGVkIGZhbWlseS1zdHJhdGlmaWVkIG91dGVyIGNyb3NzLXZhbGlkYXRpb24KCkVhY2ggZmFtaWx5IGNvbnRhaW5zIDE1IGluZGl2aWR1YWxzLiBXaXRoaW4gZWFjaCByZXBldGl0aW9uLCB0aGUgMTUgbWVtYmVycyBvZiBlYWNoIGZhbWlseSBhcmUgc2h1ZmZsZWQgcmVwcm9kdWNpYmx5IGFuZCBhc3NpZ25lZCBhcyAzIGluZGl2aWR1YWxzIHRvIGVhY2ggb2YgdGhlIGZpdmUgb3V0ZXIgZm9sZHMuIENvbnNlcXVlbnRseSwgZXZlcnkgb3V0ZXIgYXNzZXNzbWVudCBzZXQgY29udGFpbnMgMzkgaW5kaXZpZHVhbHMgYW5kIGV2ZXJ5IG91dGVyIGFuYWx5c2lzIHNldCBjb250YWlucyAxNTYgaW5kaXZpZHVhbHMuCgpgYGB7ciBvdXRlci1mb2xkc30Kb3V0ZXJfYXNzaWdubWVudF9saXN0IDwtIHZlY3RvcigibGlzdCIsIE5fT1VURVJfUkVQRUFUUykKb3V0ZXJfc3BsaXRzIDwtIGxpc3QoKQoKZm9yIChyZXBfaWQgaW4gc2VxX2xlbihOX09VVEVSX1JFUEVBVFMpKSB7CgogIHNldC5zZWVkKFNFRURfR0xPQkFMICsgcmVwX2lkKQoKICBmb2xkX2J5X3JvdyA8LSBpbnRlZ2VyKGxlbmd0aChpZHMpKQoKICBmb3IgKGZhbWlseV9pZCBpbiB1bmlxdWUoZmFtaWx5KSkgewoKICAgIGZhbWlseV9yb3dzIDwtIHdoaWNoKGZhbWlseSA9PSBmYW1pbHlfaWQpCiAgICBzaHVmZmxlZF9yb3dzIDwtIHNhbXBsZShmYW1pbHlfcm93cywgbGVuZ3RoKGZhbWlseV9yb3dzKSwgcmVwbGFjZSA9IEZBTFNFKQoKICAgIGZvbGRfYnlfcm93W3NodWZmbGVkX3Jvd3NdIDwtIHJlcCgKICAgICAgc2VxX2xlbihOX09VVEVSX0ZPTERTKSwKICAgICAgZWFjaCA9IDNMCiAgICApCiAgfQoKICBvdXRlcl9hc3NpZ25tZW50X2xpc3RbW3JlcF9pZF1dIDwtIGRhdGEuZnJhbWUoCiAgICBSZXBldGl0aW9uID0gcmVwX2lkLAogICAgSUQgPSBpZHMsCiAgICBGYW1pbHkgPSBmYW1pbHksCiAgICBPdXRlckZvbGQgPSBmb2xkX2J5X3JvdywKICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICkKCiAgZm9yIChvdXRlcl9mb2xkIGluIHNlcV9sZW4oTl9PVVRFUl9GT0xEUykpIHsKCiAgICBzcGxpdF9pZCA8LSBzcHJpbnRmKCJSJTAyZF9GJTAyZCIsIHJlcF9pZCwgb3V0ZXJfZm9sZCkKCiAgICBhc3Nlc3NtZW50X2luZGV4IDwtIHdoaWNoKGZvbGRfYnlfcm93ID09IG91dGVyX2ZvbGQpCiAgICBhbmFseXNpc19pbmRleCA8LSB3aGljaChmb2xkX2J5X3JvdyAhPSBvdXRlcl9mb2xkKQoKICAgIG91dGVyX3NwbGl0c1tbc3BsaXRfaWRdXSA8LSBsaXN0KAogICAgICBzcGxpdF9pZCA9IHNwbGl0X2lkLAogICAgICByZXBldGl0aW9uID0gcmVwX2lkLAogICAgICBvdXRlcl9mb2xkID0gb3V0ZXJfZm9sZCwKICAgICAgYW5hbHlzaXNfaWRzID0gaWRzW2FuYWx5c2lzX2luZGV4XSwKICAgICAgYXNzZXNzbWVudF9pZHMgPSBpZHNbYXNzZXNzbWVudF9pbmRleF0KICAgICkKICB9Cn0KCm91dGVyX2Fzc2lnbm1lbnRzIDwtIGRvLmNhbGwocmJpbmQsIG91dGVyX2Fzc2lnbm1lbnRfbGlzdCkKcm93bmFtZXMob3V0ZXJfYXNzaWdubWVudHMpIDwtIE5VTEwKCm91dGVyX2Fzc2lnbm1lbnRzJFNwbGl0SUQgPC0gc3ByaW50ZigKICAiUiUwMmRfRiUwMmQiLAogIG91dGVyX2Fzc2lnbm1lbnRzJFJlcGV0aXRpb24sCiAgb3V0ZXJfYXNzaWdubWVudHMkT3V0ZXJGb2xkCikKYGBgCgpgYGB7ciBvdXRlci1jaGVja3N9Cm91dGVyX3NpemVzIDwtIGRvLmNhbGwoCiAgcmJpbmQsCiAgbGFwcGx5KG91dGVyX3NwbGl0cywgZnVuY3Rpb24oeCkgewogICAgZGF0YS5mcmFtZSgKICAgICAgU3BsaXRJRCA9IHgkc3BsaXRfaWQsCiAgICAgIEFuYWx5c2lzX04gPSBsZW5ndGgoeCRhbmFseXNpc19pZHMpLAogICAgICBBc3Nlc3NtZW50X04gPSBsZW5ndGgoeCRhc3Nlc3NtZW50X2lkcyksCiAgICAgIE92ZXJsYXBfTiA9IGxlbmd0aChpbnRlcnNlY3QoeCRhbmFseXNpc19pZHMsIHgkYXNzZXNzbWVudF9pZHMpKSwKICAgICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgICApCiAgfSkKKQoKb3V0ZXJfZmFtaWx5X2JhbGFuY2UgPC0gYWxsKAogIHZhcHBseSgKICAgIG91dGVyX3NwbGl0cywKICAgIGZ1bmN0aW9uKHgpIHsKICAgICAgYWxsKHRhYmxlKGZhbWlseVttYXRjaCh4JGFzc2Vzc21lbnRfaWRzLCBpZHMpXSkgPT0gM0wpCiAgICB9LAogICAgbG9naWNhbCgxKQogICkKKQoKb3V0ZXJfY292ZXJhZ2UgPC0gYWxsKAogIHZhcHBseSgKICAgIHNlcV9sZW4oTl9PVVRFUl9SRVBFQVRTKSwKICAgIGZ1bmN0aW9uKHJlcF9pZCkgewogICAgICBzcGxpdF9pZHMgPC0gc3ByaW50ZigKICAgICAgICAiUiUwMmRfRiUwMmQiLAogICAgICAgIHJlcF9pZCwKICAgICAgICBzZXFfbGVuKE5fT1VURVJfRk9MRFMpCiAgICAgICkKCiAgICAgIGFzc2Vzc2VkIDwtIHVubGlzdCgKICAgICAgICBsYXBwbHkob3V0ZXJfc3BsaXRzW3NwbGl0X2lkc10sIGBbW2AsICJhc3Nlc3NtZW50X2lkcyIpLAogICAgICAgIHVzZS5uYW1lcyA9IEZBTFNFCiAgICAgICkKCiAgICAgIGlkZW50aWNhbChzb3J0KGFzc2Vzc2VkKSwgc29ydChpZHMpKSAmJgogICAgICAgIGFsbCh0YWJsZShhc3Nlc3NlZCkgPT0gMUwpCiAgICB9LAogICAgbG9naWNhbCgxKQogICkKKQoKb3V0ZXJfY29udHJhY3QgPC0gZGF0YS5mcmFtZSgKICBDaGVjayA9IGMoCiAgICAiMjUgb3V0ZXIgc3BsaXRzIiwKICAgICIxNTYgYW5hbHlzaXMgaW5kaXZpZHVhbHMgcGVyIHNwbGl0IiwKICAgICIzOSBhc3Nlc3NtZW50IGluZGl2aWR1YWxzIHBlciBzcGxpdCIsCiAgICAiTm8gYW5hbHlzaXMtYXNzZXNzbWVudCBvdmVybGFwIiwKICAgICJFeGFjdGx5IDMgYXNzZXNzbWVudCBpbmRpdmlkdWFscyBwZXIgZmFtaWx5IiwKICAgICJFdmVyeSBpbmRpdmlkdWFsIGFzc2Vzc2VkIGV4YWN0bHkgb25jZSBwZXIgcmVwZXRpdGlvbiIKICApLAogIFBhc3NlZCA9IGMoCiAgICBsZW5ndGgob3V0ZXJfc3BsaXRzKSA9PSAyNUwsCiAgICBhbGwob3V0ZXJfc2l6ZXMkQW5hbHlzaXNfTiA9PSAxNTZMKSwKICAgIGFsbChvdXRlcl9zaXplcyRBc3Nlc3NtZW50X04gPT0gMzlMKSwKICAgIGFsbChvdXRlcl9zaXplcyRPdmVybGFwX04gPT0gMEwpLAogICAgb3V0ZXJfZmFtaWx5X2JhbGFuY2UsCiAgICBvdXRlcl9jb3ZlcmFnZQogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCm91dGVyX2NvbnRyYWN0IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJPdXRlciB2YWxpZGF0aW9uIGNvbnRyYWN0IiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCInCiAgKQoKc3RvcGlmbm90KGFsbChvdXRlcl9jb250cmFjdCRQYXNzZWQpKQpgYGAKClRoZSBjb3ZlcmFnZSBjaGVjayBleHBsaWNpdGx5IHJlbW92ZXMgbGlzdC1nZW5lcmF0ZWQgbmFtZXMgYmVmb3JlIGNvbXBhcmlzb24sIGF2b2lkaW5nIHRoZSBmYWxzZSBuZWdhdGl2ZSB0aGF0IGNhbiBvY2N1ciB3aGVuIGB1bmxpc3QoKWAgbmFtZXMgYXJlIGNvbXBhcmVkIHdpdGggYW4gdW5uYW1lZCB2ZWN0b3IuCgojIyA1LiBOZXN0ZWQgaW5uZXIgY3Jvc3MtdmFsaWRhdGlvbgoKRWFjaCBvdXRlciBhbmFseXNpcyBzZXQgY29udGFpbnMgMTIgaW5kaXZpZHVhbHMgZnJvbSBldmVyeSBmYW1pbHkuIFRob3NlIDEyIGluZGl2aWR1YWxzIGFyZSBkaXZpZGVkIGludG8gZm91ciBpbm5lciBmb2xkcyBvZiAzIGluZGl2aWR1YWxzIHBlciBmYW1pbHkuIFRodXMgZXZlcnkgaW5uZXIgYXNzZXNzbWVudCBzZXQgY29udGFpbnMgMzkgaW5kaXZpZHVhbHMgYW5kIGV2ZXJ5IGlubmVyIGFuYWx5c2lzIHNldCBjb250YWlucyAxMTcgaW5kaXZpZHVhbHMuCgpUaGUgb3V0ZXIgYXNzZXNzbWVudCBpbmRpdmlkdWFscyBuZXZlciBwYXJ0aWNpcGF0ZSBpbiBpbm5lciBwYXJ0aXRpb24gZ2VuZXJhdGlvbi4KCmBgYHtyIGlubmVyLWZvbGRzfQppbm5lcl9hc3NpZ25tZW50c19saXN0IDwtIGxpc3QoKQppbm5lcl9zcGxpdHMgPC0gc2V0TmFtZXMoCiAgdmVjdG9yKCJsaXN0IiwgbGVuZ3RoKG91dGVyX3NwbGl0cykpLAogIG5hbWVzKG91dGVyX3NwbGl0cykKKQoKZm9yIChzcGxpdF9pZCBpbiBuYW1lcyhvdXRlcl9zcGxpdHMpKSB7CgogIG91dGVyX3NwbGl0IDwtIG91dGVyX3NwbGl0c1tbc3BsaXRfaWRdXQoKICByZXBfaWQgPC0gb3V0ZXJfc3BsaXQkcmVwZXRpdGlvbgogIG91dGVyX2ZvbGQgPC0gb3V0ZXJfc3BsaXQkb3V0ZXJfZm9sZAoKICBvdXRlcl9hbmFseXNpc19pZHMgPC0gb3V0ZXJfc3BsaXQkYW5hbHlzaXNfaWRzCiAgb3V0ZXJfYW5hbHlzaXNfaW5kZXggPC0gbWF0Y2gob3V0ZXJfYW5hbHlzaXNfaWRzLCBpZHMpCiAgb3V0ZXJfYW5hbHlzaXNfZmFtaWx5IDwtIGZhbWlseVtvdXRlcl9hbmFseXNpc19pbmRleF0KCiAgc2V0LnNlZWQoCiAgICBTRUVEX0dMT0JBTCArCiAgICAgIDEwMDAwMEwgKwogICAgICByZXBfaWQgKiAxMDBMICsKICAgICAgb3V0ZXJfZm9sZAogICkKCiAgaW5uZXJfZm9sZF9ieV9yb3cgPC0gaW50ZWdlcihsZW5ndGgob3V0ZXJfYW5hbHlzaXNfaWRzKSkKCiAgZm9yIChmYW1pbHlfaWQgaW4gdW5pcXVlKG91dGVyX2FuYWx5c2lzX2ZhbWlseSkpIHsKCiAgICBmYW1pbHlfcm93cyA8LSB3aGljaChvdXRlcl9hbmFseXNpc19mYW1pbHkgPT0gZmFtaWx5X2lkKQogICAgc2h1ZmZsZWRfcm93cyA8LSBzYW1wbGUoZmFtaWx5X3Jvd3MsIGxlbmd0aChmYW1pbHlfcm93cyksIHJlcGxhY2UgPSBGQUxTRSkKCiAgICBpbm5lcl9mb2xkX2J5X3Jvd1tzaHVmZmxlZF9yb3dzXSA8LSByZXAoCiAgICAgIHNlcV9sZW4oTl9JTk5FUl9GT0xEUyksCiAgICAgIGVhY2ggPSAzTAogICAgKQogIH0KCiAgaW5uZXJfYXNzaWdubWVudHNfbGlzdFtbc3BsaXRfaWRdXSA8LSBkYXRhLmZyYW1lKAogICAgU3BsaXRJRCA9IHNwbGl0X2lkLAogICAgUmVwZXRpdGlvbiA9IHJlcF9pZCwKICAgIE91dGVyRm9sZCA9IG91dGVyX2ZvbGQsCiAgICBJRCA9IG91dGVyX2FuYWx5c2lzX2lkcywKICAgIEZhbWlseSA9IG91dGVyX2FuYWx5c2lzX2ZhbWlseSwKICAgIElubmVyRm9sZCA9IGlubmVyX2ZvbGRfYnlfcm93LAogICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgKQoKICBjdXJyZW50X2lubmVyX3NwbGl0cyA8LSBzZXROYW1lcygKICAgIHZlY3RvcigibGlzdCIsIE5fSU5ORVJfRk9MRFMpLAogICAgcGFzdGUwKCJJIiwgc2VxX2xlbihOX0lOTkVSX0ZPTERTKSkKICApCgogIGZvciAoaW5uZXJfZm9sZCBpbiBzZXFfbGVuKE5fSU5ORVJfRk9MRFMpKSB7CgogICAgYXNzZXNzbWVudF9yb3dzIDwtIHdoaWNoKGlubmVyX2ZvbGRfYnlfcm93ID09IGlubmVyX2ZvbGQpCiAgICBhbmFseXNpc19yb3dzIDwtIHdoaWNoKGlubmVyX2ZvbGRfYnlfcm93ICE9IGlubmVyX2ZvbGQpCgogICAgY3VycmVudF9pbm5lcl9zcGxpdHNbW3Bhc3RlMCgiSSIsIGlubmVyX2ZvbGQpXV0gPC0gbGlzdCgKICAgICAgc3BsaXRfaWQgPSBzcGxpdF9pZCwKICAgICAgaW5uZXJfZm9sZCA9IGlubmVyX2ZvbGQsCiAgICAgIGFuYWx5c2lzX2lkcyA9IG91dGVyX2FuYWx5c2lzX2lkc1thbmFseXNpc19yb3dzXSwKICAgICAgYXNzZXNzbWVudF9pZHMgPSBvdXRlcl9hbmFseXNpc19pZHNbYXNzZXNzbWVudF9yb3dzXQogICAgKQogIH0KCiAgaW5uZXJfc3BsaXRzW1tzcGxpdF9pZF1dIDwtIGN1cnJlbnRfaW5uZXJfc3BsaXRzCn0KCmlubmVyX2Fzc2lnbm1lbnRzIDwtIGRvLmNhbGwocmJpbmQsIGlubmVyX2Fzc2lnbm1lbnRzX2xpc3QpCnJvd25hbWVzKGlubmVyX2Fzc2lnbm1lbnRzKSA8LSBOVUxMCmBgYAoKYGBge3IgaW5uZXItY2hlY2tzfQppbm5lcl9zaXplX3Jvd3MgPC0gbGlzdCgpCnJvd19pZCA8LSAxTAoKZm9yIChzcGxpdF9pZCBpbiBuYW1lcyhpbm5lcl9zcGxpdHMpKSB7CiAgZm9yIChpbm5lcl9uYW1lIGluIG5hbWVzKGlubmVyX3NwbGl0c1tbc3BsaXRfaWRdXSkpIHsKCiAgICB4IDwtIGlubmVyX3NwbGl0c1tbc3BsaXRfaWRdXVtbaW5uZXJfbmFtZV1dCgogICAgaW5uZXJfc2l6ZV9yb3dzW1tyb3dfaWRdXSA8LSBkYXRhLmZyYW1lKAogICAgICBTcGxpdElEID0gc3BsaXRfaWQsCiAgICAgIElubmVyRm9sZCA9IHgkaW5uZXJfZm9sZCwKICAgICAgQW5hbHlzaXNfTiA9IGxlbmd0aCh4JGFuYWx5c2lzX2lkcyksCiAgICAgIEFzc2Vzc21lbnRfTiA9IGxlbmd0aCh4JGFzc2Vzc21lbnRfaWRzKSwKICAgICAgT3ZlcmxhcF9OID0gbGVuZ3RoKGludGVyc2VjdCh4JGFuYWx5c2lzX2lkcywgeCRhc3Nlc3NtZW50X2lkcykpLAogICAgICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKICAgICkKCiAgICByb3dfaWQgPC0gcm93X2lkICsgMUwKICB9Cn0KCmlubmVyX3NpemVzIDwtIGRvLmNhbGwocmJpbmQsIGlubmVyX3NpemVfcm93cykKcm93bmFtZXMoaW5uZXJfc2l6ZXMpIDwtIE5VTEwKCmlubmVyX2ZhbWlseV9iYWxhbmNlIDwtIGFsbCgKICB2YXBwbHkoCiAgICBuYW1lcyhpbm5lcl9zcGxpdHMpLAogICAgZnVuY3Rpb24oc3BsaXRfaWQpIHsKICAgICAgYWxsKAogICAgICAgIHZhcHBseSgKICAgICAgICAgIGlubmVyX3NwbGl0c1tbc3BsaXRfaWRdXSwKICAgICAgICAgIGZ1bmN0aW9uKHgpIHsKICAgICAgICAgICAgYXNzZXNzbWVudF9mYW1pbHkgPC0gZmFtaWx5W21hdGNoKHgkYXNzZXNzbWVudF9pZHMsIGlkcyldCiAgICAgICAgICAgIGFsbCh0YWJsZShhc3Nlc3NtZW50X2ZhbWlseSkgPT0gM0wpCiAgICAgICAgICB9LAogICAgICAgICAgbG9naWNhbCgxKQogICAgICAgICkKICAgICAgKQogICAgfSwKICAgIGxvZ2ljYWwoMSkKICApCikKCm91dGVyX2xlYWthZ2UgPC0gYW55KAogIHZhcHBseSgKICAgIG5hbWVzKG91dGVyX3NwbGl0cyksCiAgICBmdW5jdGlvbihzcGxpdF9pZCkgewoKICAgICAgb3V0ZXJfYXNzZXNzbWVudCA8LSBvdXRlcl9zcGxpdHNbW3NwbGl0X2lkXV0kYXNzZXNzbWVudF9pZHMKCiAgICAgIGFueSgKICAgICAgICB2YXBwbHkoCiAgICAgICAgICBpbm5lcl9zcGxpdHNbW3NwbGl0X2lkXV0sCiAgICAgICAgICBmdW5jdGlvbih4KSB7CiAgICAgICAgICAgIGxlbmd0aCgKICAgICAgICAgICAgICBpbnRlcnNlY3QoCiAgICAgICAgICAgICAgICBvdXRlcl9hc3Nlc3NtZW50LAogICAgICAgICAgICAgICAgYyh4JGFuYWx5c2lzX2lkcywgeCRhc3Nlc3NtZW50X2lkcykKICAgICAgICAgICAgICApCiAgICAgICAgICAgICkgPiAwTAogICAgICAgICAgfSwKICAgICAgICAgIGxvZ2ljYWwoMSkKICAgICAgICApCiAgICAgICkKICAgIH0sCiAgICBsb2dpY2FsKDEpCiAgKQopCgppbm5lcl9jb250cmFjdCA8LSBkYXRhLmZyYW1lKAogIENoZWNrID0gYygKICAgICIxMDAgaW5uZXIgc3BsaXRzIiwKICAgICIxMTcgaW5uZXItYW5hbHlzaXMgaW5kaXZpZHVhbHMgcGVyIHNwbGl0IiwKICAgICIzOSBpbm5lci1hc3Nlc3NtZW50IGluZGl2aWR1YWxzIHBlciBzcGxpdCIsCiAgICAiTm8gaW5uZXIgYW5hbHlzaXMtYXNzZXNzbWVudCBvdmVybGFwIiwKICAgICJFeGFjdGx5IDMgaW5uZXItYXNzZXNzbWVudCBpbmRpdmlkdWFscyBwZXIgZmFtaWx5IiwKICAgICJObyBvdXRlci1hc3Nlc3NtZW50IGluZGl2aWR1YWwgYXBwZWFycyBpbiBpbm5lciB2YWxpZGF0aW9uIgogICksCiAgUGFzc2VkID0gYygKICAgIG5yb3coaW5uZXJfc2l6ZXMpID09IDEwMEwsCiAgICBhbGwoaW5uZXJfc2l6ZXMkQW5hbHlzaXNfTiA9PSAxMTdMKSwKICAgIGFsbChpbm5lcl9zaXplcyRBc3Nlc3NtZW50X04gPT0gMzlMKSwKICAgIGFsbChpbm5lcl9zaXplcyRPdmVybGFwX04gPT0gMEwpLAogICAgaW5uZXJfZmFtaWx5X2JhbGFuY2UsCiAgICAhb3V0ZXJfbGVha2FnZQogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCmlubmVyX2NvbnRyYWN0IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJOZXN0ZWQgaW5uZXItdmFsaWRhdGlvbiBjb250cmFjdCIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiJwogICkKCnN0b3BpZm5vdChhbGwoaW5uZXJfY29udHJhY3QkUGFzc2VkKSkKYGBgCgojIyA2LiBDb21wbGVtZW50YXJ5IGxlYXZlLW9uZS1mYW1pbHktb3V0IGRlc2lnbgoKVGhlIHByaW1hcnkgbmVzdGVkIGNyb3NzLXZhbGlkYXRpb24gZXN0aW1hdGVzIHByZWRpY3RpdmUgcGVyZm9ybWFuY2Ugd2hlbiBhbGwgMTMgcHJvZ2VuaWVzIGFyZSByZXByZXNlbnRlZCBpbiBtb2RlbCBkZXZlbG9wbWVudC4gQSBjb21wbGVtZW50YXJ5IExPRk8gZGVzaWduIGlzIHN0b3JlZCBzZXBhcmF0ZWx5IHRvIGV2YWx1YXRlIHRoZSBtb3JlIGRlbWFuZGluZyBzZXR0aW5nIGluIHdoaWNoIG9uZSBjb21wbGV0ZSBwcm9nZW55IGlzIGFic2VudCBmcm9tIHRyYWluaW5nLgoKYGBge3IgbG9mby1kZXNpZ259CmZhbWlseV9sZXZlbHMgPC0gc29ydCh1bmlxdWUoZmFtaWx5KSkKCmxvZm9fc3BsaXRzIDwtIHNldE5hbWVzKAogIHZlY3RvcigibGlzdCIsIGxlbmd0aChmYW1pbHlfbGV2ZWxzKSksCiAgZmFtaWx5X2xldmVscwopCgpsb2ZvX2Fzc2lnbm1lbnRzIDwtIGRhdGEuZnJhbWUoCiAgSUQgPSBpZHMsCiAgRmFtaWx5ID0gZmFtaWx5LAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpmb3IgKGZhbWlseV9pZCBpbiBmYW1pbHlfbGV2ZWxzKSB7CgogIGFzc2Vzc21lbnRfaWRzIDwtIGlkc1tmYW1pbHkgPT0gZmFtaWx5X2lkXQogIGFuYWx5c2lzX2lkcyA8LSBpZHNbZmFtaWx5ICE9IGZhbWlseV9pZF0KCiAgbG9mb19zcGxpdHNbW2ZhbWlseV9pZF1dIDwtIGxpc3QoCiAgICBoZWxkX291dF9mYW1pbHkgPSBmYW1pbHlfaWQsCiAgICBhbmFseXNpc19pZHMgPSBhbmFseXNpc19pZHMsCiAgICBhc3Nlc3NtZW50X2lkcyA9IGFzc2Vzc21lbnRfaWRzCiAgKQp9Cgpsb2ZvX3NpemVzIDwtIGRvLmNhbGwoCiAgcmJpbmQsCiAgbGFwcGx5KGxvZm9fc3BsaXRzLCBmdW5jdGlvbih4KSB7CiAgICBkYXRhLmZyYW1lKAogICAgICBIZWxkX291dF9mYW1pbHkgPSB4JGhlbGRfb3V0X2ZhbWlseSwKICAgICAgQW5hbHlzaXNfTiA9IGxlbmd0aCh4JGFuYWx5c2lzX2lkcyksCiAgICAgIEFzc2Vzc21lbnRfTiA9IGxlbmd0aCh4JGFzc2Vzc21lbnRfaWRzKSwKICAgICAgT3ZlcmxhcF9OID0gbGVuZ3RoKGludGVyc2VjdCh4JGFuYWx5c2lzX2lkcywgeCRhc3Nlc3NtZW50X2lkcykpLAogICAgICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKICAgICkKICB9KQopCgpzdG9waWZub3QoCiAgbGVuZ3RoKGxvZm9fc3BsaXRzKSA9PSAxM0wsCiAgYWxsKGxvZm9fc2l6ZXMkQW5hbHlzaXNfTiA9PSAxODBMKSwKICBhbGwobG9mb19zaXplcyRBc3Nlc3NtZW50X04gPT0gMTVMKSwKICBhbGwobG9mb19zaXplcyRPdmVybGFwX04gPT0gMEwpCikKCmxvZm9fc2l6ZXMgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBjYXB0aW9uID0gIkNvbXBsZW1lbnRhcnkgbGVhdmUtb25lLWZhbWlseS1vdXQgc3BsaXRzIiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCInCiAgKQpgYGAKCiMjIDcuIEluZm9ybWF0aW9uIGV4Y2x1ZGVkIGZyb20gcGFydGl0aW9uIGdlbmVyYXRpb24KCmBgYHtyIHBhcnRpdGlvbi1pbmZvcm1hdGlvbn0KcGFydGl0aW9uX2luZm9ybWF0aW9uIDwtIGRhdGEuZnJhbWUoCiAgSW5mb3JtYXRpb24gPSBjKAogICAgIkluZGl2aWR1YWwgSUQiLAogICAgIkZhbWlseSBsYWJlbCIsCiAgICAiRGV0ZXJtaW5pc3RpYyBzZWVkIiwKICAgICJQcm9kLkNvciBwaGVub3R5cGUiLAogICAgIkNlciBwaGVub3R5cGUiLAogICAgIkJNIHBoZW5vdHlwZSIsCiAgICAiUHJlZGljdGlvbiBtb2RlbCIKICApLAogIFBhcnRpdGlvbl9yb2xlID0gYygKICAgICJVc2VkIiwKICAgICJVc2VkIGZvciBiYWxhbmNlIiwKICAgICJVc2VkIiwKICAgICJOb3QgdXNlZCIsCiAgICAiTm90IHVzZWQiLAogICAgIk5vdCB1c2VkIiwKICAgICJOb3QgdXNlZCIKICApLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpwYXJ0aXRpb25faW5mb3JtYXRpb24gfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBjYXB0aW9uID0gIkluZm9ybWF0aW9uIHVzZWQgYW5kIGV4Y2x1ZGVkIGR1cmluZyBwYXJ0aXRpb24gZ2VuZXJhdGlvbiIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiJwogICkKYGBgCgpUaGUgc2FtZSBzdG9yZWQgcGFydGl0aW9ucyBhcmUgdGhlcmVmb3JlIHZhbGlkIGZvciBhbGwgdGhyZWUgdHJhaXRzIGFuZCBhbGwgcHJlZGljdGlvbiBtZXRob2RzLgoKIyMgOC4gVmFsaWRhdGlvbiBkZXNpZ24gc3VtbWFyeQoKYGBge3IgZGVzaWduLXN1bW1hcnl9CmRlc2lnbl9zdW1tYXJ5IDwtIGRhdGEuZnJhbWUoCiAgSXRlbSA9IGMoCiAgICAiSW5kaXZpZHVhbHMiLAogICAgIkZhbWlsaWVzIiwKICAgICJPdXRlciByZXBldGl0aW9ucyIsCiAgICAiT3V0ZXIgZm9sZHMgcGVyIHJlcGV0aXRpb24iLAogICAgIlRvdGFsIG91dGVyIHNwbGl0cyIsCiAgICAiT3V0ZXIgYW5hbHlzaXMgTiIsCiAgICAiT3V0ZXIgYXNzZXNzbWVudCBOIiwKICAgICJJbmRpdmlkdWFscyBwZXIgZmFtaWx5IGluIGVhY2ggb3V0ZXIgYXNzZXNzbWVudCIsCiAgICAiSW5uZXIgZm9sZHMgcGVyIG91dGVyIHNwbGl0IiwKICAgICJUb3RhbCBpbm5lciBzcGxpdHMiLAogICAgIklubmVyIGFuYWx5c2lzIE4iLAogICAgIklubmVyIGFzc2Vzc21lbnQgTiIsCiAgICAiSW5kaXZpZHVhbHMgcGVyIGZhbWlseSBpbiBlYWNoIGlubmVyIGFzc2Vzc21lbnQiLAogICAgIkxPRk8gc3BsaXRzIiwKICAgICJMT0ZPIGFuYWx5c2lzIE4iLAogICAgIkxPRk8gYXNzZXNzbWVudCBOIgogICksCiAgVmFsdWUgPSBjKAogICAgMTk1TCwKICAgIDEzTCwKICAgIE5fT1VURVJfUkVQRUFUUywKICAgIE5fT1VURVJfRk9MRFMsCiAgICBsZW5ndGgob3V0ZXJfc3BsaXRzKSwKICAgIDE1NkwsCiAgICAzOUwsCiAgICAzTCwKICAgIE5fSU5ORVJfRk9MRFMsCiAgICBucm93KGlubmVyX3NpemVzKSwKICAgIDExN0wsCiAgICAzOUwsCiAgICAzTCwKICAgIGxlbmd0aChsb2ZvX3NwbGl0cyksCiAgICAxODBMLAogICAgMTVMCiAgKSwKICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKKQoKZGVzaWduX3N1bW1hcnkgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBjYXB0aW9uID0gIkZyb3plbiByZWFsLWRhdGEgdmFsaWRhdGlvbiBkZXNpZ24iLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIicKICApCmBgYAoKIyMgOS4gU2F2ZSB0aGUgY29tbW9uIHZhbGlkYXRpb24gb2JqZWN0CgpgYGB7ciBzYXZlLXZhbGlkYXRpb24tb3V0cHV0cywgaW5jbHVkZT1GQUxTRX0KY3ZfZGVzaWduIDwtIGxpc3QoCiAgZGF0YXNldCA9ICJyZWFsIiwKICBzZWVkX2dsb2JhbCA9IFNFRURfR0xPQkFMLAogIG5fb3V0ZXJfcmVwZWF0cyA9IE5fT1VURVJfUkVQRUFUUywKICBuX291dGVyX2ZvbGRzID0gTl9PVVRFUl9GT0xEUywKICBuX2lubmVyX2ZvbGRzID0gTl9JTk5FUl9GT0xEUywKICBpZHMgPSBpZHMsCiAgZmFtaWx5ID0gc2V0TmFtZXMoZmFtaWx5LCBpZHMpLAogIG91dGVyX2Fzc2lnbm1lbnRzID0gb3V0ZXJfYXNzaWdubWVudHMsCiAgb3V0ZXJfc3BsaXRzID0gb3V0ZXJfc3BsaXRzLAogIGlubmVyX2Fzc2lnbm1lbnRzID0gaW5uZXJfYXNzaWdubWVudHMsCiAgaW5uZXJfc3BsaXRzID0gaW5uZXJfc3BsaXRzLAogIGxvZm9fc3BsaXRzID0gbG9mb19zcGxpdHMsCiAgY2hlY2tzID0gbGlzdCgKICAgIG91dGVyX2NvbnRyYWN0ID0gb3V0ZXJfY29udHJhY3QsCiAgICBpbm5lcl9jb250cmFjdCA9IGlubmVyX2NvbnRyYWN0LAogICAgb3V0ZXJfZmFtaWx5X2JhbGFuY2UgPSBvdXRlcl9mYW1pbHlfYmFsYW5jZSwKICAgIG91dGVyX2NvdmVyYWdlID0gb3V0ZXJfY292ZXJhZ2UsCiAgICBvdXRlcl9sZWFrYWdlID0gb3V0ZXJfbGVha2FnZQogICkKKQoKc2F2ZVJEUygKICBjdl9kZXNpZ24sCiAgIm91dHB1dC9yZWFsL3ZhbGlkYXRpb24vcmVhbF9jdl9kZXNpZ24ucmRzIiwKICBjb21wcmVzcyA9ICJnemlwIgopCgp3cml0ZS5jc3YoCiAgb3V0ZXJfYXNzaWdubWVudHMsCiAgIm91dHB1dC9yZWFsL3ZhbGlkYXRpb24vcmVhbF9vdXRlcl9hc3NpZ25tZW50cy5jc3YiLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKCndyaXRlLmNzdigKICBpbm5lcl9hc3NpZ25tZW50cywKICAib3V0cHV0L3JlYWwvdmFsaWRhdGlvbi9yZWFsX2lubmVyX2Fzc2lnbm1lbnRzLmNzdiIsCiAgcm93Lm5hbWVzID0gRkFMU0UKKQoKd3JpdGUuY3N2KAogIGxvZm9fc2l6ZXMsCiAgIm91dHB1dC9yZWFsL3ZhbGlkYXRpb24vcmVhbF9sb2ZvX3N1bW1hcnkuY3N2IiwKICByb3cubmFtZXMgPSBGQUxTRQopCgp3cml0ZS5jc3YoCiAgZGVzaWduX3N1bW1hcnksCiAgIm91dHB1dC9yZWFsL3ZhbGlkYXRpb24vcmVhbF92YWxpZGF0aW9uX3N1bW1hcnkuY3N2IiwKICByb3cubmFtZXMgPSBGQUxTRQopCmBgYAoKIyMgMTAuIEZyb3plbiB2YWxpZGF0aW9uIGNvbnRyYWN0CgpUaGUgcHJpbWFyeSByZWFsLWRhdGEgY29tcGFyaXNvbiBpcyBiYXNlZCBvbiB0aGUgc2FtZSAyNSBmYW1pbHktc3RyYXRpZmllZCBvdXRlciBhc3Nlc3NtZW50cyBmb3IgR0JMVVAgYW5kIGV2ZXJ5IEFOTiB2YXJpYW50LiBBTk4gaHlwZXJwYXJhbWV0ZXIgc2VsZWN0aW9uIGlzIHJlc3RyaWN0ZWQgdG8gdGhlIGNvcnJlc3BvbmRpbmcgMTAwIGlubmVyIHNwbGl0czsgb3V0ZXItYXNzZXNzbWVudCBwaGVub3R5cGVzIHJlbWFpbiB1bmF2YWlsYWJsZSBkdXJpbmcgbW9kZWwgZGV2ZWxvcG1lbnQuCgpUaGUgY29tcGxlbWVudGFyeSAxMy1mb2xkIExPRk8gZGVzaWduIGlzIHN0b3JlZCBpbmRlcGVuZGVudGx5IGFuZCBjYW4gbGF0ZXIgYmUgdXNlZCB0byBxdWFudGlmeSBnZW5lcmFsaXphdGlvbiB0byBwcm9nZW5pZXMgYWJzZW50IGZyb20gbW9kZWwgdHJhaW5pbmcgd2l0aG91dCBjaGFuZ2luZyB0aGUgcHJpbWFyeSBtb2RlbC1jb21wYXJpc29uIGNvbnRyYWN0Lgo=</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("real_data_validation.Rmd");
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

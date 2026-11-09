@@ -11,7 +11,7 @@
 
 <meta name="author" content="Weverton Gomes da Costa" />
 
-<meta name="date" content="2026-09-08" />
+<meta name="date" content="2026-11-09" />
 
 <title>Regularized Artificial Neural Networks for Genomic Prediction</title>
 
@@ -416,7 +416,7 @@ $(document).ready(function () {
 <h1 class="title toc-ignore">Regularized Artificial Neural Networks for
 Genomic Prediction</h1>
 <h4 class="author">Weverton Gomes da Costa</h4>
-<h4 class="date">2026-09-08</h4>
+<h4 class="date">2026-11-09</h4>
 
 </div>
 
@@ -445,7 +445,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-09-08
+<strong>Last updated:</strong> 2026-11-09
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -577,15 +577,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreec5443a6371e614051e709ab9430f86d7f3421bb7targetblankc5443a6a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed16aa18779a7295de69a4b36d48678f3b0c45b03targetblankd16aa18a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/c5443a6371e614051e709ab9430f86d7f3421bb7" target="_blank">c5443a6</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d16aa18779a7295de69a4b36d48678f3b0c45b03" target="_blank">d16aa18</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreec5443a6371e614051e709ab9430f86d7f3421bb7targetblankc5443a6a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreed16aa18779a7295de69a4b36d48678f3b0c45b03targetblankd16aa18a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -595,7 +595,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/c5443a6371e614051e709ab9430f86d7f3421bb7" target="_blank">c5443a6</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/d16aa18779a7295de69a4b36d48678f3b0c45b03" target="_blank">d16aa18</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -676,6 +676,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/d16aa18779a7295de69a4b36d48678f3b0c45b03/analysis/index.Rmd" target="_blank">d16aa18</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-09
+</td>
+<td>
+Add real-data ANN and model comparison workflows
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/654b7109336d7b27a3c542fd1831a4bf3bfd4968/docs/index.html" target="_blank">654b710</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-09-08
+</td>
+<td>
+Publish updated repository overview
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -876,9 +910,10 @@ Start workflowr project.
 a GBLUP-ADE genomic mixed model and artificial neural networks with no
 regularization, L1 regularization, L2 regularization, or simultaneous
 L1+L2 regularization.</p>
-<p>The validated public analysis currently focuses on simulated genomic
-data, where true genetic values are known and can be used for
-independent predictive assessment.</p>
+<p>The validated analysis contains both simulated genomic data, where
+true genetic values are known and can be used for independent predictive
+assessment, and a real <em>Coffea arabica</em> branch evaluated under
+the same frozen validation principles.</p>
 <div id="scientific-question" class="section level2">
 <h2>Scientific question</h2>
 <p>The simulated-data branch asks whether neural-network weight
@@ -927,6 +962,20 @@ branches are complete.</li>
 </ol>
 <p>ANN hyperparameter tuning is part of the ANN analysis rather than a
 separate public module.</p>
+<p>The real-data workflow uses the corresponding modules:</p>
+<ol style="list-style-type: decimal">
+<li><a href="real_data_audit.html">Real-data audit</a></li>
+<li><a href="real_data_validation.html">Real-data validation</a></li>
+<li>Parallel modeling branches:
+<ul>
+<li><a href="real_data_gblup.html">Real-data GBLUP-ADE</a></li>
+<li><a href="real_data_ann.html">Real-data regularized ANN</a></li>
+</ul></li>
+<li><a href="real_data_comparison.html">Real-data model
+comparison</a></li>
+</ol>
+<p>The terminal real-data comparison reads the frozen model outputs and
+does not refit either model family.</p>
 </div>
 <div id="key-result" class="section level2">
 <h2>Key result</h2>
@@ -943,14 +992,17 @@ regularization gain is driven mainly by the L1 component.</p>
 search evaluated here; they do not establish a universal ranking between
 genomic mixed models and all possible neural-network architectures.</p>
 </div>
-<div id="planned-real-data-extension" class="section level2">
-<h2>Planned real-data extension</h2>
-<p>A real <em>Coffea arabica</em> extension is planned under the same
-separation between data audit, validation, model fitting, and terminal
-comparison. Genotype provenance and phenotype preparation will be
-audited before genomic prediction.</p>
-<p>This real-data branch is not yet part of the validated public
-workflow.</p>
+<div id="validated-real-data-extension" class="section level2">
+<h2>Validated real-data extension</h2>
+<p>The <em>Coffea arabica</em> branch follows the same separation
+between data audit, validation, model fitting, and terminal
+comparison.</p>
+<p>Under the frozen real-data design, all evaluated models show weak
+held-out discrimination. GBLUP-ADE has the lowest mean RMSE and MAE and
+the highest mean R-squared for all three traits. The ANN variants do not
+demonstrate a useful predictive advantage, and prediction-dispersion
+diagnostics show substantial shrinkage in both modeling families,
+especially for ANN variants containing L1 regularization.</p>
 </div>
 <div id="reproducibility" class="section level2">
 <h2>Reproducibility</h2>
@@ -971,7 +1023,7 @@ Session information
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
-Running under: Windows 11 x64 (build 26200)
+Running under: Windows 11 x64 (build 26300)
 
 Matrix products: default
   LAPACK version 3.12.1
