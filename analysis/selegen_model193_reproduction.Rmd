@@ -1,0 +1,850 @@
+---
+title: "SELEGEN Model 193: exact R reproduction"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+    code_folding: show
+editor_options:
+  chunk_output_type: console
+---
+
+## 1. Purpose
+
+This module reproduces, in R, the numerical procedure used by
+SELEGEN-REML/BLUP Model 193 for the longitudinal *Coffea arabica* phenotypes
+cercosporiosis (`Cer`), leaf miner (`BM`), and production (`L/P`).
+
+The objective is **not** to re-optimize the mixed model with a different REML
+implementation. Instead, the module reconstructs the iterative mixed-model
+equations and stopping rule that generated the audited SELEGEN outputs.
+
+The canonical input is:
+
+```text
+data/dados_reais/dados_selegen_cafe.txt
+```
+
+No derived trait-specific SELEGEN input files are required.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
+
+options(stringsAsFactors = FALSE, digits = 12)
+
+OUT <- "output/real/selegen_model193_reproduction"
+
+dir.create(
+  OUT,
+  showWarnings = FALSE,
+  recursive = TRUE
+)
+```
+
+## 2. Packages
+
+Only `knitr` is required for reporting. The numerical reproduction itself uses
+base R linear algebra.
+
+```{r packages}
+library(knitr)
+```
+
+## 3. Canonical SELEGEN input
+
+```{r read-input}
+input_file <- "data/dados_reais/dados_selegen_cafe.txt"
+
+stopifnot(file.exists(input_file))
+
+d0 <- utils::read.delim(
+  input_file,
+  header = TRUE,
+  sep = "\t",
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+
+expected_columns <- c(
+  "Ind", "Prog", "Fixo", "Parc", "Pop", "Bloc",
+  "Int", "Pl", "Cer", "BM", "L/P"
+)
+
+stopifnot(
+  identical(names(d0), expected_columns),
+  nrow(d0) == 684L
+)
+
+input_summary <- data.frame(
+  Item = c(
+    "Records",
+    "Progenies",
+    "Fixed-year levels",
+    "Permanent-plant levels (Parc)",
+    "Population levels",
+    "Block levels",
+    "Progeny-by-year levels",
+    "Pl codes",
+    "Cer zero records",
+    "BM zero records",
+    "L/P zero records"
+  ),
+  Value = c(
+    nrow(d0),
+    length(unique(d0$Prog)),
+    length(unique(d0$Fixo)),
+    length(unique(d0$Parc)),
+    length(unique(d0$Pop)),
+    length(unique(d0$Bloc)),
+    length(unique(d0$Int)),
+    length(unique(d0$Pl)),
+    sum(d0$Cer == 0, na.rm = TRUE),
+    sum(d0$BM == 0, na.rm = TRUE),
+    sum(d0[["L/P"]] == 0, na.rm = TRUE)
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Canonical Model 193 input audit",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+The audited Model 193 effect mapping is:
+
+| SELEGEN effect | Input field | Interpretation |
+|---:|---|---|
+| 1 | `Prog` | progeny |
+| 2 | `Fixo` | evaluation year, fixed |
+| 3 | `Parc` | permanent plant effect |
+| 4 | `Pop` | population type |
+| 5 | `Bloc` | block |
+| 6 | `Int` | progeny × year interaction |
+
+`Pl` is present in the Model 193 input layout but is **not fitted as a seventh
+effect** in the audited mixed-model equations.
+
+## 4. Audited SELEGEN benchmarks
+
+These are the values reproduced from the current audited SELEGEN runs. They
+are used only as regression-test targets for this module.
+
+```{r benchmarks}
+benchmark <- data.frame(
+  Trait = c("Cer", "BM", "LP"),
+  N = c(684L, 684L, 677L),
+  Iteration_expected = c(1L, 1L, 46L),
+  Tolerance = c(0.05, 0.05, 0.0001),
+  Deviance = c(179.1817, -82.4047, 1980.2031),
+  Vgen_pop = c(0.046499, 0.031433, 0.751094),
+  Vparc = c(0.068135, 0.049095, 1.886503),
+  Vpop = c(0.050455, 0.027236, 0.039846),
+  Vbloc = c(0.036630, 0.032487, 0.234072),
+  Vint = c(0.057987, 0.031809, 0.067444),
+  Ve = c(0.384139, 0.258941, 5.055057),
+  Vf = c(0.643845, 0.431001, 8.034016),
+  h2gen_pop = c(0.072221, 0.072929, 0.093489),
+  c2parc = c(0.105824, 0.113909, 0.234814),
+  h2pop = c(0.078365, 0.063192, 0.004960),
+  c2bloc = c(0.056893, 0.075377, 0.029135),
+  c2int = c(0.090064, 0.073803, 0.008395),
+  repet = c(0.313303, 0.325407, 0.362398),
+  h2tot = c(0.150586, 0.136121, 0.098449),
+  Mean = c(2.513571, 2.035957, 4.984603),
+  stringsAsFactors = FALSE
+)
+
+benchmark |>
+  knitr::kable(
+    format = "html",
+    digits = 6,
+    caption = "Audited SELEGEN benchmarks",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+The tolerances above are the execution settings required to reproduce the
+current audited SELEGEN outputs. They should not be interpreted as universal
+recommendations for REML fitting.
+
+## 5. Data preparation by trait
+
+SELEGEN was run with zero values treated as non-significant. Therefore, zero
+records are removed before fitting. This affects `L/P` only in the canonical
+input.
+
+```{r prepare-trait}
+prepare_trait <- function(trait) {
+  d <- d0
+
+  d$y <- switch(
+    trait,
+    Cer = suppressWarnings(as.numeric(d$Cer)),
+    BM = suppressWarnings(as.numeric(d$BM)),
+    LP = suppressWarnings(as.numeric(d[["L/P"]])),
+    stop("Unknown trait: ", trait)
+  )
+
+  keep <- is.finite(d$y) & d$y != 0
+  d <- d[keep, , drop = FALSE]
+
+  expected_n <- benchmark$N[match(trait, benchmark$Trait)]
+  stopifnot(nrow(d) == expected_n)
+
+  d
+}
+
+trait_counts <- do.call(
+  rbind,
+  lapply(c("Cer", "BM", "LP"), function(trait) {
+    d <- prepare_trait(trait)
+    data.frame(
+      Trait = trait,
+      N = nrow(d),
+      Mean_raw = mean(d$y),
+      SD_raw = stats::sd(d$y),
+      stringsAsFactors = FALSE
+    )
+  })
+)
+
+trait_counts |>
+  knitr::kable(
+    format = "html",
+    digits = 6,
+    caption = "Trait-specific records used by Model 193",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+## 6. Design matrices
+
+Factor levels are ordered by first occurrence, matching the audited SELEGEN
+effect output.
+
+```{r design-matrices}
+random_fields <- c("Prog", "Parc", "Pop", "Bloc", "Int")
+
+indicator_matrix <- function(x) {
+  lev <- unique(x)
+
+  Z <- sapply(
+    lev,
+    function(z) as.numeric(x == z)
+  )
+
+  if (is.null(dim(Z))) {
+    Z <- matrix(Z, ncol = 1L)
+  }
+
+  colnames(Z) <- as.character(lev)
+
+  list(
+    matrix = Z,
+    levels = lev
+  )
+}
+
+build_design <- function(d) {
+  fixed_info <- indicator_matrix(d$Fixo)
+  X <- fixed_info$matrix
+
+  random_info <- lapply(
+    random_fields,
+    function(field) indicator_matrix(d[[field]])
+  )
+  names(random_info) <- random_fields
+
+  Zlist <- lapply(random_info, `[[`, "matrix")
+  Z <- do.call(cbind, Zlist)
+  W <- cbind(X, Z)
+
+  p <- ncol(X)
+  pos <- p + 1L
+  slices <- list()
+
+  for (field in random_fields) {
+    q <- ncol(Zlist[[field]])
+    slices[[field]] <- pos:(pos + q - 1L)
+    pos <- pos + q
+  }
+
+  list(
+    X = X,
+    X_levels = fixed_info$levels,
+    Zlist = Zlist,
+    Z_levels = lapply(random_info, `[[`, "levels"),
+    W = W,
+    slices = slices,
+    p = p
+  )
+}
+```
+
+## 7. Reconstructed SELEGEN update
+
+The audited initial variance proportions are:
+
+\[
+h^2=c^2=c^2_{21}=c^2_{22}=c^2_{24}=0.10,
+\]
+
+leaving a residual proportion of \(0.50\). Thus every initial variance ratio is
+
+\[
+\lambda_i=\frac{0.50}{0.10}=5.
+\]
+
+At each iteration, the mixed-model equations are solved and the components are
+updated as
+
+\[
+\hat{\sigma}_e^2 =
+\frac{
+e'e + \sum_i \lambda_i u_i'u_i
+}{
+n-\operatorname{rank}(X)
+},
+\]
+
+and
+
+\[
+\hat{\sigma}_i^2 =
+\frac{
+u_i'u_i + \hat{\sigma}_e^2\,\mathrm{tr}(C_{ii})
+}{
+q_i
+}.
+\]
+
+```{r selegen-update}
+selegen_iteration <- function(d, design, old_props) {
+  W <- design$W
+  p <- design$p
+  n <- nrow(d)
+  df_reml <- n - p
+
+  lambda_old <- old_props["Ve"] / old_props[random_fields]
+
+  penalty <- matrix(0, ncol(W), ncol(W))
+
+  for (field in random_fields) {
+    idx <- design$slices[[field]]
+    penalty[idx, idx] <- diag(
+      lambda_old[[field]],
+      length(idx)
+    )
+  }
+
+  M <- crossprod(W) + penalty
+  rhs <- crossprod(W, d$y)
+
+  coef <- solve(M, rhs)
+  C <- solve(M)
+
+  fitted <- as.numeric(W %*% coef)
+  residual <- d$y - fitted
+
+  penalized_ss <- sum(residual^2)
+
+  for (field in random_fields) {
+    idx <- design$slices[[field]]
+    u <- coef[idx]
+
+    penalized_ss <- penalized_ss +
+      lambda_old[[field]] * sum(u^2)
+  }
+
+  Ve_new <- penalized_ss / df_reml
+
+  components <- numeric(0)
+
+  for (field in random_fields) {
+    idx <- design$slices[[field]]
+    u <- coef[idx]
+    q <- length(idx)
+
+    components[[field]] <- (
+      sum(u^2) +
+      Ve_new * sum(diag(C[idx, idx, drop = FALSE]))
+    ) / q
+  }
+
+  components[["Ve"]] <- Ve_new
+
+  Vf <- sum(components)
+  new_props <- components / Vf
+  lambda_new <- Ve_new / components[random_fields]
+
+  logdet_M <- as.numeric(
+    determinant(
+      M,
+      logarithm = TRUE
+    )$modulus
+  )
+
+  q_by_effect <- vapply(
+    random_fields,
+    function(field) length(design$slices[[field]]),
+    integer(1)
+  )
+
+  deviance <- (
+    df_reml * (1 + log(Ve_new)) +
+    logdet_M -
+    sum(q_by_effect * log(lambda_new))
+  )
+
+  random_change <- max(
+    abs(
+      new_props[random_fields] -
+        old_props[random_fields]
+    )
+  )
+
+  beta <- coef[seq_len(p)]
+  names(beta) <- as.character(design$X_levels)
+
+  ulist <- list()
+
+  for (field in random_fields) {
+    idx <- design$slices[[field]]
+    u <- coef[idx]
+    names(u) <- as.character(design$Z_levels[[field]])
+    ulist[[field]] <- u
+  }
+
+  list(
+    components = components,
+    props = new_props,
+    lambda_old = lambda_old,
+    lambda_new = lambda_new,
+    coef = coef,
+    beta = beta,
+    u = ulist,
+    residual = residual,
+    fitted = fitted,
+    C = C,
+    M = M,
+    logdet_M = logdet_M,
+    penalized_ss = penalized_ss,
+    deviance = deviance,
+    random_change = random_change
+  )
+}
+```
+
+## 8. Iteration and stopping rule
+
+The reconstructed stopping rule is the maximum absolute change among the five
+**random-effect variance proportions**.
+
+```{r fit-function}
+fit_selegen193 <- function(trait, tolerance, max_iter = 500L) {
+  d <- prepare_trait(trait)
+  design <- build_design(d)
+
+  old_props <- c(
+    Prog = 0.10,
+    Parc = 0.10,
+    Pop = 0.10,
+    Bloc = 0.10,
+    Int = 0.10,
+    Ve = 0.50
+  )
+
+  history <- list()
+  final <- NULL
+
+  for (iter in seq_len(max_iter)) {
+    step <- selegen_iteration(
+      d = d,
+      design = design,
+      old_props = old_props
+    )
+
+    components <- step$components
+    props <- step$props
+
+    history[[iter]] <- data.frame(
+      Trait = trait,
+      Iteration = iter,
+      Tolerance = tolerance,
+      Max_random_prop_change = step$random_change,
+      Lambda_Prog_used = step$lambda_old[["Prog"]],
+      Lambda_Parc_used = step$lambda_old[["Parc"]],
+      Lambda_Pop_used = step$lambda_old[["Pop"]],
+      Lambda_Bloc_used = step$lambda_old[["Bloc"]],
+      Lambda_Int_used = step$lambda_old[["Int"]],
+      Vgen_pop = components[["Prog"]],
+      Vparc = components[["Parc"]],
+      Vpop = components[["Pop"]],
+      Vbloc = components[["Bloc"]],
+      Vint = components[["Int"]],
+      Ve = components[["Ve"]],
+      Vf = sum(components),
+      h2gen_pop = props[["Prog"]],
+      c2parc = props[["Parc"]],
+      h2pop = props[["Pop"]],
+      c2bloc = props[["Bloc"]],
+      c2int = props[["Int"]],
+      residual_prop = props[["Ve"]],
+      LogDet_M = step$logdet_M,
+      Penalized_SS = step$penalized_ss,
+      Deviance = step$deviance,
+      stringsAsFactors = FALSE
+    )
+
+    if (step$random_change <= tolerance) {
+      final <- step
+      break
+    }
+
+    old_props <- props
+  }
+
+  if (is.null(final)) {
+    stop(
+      trait,
+      ": Model 193 reconstruction did not meet the stopping rule within ",
+      max_iter,
+      " iterations."
+    )
+  }
+
+  history_df <- do.call(rbind, history)
+  rownames(history_df) <- NULL
+
+  list(
+    trait = trait,
+    data = d,
+    design = design,
+    final = final,
+    history = history_df,
+    iterations = nrow(history_df),
+    tolerance = tolerance
+  )
+}
+```
+
+## 9. Exact reproduction
+
+```{r run-model}
+fits <- list()
+
+for (trait in c("Cer", "BM", "LP")) {
+  tolerance <- benchmark$Tolerance[
+    benchmark$Trait == trait
+  ]
+
+  fits[[trait]] <- fit_selegen193(
+    trait = trait,
+    tolerance = tolerance
+  )
+}
+```
+
+```{r summarize-results}
+summarize_fit <- function(fit) {
+  f <- fit$final
+  components <- f$components
+  props <- f$props
+
+  data.frame(
+    Trait = fit$trait,
+    N = nrow(fit$data),
+    Iterations = fit$iterations,
+    Tolerance = fit$tolerance,
+    Deviance = f$deviance,
+    Vgen_pop = components[["Prog"]],
+    Vparc = components[["Parc"]],
+    Vpop = components[["Pop"]],
+    Vbloc = components[["Bloc"]],
+    Vint = components[["Int"]],
+    Ve = components[["Ve"]],
+    Vf = sum(components),
+    h2gen_pop = props[["Prog"]],
+    c2parc = props[["Parc"]],
+    h2pop = props[["Pop"]],
+    c2bloc = props[["Bloc"]],
+    c2int = props[["Int"]],
+    repet = (
+      components[["Prog"]] +
+        components[["Parc"]] +
+        components[["Pop"]] +
+        components[["Bloc"]]
+    ) / sum(components),
+    h2tot = (
+      components[["Prog"]] +
+        components[["Pop"]]
+    ) / sum(components),
+    Mean = mean(f$beta),
+    stringsAsFactors = FALSE
+  )
+}
+
+results <- do.call(
+  rbind,
+  lapply(fits, summarize_fit)
+)
+
+rownames(results) <- NULL
+
+results |>
+  knitr::kable(
+    format = "html",
+    digits = 6,
+    caption = "R reconstruction of SELEGEN Model 193",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+## 10. R × SELEGEN regression test
+
+```{r compare}
+metrics <- c(
+  "Deviance",
+  "Vgen_pop",
+  "Vparc",
+  "Vpop",
+  "Vbloc",
+  "Vint",
+  "Ve",
+  "Vf",
+  "h2gen_pop",
+  "c2parc",
+  "h2pop",
+  "c2bloc",
+  "c2int",
+  "repet",
+  "h2tot",
+  "Mean"
+)
+
+comparison <- do.call(
+  rbind,
+  lapply(seq_len(nrow(results)), function(i) {
+    trait <- results$Trait[i]
+
+    b <- benchmark[
+      benchmark$Trait == trait,
+      ,
+      drop = FALSE
+    ]
+
+    do.call(
+      rbind,
+      lapply(metrics, function(metric) {
+        data.frame(
+          Trait = trait,
+          Metric = metric,
+          R = results[[metric]][i],
+          SELEGEN = b[[metric]][1],
+          Difference = results[[metric]][i] - b[[metric]][1],
+          Abs_difference = abs(
+            results[[metric]][i] - b[[metric]][1]
+          ),
+          stringsAsFactors = FALSE
+        )
+      })
+    )
+  })
+)
+
+rownames(comparison) <- NULL
+```
+
+```{r validation}
+validation <- do.call(
+  rbind,
+  lapply(c("Cer", "BM", "LP"), function(trait) {
+    x <- comparison[
+      comparison$Trait == trait,
+      ,
+      drop = FALSE
+    ]
+
+    r <- results[
+      results$Trait == trait,
+      ,
+      drop = FALSE
+    ]
+
+    b <- benchmark[
+      benchmark$Trait == trait,
+      ,
+      drop = FALSE
+    ]
+
+    component_metrics <- c(
+      "Vgen_pop",
+      "Vparc",
+      "Vpop",
+      "Vbloc",
+      "Vint",
+      "Ve",
+      "Vf"
+    )
+
+    max_component_diff <- max(
+      x$Abs_difference[
+        x$Metric %in% component_metrics
+      ]
+    )
+
+    deviance_diff <- x$Abs_difference[
+      x$Metric == "Deviance"
+    ]
+
+    mean_diff <- x$Abs_difference[
+      x$Metric == "Mean"
+    ]
+
+    data.frame(
+      Trait = trait,
+      Iterations_R = r$Iterations,
+      Iterations_SELEGEN = b$Iteration_expected,
+      Iterations_match =
+        r$Iterations == b$Iteration_expected,
+      Max_abs_component_diff =
+        max_component_diff,
+      Abs_deviance_diff =
+        deviance_diff,
+      Abs_mean_diff =
+        mean_diff,
+      PASS = (
+        r$Iterations == b$Iteration_expected &&
+          max_component_diff < 5e-6 &&
+          deviance_diff < 5e-3 &&
+          mean_diff < 5e-5
+      ),
+      stringsAsFactors = FALSE
+    )
+  })
+)
+
+validation |>
+  knitr::kable(
+    format = "html",
+    digits = 9,
+    caption = "Numerical reproduction validation",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+
+stopifnot(all(validation$PASS))
+```
+
+All three traits must pass this regression test. Failure indicates that the
+canonical input, algorithm, execution settings, or numerical behavior has
+changed and must be audited before downstream analyses are accepted.
+
+## 11. Iteration behavior
+
+```{r iteration-summary}
+iteration_summary <- do.call(
+  rbind,
+  lapply(fits, function(fit) {
+    data.frame(
+      Trait = fit$trait,
+      Iterations = fit$iterations,
+      Final_change =
+        fit$final$random_change,
+      Tolerance = fit$tolerance,
+      stringsAsFactors = FALSE
+    )
+  })
+)
+
+iteration_summary |>
+  knitr::kable(
+    format = "html",
+    digits = 9,
+    caption = "Model 193 stopping behavior",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+`Cer` and `BM` satisfy the audited `0.05` stopping threshold after the first
+variance-component update. `L/P`, using the audited `0.0001` threshold,
+requires 46 updates. This explains why a conventional REML optimizer carried
+to a stricter numerical optimum can produce different small variance
+components even when the mixed-model structure is otherwise equivalent.
+
+## 12. Persisted audit outputs
+
+```{r save-outputs}
+utils::write.csv(
+  benchmark,
+  file.path(OUT, "selegen_benchmark.csv"),
+  row.names = FALSE
+)
+
+utils::write.csv(
+  results,
+  file.path(OUT, "r_exact_results.csv"),
+  row.names = FALSE
+)
+
+utils::write.csv(
+  comparison,
+  file.path(OUT, "r_vs_selegen.csv"),
+  row.names = FALSE
+)
+
+utils::write.csv(
+  validation,
+  file.path(OUT, "validation.csv"),
+  row.names = FALSE
+)
+
+for (trait in names(fits)) {
+  utils::write.csv(
+    fits[[trait]]$history,
+    file.path(
+      OUT,
+      paste0(
+        "iterations_",
+        tolower(trait),
+        ".csv"
+      )
+    ),
+    row.names = FALSE
+  )
+}
+```
+
+## 13. Reproducibility conclusion
+
+The reconstructed R implementation reproduces the audited SELEGEN Model 193
+outputs for all three traits to numerical rounding precision, including the
+number of iterations, variance components, variance proportions, mean, and
+deviance.
+
+This establishes an executable regression test for the phenotypic first stage
+used in the real-data workflow. It does **not** claim that the current
+phenotypic data reproduce every historical value reported in the thesis; the
+historical thesis comparison and the exact reproduction of the current audited
+SELEGEN execution are separate questions.
