@@ -1,0 +1,2598 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Weverton Gomes da Costa" />
+
+<meta name="date" content="2026-11-11" />
+
+<title>SELEGEN Model 193: exact R reproduction</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Regularized ANN Genomic Prediction</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Simulated data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="simulated_data_audit.html">Data audit</a>
+    </li>
+    <li>
+      <a href="simulated_data_validation.html">Validation design</a>
+    </li>
+    <li>
+      <a href="simulated_data_gblup.html">GBLUP-ADE</a>
+    </li>
+    <li>
+      <a href="simulated_data_ann.html">ANN</a>
+    </li>
+    <li>
+      <a href="simulated_data_comparison.html">Model comparison</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+<li role="separator" class="divider"></li>
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">SELEGEN Model 193: exact R
+reproduction</h1>
+<h4 class="author">Weverton Gomes da Costa</h4>
+<h4 class="date">2026-11-11</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-11-11
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/</code>
+<span class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20260821code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20260821)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20260821code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20260821)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreee3e83e8fc32f6cfa6c97985ff00e21a7d32ad1fctargetblanke3e83e8a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/e3e83e8fc32f6cfa6c97985ff00e21a7d32ad1fc" target="_blank">e3e83e8</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreee3e83e8fc32f6cfa6c97985ff00e21a7d32ad1fctargetblanke3e83e8a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/e3e83e8fc32f6cfa6c97985ff00e21a7d32ad1fc" target="_blank">e3e83e8</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .github/
+    Ignored:    .local/
+    Ignored:    code/legacy/
+    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica (1).xlsx
+    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica.xlsx
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.indv
+    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.pos
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.indv.txt
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.pos.txt
+    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.txt
+    Ignored:    data/dados_reais/Rótulos C. arabica_Proj_Piloto.xlsx
+    Ignored:    data/dados_reais/Rótulos Novos SNPs.xls
+    Ignored:    data/dados_reais/dados_cafe.xlsx
+    Ignored:    data/dados_reais/fpls-09-01934.pdf
+    Ignored:    data/dados_reais/geno_real.rds
+    Ignored:    data/dados_reais/pheno_real.rds
+    Ignored:    data/dados_reais/plants-13-01876-v2.pdf
+    Ignored:    data/dados_reais/pos_geno_real.rds
+    Ignored:    renv/library/
+    Ignored:    renv/staging/
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/selegen_model193_reproduction.Rmd</code>) and HTML
+(<code>docs/selegen_model193_reproduction.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/e3e83e8fc32f6cfa6c97985ff00e21a7d32ad1fc/analysis/selegen_model193_reproduction.Rmd" target="_blank">e3e83e8</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-11
+</td>
+<td>
+Reproduce SELEGEN Model 193 phenotypic analysis
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="purpose" class="section level2">
+<h2>1. Purpose</h2>
+<p>This module reproduces, in R, the numerical procedure used by
+SELEGEN-REML/BLUP Model 193 for the longitudinal <em>Coffea arabica</em>
+phenotypes cercosporiosis (<code>Cer</code>), leaf miner
+(<code>BM</code>), and production (<code>L/P</code>).</p>
+<p>The objective is <strong>not</strong> to re-optimize the mixed model
+with a different REML implementation. Instead, the module reconstructs
+the iterative mixed-model equations and stopping rule that generated the
+audited SELEGEN outputs.</p>
+<p>The canonical input is:</p>
+<pre class="text"><code>data/dados_reais/dados_selegen_cafe.txt</code></pre>
+<p>No derived trait-specific SELEGEN input files are required.</p>
+</div>
+<div id="packages" class="section level2">
+<h2>2. Packages</h2>
+<p>Only <code>knitr</code> is required for reporting. The numerical
+reproduction itself uses base R linear algebra.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(knitr)</span></code></pre></div>
+</div>
+<div id="canonical-selegen-input" class="section level2">
+<h2>3. Canonical SELEGEN input</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>input_file <span class="ot">&lt;-</span> <span class="st">&quot;data/dados_reais/dados_selegen_cafe.txt&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">file.exists</span>(input_file))</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>d0 <span class="ot">&lt;-</span> utils<span class="sc">::</span><span class="fu">read.delim</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  input_file,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">header =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\t</span><span class="st">&quot;</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>)</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>expected_columns <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="st">&quot;Ind&quot;</span>, <span class="st">&quot;Prog&quot;</span>, <span class="st">&quot;Fixo&quot;</span>, <span class="st">&quot;Parc&quot;</span>, <span class="st">&quot;Pop&quot;</span>, <span class="st">&quot;Bloc&quot;</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  <span class="st">&quot;Int&quot;</span>, <span class="st">&quot;Pl&quot;</span>, <span class="st">&quot;Cer&quot;</span>, <span class="st">&quot;BM&quot;</span>, <span class="st">&quot;L/P&quot;</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>)</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>  <span class="fu">identical</span>(<span class="fu">names</span>(d0), expected_columns),</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>  <span class="fu">nrow</span>(d0) <span class="sc">==</span> <span class="dv">684</span><span class="dt">L</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>)</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>input_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>    <span class="st">&quot;Records&quot;</span>,</span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>    <span class="st">&quot;Progenies&quot;</span>,</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>    <span class="st">&quot;Fixed-year levels&quot;</span>,</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>    <span class="st">&quot;Permanent-plant levels (Parc)&quot;</span>,</span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>    <span class="st">&quot;Population levels&quot;</span>,</span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>    <span class="st">&quot;Block levels&quot;</span>,</span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>    <span class="st">&quot;Progeny-by-year levels&quot;</span>,</span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>    <span class="st">&quot;Pl codes&quot;</span>,</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>    <span class="st">&quot;Cer zero records&quot;</span>,</span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>    <span class="st">&quot;BM zero records&quot;</span>,</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>    <span class="st">&quot;L/P zero records&quot;</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>  ),</span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a>    <span class="fu">nrow</span>(d0),</span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(d0<span class="sc">$</span>Prog)),</span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(d0<span class="sc">$</span>Fixo)),</span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(d0<span class="sc">$</span>Parc)),</span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(d0<span class="sc">$</span>Pop)),</span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(d0<span class="sc">$</span>Bloc)),</span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(d0<span class="sc">$</span>Int)),</span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(d0<span class="sc">$</span>Pl)),</span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a>    <span class="fu">sum</span>(d0<span class="sc">$</span>Cer <span class="sc">==</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a>    <span class="fu">sum</span>(d0<span class="sc">$</span>BM <span class="sc">==</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a>    <span class="fu">sum</span>(d0[[<span class="st">&quot;L/P&quot;</span>]] <span class="sc">==</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a>  ),</span>
+<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a>)</span>
+<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a>input_summary <span class="sc">|&gt;</span></span>
+<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Canonical Model 193 input audit&quot;</span>,</span>
+<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Canonical Model 193 input audit
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Item
+</th>
+<th style="text-align:right;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Records
+</td>
+<td style="text-align:right;">
+684
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Progenies
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fixed-year levels
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Permanent-plant levels (Parc)
+</td>
+<td style="text-align:right;">
+228
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Population levels
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Block levels
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Progeny-by-year levels
+</td>
+<td style="text-align:right;">
+45
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pl codes
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cer zero records
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM zero records
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L/P zero records
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+</tbody>
+</table>
+<p>The audited Model 193 effect mapping is:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right">SELEGEN effect</th>
+<th>Input field</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td><code>Prog</code></td>
+<td>progeny</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td><code>Fixo</code></td>
+<td>evaluation year, fixed</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td><code>Parc</code></td>
+<td>permanent plant effect</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td><code>Pop</code></td>
+<td>population type</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td><code>Bloc</code></td>
+<td>block</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td><code>Int</code></td>
+<td>progeny × year interaction</td>
+</tr>
+</tbody>
+</table>
+<p><code>Pl</code> is present in the Model 193 input layout but is
+<strong>not fitted as a seventh effect</strong> in the audited
+mixed-model equations.</p>
+</div>
+<div id="audited-selegen-benchmarks" class="section level2">
+<h2>4. Audited SELEGEN benchmarks</h2>
+<p>These are the values reproduced from the current audited SELEGEN
+runs. They are used only as regression-test targets for this module.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>benchmark <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="at">Trait =</span> <span class="fu">c</span>(<span class="st">&quot;Cer&quot;</span>, <span class="st">&quot;BM&quot;</span>, <span class="st">&quot;LP&quot;</span>),</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">N =</span> <span class="fu">c</span>(<span class="dv">684</span><span class="dt">L</span>, <span class="dv">684</span><span class="dt">L</span>, <span class="dv">677</span><span class="dt">L</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="at">Iteration_expected =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="dt">L</span>, <span class="dv">1</span><span class="dt">L</span>, <span class="dv">46</span><span class="dt">L</span>),</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">Tolerance =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.05</span>, <span class="fl">0.0001</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">Deviance =</span> <span class="fu">c</span>(<span class="fl">179.1817</span>, <span class="sc">-</span><span class="fl">82.4047</span>, <span class="fl">1980.2031</span>),</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">Vgen_pop =</span> <span class="fu">c</span>(<span class="fl">0.046499</span>, <span class="fl">0.031433</span>, <span class="fl">0.751094</span>),</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">Vparc =</span> <span class="fu">c</span>(<span class="fl">0.068135</span>, <span class="fl">0.049095</span>, <span class="fl">1.886503</span>),</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="at">Vpop =</span> <span class="fu">c</span>(<span class="fl">0.050455</span>, <span class="fl">0.027236</span>, <span class="fl">0.039846</span>),</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  <span class="at">Vbloc =</span> <span class="fu">c</span>(<span class="fl">0.036630</span>, <span class="fl">0.032487</span>, <span class="fl">0.234072</span>),</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="at">Vint =</span> <span class="fu">c</span>(<span class="fl">0.057987</span>, <span class="fl">0.031809</span>, <span class="fl">0.067444</span>),</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  <span class="at">Ve =</span> <span class="fu">c</span>(<span class="fl">0.384139</span>, <span class="fl">0.258941</span>, <span class="fl">5.055057</span>),</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="at">Vf =</span> <span class="fu">c</span>(<span class="fl">0.643845</span>, <span class="fl">0.431001</span>, <span class="fl">8.034016</span>),</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  <span class="at">h2gen_pop =</span> <span class="fu">c</span>(<span class="fl">0.072221</span>, <span class="fl">0.072929</span>, <span class="fl">0.093489</span>),</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>  <span class="at">c2parc =</span> <span class="fu">c</span>(<span class="fl">0.105824</span>, <span class="fl">0.113909</span>, <span class="fl">0.234814</span>),</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>  <span class="at">h2pop =</span> <span class="fu">c</span>(<span class="fl">0.078365</span>, <span class="fl">0.063192</span>, <span class="fl">0.004960</span>),</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>  <span class="at">c2bloc =</span> <span class="fu">c</span>(<span class="fl">0.056893</span>, <span class="fl">0.075377</span>, <span class="fl">0.029135</span>),</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>  <span class="at">c2int =</span> <span class="fu">c</span>(<span class="fl">0.090064</span>, <span class="fl">0.073803</span>, <span class="fl">0.008395</span>),</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>  <span class="at">repet =</span> <span class="fu">c</span>(<span class="fl">0.313303</span>, <span class="fl">0.325407</span>, <span class="fl">0.362398</span>),</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>  <span class="at">h2tot =</span> <span class="fu">c</span>(<span class="fl">0.150586</span>, <span class="fl">0.136121</span>, <span class="fl">0.098449</span>),</span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>  <span class="at">Mean =</span> <span class="fu">c</span>(<span class="fl">2.513571</span>, <span class="fl">2.035957</span>, <span class="fl">4.984603</span>),</span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>)</span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>benchmark <span class="sc">|&gt;</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">6</span>,</span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Audited SELEGEN benchmarks&quot;</span>,</span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Audited SELEGEN benchmarks
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+N
+</th>
+<th style="text-align:right;">
+Iteration_expected
+</th>
+<th style="text-align:right;">
+Tolerance
+</th>
+<th style="text-align:right;">
+Deviance
+</th>
+<th style="text-align:right;">
+Vgen_pop
+</th>
+<th style="text-align:right;">
+Vparc
+</th>
+<th style="text-align:right;">
+Vpop
+</th>
+<th style="text-align:right;">
+Vbloc
+</th>
+<th style="text-align:right;">
+Vint
+</th>
+<th style="text-align:right;">
+Ve
+</th>
+<th style="text-align:right;">
+Vf
+</th>
+<th style="text-align:right;">
+h2gen_pop
+</th>
+<th style="text-align:right;">
+c2parc
+</th>
+<th style="text-align:right;">
+h2pop
+</th>
+<th style="text-align:right;">
+c2bloc
+</th>
+<th style="text-align:right;">
+c2int
+</th>
+<th style="text-align:right;">
+repet
+</th>
+<th style="text-align:right;">
+h2tot
+</th>
+<th style="text-align:right;">
+Mean
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+684
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5e-02
+</td>
+<td style="text-align:right;">
+179.1817
+</td>
+<td style="text-align:right;">
+0.046499
+</td>
+<td style="text-align:right;">
+0.068135
+</td>
+<td style="text-align:right;">
+0.050455
+</td>
+<td style="text-align:right;">
+0.036630
+</td>
+<td style="text-align:right;">
+0.057987
+</td>
+<td style="text-align:right;">
+0.384139
+</td>
+<td style="text-align:right;">
+0.643845
+</td>
+<td style="text-align:right;">
+0.072221
+</td>
+<td style="text-align:right;">
+0.105824
+</td>
+<td style="text-align:right;">
+0.078365
+</td>
+<td style="text-align:right;">
+0.056893
+</td>
+<td style="text-align:right;">
+0.090064
+</td>
+<td style="text-align:right;">
+0.313303
+</td>
+<td style="text-align:right;">
+0.150586
+</td>
+<td style="text-align:right;">
+2.513571
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+684
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5e-02
+</td>
+<td style="text-align:right;">
+-82.4047
+</td>
+<td style="text-align:right;">
+0.031433
+</td>
+<td style="text-align:right;">
+0.049095
+</td>
+<td style="text-align:right;">
+0.027236
+</td>
+<td style="text-align:right;">
+0.032487
+</td>
+<td style="text-align:right;">
+0.031809
+</td>
+<td style="text-align:right;">
+0.258941
+</td>
+<td style="text-align:right;">
+0.431001
+</td>
+<td style="text-align:right;">
+0.072929
+</td>
+<td style="text-align:right;">
+0.113909
+</td>
+<td style="text-align:right;">
+0.063192
+</td>
+<td style="text-align:right;">
+0.075377
+</td>
+<td style="text-align:right;">
+0.073803
+</td>
+<td style="text-align:right;">
+0.325407
+</td>
+<td style="text-align:right;">
+0.136121
+</td>
+<td style="text-align:right;">
+2.035957
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+677
+</td>
+<td style="text-align:right;">
+46
+</td>
+<td style="text-align:right;">
+1e-04
+</td>
+<td style="text-align:right;">
+1980.2031
+</td>
+<td style="text-align:right;">
+0.751094
+</td>
+<td style="text-align:right;">
+1.886503
+</td>
+<td style="text-align:right;">
+0.039846
+</td>
+<td style="text-align:right;">
+0.234072
+</td>
+<td style="text-align:right;">
+0.067444
+</td>
+<td style="text-align:right;">
+5.055057
+</td>
+<td style="text-align:right;">
+8.034016
+</td>
+<td style="text-align:right;">
+0.093489
+</td>
+<td style="text-align:right;">
+0.234814
+</td>
+<td style="text-align:right;">
+0.004960
+</td>
+<td style="text-align:right;">
+0.029135
+</td>
+<td style="text-align:right;">
+0.008395
+</td>
+<td style="text-align:right;">
+0.362398
+</td>
+<td style="text-align:right;">
+0.098449
+</td>
+<td style="text-align:right;">
+4.984603
+</td>
+</tr>
+</tbody>
+</table>
+<p>The tolerances above are the execution settings required to reproduce
+the current audited SELEGEN outputs. They should not be interpreted as
+universal recommendations for REML fitting.</p>
+</div>
+<div id="data-preparation-by-trait" class="section level2">
+<h2>5. Data preparation by trait</h2>
+<p>SELEGEN was run with zero values treated as non-significant.
+Therefore, zero records are removed before fitting. This affects
+<code>L/P</code> only in the canonical input.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>prepare_trait <span class="ot">&lt;-</span> <span class="cf">function</span>(trait) {</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  d <span class="ot">&lt;-</span> d0</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  d<span class="sc">$</span>y <span class="ot">&lt;-</span> <span class="cf">switch</span>(</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>    trait,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>    <span class="at">Cer =</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(d<span class="sc">$</span>Cer)),</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>    <span class="at">BM =</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(d<span class="sc">$</span>BM)),</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>    <span class="at">LP =</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(d[[<span class="st">&quot;L/P&quot;</span>]])),</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;Unknown trait: &quot;</span>, trait)</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  )</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  keep <span class="ot">&lt;-</span> <span class="fu">is.finite</span>(d<span class="sc">$</span>y) <span class="sc">&amp;</span> d<span class="sc">$</span>y <span class="sc">!=</span> <span class="dv">0</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  d <span class="ot">&lt;-</span> d[keep, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  expected_n <span class="ot">&lt;-</span> benchmark<span class="sc">$</span>N[<span class="fu">match</span>(trait, benchmark<span class="sc">$</span>Trait)]</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">nrow</span>(d) <span class="sc">==</span> expected_n)</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>  d</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>}</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>trait_counts <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>  rbind,</span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="fu">c</span>(<span class="st">&quot;Cer&quot;</span>, <span class="st">&quot;BM&quot;</span>, <span class="st">&quot;LP&quot;</span>), <span class="cf">function</span>(trait) {</span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>    d <span class="ot">&lt;-</span> <span class="fu">prepare_trait</span>(trait)</span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a>      <span class="at">Trait =</span> trait,</span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>      <span class="at">N =</span> <span class="fu">nrow</span>(d),</span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>      <span class="at">Mean_raw =</span> <span class="fu">mean</span>(d<span class="sc">$</span>y),</span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a>      <span class="at">SD_raw =</span> stats<span class="sc">::</span><span class="fu">sd</span>(d<span class="sc">$</span>y),</span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a>    )</span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a>  })</span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a>)</span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a></span>
+<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a>trait_counts <span class="sc">|&gt;</span></span>
+<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">6</span>,</span>
+<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Trait-specific records used by Model 193&quot;</span>,</span>
+<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Trait-specific records used by Model 193
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+N
+</th>
+<th style="text-align:right;">
+Mean_raw
+</th>
+<th style="text-align:right;">
+SD_raw
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+684
+</td>
+<td style="text-align:right;">
+2.505848
+</td>
+<td style="text-align:right;">
+0.716851
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+684
+</td>
+<td style="text-align:right;">
+2.057018
+</td>
+<td style="text-align:right;">
+0.691695
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+677
+</td>
+<td style="text-align:right;">
+5.048301
+</td>
+<td style="text-align:right;">
+3.822050
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="design-matrices" class="section level2">
+<h2>6. Design matrices</h2>
+<p>Factor levels are ordered by first occurrence, matching the audited
+SELEGEN effect output.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>random_fields <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Prog&quot;</span>, <span class="st">&quot;Parc&quot;</span>, <span class="st">&quot;Pop&quot;</span>, <span class="st">&quot;Bloc&quot;</span>, <span class="st">&quot;Int&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>indicator_matrix <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  lev <span class="ot">&lt;-</span> <span class="fu">unique</span>(x)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  Z <span class="ot">&lt;-</span> <span class="fu">sapply</span>(</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>    lev,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>    <span class="cf">function</span>(z) <span class="fu">as.numeric</span>(x <span class="sc">==</span> z)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  )</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(<span class="fu">dim</span>(Z))) {</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>    Z <span class="ot">&lt;-</span> <span class="fu">matrix</span>(Z, <span class="at">ncol =</span> <span class="dv">1</span><span class="dt">L</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  }</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>  <span class="fu">colnames</span>(Z) <span class="ot">&lt;-</span> <span class="fu">as.character</span>(lev)</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>    <span class="at">matrix =</span> Z,</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>    <span class="at">levels =</span> lev</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  )</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>}</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>build_design <span class="ot">&lt;-</span> <span class="cf">function</span>(d) {</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>  fixed_info <span class="ot">&lt;-</span> <span class="fu">indicator_matrix</span>(d<span class="sc">$</span>Fixo)</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>  X <span class="ot">&lt;-</span> fixed_info<span class="sc">$</span>matrix</span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>  random_info <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>    random_fields,</span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>    <span class="cf">function</span>(field) <span class="fu">indicator_matrix</span>(d[[field]])</span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>  )</span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>  <span class="fu">names</span>(random_info) <span class="ot">&lt;-</span> random_fields</span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>  Zlist <span class="ot">&lt;-</span> <span class="fu">lapply</span>(random_info, <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, <span class="st">&quot;matrix&quot;</span>)</span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>  Z <span class="ot">&lt;-</span> <span class="fu">do.call</span>(cbind, Zlist)</span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>  W <span class="ot">&lt;-</span> <span class="fu">cbind</span>(X, Z)</span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a></span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ncol</span>(X)</span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>  pos <span class="ot">&lt;-</span> p <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span></span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>  slices <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>  <span class="cf">for</span> (field <span class="cf">in</span> random_fields) {</span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>    q <span class="ot">&lt;-</span> <span class="fu">ncol</span>(Zlist[[field]])</span>
+<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>    slices[[field]] <span class="ot">&lt;-</span> pos<span class="sc">:</span>(pos <span class="sc">+</span> q <span class="sc">-</span> <span class="dv">1</span><span class="dt">L</span>)</span>
+<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a>    pos <span class="ot">&lt;-</span> pos <span class="sc">+</span> q</span>
+<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>  }</span>
+<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a></span>
+<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>    <span class="at">X =</span> X,</span>
+<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>    <span class="at">X_levels =</span> fixed_info<span class="sc">$</span>levels,</span>
+<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>    <span class="at">Zlist =</span> Zlist,</span>
+<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a>    <span class="at">Z_levels =</span> <span class="fu">lapply</span>(random_info, <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, <span class="st">&quot;levels&quot;</span>),</span>
+<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a>    <span class="at">W =</span> W,</span>
+<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a>    <span class="at">slices =</span> slices,</span>
+<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a>    <span class="at">p =</span> p</span>
+<span id="cb6-55"><a href="#cb6-55" tabindex="-1"></a>  )</span>
+<span id="cb6-56"><a href="#cb6-56" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="reconstructed-selegen-update" class="section level2">
+<h2>7. Reconstructed SELEGEN update</h2>
+<p>The audited initial variance proportions are:</p>
+<p><span class="math display">\[
+h^2=c^2=c^2_{21}=c^2_{22}=c^2_{24}=0.10,
+\]</span></p>
+<p>leaving a residual proportion of <span
+class="math inline">\(0.50\)</span>. Thus every initial variance ratio
+is</p>
+<p><span class="math display">\[
+\lambda_i=\frac{0.50}{0.10}=5.
+\]</span></p>
+<p>At each iteration, the mixed-model equations are solved and the
+components are updated as</p>
+<p><span class="math display">\[
+\hat{\sigma}_e^2 =
+\frac{
+e&#39;e + \sum_i \lambda_i u_i&#39;u_i
+}{
+n-\operatorname{rank}(X)
+},
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\hat{\sigma}_i^2 =
+\frac{
+u_i&#39;u_i + \hat{\sigma}_e^2\,\mathrm{tr}(C_{ii})
+}{
+q_i
+}.
+\]</span></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>selegen_iteration <span class="ot">&lt;-</span> <span class="cf">function</span>(d, design, old_props) {</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  W <span class="ot">&lt;-</span> design<span class="sc">$</span>W</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  p <span class="ot">&lt;-</span> design<span class="sc">$</span>p</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(d)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  df_reml <span class="ot">&lt;-</span> n <span class="sc">-</span> p</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  lambda_old <span class="ot">&lt;-</span> old_props[<span class="st">&quot;Ve&quot;</span>] <span class="sc">/</span> old_props[random_fields]</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  penalty <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="fu">ncol</span>(W), <span class="fu">ncol</span>(W))</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="cf">for</span> (field <span class="cf">in</span> random_fields) {</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>    idx <span class="ot">&lt;-</span> design<span class="sc">$</span>slices[[field]]</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>    penalty[idx, idx] <span class="ot">&lt;-</span> <span class="fu">diag</span>(</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>      lambda_old[[field]],</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>      <span class="fu">length</span>(idx)</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>    )</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  }</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>  M <span class="ot">&lt;-</span> <span class="fu">crossprod</span>(W) <span class="sc">+</span> penalty</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  rhs <span class="ot">&lt;-</span> <span class="fu">crossprod</span>(W, d<span class="sc">$</span>y)</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>  coef <span class="ot">&lt;-</span> <span class="fu">solve</span>(M, rhs)</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  C <span class="ot">&lt;-</span> <span class="fu">solve</span>(M)</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>  fitted <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(W <span class="sc">%*%</span> coef)</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>  residual <span class="ot">&lt;-</span> d<span class="sc">$</span>y <span class="sc">-</span> fitted</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>  penalized_ss <span class="ot">&lt;-</span> <span class="fu">sum</span>(residual<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>  <span class="cf">for</span> (field <span class="cf">in</span> random_fields) {</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>    idx <span class="ot">&lt;-</span> design<span class="sc">$</span>slices[[field]]</span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>    u <span class="ot">&lt;-</span> coef[idx]</span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>    penalized_ss <span class="ot">&lt;-</span> penalized_ss <span class="sc">+</span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>      lambda_old[[field]] <span class="sc">*</span> <span class="fu">sum</span>(u<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>  }</span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>  Ve_new <span class="ot">&lt;-</span> penalized_ss <span class="sc">/</span> df_reml</span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>  components <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">0</span>)</span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>  <span class="cf">for</span> (field <span class="cf">in</span> random_fields) {</span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>    idx <span class="ot">&lt;-</span> design<span class="sc">$</span>slices[[field]]</span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a>    u <span class="ot">&lt;-</span> coef[idx]</span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a>    q <span class="ot">&lt;-</span> <span class="fu">length</span>(idx)</span>
+<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a></span>
+<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>    components[[field]] <span class="ot">&lt;-</span> (</span>
+<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>      <span class="fu">sum</span>(u<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a>      Ve_new <span class="sc">*</span> <span class="fu">sum</span>(<span class="fu">diag</span>(C[idx, idx, <span class="at">drop =</span> <span class="cn">FALSE</span>]))</span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>    ) <span class="sc">/</span> q</span>
+<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>  }</span>
+<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a></span>
+<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a>  components[[<span class="st">&quot;Ve&quot;</span>]] <span class="ot">&lt;-</span> Ve_new</span>
+<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a></span>
+<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a>  Vf <span class="ot">&lt;-</span> <span class="fu">sum</span>(components)</span>
+<span id="cb7-56"><a href="#cb7-56" tabindex="-1"></a>  new_props <span class="ot">&lt;-</span> components <span class="sc">/</span> Vf</span>
+<span id="cb7-57"><a href="#cb7-57" tabindex="-1"></a>  lambda_new <span class="ot">&lt;-</span> Ve_new <span class="sc">/</span> components[random_fields]</span>
+<span id="cb7-58"><a href="#cb7-58" tabindex="-1"></a></span>
+<span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a>  logdet_M <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
+<span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a>    <span class="fu">determinant</span>(</span>
+<span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a>      M,</span>
+<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a>      <span class="at">logarithm =</span> <span class="cn">TRUE</span></span>
+<span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a>    )<span class="sc">$</span>modulus</span>
+<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a>  )</span>
+<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a></span>
+<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a>  q_by_effect <span class="ot">&lt;-</span> <span class="fu">vapply</span>(</span>
+<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a>    random_fields,</span>
+<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a>    <span class="cf">function</span>(field) <span class="fu">length</span>(design<span class="sc">$</span>slices[[field]]),</span>
+<span id="cb7-69"><a href="#cb7-69" tabindex="-1"></a>    <span class="fu">integer</span>(<span class="dv">1</span>)</span>
+<span id="cb7-70"><a href="#cb7-70" tabindex="-1"></a>  )</span>
+<span id="cb7-71"><a href="#cb7-71" tabindex="-1"></a></span>
+<span id="cb7-72"><a href="#cb7-72" tabindex="-1"></a>  deviance <span class="ot">&lt;-</span> (</span>
+<span id="cb7-73"><a href="#cb7-73" tabindex="-1"></a>    df_reml <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">log</span>(Ve_new)) <span class="sc">+</span></span>
+<span id="cb7-74"><a href="#cb7-74" tabindex="-1"></a>    logdet_M <span class="sc">-</span></span>
+<span id="cb7-75"><a href="#cb7-75" tabindex="-1"></a>    <span class="fu">sum</span>(q_by_effect <span class="sc">*</span> <span class="fu">log</span>(lambda_new))</span>
+<span id="cb7-76"><a href="#cb7-76" tabindex="-1"></a>  )</span>
+<span id="cb7-77"><a href="#cb7-77" tabindex="-1"></a></span>
+<span id="cb7-78"><a href="#cb7-78" tabindex="-1"></a>  random_change <span class="ot">&lt;-</span> <span class="fu">max</span>(</span>
+<span id="cb7-79"><a href="#cb7-79" tabindex="-1"></a>    <span class="fu">abs</span>(</span>
+<span id="cb7-80"><a href="#cb7-80" tabindex="-1"></a>      new_props[random_fields] <span class="sc">-</span></span>
+<span id="cb7-81"><a href="#cb7-81" tabindex="-1"></a>        old_props[random_fields]</span>
+<span id="cb7-82"><a href="#cb7-82" tabindex="-1"></a>    )</span>
+<span id="cb7-83"><a href="#cb7-83" tabindex="-1"></a>  )</span>
+<span id="cb7-84"><a href="#cb7-84" tabindex="-1"></a></span>
+<span id="cb7-85"><a href="#cb7-85" tabindex="-1"></a>  beta <span class="ot">&lt;-</span> coef[<span class="fu">seq_len</span>(p)]</span>
+<span id="cb7-86"><a href="#cb7-86" tabindex="-1"></a>  <span class="fu">names</span>(beta) <span class="ot">&lt;-</span> <span class="fu">as.character</span>(design<span class="sc">$</span>X_levels)</span>
+<span id="cb7-87"><a href="#cb7-87" tabindex="-1"></a></span>
+<span id="cb7-88"><a href="#cb7-88" tabindex="-1"></a>  ulist <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb7-89"><a href="#cb7-89" tabindex="-1"></a></span>
+<span id="cb7-90"><a href="#cb7-90" tabindex="-1"></a>  <span class="cf">for</span> (field <span class="cf">in</span> random_fields) {</span>
+<span id="cb7-91"><a href="#cb7-91" tabindex="-1"></a>    idx <span class="ot">&lt;-</span> design<span class="sc">$</span>slices[[field]]</span>
+<span id="cb7-92"><a href="#cb7-92" tabindex="-1"></a>    u <span class="ot">&lt;-</span> coef[idx]</span>
+<span id="cb7-93"><a href="#cb7-93" tabindex="-1"></a>    <span class="fu">names</span>(u) <span class="ot">&lt;-</span> <span class="fu">as.character</span>(design<span class="sc">$</span>Z_levels[[field]])</span>
+<span id="cb7-94"><a href="#cb7-94" tabindex="-1"></a>    ulist[[field]] <span class="ot">&lt;-</span> u</span>
+<span id="cb7-95"><a href="#cb7-95" tabindex="-1"></a>  }</span>
+<span id="cb7-96"><a href="#cb7-96" tabindex="-1"></a></span>
+<span id="cb7-97"><a href="#cb7-97" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb7-98"><a href="#cb7-98" tabindex="-1"></a>    <span class="at">components =</span> components,</span>
+<span id="cb7-99"><a href="#cb7-99" tabindex="-1"></a>    <span class="at">props =</span> new_props,</span>
+<span id="cb7-100"><a href="#cb7-100" tabindex="-1"></a>    <span class="at">lambda_old =</span> lambda_old,</span>
+<span id="cb7-101"><a href="#cb7-101" tabindex="-1"></a>    <span class="at">lambda_new =</span> lambda_new,</span>
+<span id="cb7-102"><a href="#cb7-102" tabindex="-1"></a>    <span class="at">coef =</span> coef,</span>
+<span id="cb7-103"><a href="#cb7-103" tabindex="-1"></a>    <span class="at">beta =</span> beta,</span>
+<span id="cb7-104"><a href="#cb7-104" tabindex="-1"></a>    <span class="at">u =</span> ulist,</span>
+<span id="cb7-105"><a href="#cb7-105" tabindex="-1"></a>    <span class="at">residual =</span> residual,</span>
+<span id="cb7-106"><a href="#cb7-106" tabindex="-1"></a>    <span class="at">fitted =</span> fitted,</span>
+<span id="cb7-107"><a href="#cb7-107" tabindex="-1"></a>    <span class="at">C =</span> C,</span>
+<span id="cb7-108"><a href="#cb7-108" tabindex="-1"></a>    <span class="at">M =</span> M,</span>
+<span id="cb7-109"><a href="#cb7-109" tabindex="-1"></a>    <span class="at">logdet_M =</span> logdet_M,</span>
+<span id="cb7-110"><a href="#cb7-110" tabindex="-1"></a>    <span class="at">penalized_ss =</span> penalized_ss,</span>
+<span id="cb7-111"><a href="#cb7-111" tabindex="-1"></a>    <span class="at">deviance =</span> deviance,</span>
+<span id="cb7-112"><a href="#cb7-112" tabindex="-1"></a>    <span class="at">random_change =</span> random_change</span>
+<span id="cb7-113"><a href="#cb7-113" tabindex="-1"></a>  )</span>
+<span id="cb7-114"><a href="#cb7-114" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="iteration-and-stopping-rule" class="section level2">
+<h2>8. Iteration and stopping rule</h2>
+<p>The reconstructed stopping rule is the maximum absolute change among
+the five <strong>random-effect variance proportions</strong>.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>fit_selegen193 <span class="ot">&lt;-</span> <span class="cf">function</span>(trait, tolerance, <span class="at">max_iter =</span> <span class="dv">500</span><span class="dt">L</span>) {</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">prepare_trait</span>(trait)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  design <span class="ot">&lt;-</span> <span class="fu">build_design</span>(d)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  old_props <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    <span class="at">Prog =</span> <span class="fl">0.10</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="at">Parc =</span> <span class="fl">0.10</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    <span class="at">Pop =</span> <span class="fl">0.10</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    <span class="at">Bloc =</span> <span class="fl">0.10</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    <span class="at">Int =</span> <span class="fl">0.10</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>    <span class="at">Ve =</span> <span class="fl">0.50</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>  )</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  history <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>  final <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>  <span class="cf">for</span> (iter <span class="cf">in</span> <span class="fu">seq_len</span>(max_iter)) {</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    step <span class="ot">&lt;-</span> <span class="fu">selegen_iteration</span>(</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>      <span class="at">d =</span> d,</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>      <span class="at">design =</span> design,</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>      <span class="at">old_props =</span> old_props</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>    )</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>    components <span class="ot">&lt;-</span> step<span class="sc">$</span>components</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>    props <span class="ot">&lt;-</span> step<span class="sc">$</span>props</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>    history[[iter]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>      <span class="at">Trait =</span> trait,</span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>      <span class="at">Iteration =</span> iter,</span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>      <span class="at">Tolerance =</span> tolerance,</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>      <span class="at">Max_random_prop_change =</span> step<span class="sc">$</span>random_change,</span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>      <span class="at">Lambda_Prog_used =</span> step<span class="sc">$</span>lambda_old[[<span class="st">&quot;Prog&quot;</span>]],</span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>      <span class="at">Lambda_Parc_used =</span> step<span class="sc">$</span>lambda_old[[<span class="st">&quot;Parc&quot;</span>]],</span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>      <span class="at">Lambda_Pop_used =</span> step<span class="sc">$</span>lambda_old[[<span class="st">&quot;Pop&quot;</span>]],</span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>      <span class="at">Lambda_Bloc_used =</span> step<span class="sc">$</span>lambda_old[[<span class="st">&quot;Bloc&quot;</span>]],</span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>      <span class="at">Lambda_Int_used =</span> step<span class="sc">$</span>lambda_old[[<span class="st">&quot;Int&quot;</span>]],</span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a>      <span class="at">Vgen_pop =</span> components[[<span class="st">&quot;Prog&quot;</span>]],</span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a>      <span class="at">Vparc =</span> components[[<span class="st">&quot;Parc&quot;</span>]],</span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>      <span class="at">Vpop =</span> components[[<span class="st">&quot;Pop&quot;</span>]],</span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>      <span class="at">Vbloc =</span> components[[<span class="st">&quot;Bloc&quot;</span>]],</span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>      <span class="at">Vint =</span> components[[<span class="st">&quot;Int&quot;</span>]],</span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>      <span class="at">Ve =</span> components[[<span class="st">&quot;Ve&quot;</span>]],</span>
+<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a>      <span class="at">Vf =</span> <span class="fu">sum</span>(components),</span>
+<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>      <span class="at">h2gen_pop =</span> props[[<span class="st">&quot;Prog&quot;</span>]],</span>
+<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>      <span class="at">c2parc =</span> props[[<span class="st">&quot;Parc&quot;</span>]],</span>
+<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a>      <span class="at">h2pop =</span> props[[<span class="st">&quot;Pop&quot;</span>]],</span>
+<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a>      <span class="at">c2bloc =</span> props[[<span class="st">&quot;Bloc&quot;</span>]],</span>
+<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a>      <span class="at">c2int =</span> props[[<span class="st">&quot;Int&quot;</span>]],</span>
+<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a>      <span class="at">residual_prop =</span> props[[<span class="st">&quot;Ve&quot;</span>]],</span>
+<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a>      <span class="at">LogDet_M =</span> step<span class="sc">$</span>logdet_M,</span>
+<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a>      <span class="at">Penalized_SS =</span> step<span class="sc">$</span>penalized_ss,</span>
+<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a>      <span class="at">Deviance =</span> step<span class="sc">$</span>deviance,</span>
+<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a>    )</span>
+<span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a></span>
+<span id="cb8-56"><a href="#cb8-56" tabindex="-1"></a>    <span class="cf">if</span> (step<span class="sc">$</span>random_change <span class="sc">&lt;=</span> tolerance) {</span>
+<span id="cb8-57"><a href="#cb8-57" tabindex="-1"></a>      final <span class="ot">&lt;-</span> step</span>
+<span id="cb8-58"><a href="#cb8-58" tabindex="-1"></a>      <span class="cf">break</span></span>
+<span id="cb8-59"><a href="#cb8-59" tabindex="-1"></a>    }</span>
+<span id="cb8-60"><a href="#cb8-60" tabindex="-1"></a></span>
+<span id="cb8-61"><a href="#cb8-61" tabindex="-1"></a>    old_props <span class="ot">&lt;-</span> props</span>
+<span id="cb8-62"><a href="#cb8-62" tabindex="-1"></a>  }</span>
+<span id="cb8-63"><a href="#cb8-63" tabindex="-1"></a></span>
+<span id="cb8-64"><a href="#cb8-64" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(final)) {</span>
+<span id="cb8-65"><a href="#cb8-65" tabindex="-1"></a>    <span class="fu">stop</span>(</span>
+<span id="cb8-66"><a href="#cb8-66" tabindex="-1"></a>      trait,</span>
+<span id="cb8-67"><a href="#cb8-67" tabindex="-1"></a>      <span class="st">&quot;: Model 193 reconstruction did not meet the stopping rule within &quot;</span>,</span>
+<span id="cb8-68"><a href="#cb8-68" tabindex="-1"></a>      max_iter,</span>
+<span id="cb8-69"><a href="#cb8-69" tabindex="-1"></a>      <span class="st">&quot; iterations.&quot;</span></span>
+<span id="cb8-70"><a href="#cb8-70" tabindex="-1"></a>    )</span>
+<span id="cb8-71"><a href="#cb8-71" tabindex="-1"></a>  }</span>
+<span id="cb8-72"><a href="#cb8-72" tabindex="-1"></a></span>
+<span id="cb8-73"><a href="#cb8-73" tabindex="-1"></a>  history_df <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, history)</span>
+<span id="cb8-74"><a href="#cb8-74" tabindex="-1"></a>  <span class="fu">rownames</span>(history_df) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb8-75"><a href="#cb8-75" tabindex="-1"></a></span>
+<span id="cb8-76"><a href="#cb8-76" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb8-77"><a href="#cb8-77" tabindex="-1"></a>    <span class="at">trait =</span> trait,</span>
+<span id="cb8-78"><a href="#cb8-78" tabindex="-1"></a>    <span class="at">data =</span> d,</span>
+<span id="cb8-79"><a href="#cb8-79" tabindex="-1"></a>    <span class="at">design =</span> design,</span>
+<span id="cb8-80"><a href="#cb8-80" tabindex="-1"></a>    <span class="at">final =</span> final,</span>
+<span id="cb8-81"><a href="#cb8-81" tabindex="-1"></a>    <span class="at">history =</span> history_df,</span>
+<span id="cb8-82"><a href="#cb8-82" tabindex="-1"></a>    <span class="at">iterations =</span> <span class="fu">nrow</span>(history_df),</span>
+<span id="cb8-83"><a href="#cb8-83" tabindex="-1"></a>    <span class="at">tolerance =</span> tolerance</span>
+<span id="cb8-84"><a href="#cb8-84" tabindex="-1"></a>  )</span>
+<span id="cb8-85"><a href="#cb8-85" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="exact-reproduction" class="section level2">
+<h2>9. Exact reproduction</h2>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>fits <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="cf">for</span> (trait <span class="cf">in</span> <span class="fu">c</span>(<span class="st">&quot;Cer&quot;</span>, <span class="st">&quot;BM&quot;</span>, <span class="st">&quot;LP&quot;</span>)) {</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  tolerance <span class="ot">&lt;-</span> benchmark<span class="sc">$</span>Tolerance[</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>    benchmark<span class="sc">$</span>Trait <span class="sc">==</span> trait</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  ]</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  fits[[trait]] <span class="ot">&lt;-</span> <span class="fu">fit_selegen193</span>(</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>    <span class="at">trait =</span> trait,</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>    <span class="at">tolerance =</span> tolerance</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  )</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>summarize_fit <span class="ot">&lt;-</span> <span class="cf">function</span>(fit) {</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  f <span class="ot">&lt;-</span> fit<span class="sc">$</span>final</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  components <span class="ot">&lt;-</span> f<span class="sc">$</span>components</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  props <span class="ot">&lt;-</span> f<span class="sc">$</span>props</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>    <span class="at">Trait =</span> fit<span class="sc">$</span>trait,</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>    <span class="at">N =</span> <span class="fu">nrow</span>(fit<span class="sc">$</span>data),</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>    <span class="at">Iterations =</span> fit<span class="sc">$</span>iterations,</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>    <span class="at">Tolerance =</span> fit<span class="sc">$</span>tolerance,</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>    <span class="at">Deviance =</span> f<span class="sc">$</span>deviance,</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>    <span class="at">Vgen_pop =</span> components[[<span class="st">&quot;Prog&quot;</span>]],</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>    <span class="at">Vparc =</span> components[[<span class="st">&quot;Parc&quot;</span>]],</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>    <span class="at">Vpop =</span> components[[<span class="st">&quot;Pop&quot;</span>]],</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>    <span class="at">Vbloc =</span> components[[<span class="st">&quot;Bloc&quot;</span>]],</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>    <span class="at">Vint =</span> components[[<span class="st">&quot;Int&quot;</span>]],</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>    <span class="at">Ve =</span> components[[<span class="st">&quot;Ve&quot;</span>]],</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>    <span class="at">Vf =</span> <span class="fu">sum</span>(components),</span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>    <span class="at">h2gen_pop =</span> props[[<span class="st">&quot;Prog&quot;</span>]],</span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>    <span class="at">c2parc =</span> props[[<span class="st">&quot;Parc&quot;</span>]],</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>    <span class="at">h2pop =</span> props[[<span class="st">&quot;Pop&quot;</span>]],</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>    <span class="at">c2bloc =</span> props[[<span class="st">&quot;Bloc&quot;</span>]],</span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>    <span class="at">c2int =</span> props[[<span class="st">&quot;Int&quot;</span>]],</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>    <span class="at">repet =</span> (</span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>      components[[<span class="st">&quot;Prog&quot;</span>]] <span class="sc">+</span></span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>        components[[<span class="st">&quot;Parc&quot;</span>]] <span class="sc">+</span></span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>        components[[<span class="st">&quot;Pop&quot;</span>]] <span class="sc">+</span></span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a>        components[[<span class="st">&quot;Bloc&quot;</span>]]</span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>    ) <span class="sc">/</span> <span class="fu">sum</span>(components),</span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>    <span class="at">h2tot =</span> (</span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>      components[[<span class="st">&quot;Prog&quot;</span>]] <span class="sc">+</span></span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a>        components[[<span class="st">&quot;Pop&quot;</span>]]</span>
+<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>    ) <span class="sc">/</span> <span class="fu">sum</span>(components),</span>
+<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a>    <span class="at">Mean =</span> <span class="fu">mean</span>(f<span class="sc">$</span>beta),</span>
+<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a>  )</span>
+<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>}</span>
+<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a></span>
+<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a>  rbind,</span>
+<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a>  <span class="fu">lapply</span>(fits, summarize_fit)</span>
+<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a>)</span>
+<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a></span>
+<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a><span class="fu">rownames</span>(results) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a></span>
+<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a>results <span class="sc">|&gt;</span></span>
+<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">6</span>,</span>
+<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;R reconstruction of SELEGEN Model 193&quot;</span>,</span>
+<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb10-53"><a href="#cb10-53" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+R reconstruction of SELEGEN Model 193
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+N
+</th>
+<th style="text-align:right;">
+Iterations
+</th>
+<th style="text-align:right;">
+Tolerance
+</th>
+<th style="text-align:right;">
+Deviance
+</th>
+<th style="text-align:right;">
+Vgen_pop
+</th>
+<th style="text-align:right;">
+Vparc
+</th>
+<th style="text-align:right;">
+Vpop
+</th>
+<th style="text-align:right;">
+Vbloc
+</th>
+<th style="text-align:right;">
+Vint
+</th>
+<th style="text-align:right;">
+Ve
+</th>
+<th style="text-align:right;">
+Vf
+</th>
+<th style="text-align:right;">
+h2gen_pop
+</th>
+<th style="text-align:right;">
+c2parc
+</th>
+<th style="text-align:right;">
+h2pop
+</th>
+<th style="text-align:right;">
+c2bloc
+</th>
+<th style="text-align:right;">
+c2int
+</th>
+<th style="text-align:right;">
+repet
+</th>
+<th style="text-align:right;">
+h2tot
+</th>
+<th style="text-align:right;">
+Mean
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+684
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5e-02
+</td>
+<td style="text-align:right;">
+179.181684
+</td>
+<td style="text-align:right;">
+0.046499
+</td>
+<td style="text-align:right;">
+0.068135
+</td>
+<td style="text-align:right;">
+0.050455
+</td>
+<td style="text-align:right;">
+0.036630
+</td>
+<td style="text-align:right;">
+0.057987
+</td>
+<td style="text-align:right;">
+0.384139
+</td>
+<td style="text-align:right;">
+0.643845
+</td>
+<td style="text-align:right;">
+0.072221
+</td>
+<td style="text-align:right;">
+0.105824
+</td>
+<td style="text-align:right;">
+0.078365
+</td>
+<td style="text-align:right;">
+0.056893
+</td>
+<td style="text-align:right;">
+0.090064
+</td>
+<td style="text-align:right;">
+0.313303
+</td>
+<td style="text-align:right;">
+0.150586
+</td>
+<td style="text-align:right;">
+2.513571
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+684
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5e-02
+</td>
+<td style="text-align:right;">
+-82.404681
+</td>
+<td style="text-align:right;">
+0.031433
+</td>
+<td style="text-align:right;">
+0.049095
+</td>
+<td style="text-align:right;">
+0.027236
+</td>
+<td style="text-align:right;">
+0.032487
+</td>
+<td style="text-align:right;">
+0.031809
+</td>
+<td style="text-align:right;">
+0.258941
+</td>
+<td style="text-align:right;">
+0.431001
+</td>
+<td style="text-align:right;">
+0.072929
+</td>
+<td style="text-align:right;">
+0.113909
+</td>
+<td style="text-align:right;">
+0.063192
+</td>
+<td style="text-align:right;">
+0.075377
+</td>
+<td style="text-align:right;">
+0.073803
+</td>
+<td style="text-align:right;">
+0.325407
+</td>
+<td style="text-align:right;">
+0.136121
+</td>
+<td style="text-align:right;">
+2.035957
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+677
+</td>
+<td style="text-align:right;">
+46
+</td>
+<td style="text-align:right;">
+1e-04
+</td>
+<td style="text-align:right;">
+1980.203124
+</td>
+<td style="text-align:right;">
+0.751094
+</td>
+<td style="text-align:right;">
+1.886503
+</td>
+<td style="text-align:right;">
+0.039846
+</td>
+<td style="text-align:right;">
+0.234072
+</td>
+<td style="text-align:right;">
+0.067444
+</td>
+<td style="text-align:right;">
+5.055057
+</td>
+<td style="text-align:right;">
+8.034016
+</td>
+<td style="text-align:right;">
+0.093489
+</td>
+<td style="text-align:right;">
+0.234814
+</td>
+<td style="text-align:right;">
+0.004960
+</td>
+<td style="text-align:right;">
+0.029135
+</td>
+<td style="text-align:right;">
+0.008395
+</td>
+<td style="text-align:right;">
+0.362398
+</td>
+<td style="text-align:right;">
+0.098449
+</td>
+<td style="text-align:right;">
+4.984603
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="r-selegen-regression-test" class="section level2">
+<h2>10. R × SELEGEN regression test</h2>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>metrics <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="st">&quot;Deviance&quot;</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="st">&quot;Vgen_pop&quot;</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>  <span class="st">&quot;Vparc&quot;</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>  <span class="st">&quot;Vpop&quot;</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>  <span class="st">&quot;Vbloc&quot;</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="st">&quot;Vint&quot;</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  <span class="st">&quot;Ve&quot;</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="st">&quot;Vf&quot;</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>  <span class="st">&quot;h2gen_pop&quot;</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>  <span class="st">&quot;c2parc&quot;</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>  <span class="st">&quot;h2pop&quot;</span>,</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>  <span class="st">&quot;c2bloc&quot;</span>,</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>  <span class="st">&quot;c2int&quot;</span>,</span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>  <span class="st">&quot;repet&quot;</span>,</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>  <span class="st">&quot;h2tot&quot;</span>,</span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>  <span class="st">&quot;Mean&quot;</span></span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>)</span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>comparison <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>  rbind,</span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(results)), <span class="cf">function</span>(i) {</span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>    trait <span class="ot">&lt;-</span> results<span class="sc">$</span>Trait[i]</span>
+<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a></span>
+<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a>    b <span class="ot">&lt;-</span> benchmark[</span>
+<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a>      benchmark<span class="sc">$</span>Trait <span class="sc">==</span> trait,</span>
+<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a>      ,</span>
+<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a>      drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a>    ]</span>
+<span id="cb11-30"><a href="#cb11-30" tabindex="-1"></a></span>
+<span id="cb11-31"><a href="#cb11-31" tabindex="-1"></a>    <span class="fu">do.call</span>(</span>
+<span id="cb11-32"><a href="#cb11-32" tabindex="-1"></a>      rbind,</span>
+<span id="cb11-33"><a href="#cb11-33" tabindex="-1"></a>      <span class="fu">lapply</span>(metrics, <span class="cf">function</span>(metric) {</span>
+<span id="cb11-34"><a href="#cb11-34" tabindex="-1"></a>        <span class="fu">data.frame</span>(</span>
+<span id="cb11-35"><a href="#cb11-35" tabindex="-1"></a>          <span class="at">Trait =</span> trait,</span>
+<span id="cb11-36"><a href="#cb11-36" tabindex="-1"></a>          <span class="at">Metric =</span> metric,</span>
+<span id="cb11-37"><a href="#cb11-37" tabindex="-1"></a>          <span class="at">R =</span> results[[metric]][i],</span>
+<span id="cb11-38"><a href="#cb11-38" tabindex="-1"></a>          <span class="at">SELEGEN =</span> b[[metric]][<span class="dv">1</span>],</span>
+<span id="cb11-39"><a href="#cb11-39" tabindex="-1"></a>          <span class="at">Difference =</span> results[[metric]][i] <span class="sc">-</span> b[[metric]][<span class="dv">1</span>],</span>
+<span id="cb11-40"><a href="#cb11-40" tabindex="-1"></a>          <span class="at">Abs_difference =</span> <span class="fu">abs</span>(</span>
+<span id="cb11-41"><a href="#cb11-41" tabindex="-1"></a>            results[[metric]][i] <span class="sc">-</span> b[[metric]][<span class="dv">1</span>]</span>
+<span id="cb11-42"><a href="#cb11-42" tabindex="-1"></a>          ),</span>
+<span id="cb11-43"><a href="#cb11-43" tabindex="-1"></a>          <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb11-44"><a href="#cb11-44" tabindex="-1"></a>        )</span>
+<span id="cb11-45"><a href="#cb11-45" tabindex="-1"></a>      })</span>
+<span id="cb11-46"><a href="#cb11-46" tabindex="-1"></a>    )</span>
+<span id="cb11-47"><a href="#cb11-47" tabindex="-1"></a>  })</span>
+<span id="cb11-48"><a href="#cb11-48" tabindex="-1"></a>)</span>
+<span id="cb11-49"><a href="#cb11-49" tabindex="-1"></a></span>
+<span id="cb11-50"><a href="#cb11-50" tabindex="-1"></a><span class="fu">rownames</span>(comparison) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>validation <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  rbind,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="fu">c</span>(<span class="st">&quot;Cer&quot;</span>, <span class="st">&quot;BM&quot;</span>, <span class="st">&quot;LP&quot;</span>), <span class="cf">function</span>(trait) {</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    x <span class="ot">&lt;-</span> comparison[</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>      comparison<span class="sc">$</span>Trait <span class="sc">==</span> trait,</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>      ,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>      drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>    ]</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>    r <span class="ot">&lt;-</span> results[</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>      results<span class="sc">$</span>Trait <span class="sc">==</span> trait,</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>      ,</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>      drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>    ]</span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>    b <span class="ot">&lt;-</span> benchmark[</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>      benchmark<span class="sc">$</span>Trait <span class="sc">==</span> trait,</span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>      ,</span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>      drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>    ]</span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>    component_metrics <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>      <span class="st">&quot;Vgen_pop&quot;</span>,</span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a>      <span class="st">&quot;Vparc&quot;</span>,</span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>      <span class="st">&quot;Vpop&quot;</span>,</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>      <span class="st">&quot;Vbloc&quot;</span>,</span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>      <span class="st">&quot;Vint&quot;</span>,</span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>      <span class="st">&quot;Ve&quot;</span>,</span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>      <span class="st">&quot;Vf&quot;</span></span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>    )</span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a></span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a>    max_component_diff <span class="ot">&lt;-</span> <span class="fu">max</span>(</span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>      x<span class="sc">$</span>Abs_difference[</span>
+<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a>        x<span class="sc">$</span>Metric <span class="sc">%in%</span> component_metrics</span>
+<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a>      ]</span>
+<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a>    )</span>
+<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a></span>
+<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a>    deviance_diff <span class="ot">&lt;-</span> x<span class="sc">$</span>Abs_difference[</span>
+<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a>      x<span class="sc">$</span>Metric <span class="sc">==</span> <span class="st">&quot;Deviance&quot;</span></span>
+<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a>    ]</span>
+<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a></span>
+<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a>    mean_diff <span class="ot">&lt;-</span> x<span class="sc">$</span>Abs_difference[</span>
+<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a>      x<span class="sc">$</span>Metric <span class="sc">==</span> <span class="st">&quot;Mean&quot;</span></span>
+<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a>    ]</span>
+<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a></span>
+<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb12-47"><a href="#cb12-47" tabindex="-1"></a>      <span class="at">Trait =</span> trait,</span>
+<span id="cb12-48"><a href="#cb12-48" tabindex="-1"></a>      <span class="at">Iterations_R =</span> r<span class="sc">$</span>Iterations,</span>
+<span id="cb12-49"><a href="#cb12-49" tabindex="-1"></a>      <span class="at">Iterations_SELEGEN =</span> b<span class="sc">$</span>Iteration_expected,</span>
+<span id="cb12-50"><a href="#cb12-50" tabindex="-1"></a>      <span class="at">Iterations_match =</span></span>
+<span id="cb12-51"><a href="#cb12-51" tabindex="-1"></a>        r<span class="sc">$</span>Iterations <span class="sc">==</span> b<span class="sc">$</span>Iteration_expected,</span>
+<span id="cb12-52"><a href="#cb12-52" tabindex="-1"></a>      <span class="at">Max_abs_component_diff =</span></span>
+<span id="cb12-53"><a href="#cb12-53" tabindex="-1"></a>        max_component_diff,</span>
+<span id="cb12-54"><a href="#cb12-54" tabindex="-1"></a>      <span class="at">Abs_deviance_diff =</span></span>
+<span id="cb12-55"><a href="#cb12-55" tabindex="-1"></a>        deviance_diff,</span>
+<span id="cb12-56"><a href="#cb12-56" tabindex="-1"></a>      <span class="at">Abs_mean_diff =</span></span>
+<span id="cb12-57"><a href="#cb12-57" tabindex="-1"></a>        mean_diff,</span>
+<span id="cb12-58"><a href="#cb12-58" tabindex="-1"></a>      <span class="at">PASS =</span> (</span>
+<span id="cb12-59"><a href="#cb12-59" tabindex="-1"></a>        r<span class="sc">$</span>Iterations <span class="sc">==</span> b<span class="sc">$</span>Iteration_expected <span class="sc">&amp;&amp;</span></span>
+<span id="cb12-60"><a href="#cb12-60" tabindex="-1"></a>          max_component_diff <span class="sc">&lt;</span> <span class="fl">5e-6</span> <span class="sc">&amp;&amp;</span></span>
+<span id="cb12-61"><a href="#cb12-61" tabindex="-1"></a>          deviance_diff <span class="sc">&lt;</span> <span class="fl">5e-3</span> <span class="sc">&amp;&amp;</span></span>
+<span id="cb12-62"><a href="#cb12-62" tabindex="-1"></a>          mean_diff <span class="sc">&lt;</span> <span class="fl">5e-5</span></span>
+<span id="cb12-63"><a href="#cb12-63" tabindex="-1"></a>      ),</span>
+<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb12-65"><a href="#cb12-65" tabindex="-1"></a>    )</span>
+<span id="cb12-66"><a href="#cb12-66" tabindex="-1"></a>  })</span>
+<span id="cb12-67"><a href="#cb12-67" tabindex="-1"></a>)</span>
+<span id="cb12-68"><a href="#cb12-68" tabindex="-1"></a></span>
+<span id="cb12-69"><a href="#cb12-69" tabindex="-1"></a>validation <span class="sc">|&gt;</span></span>
+<span id="cb12-70"><a href="#cb12-70" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb12-71"><a href="#cb12-71" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb12-72"><a href="#cb12-72" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">9</span>,</span>
+<span id="cb12-73"><a href="#cb12-73" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Numerical reproduction validation&quot;</span>,</span>
+<span id="cb12-74"><a href="#cb12-74" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb12-75"><a href="#cb12-75" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb12-76"><a href="#cb12-76" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Numerical reproduction validation
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+Iterations_R
+</th>
+<th style="text-align:right;">
+Iterations_SELEGEN
+</th>
+<th style="text-align:left;">
+Iterations_match
+</th>
+<th style="text-align:right;">
+Max_abs_component_diff
+</th>
+<th style="text-align:right;">
+Abs_deviance_diff
+</th>
+<th style="text-align:right;">
+Abs_mean_diff
+</th>
+<th style="text-align:left;">
+PASS
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:right;">
+4.60e-07
+</td>
+<td style="text-align:right;">
+1.5718e-05
+</td>
+<td style="text-align:right;">
+3.35e-07
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:right;">
+4.04e-07
+</td>
+<td style="text-align:right;">
+1.8753e-05
+</td>
+<td style="text-align:right;">
+4.90e-08
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+46
+</td>
+<td style="text-align:right;">
+46
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:right;">
+3.52e-07
+</td>
+<td style="text-align:right;">
+2.3513e-05
+</td>
+<td style="text-align:right;">
+2.82e-07
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">all</span>(validation<span class="sc">$</span>PASS))</span></code></pre></div>
+<p>All three traits must pass this regression test. Failure indicates
+that the canonical input, algorithm, execution settings, or numerical
+behavior has changed and must be audited before downstream analyses are
+accepted.</p>
+</div>
+<div id="iteration-behavior" class="section level2">
+<h2>11. Iteration behavior</h2>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>iteration_summary <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  rbind,</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="fu">lapply</span>(fits, <span class="cf">function</span>(fit) {</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>      <span class="at">Trait =</span> fit<span class="sc">$</span>trait,</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>      <span class="at">Iterations =</span> fit<span class="sc">$</span>iterations,</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>      <span class="at">Final_change =</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>        fit<span class="sc">$</span>final<span class="sc">$</span>random_change,</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>      <span class="at">Tolerance =</span> fit<span class="sc">$</span>tolerance,</span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>      <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>    )</span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>  })</span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>)</span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>iteration_summary <span class="sc">|&gt;</span></span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">9</span>,</span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Model 193 stopping behavior&quot;</span>,</span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a>  )</span></code></pre></div>
+<table class="table table-striped table-hover table-bordered">
+<caption>
+Model 193 stopping behavior
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+Iterations
+</th>
+<th style="text-align:right;">
+Final_change
+</th>
+<th style="text-align:right;">
+Tolerance
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.043107316
+</td>
+<td style="text-align:right;">
+5e-02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.036808435
+</td>
+<td style="text-align:right;">
+5e-02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+46
+</td>
+<td style="text-align:right;">
+0.000098555
+</td>
+<td style="text-align:right;">
+1e-04
+</td>
+</tr>
+</tbody>
+</table>
+<p><code>Cer</code> and <code>BM</code> satisfy the audited
+<code>0.05</code> stopping threshold after the first variance-component
+update. <code>L/P</code>, using the audited <code>0.0001</code>
+threshold, requires 46 updates. This explains why a conventional REML
+optimizer carried to a stricter numerical optimum can produce different
+small variance components even when the mixed-model structure is
+otherwise equivalent.</p>
+</div>
+<div id="persisted-audit-outputs" class="section level2">
+<h2>12. Persisted audit outputs</h2>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>utils<span class="sc">::</span><span class="fu">write.csv</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  benchmark,</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="fu">file.path</span>(OUT, <span class="st">&quot;selegen_benchmark.csv&quot;</span>),</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>)</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>utils<span class="sc">::</span><span class="fu">write.csv</span>(</span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  results,</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>  <span class="fu">file.path</span>(OUT, <span class="st">&quot;r_exact_results.csv&quot;</span>),</span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>)</span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>utils<span class="sc">::</span><span class="fu">write.csv</span>(</span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a>  comparison,</span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a>  <span class="fu">file.path</span>(OUT, <span class="st">&quot;r_vs_selegen.csv&quot;</span>),</span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a>)</span>
+<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a>utils<span class="sc">::</span><span class="fu">write.csv</span>(</span>
+<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a>  validation,</span>
+<span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a>  <span class="fu">file.path</span>(OUT, <span class="st">&quot;validation.csv&quot;</span>),</span>
+<span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a>)</span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a></span>
+<span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="cf">for</span> (trait <span class="cf">in</span> <span class="fu">names</span>(fits)) {</span>
+<span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">write.csv</span>(</span>
+<span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a>    fits[[trait]]<span class="sc">$</span>history,</span>
+<span id="cb15-28"><a href="#cb15-28" tabindex="-1"></a>    <span class="fu">file.path</span>(</span>
+<span id="cb15-29"><a href="#cb15-29" tabindex="-1"></a>      OUT,</span>
+<span id="cb15-30"><a href="#cb15-30" tabindex="-1"></a>      <span class="fu">paste0</span>(</span>
+<span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a>        <span class="st">&quot;iterations_&quot;</span>,</span>
+<span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a>        <span class="fu">tolower</span>(trait),</span>
+<span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a>        <span class="st">&quot;.csv&quot;</span></span>
+<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a>      )</span>
+<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a>    ),</span>
+<span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a>  )</span>
+<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="reproducibility-conclusion" class="section level2">
+<h2>13. Reproducibility conclusion</h2>
+<p>The reconstructed R implementation reproduces the audited SELEGEN
+Model 193 outputs for all three traits to numerical rounding precision,
+including the number of iterations, variance components, variance
+proportions, mean, and deviance.</p>
+<p>This establishes an executable regression test for the phenotypic
+first stage used in the real-data workflow. It does <strong>not</strong>
+claim that the current phenotypic data reproduce every historical value
+reported in the thesis; the historical thesis comparison and the exact
+reproduction of the current audited SELEGEN execution are separate
+questions.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26300)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices datasets  utils     methods   base     
+
+other attached packages:
+[1] knitr_1.50      workflowr_1.7.2
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.7.1       httr_1.4.7        cli_3.6.5         rlang_1.1.7      
+ [5] xfun_0.54         stringi_1.8.7     otel_0.2.0        processx_3.8.6   
+ [9] renv_1.1.8        promises_1.5.0    jsonlite_2.0.0    glue_1.8.0       
+[13] rprojroot_2.1.1   git2r_0.36.2      htmltools_0.5.9   httpuv_1.6.16    
+[17] ps_1.9.1          sass_0.4.10       rmarkdown_2.30    jquerylib_0.1.4  
+[21] tibble_3.3.1      evaluate_1.0.5    fastmap_1.2.0     yaml_2.3.12      
+[25] lifecycle_1.0.5   whisker_0.4.1     stringr_1.6.0     compiler_4.5.1   
+[29] fs_1.6.6          pkgconfig_2.0.3   Rcpp_1.1.2        rstudioapi_0.17.1
+[33] later_1.4.4       digest_0.6.39     R6_2.6.1          pillar_1.11.1    
+[37] callr_3.7.6       magrittr_2.0.4    bslib_0.9.0       tools_4.5.1      
+[41] cachem_1.1.0      getPass_0.2-4    </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiU0VMRUdFTiBNb2RlbCAxOTM6IGV4YWN0IFIgcmVwcm9kdWN0aW9uIgphdXRob3I6CiAgLSBXZXZlcnRvbiBHb21lcyBkYSBDb3N0YQpkYXRlOiAiYHIgU3lzLkRhdGUoKWAiCnNpdGU6IHdvcmtmbG93cjo6d2Zsb3dfc2l0ZQpvdXRwdXQ6CiAgd29ya2Zsb3dyOjp3Zmxvd19odG1sOgogICAgdG9jOiB0cnVlCiAgICB0b2NfZGVwdGg6IDMKICAgIHRvY19mbG9hdDogdHJ1ZQogICAgY29kZV9kb3dubG9hZDogdHJ1ZQogICAgY29kZV9mb2xkaW5nOiBzaG93CmVkaXRvcl9vcHRpb25zOgogIGNodW5rX291dHB1dF90eXBlOiBjb25zb2xlCi0tLQoKIyMgMS4gUHVycG9zZQoKVGhpcyBtb2R1bGUgcmVwcm9kdWNlcywgaW4gUiwgdGhlIG51bWVyaWNhbCBwcm9jZWR1cmUgdXNlZCBieQpTRUxFR0VOLVJFTUwvQkxVUCBNb2RlbCAxOTMgZm9yIHRoZSBsb25naXR1ZGluYWwgKkNvZmZlYSBhcmFiaWNhKiBwaGVub3R5cGVzCmNlcmNvc3Bvcmlvc2lzIChgQ2VyYCksIGxlYWYgbWluZXIgKGBCTWApLCBhbmQgcHJvZHVjdGlvbiAoYEwvUGApLgoKVGhlIG9iamVjdGl2ZSBpcyAqKm5vdCoqIHRvIHJlLW9wdGltaXplIHRoZSBtaXhlZCBtb2RlbCB3aXRoIGEgZGlmZmVyZW50IFJFTUwKaW1wbGVtZW50YXRpb24uIEluc3RlYWQsIHRoZSBtb2R1bGUgcmVjb25zdHJ1Y3RzIHRoZSBpdGVyYXRpdmUgbWl4ZWQtbW9kZWwKZXF1YXRpb25zIGFuZCBzdG9wcGluZyBydWxlIHRoYXQgZ2VuZXJhdGVkIHRoZSBhdWRpdGVkIFNFTEVHRU4gb3V0cHV0cy4KClRoZSBjYW5vbmljYWwgaW5wdXQgaXM6CgpgYGB0ZXh0CmRhdGEvZGFkb3NfcmVhaXMvZGFkb3Nfc2VsZWdlbl9jYWZlLnR4dApgYGAKCk5vIGRlcml2ZWQgdHJhaXQtc3BlY2lmaWMgU0VMRUdFTiBpbnB1dCBmaWxlcyBhcmUgcmVxdWlyZWQuCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KAogIGVjaG8gPSBUUlVFLAogIHdhcm5pbmcgPSBGQUxTRSwKICBtZXNzYWdlID0gRkFMU0UsCiAgY2FjaGUgPSBGQUxTRSwKICBmaWcuYWxpZ24gPSAiY2VudGVyIiwKICBvdXQud2lkdGggPSAiMTAwJSIKKQoKb3B0aW9ucyhzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UsIGRpZ2l0cyA9IDEyKQoKT1VUIDwtICJvdXRwdXQvcmVhbC9zZWxlZ2VuX21vZGVsMTkzX3JlcHJvZHVjdGlvbiIKCmRpci5jcmVhdGUoCiAgT1VULAogIHNob3dXYXJuaW5ncyA9IEZBTFNFLAogIHJlY3Vyc2l2ZSA9IFRSVUUKKQpgYGAKCiMjIDIuIFBhY2thZ2VzCgpPbmx5IGBrbml0cmAgaXMgcmVxdWlyZWQgZm9yIHJlcG9ydGluZy4gVGhlIG51bWVyaWNhbCByZXByb2R1Y3Rpb24gaXRzZWxmIHVzZXMKYmFzZSBSIGxpbmVhciBhbGdlYnJhLgoKYGBge3IgcGFja2FnZXN9CmxpYnJhcnkoa25pdHIpCmBgYAoKIyMgMy4gQ2Fub25pY2FsIFNFTEVHRU4gaW5wdXQKCmBgYHtyIHJlYWQtaW5wdXR9CmlucHV0X2ZpbGUgPC0gImRhdGEvZGFkb3NfcmVhaXMvZGFkb3Nfc2VsZWdlbl9jYWZlLnR4dCIKCnN0b3BpZm5vdChmaWxlLmV4aXN0cyhpbnB1dF9maWxlKSkKCmQwIDwtIHV0aWxzOjpyZWFkLmRlbGltKAogIGlucHV0X2ZpbGUsCiAgaGVhZGVyID0gVFJVRSwKICBzZXAgPSAiXHQiLAogIGNoZWNrLm5hbWVzID0gRkFMU0UsCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCmV4cGVjdGVkX2NvbHVtbnMgPC0gYygKICAiSW5kIiwgIlByb2ciLCAiRml4byIsICJQYXJjIiwgIlBvcCIsICJCbG9jIiwKICAiSW50IiwgIlBsIiwgIkNlciIsICJCTSIsICJML1AiCikKCnN0b3BpZm5vdCgKICBpZGVudGljYWwobmFtZXMoZDApLCBleHBlY3RlZF9jb2x1bW5zKSwKICBucm93KGQwKSA9PSA2ODRMCikKCmlucHV0X3N1bW1hcnkgPC0gZGF0YS5mcmFtZSgKICBJdGVtID0gYygKICAgICJSZWNvcmRzIiwKICAgICJQcm9nZW5pZXMiLAogICAgIkZpeGVkLXllYXIgbGV2ZWxzIiwKICAgICJQZXJtYW5lbnQtcGxhbnQgbGV2ZWxzIChQYXJjKSIsCiAgICAiUG9wdWxhdGlvbiBsZXZlbHMiLAogICAgIkJsb2NrIGxldmVscyIsCiAgICAiUHJvZ2VueS1ieS15ZWFyIGxldmVscyIsCiAgICAiUGwgY29kZXMiLAogICAgIkNlciB6ZXJvIHJlY29yZHMiLAogICAgIkJNIHplcm8gcmVjb3JkcyIsCiAgICAiTC9QIHplcm8gcmVjb3JkcyIKICApLAogIFZhbHVlID0gYygKICAgIG5yb3coZDApLAogICAgbGVuZ3RoKHVuaXF1ZShkMCRQcm9nKSksCiAgICBsZW5ndGgodW5pcXVlKGQwJEZpeG8pKSwKICAgIGxlbmd0aCh1bmlxdWUoZDAkUGFyYykpLAogICAgbGVuZ3RoKHVuaXF1ZShkMCRQb3ApKSwKICAgIGxlbmd0aCh1bmlxdWUoZDAkQmxvYykpLAogICAgbGVuZ3RoKHVuaXF1ZShkMCRJbnQpKSwKICAgIGxlbmd0aCh1bmlxdWUoZDAkUGwpKSwKICAgIHN1bShkMCRDZXIgPT0gMCwgbmEucm0gPSBUUlVFKSwKICAgIHN1bShkMCRCTSA9PSAwLCBuYS5ybSA9IFRSVUUpLAogICAgc3VtKGQwW1siTC9QIl1dID09IDAsIG5hLnJtID0gVFJVRSkKICApLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgppbnB1dF9zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJDYW5vbmljYWwgTW9kZWwgMTkzIGlucHV0IGF1ZGl0IiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCInCiAgKQpgYGAKClRoZSBhdWRpdGVkIE1vZGVsIDE5MyBlZmZlY3QgbWFwcGluZyBpczoKCnwgU0VMRUdFTiBlZmZlY3QgfCBJbnB1dCBmaWVsZCB8IEludGVycHJldGF0aW9uIHwKfC0tLTp8LS0tfC0tLXwKfCAxIHwgYFByb2dgIHwgcHJvZ2VueSB8CnwgMiB8IGBGaXhvYCB8IGV2YWx1YXRpb24geWVhciwgZml4ZWQgfAp8IDMgfCBgUGFyY2AgfCBwZXJtYW5lbnQgcGxhbnQgZWZmZWN0IHwKfCA0IHwgYFBvcGAgfCBwb3B1bGF0aW9uIHR5cGUgfAp8IDUgfCBgQmxvY2AgfCBibG9jayB8CnwgNiB8IGBJbnRgIHwgcHJvZ2VueSDDlyB5ZWFyIGludGVyYWN0aW9uIHwKCmBQbGAgaXMgcHJlc2VudCBpbiB0aGUgTW9kZWwgMTkzIGlucHV0IGxheW91dCBidXQgaXMgKipub3QgZml0dGVkIGFzIGEgc2V2ZW50aAplZmZlY3QqKiBpbiB0aGUgYXVkaXRlZCBtaXhlZC1tb2RlbCBlcXVhdGlvbnMuCgojIyA0LiBBdWRpdGVkIFNFTEVHRU4gYmVuY2htYXJrcwoKVGhlc2UgYXJlIHRoZSB2YWx1ZXMgcmVwcm9kdWNlZCBmcm9tIHRoZSBjdXJyZW50IGF1ZGl0ZWQgU0VMRUdFTiBydW5zLiBUaGV5CmFyZSB1c2VkIG9ubHkgYXMgcmVncmVzc2lvbi10ZXN0IHRhcmdldHMgZm9yIHRoaXMgbW9kdWxlLgoKYGBge3IgYmVuY2htYXJrc30KYmVuY2htYXJrIDwtIGRhdGEuZnJhbWUoCiAgVHJhaXQgPSBjKCJDZXIiLCAiQk0iLCAiTFAiKSwKICBOID0gYyg2ODRMLCA2ODRMLCA2NzdMKSwKICBJdGVyYXRpb25fZXhwZWN0ZWQgPSBjKDFMLCAxTCwgNDZMKSwKICBUb2xlcmFuY2UgPSBjKDAuMDUsIDAuMDUsIDAuMDAwMSksCiAgRGV2aWFuY2UgPSBjKDE3OS4xODE3LCAtODIuNDA0NywgMTk4MC4yMDMxKSwKICBWZ2VuX3BvcCA9IGMoMC4wNDY0OTksIDAuMDMxNDMzLCAwLjc1MTA5NCksCiAgVnBhcmMgPSBjKDAuMDY4MTM1LCAwLjA0OTA5NSwgMS44ODY1MDMpLAogIFZwb3AgPSBjKDAuMDUwNDU1LCAwLjAyNzIzNiwgMC4wMzk4NDYpLAogIFZibG9jID0gYygwLjAzNjYzMCwgMC4wMzI0ODcsIDAuMjM0MDcyKSwKICBWaW50ID0gYygwLjA1Nzk4NywgMC4wMzE4MDksIDAuMDY3NDQ0KSwKICBWZSA9IGMoMC4zODQxMzksIDAuMjU4OTQxLCA1LjA1NTA1NyksCiAgVmYgPSBjKDAuNjQzODQ1LCAwLjQzMTAwMSwgOC4wMzQwMTYpLAogIGgyZ2VuX3BvcCA9IGMoMC4wNzIyMjEsIDAuMDcyOTI5LCAwLjA5MzQ4OSksCiAgYzJwYXJjID0gYygwLjEwNTgyNCwgMC4xMTM5MDksIDAuMjM0ODE0KSwKICBoMnBvcCA9IGMoMC4wNzgzNjUsIDAuMDYzMTkyLCAwLjAwNDk2MCksCiAgYzJibG9jID0gYygwLjA1Njg5MywgMC4wNzUzNzcsIDAuMDI5MTM1KSwKICBjMmludCA9IGMoMC4wOTAwNjQsIDAuMDczODAzLCAwLjAwODM5NSksCiAgcmVwZXQgPSBjKDAuMzEzMzAzLCAwLjMyNTQwNywgMC4zNjIzOTgpLAogIGgydG90ID0gYygwLjE1MDU4NiwgMC4xMzYxMjEsIDAuMDk4NDQ5KSwKICBNZWFuID0gYygyLjUxMzU3MSwgMi4wMzU5NTcsIDQuOTg0NjAzKSwKICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKKQoKYmVuY2htYXJrIHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgZGlnaXRzID0gNiwKICAgIGNhcHRpb24gPSAiQXVkaXRlZCBTRUxFR0VOIGJlbmNobWFya3MiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIicKICApCmBgYAoKVGhlIHRvbGVyYW5jZXMgYWJvdmUgYXJlIHRoZSBleGVjdXRpb24gc2V0dGluZ3MgcmVxdWlyZWQgdG8gcmVwcm9kdWNlIHRoZQpjdXJyZW50IGF1ZGl0ZWQgU0VMRUdFTiBvdXRwdXRzLiBUaGV5IHNob3VsZCBub3QgYmUgaW50ZXJwcmV0ZWQgYXMgdW5pdmVyc2FsCnJlY29tbWVuZGF0aW9ucyBmb3IgUkVNTCBmaXR0aW5nLgoKIyMgNS4gRGF0YSBwcmVwYXJhdGlvbiBieSB0cmFpdAoKU0VMRUdFTiB3YXMgcnVuIHdpdGggemVybyB2YWx1ZXMgdHJlYXRlZCBhcyBub24tc2lnbmlmaWNhbnQuIFRoZXJlZm9yZSwgemVybwpyZWNvcmRzIGFyZSByZW1vdmVkIGJlZm9yZSBmaXR0aW5nLiBUaGlzIGFmZmVjdHMgYEwvUGAgb25seSBpbiB0aGUgY2Fub25pY2FsCmlucHV0LgoKYGBge3IgcHJlcGFyZS10cmFpdH0KcHJlcGFyZV90cmFpdCA8LSBmdW5jdGlvbih0cmFpdCkgewogIGQgPC0gZDAKCiAgZCR5IDwtIHN3aXRjaCgKICAgIHRyYWl0LAogICAgQ2VyID0gc3VwcHJlc3NXYXJuaW5ncyhhcy5udW1lcmljKGQkQ2VyKSksCiAgICBCTSA9IHN1cHByZXNzV2FybmluZ3MoYXMubnVtZXJpYyhkJEJNKSksCiAgICBMUCA9IHN1cHByZXNzV2FybmluZ3MoYXMubnVtZXJpYyhkW1siTC9QIl1dKSksCiAgICBzdG9wKCJVbmtub3duIHRyYWl0OiAiLCB0cmFpdCkKICApCgogIGtlZXAgPC0gaXMuZmluaXRlKGQkeSkgJiBkJHkgIT0gMAogIGQgPC0gZFtrZWVwLCAsIGRyb3AgPSBGQUxTRV0KCiAgZXhwZWN0ZWRfbiA8LSBiZW5jaG1hcmskTlttYXRjaCh0cmFpdCwgYmVuY2htYXJrJFRyYWl0KV0KICBzdG9waWZub3QobnJvdyhkKSA9PSBleHBlY3RlZF9uKQoKICBkCn0KCnRyYWl0X2NvdW50cyA8LSBkby5jYWxsKAogIHJiaW5kLAogIGxhcHBseShjKCJDZXIiLCAiQk0iLCAiTFAiKSwgZnVuY3Rpb24odHJhaXQpIHsKICAgIGQgPC0gcHJlcGFyZV90cmFpdCh0cmFpdCkKICAgIGRhdGEuZnJhbWUoCiAgICAgIFRyYWl0ID0gdHJhaXQsCiAgICAgIE4gPSBucm93KGQpLAogICAgICBNZWFuX3JhdyA9IG1lYW4oZCR5KSwKICAgICAgU0RfcmF3ID0gc3RhdHM6OnNkKGQkeSksCiAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICAgKQogIH0pCikKCnRyYWl0X2NvdW50cyB8PgogIGtuaXRyOjprYWJsZSgKICAgIGZvcm1hdCA9ICJodG1sIiwKICAgIGRpZ2l0cyA9IDYsCiAgICBjYXB0aW9uID0gIlRyYWl0LXNwZWNpZmljIHJlY29yZHMgdXNlZCBieSBNb2RlbCAxOTMiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIicKICApCmBgYAoKIyMgNi4gRGVzaWduIG1hdHJpY2VzCgpGYWN0b3IgbGV2ZWxzIGFyZSBvcmRlcmVkIGJ5IGZpcnN0IG9jY3VycmVuY2UsIG1hdGNoaW5nIHRoZSBhdWRpdGVkIFNFTEVHRU4KZWZmZWN0IG91dHB1dC4KCmBgYHtyIGRlc2lnbi1tYXRyaWNlc30KcmFuZG9tX2ZpZWxkcyA8LSBjKCJQcm9nIiwgIlBhcmMiLCAiUG9wIiwgIkJsb2MiLCAiSW50IikKCmluZGljYXRvcl9tYXRyaXggPC0gZnVuY3Rpb24oeCkgewogIGxldiA8LSB1bmlxdWUoeCkKCiAgWiA8LSBzYXBwbHkoCiAgICBsZXYsCiAgICBmdW5jdGlvbih6KSBhcy5udW1lcmljKHggPT0geikKICApCgogIGlmIChpcy5udWxsKGRpbShaKSkpIHsKICAgIFogPC0gbWF0cml4KFosIG5jb2wgPSAxTCkKICB9CgogIGNvbG5hbWVzKFopIDwtIGFzLmNoYXJhY3RlcihsZXYpCgogIGxpc3QoCiAgICBtYXRyaXggPSBaLAogICAgbGV2ZWxzID0gbGV2CiAgKQp9CgpidWlsZF9kZXNpZ24gPC0gZnVuY3Rpb24oZCkgewogIGZpeGVkX2luZm8gPC0gaW5kaWNhdG9yX21hdHJpeChkJEZpeG8pCiAgWCA8LSBmaXhlZF9pbmZvJG1hdHJpeAoKICByYW5kb21faW5mbyA8LSBsYXBwbHkoCiAgICByYW5kb21fZmllbGRzLAogICAgZnVuY3Rpb24oZmllbGQpIGluZGljYXRvcl9tYXRyaXgoZFtbZmllbGRdXSkKICApCiAgbmFtZXMocmFuZG9tX2luZm8pIDwtIHJhbmRvbV9maWVsZHMKCiAgWmxpc3QgPC0gbGFwcGx5KHJhbmRvbV9pbmZvLCBgW1tgLCAibWF0cml4IikKICBaIDwtIGRvLmNhbGwoY2JpbmQsIFpsaXN0KQogIFcgPC0gY2JpbmQoWCwgWikKCiAgcCA8LSBuY29sKFgpCiAgcG9zIDwtIHAgKyAxTAogIHNsaWNlcyA8LSBsaXN0KCkKCiAgZm9yIChmaWVsZCBpbiByYW5kb21fZmllbGRzKSB7CiAgICBxIDwtIG5jb2woWmxpc3RbW2ZpZWxkXV0pCiAgICBzbGljZXNbW2ZpZWxkXV0gPC0gcG9zOihwb3MgKyBxIC0gMUwpCiAgICBwb3MgPC0gcG9zICsgcQogIH0KCiAgbGlzdCgKICAgIFggPSBYLAogICAgWF9sZXZlbHMgPSBmaXhlZF9pbmZvJGxldmVscywKICAgIFpsaXN0ID0gWmxpc3QsCiAgICBaX2xldmVscyA9IGxhcHBseShyYW5kb21faW5mbywgYFtbYCwgImxldmVscyIpLAogICAgVyA9IFcsCiAgICBzbGljZXMgPSBzbGljZXMsCiAgICBwID0gcAogICkKfQpgYGAKCiMjIDcuIFJlY29uc3RydWN0ZWQgU0VMRUdFTiB1cGRhdGUKClRoZSBhdWRpdGVkIGluaXRpYWwgdmFyaWFuY2UgcHJvcG9ydGlvbnMgYXJlOgoKXFsKaF4yPWNeMj1jXjJfezIxfT1jXjJfezIyfT1jXjJfezI0fT0wLjEwLApcXQoKbGVhdmluZyBhIHJlc2lkdWFsIHByb3BvcnRpb24gb2YgXCgwLjUwXCkuIFRodXMgZXZlcnkgaW5pdGlhbCB2YXJpYW5jZSByYXRpbyBpcwoKXFsKXGxhbWJkYV9pPVxmcmFjezAuNTB9ezAuMTB9PTUuClxdCgpBdCBlYWNoIGl0ZXJhdGlvbiwgdGhlIG1peGVkLW1vZGVsIGVxdWF0aW9ucyBhcmUgc29sdmVkIGFuZCB0aGUgY29tcG9uZW50cyBhcmUKdXBkYXRlZCBhcwoKXFsKXGhhdHtcc2lnbWF9X2VeMiA9ClxmcmFjewplJ2UgKyBcc3VtX2kgXGxhbWJkYV9pIHVfaSd1X2kKfXsKbi1cb3BlcmF0b3JuYW1le3Jhbmt9KFgpCn0sClxdCgphbmQKClxbClxoYXR7XHNpZ21hfV9pXjIgPQpcZnJhY3sKdV9pJ3VfaSArIFxoYXR7XHNpZ21hfV9lXjJcLFxtYXRocm17dHJ9KENfe2lpfSkKfXsKcV9pCn0uClxdCgpgYGB7ciBzZWxlZ2VuLXVwZGF0ZX0Kc2VsZWdlbl9pdGVyYXRpb24gPC0gZnVuY3Rpb24oZCwgZGVzaWduLCBvbGRfcHJvcHMpIHsKICBXIDwtIGRlc2lnbiRXCiAgcCA8LSBkZXNpZ24kcAogIG4gPC0gbnJvdyhkKQogIGRmX3JlbWwgPC0gbiAtIHAKCiAgbGFtYmRhX29sZCA8LSBvbGRfcHJvcHNbIlZlIl0gLyBvbGRfcHJvcHNbcmFuZG9tX2ZpZWxkc10KCiAgcGVuYWx0eSA8LSBtYXRyaXgoMCwgbmNvbChXKSwgbmNvbChXKSkKCiAgZm9yIChmaWVsZCBpbiByYW5kb21fZmllbGRzKSB7CiAgICBpZHggPC0gZGVzaWduJHNsaWNlc1tbZmllbGRdXQogICAgcGVuYWx0eVtpZHgsIGlkeF0gPC0gZGlhZygKICAgICAgbGFtYmRhX29sZFtbZmllbGRdXSwKICAgICAgbGVuZ3RoKGlkeCkKICAgICkKICB9CgogIE0gPC0gY3Jvc3Nwcm9kKFcpICsgcGVuYWx0eQogIHJocyA8LSBjcm9zc3Byb2QoVywgZCR5KQoKICBjb2VmIDwtIHNvbHZlKE0sIHJocykKICBDIDwtIHNvbHZlKE0pCgogIGZpdHRlZCA8LSBhcy5udW1lcmljKFcgJSolIGNvZWYpCiAgcmVzaWR1YWwgPC0gZCR5IC0gZml0dGVkCgogIHBlbmFsaXplZF9zcyA8LSBzdW0ocmVzaWR1YWxeMikKCiAgZm9yIChmaWVsZCBpbiByYW5kb21fZmllbGRzKSB7CiAgICBpZHggPC0gZGVzaWduJHNsaWNlc1tbZmllbGRdXQogICAgdSA8LSBjb2VmW2lkeF0KCiAgICBwZW5hbGl6ZWRfc3MgPC0gcGVuYWxpemVkX3NzICsKICAgICAgbGFtYmRhX29sZFtbZmllbGRdXSAqIHN1bSh1XjIpCiAgfQoKICBWZV9uZXcgPC0gcGVuYWxpemVkX3NzIC8gZGZfcmVtbAoKICBjb21wb25lbnRzIDwtIG51bWVyaWMoMCkKCiAgZm9yIChmaWVsZCBpbiByYW5kb21fZmllbGRzKSB7CiAgICBpZHggPC0gZGVzaWduJHNsaWNlc1tbZmllbGRdXQogICAgdSA8LSBjb2VmW2lkeF0KICAgIHEgPC0gbGVuZ3RoKGlkeCkKCiAgICBjb21wb25lbnRzW1tmaWVsZF1dIDwtICgKICAgICAgc3VtKHVeMikgKwogICAgICBWZV9uZXcgKiBzdW0oZGlhZyhDW2lkeCwgaWR4LCBkcm9wID0gRkFMU0VdKSkKICAgICkgLyBxCiAgfQoKICBjb21wb25lbnRzW1siVmUiXV0gPC0gVmVfbmV3CgogIFZmIDwtIHN1bShjb21wb25lbnRzKQogIG5ld19wcm9wcyA8LSBjb21wb25lbnRzIC8gVmYKICBsYW1iZGFfbmV3IDwtIFZlX25ldyAvIGNvbXBvbmVudHNbcmFuZG9tX2ZpZWxkc10KCiAgbG9nZGV0X00gPC0gYXMubnVtZXJpYygKICAgIGRldGVybWluYW50KAogICAgICBNLAogICAgICBsb2dhcml0aG0gPSBUUlVFCiAgICApJG1vZHVsdXMKICApCgogIHFfYnlfZWZmZWN0IDwtIHZhcHBseSgKICAgIHJhbmRvbV9maWVsZHMsCiAgICBmdW5jdGlvbihmaWVsZCkgbGVuZ3RoKGRlc2lnbiRzbGljZXNbW2ZpZWxkXV0pLAogICAgaW50ZWdlcigxKQogICkKCiAgZGV2aWFuY2UgPC0gKAogICAgZGZfcmVtbCAqICgxICsgbG9nKFZlX25ldykpICsKICAgIGxvZ2RldF9NIC0KICAgIHN1bShxX2J5X2VmZmVjdCAqIGxvZyhsYW1iZGFfbmV3KSkKICApCgogIHJhbmRvbV9jaGFuZ2UgPC0gbWF4KAogICAgYWJzKAogICAgICBuZXdfcHJvcHNbcmFuZG9tX2ZpZWxkc10gLQogICAgICAgIG9sZF9wcm9wc1tyYW5kb21fZmllbGRzXQogICAgKQogICkKCiAgYmV0YSA8LSBjb2VmW3NlcV9sZW4ocCldCiAgbmFtZXMoYmV0YSkgPC0gYXMuY2hhcmFjdGVyKGRlc2lnbiRYX2xldmVscykKCiAgdWxpc3QgPC0gbGlzdCgpCgogIGZvciAoZmllbGQgaW4gcmFuZG9tX2ZpZWxkcykgewogICAgaWR4IDwtIGRlc2lnbiRzbGljZXNbW2ZpZWxkXV0KICAgIHUgPC0gY29lZltpZHhdCiAgICBuYW1lcyh1KSA8LSBhcy5jaGFyYWN0ZXIoZGVzaWduJFpfbGV2ZWxzW1tmaWVsZF1dKQogICAgdWxpc3RbW2ZpZWxkXV0gPC0gdQogIH0KCiAgbGlzdCgKICAgIGNvbXBvbmVudHMgPSBjb21wb25lbnRzLAogICAgcHJvcHMgPSBuZXdfcHJvcHMsCiAgICBsYW1iZGFfb2xkID0gbGFtYmRhX29sZCwKICAgIGxhbWJkYV9uZXcgPSBsYW1iZGFfbmV3LAogICAgY29lZiA9IGNvZWYsCiAgICBiZXRhID0gYmV0YSwKICAgIHUgPSB1bGlzdCwKICAgIHJlc2lkdWFsID0gcmVzaWR1YWwsCiAgICBmaXR0ZWQgPSBmaXR0ZWQsCiAgICBDID0gQywKICAgIE0gPSBNLAogICAgbG9nZGV0X00gPSBsb2dkZXRfTSwKICAgIHBlbmFsaXplZF9zcyA9IHBlbmFsaXplZF9zcywKICAgIGRldmlhbmNlID0gZGV2aWFuY2UsCiAgICByYW5kb21fY2hhbmdlID0gcmFuZG9tX2NoYW5nZQogICkKfQpgYGAKCiMjIDguIEl0ZXJhdGlvbiBhbmQgc3RvcHBpbmcgcnVsZQoKVGhlIHJlY29uc3RydWN0ZWQgc3RvcHBpbmcgcnVsZSBpcyB0aGUgbWF4aW11bSBhYnNvbHV0ZSBjaGFuZ2UgYW1vbmcgdGhlIGZpdmUKKipyYW5kb20tZWZmZWN0IHZhcmlhbmNlIHByb3BvcnRpb25zKiouCgpgYGB7ciBmaXQtZnVuY3Rpb259CmZpdF9zZWxlZ2VuMTkzIDwtIGZ1bmN0aW9uKHRyYWl0LCB0b2xlcmFuY2UsIG1heF9pdGVyID0gNTAwTCkgewogIGQgPC0gcHJlcGFyZV90cmFpdCh0cmFpdCkKICBkZXNpZ24gPC0gYnVpbGRfZGVzaWduKGQpCgogIG9sZF9wcm9wcyA8LSBjKAogICAgUHJvZyA9IDAuMTAsCiAgICBQYXJjID0gMC4xMCwKICAgIFBvcCA9IDAuMTAsCiAgICBCbG9jID0gMC4xMCwKICAgIEludCA9IDAuMTAsCiAgICBWZSA9IDAuNTAKICApCgogIGhpc3RvcnkgPC0gbGlzdCgpCiAgZmluYWwgPC0gTlVMTAoKICBmb3IgKGl0ZXIgaW4gc2VxX2xlbihtYXhfaXRlcikpIHsKICAgIHN0ZXAgPC0gc2VsZWdlbl9pdGVyYXRpb24oCiAgICAgIGQgPSBkLAogICAgICBkZXNpZ24gPSBkZXNpZ24sCiAgICAgIG9sZF9wcm9wcyA9IG9sZF9wcm9wcwogICAgKQoKICAgIGNvbXBvbmVudHMgPC0gc3RlcCRjb21wb25lbnRzCiAgICBwcm9wcyA8LSBzdGVwJHByb3BzCgogICAgaGlzdG9yeVtbaXRlcl1dIDwtIGRhdGEuZnJhbWUoCiAgICAgIFRyYWl0ID0gdHJhaXQsCiAgICAgIEl0ZXJhdGlvbiA9IGl0ZXIsCiAgICAgIFRvbGVyYW5jZSA9IHRvbGVyYW5jZSwKICAgICAgTWF4X3JhbmRvbV9wcm9wX2NoYW5nZSA9IHN0ZXAkcmFuZG9tX2NoYW5nZSwKICAgICAgTGFtYmRhX1Byb2dfdXNlZCA9IHN0ZXAkbGFtYmRhX29sZFtbIlByb2ciXV0sCiAgICAgIExhbWJkYV9QYXJjX3VzZWQgPSBzdGVwJGxhbWJkYV9vbGRbWyJQYXJjIl1dLAogICAgICBMYW1iZGFfUG9wX3VzZWQgPSBzdGVwJGxhbWJkYV9vbGRbWyJQb3AiXV0sCiAgICAgIExhbWJkYV9CbG9jX3VzZWQgPSBzdGVwJGxhbWJkYV9vbGRbWyJCbG9jIl1dLAogICAgICBMYW1iZGFfSW50X3VzZWQgPSBzdGVwJGxhbWJkYV9vbGRbWyJJbnQiXV0sCiAgICAgIFZnZW5fcG9wID0gY29tcG9uZW50c1tbIlByb2ciXV0sCiAgICAgIFZwYXJjID0gY29tcG9uZW50c1tbIlBhcmMiXV0sCiAgICAgIFZwb3AgPSBjb21wb25lbnRzW1siUG9wIl1dLAogICAgICBWYmxvYyA9IGNvbXBvbmVudHNbWyJCbG9jIl1dLAogICAgICBWaW50ID0gY29tcG9uZW50c1tbIkludCJdXSwKICAgICAgVmUgPSBjb21wb25lbnRzW1siVmUiXV0sCiAgICAgIFZmID0gc3VtKGNvbXBvbmVudHMpLAogICAgICBoMmdlbl9wb3AgPSBwcm9wc1tbIlByb2ciXV0sCiAgICAgIGMycGFyYyA9IHByb3BzW1siUGFyYyJdXSwKICAgICAgaDJwb3AgPSBwcm9wc1tbIlBvcCJdXSwKICAgICAgYzJibG9jID0gcHJvcHNbWyJCbG9jIl1dLAogICAgICBjMmludCA9IHByb3BzW1siSW50Il1dLAogICAgICByZXNpZHVhbF9wcm9wID0gcHJvcHNbWyJWZSJdXSwKICAgICAgTG9nRGV0X00gPSBzdGVwJGxvZ2RldF9NLAogICAgICBQZW5hbGl6ZWRfU1MgPSBzdGVwJHBlbmFsaXplZF9zcywKICAgICAgRGV2aWFuY2UgPSBzdGVwJGRldmlhbmNlLAogICAgICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKICAgICkKCiAgICBpZiAoc3RlcCRyYW5kb21fY2hhbmdlIDw9IHRvbGVyYW5jZSkgewogICAgICBmaW5hbCA8LSBzdGVwCiAgICAgIGJyZWFrCiAgICB9CgogICAgb2xkX3Byb3BzIDwtIHByb3BzCiAgfQoKICBpZiAoaXMubnVsbChmaW5hbCkpIHsKICAgIHN0b3AoCiAgICAgIHRyYWl0LAogICAgICAiOiBNb2RlbCAxOTMgcmVjb25zdHJ1Y3Rpb24gZGlkIG5vdCBtZWV0IHRoZSBzdG9wcGluZyBydWxlIHdpdGhpbiAiLAogICAgICBtYXhfaXRlciwKICAgICAgIiBpdGVyYXRpb25zLiIKICAgICkKICB9CgogIGhpc3RvcnlfZGYgPC0gZG8uY2FsbChyYmluZCwgaGlzdG9yeSkKICByb3duYW1lcyhoaXN0b3J5X2RmKSA8LSBOVUxMCgogIGxpc3QoCiAgICB0cmFpdCA9IHRyYWl0LAogICAgZGF0YSA9IGQsCiAgICBkZXNpZ24gPSBkZXNpZ24sCiAgICBmaW5hbCA9IGZpbmFsLAogICAgaGlzdG9yeSA9IGhpc3RvcnlfZGYsCiAgICBpdGVyYXRpb25zID0gbnJvdyhoaXN0b3J5X2RmKSwKICAgIHRvbGVyYW5jZSA9IHRvbGVyYW5jZQogICkKfQpgYGAKCiMjIDkuIEV4YWN0IHJlcHJvZHVjdGlvbgoKYGBge3IgcnVuLW1vZGVsfQpmaXRzIDwtIGxpc3QoKQoKZm9yICh0cmFpdCBpbiBjKCJDZXIiLCAiQk0iLCAiTFAiKSkgewogIHRvbGVyYW5jZSA8LSBiZW5jaG1hcmskVG9sZXJhbmNlWwogICAgYmVuY2htYXJrJFRyYWl0ID09IHRyYWl0CiAgXQoKICBmaXRzW1t0cmFpdF1dIDwtIGZpdF9zZWxlZ2VuMTkzKAogICAgdHJhaXQgPSB0cmFpdCwKICAgIHRvbGVyYW5jZSA9IHRvbGVyYW5jZQogICkKfQpgYGAKCmBgYHtyIHN1bW1hcml6ZS1yZXN1bHRzfQpzdW1tYXJpemVfZml0IDwtIGZ1bmN0aW9uKGZpdCkgewogIGYgPC0gZml0JGZpbmFsCiAgY29tcG9uZW50cyA8LSBmJGNvbXBvbmVudHMKICBwcm9wcyA8LSBmJHByb3BzCgogIGRhdGEuZnJhbWUoCiAgICBUcmFpdCA9IGZpdCR0cmFpdCwKICAgIE4gPSBucm93KGZpdCRkYXRhKSwKICAgIEl0ZXJhdGlvbnMgPSBmaXQkaXRlcmF0aW9ucywKICAgIFRvbGVyYW5jZSA9IGZpdCR0b2xlcmFuY2UsCiAgICBEZXZpYW5jZSA9IGYkZGV2aWFuY2UsCiAgICBWZ2VuX3BvcCA9IGNvbXBvbmVudHNbWyJQcm9nIl1dLAogICAgVnBhcmMgPSBjb21wb25lbnRzW1siUGFyYyJdXSwKICAgIFZwb3AgPSBjb21wb25lbnRzW1siUG9wIl1dLAogICAgVmJsb2MgPSBjb21wb25lbnRzW1siQmxvYyJdXSwKICAgIFZpbnQgPSBjb21wb25lbnRzW1siSW50Il1dLAogICAgVmUgPSBjb21wb25lbnRzW1siVmUiXV0sCiAgICBWZiA9IHN1bShjb21wb25lbnRzKSwKICAgIGgyZ2VuX3BvcCA9IHByb3BzW1siUHJvZyJdXSwKICAgIGMycGFyYyA9IHByb3BzW1siUGFyYyJdXSwKICAgIGgycG9wID0gcHJvcHNbWyJQb3AiXV0sCiAgICBjMmJsb2MgPSBwcm9wc1tbIkJsb2MiXV0sCiAgICBjMmludCA9IHByb3BzW1siSW50Il1dLAogICAgcmVwZXQgPSAoCiAgICAgIGNvbXBvbmVudHNbWyJQcm9nIl1dICsKICAgICAgICBjb21wb25lbnRzW1siUGFyYyJdXSArCiAgICAgICAgY29tcG9uZW50c1tbIlBvcCJdXSArCiAgICAgICAgY29tcG9uZW50c1tbIkJsb2MiXV0KICAgICkgLyBzdW0oY29tcG9uZW50cyksCiAgICBoMnRvdCA9ICgKICAgICAgY29tcG9uZW50c1tbIlByb2ciXV0gKwogICAgICAgIGNvbXBvbmVudHNbWyJQb3AiXV0KICAgICkgLyBzdW0oY29tcG9uZW50cyksCiAgICBNZWFuID0gbWVhbihmJGJldGEpLAogICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgKQp9CgpyZXN1bHRzIDwtIGRvLmNhbGwoCiAgcmJpbmQsCiAgbGFwcGx5KGZpdHMsIHN1bW1hcml6ZV9maXQpCikKCnJvd25hbWVzKHJlc3VsdHMpIDwtIE5VTEwKCnJlc3VsdHMgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBkaWdpdHMgPSA2LAogICAgY2FwdGlvbiA9ICJSIHJlY29uc3RydWN0aW9uIG9mIFNFTEVHRU4gTW9kZWwgMTkzIiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCInCiAgKQpgYGAKCiMjIDEwLiBSIMOXIFNFTEVHRU4gcmVncmVzc2lvbiB0ZXN0CgpgYGB7ciBjb21wYXJlfQptZXRyaWNzIDwtIGMoCiAgIkRldmlhbmNlIiwKICAiVmdlbl9wb3AiLAogICJWcGFyYyIsCiAgIlZwb3AiLAogICJWYmxvYyIsCiAgIlZpbnQiLAogICJWZSIsCiAgIlZmIiwKICAiaDJnZW5fcG9wIiwKICAiYzJwYXJjIiwKICAiaDJwb3AiLAogICJjMmJsb2MiLAogICJjMmludCIsCiAgInJlcGV0IiwKICAiaDJ0b3QiLAogICJNZWFuIgopCgpjb21wYXJpc29uIDwtIGRvLmNhbGwoCiAgcmJpbmQsCiAgbGFwcGx5KHNlcV9sZW4obnJvdyhyZXN1bHRzKSksIGZ1bmN0aW9uKGkpIHsKICAgIHRyYWl0IDwtIHJlc3VsdHMkVHJhaXRbaV0KCiAgICBiIDwtIGJlbmNobWFya1sKICAgICAgYmVuY2htYXJrJFRyYWl0ID09IHRyYWl0LAogICAgICAsCiAgICAgIGRyb3AgPSBGQUxTRQogICAgXQoKICAgIGRvLmNhbGwoCiAgICAgIHJiaW5kLAogICAgICBsYXBwbHkobWV0cmljcywgZnVuY3Rpb24obWV0cmljKSB7CiAgICAgICAgZGF0YS5mcmFtZSgKICAgICAgICAgIFRyYWl0ID0gdHJhaXQsCiAgICAgICAgICBNZXRyaWMgPSBtZXRyaWMsCiAgICAgICAgICBSID0gcmVzdWx0c1tbbWV0cmljXV1baV0sCiAgICAgICAgICBTRUxFR0VOID0gYltbbWV0cmljXV1bMV0sCiAgICAgICAgICBEaWZmZXJlbmNlID0gcmVzdWx0c1tbbWV0cmljXV1baV0gLSBiW1ttZXRyaWNdXVsxXSwKICAgICAgICAgIEFic19kaWZmZXJlbmNlID0gYWJzKAogICAgICAgICAgICByZXN1bHRzW1ttZXRyaWNdXVtpXSAtIGJbW21ldHJpY11dWzFdCiAgICAgICAgICApLAogICAgICAgICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgICAgICAgKQogICAgICB9KQogICAgKQogIH0pCikKCnJvd25hbWVzKGNvbXBhcmlzb24pIDwtIE5VTEwKYGBgCgpgYGB7ciB2YWxpZGF0aW9ufQp2YWxpZGF0aW9uIDwtIGRvLmNhbGwoCiAgcmJpbmQsCiAgbGFwcGx5KGMoIkNlciIsICJCTSIsICJMUCIpLCBmdW5jdGlvbih0cmFpdCkgewogICAgeCA8LSBjb21wYXJpc29uWwogICAgICBjb21wYXJpc29uJFRyYWl0ID09IHRyYWl0LAogICAgICAsCiAgICAgIGRyb3AgPSBGQUxTRQogICAgXQoKICAgIHIgPC0gcmVzdWx0c1sKICAgICAgcmVzdWx0cyRUcmFpdCA9PSB0cmFpdCwKICAgICAgLAogICAgICBkcm9wID0gRkFMU0UKICAgIF0KCiAgICBiIDwtIGJlbmNobWFya1sKICAgICAgYmVuY2htYXJrJFRyYWl0ID09IHRyYWl0LAogICAgICAsCiAgICAgIGRyb3AgPSBGQUxTRQogICAgXQoKICAgIGNvbXBvbmVudF9tZXRyaWNzIDwtIGMoCiAgICAgICJWZ2VuX3BvcCIsCiAgICAgICJWcGFyYyIsCiAgICAgICJWcG9wIiwKICAgICAgIlZibG9jIiwKICAgICAgIlZpbnQiLAogICAgICAiVmUiLAogICAgICAiVmYiCiAgICApCgogICAgbWF4X2NvbXBvbmVudF9kaWZmIDwtIG1heCgKICAgICAgeCRBYnNfZGlmZmVyZW5jZVsKICAgICAgICB4JE1ldHJpYyAlaW4lIGNvbXBvbmVudF9tZXRyaWNzCiAgICAgIF0KICAgICkKCiAgICBkZXZpYW5jZV9kaWZmIDwtIHgkQWJzX2RpZmZlcmVuY2VbCiAgICAgIHgkTWV0cmljID09ICJEZXZpYW5jZSIKICAgIF0KCiAgICBtZWFuX2RpZmYgPC0geCRBYnNfZGlmZmVyZW5jZVsKICAgICAgeCRNZXRyaWMgPT0gIk1lYW4iCiAgICBdCgogICAgZGF0YS5mcmFtZSgKICAgICAgVHJhaXQgPSB0cmFpdCwKICAgICAgSXRlcmF0aW9uc19SID0gciRJdGVyYXRpb25zLAogICAgICBJdGVyYXRpb25zX1NFTEVHRU4gPSBiJEl0ZXJhdGlvbl9leHBlY3RlZCwKICAgICAgSXRlcmF0aW9uc19tYXRjaCA9CiAgICAgICAgciRJdGVyYXRpb25zID09IGIkSXRlcmF0aW9uX2V4cGVjdGVkLAogICAgICBNYXhfYWJzX2NvbXBvbmVudF9kaWZmID0KICAgICAgICBtYXhfY29tcG9uZW50X2RpZmYsCiAgICAgIEFic19kZXZpYW5jZV9kaWZmID0KICAgICAgICBkZXZpYW5jZV9kaWZmLAogICAgICBBYnNfbWVhbl9kaWZmID0KICAgICAgICBtZWFuX2RpZmYsCiAgICAgIFBBU1MgPSAoCiAgICAgICAgciRJdGVyYXRpb25zID09IGIkSXRlcmF0aW9uX2V4cGVjdGVkICYmCiAgICAgICAgICBtYXhfY29tcG9uZW50X2RpZmYgPCA1ZS02ICYmCiAgICAgICAgICBkZXZpYW5jZV9kaWZmIDwgNWUtMyAmJgogICAgICAgICAgbWVhbl9kaWZmIDwgNWUtNQogICAgICApLAogICAgICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKICAgICkKICB9KQopCgp2YWxpZGF0aW9uIHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgZGlnaXRzID0gOSwKICAgIGNhcHRpb24gPSAiTnVtZXJpY2FsIHJlcHJvZHVjdGlvbiB2YWxpZGF0aW9uIiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCInCiAgKQoKc3RvcGlmbm90KGFsbCh2YWxpZGF0aW9uJFBBU1MpKQpgYGAKCkFsbCB0aHJlZSB0cmFpdHMgbXVzdCBwYXNzIHRoaXMgcmVncmVzc2lvbiB0ZXN0LiBGYWlsdXJlIGluZGljYXRlcyB0aGF0IHRoZQpjYW5vbmljYWwgaW5wdXQsIGFsZ29yaXRobSwgZXhlY3V0aW9uIHNldHRpbmdzLCBvciBudW1lcmljYWwgYmVoYXZpb3IgaGFzCmNoYW5nZWQgYW5kIG11c3QgYmUgYXVkaXRlZCBiZWZvcmUgZG93bnN0cmVhbSBhbmFseXNlcyBhcmUgYWNjZXB0ZWQuCgojIyAxMS4gSXRlcmF0aW9uIGJlaGF2aW9yCgpgYGB7ciBpdGVyYXRpb24tc3VtbWFyeX0KaXRlcmF0aW9uX3N1bW1hcnkgPC0gZG8uY2FsbCgKICByYmluZCwKICBsYXBwbHkoZml0cywgZnVuY3Rpb24oZml0KSB7CiAgICBkYXRhLmZyYW1lKAogICAgICBUcmFpdCA9IGZpdCR0cmFpdCwKICAgICAgSXRlcmF0aW9ucyA9IGZpdCRpdGVyYXRpb25zLAogICAgICBGaW5hbF9jaGFuZ2UgPQogICAgICAgIGZpdCRmaW5hbCRyYW5kb21fY2hhbmdlLAogICAgICBUb2xlcmFuY2UgPSBmaXQkdG9sZXJhbmNlLAogICAgICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKICAgICkKICB9KQopCgppdGVyYXRpb25fc3VtbWFyeSB8PgogIGtuaXRyOjprYWJsZSgKICAgIGZvcm1hdCA9ICJodG1sIiwKICAgIGRpZ2l0cyA9IDksCiAgICBjYXB0aW9uID0gIk1vZGVsIDE5MyBzdG9wcGluZyBiZWhhdmlvciIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiJwogICkKYGBgCgpgQ2VyYCBhbmQgYEJNYCBzYXRpc2Z5IHRoZSBhdWRpdGVkIGAwLjA1YCBzdG9wcGluZyB0aHJlc2hvbGQgYWZ0ZXIgdGhlIGZpcnN0CnZhcmlhbmNlLWNvbXBvbmVudCB1cGRhdGUuIGBML1BgLCB1c2luZyB0aGUgYXVkaXRlZCBgMC4wMDAxYCB0aHJlc2hvbGQsCnJlcXVpcmVzIDQ2IHVwZGF0ZXMuIFRoaXMgZXhwbGFpbnMgd2h5IGEgY29udmVudGlvbmFsIFJFTUwgb3B0aW1pemVyIGNhcnJpZWQKdG8gYSBzdHJpY3RlciBudW1lcmljYWwgb3B0aW11bSBjYW4gcHJvZHVjZSBkaWZmZXJlbnQgc21hbGwgdmFyaWFuY2UKY29tcG9uZW50cyBldmVuIHdoZW4gdGhlIG1peGVkLW1vZGVsIHN0cnVjdHVyZSBpcyBvdGhlcndpc2UgZXF1aXZhbGVudC4KCiMjIDEyLiBQZXJzaXN0ZWQgYXVkaXQgb3V0cHV0cwoKYGBge3Igc2F2ZS1vdXRwdXRzfQp1dGlsczo6d3JpdGUuY3N2KAogIGJlbmNobWFyaywKICBmaWxlLnBhdGgoT1VULCAic2VsZWdlbl9iZW5jaG1hcmsuY3N2IiksCiAgcm93Lm5hbWVzID0gRkFMU0UKKQoKdXRpbHM6OndyaXRlLmNzdigKICByZXN1bHRzLAogIGZpbGUucGF0aChPVVQsICJyX2V4YWN0X3Jlc3VsdHMuY3N2IiksCiAgcm93Lm5hbWVzID0gRkFMU0UKKQoKdXRpbHM6OndyaXRlLmNzdigKICBjb21wYXJpc29uLAogIGZpbGUucGF0aChPVVQsICJyX3ZzX3NlbGVnZW4uY3N2IiksCiAgcm93Lm5hbWVzID0gRkFMU0UKKQoKdXRpbHM6OndyaXRlLmNzdigKICB2YWxpZGF0aW9uLAogIGZpbGUucGF0aChPVVQsICJ2YWxpZGF0aW9uLmNzdiIpLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKCmZvciAodHJhaXQgaW4gbmFtZXMoZml0cykpIHsKICB1dGlsczo6d3JpdGUuY3N2KAogICAgZml0c1tbdHJhaXRdXSRoaXN0b3J5LAogICAgZmlsZS5wYXRoKAogICAgICBPVVQsCiAgICAgIHBhc3RlMCgKICAgICAgICAiaXRlcmF0aW9uc18iLAogICAgICAgIHRvbG93ZXIodHJhaXQpLAogICAgICAgICIuY3N2IgogICAgICApCiAgICApLAogICAgcm93Lm5hbWVzID0gRkFMU0UKICApCn0KYGBgCgojIyAxMy4gUmVwcm9kdWNpYmlsaXR5IGNvbmNsdXNpb24KClRoZSByZWNvbnN0cnVjdGVkIFIgaW1wbGVtZW50YXRpb24gcmVwcm9kdWNlcyB0aGUgYXVkaXRlZCBTRUxFR0VOIE1vZGVsIDE5MwpvdXRwdXRzIGZvciBhbGwgdGhyZWUgdHJhaXRzIHRvIG51bWVyaWNhbCByb3VuZGluZyBwcmVjaXNpb24sIGluY2x1ZGluZyB0aGUKbnVtYmVyIG9mIGl0ZXJhdGlvbnMsIHZhcmlhbmNlIGNvbXBvbmVudHMsIHZhcmlhbmNlIHByb3BvcnRpb25zLCBtZWFuLCBhbmQKZGV2aWFuY2UuCgpUaGlzIGVzdGFibGlzaGVzIGFuIGV4ZWN1dGFibGUgcmVncmVzc2lvbiB0ZXN0IGZvciB0aGUgcGhlbm90eXBpYyBmaXJzdCBzdGFnZQp1c2VkIGluIHRoZSByZWFsLWRhdGEgd29ya2Zsb3cuIEl0IGRvZXMgKipub3QqKiBjbGFpbSB0aGF0IHRoZSBjdXJyZW50CnBoZW5vdHlwaWMgZGF0YSByZXByb2R1Y2UgZXZlcnkgaGlzdG9yaWNhbCB2YWx1ZSByZXBvcnRlZCBpbiB0aGUgdGhlc2lzOyB0aGUKaGlzdG9yaWNhbCB0aGVzaXMgY29tcGFyaXNvbiBhbmQgdGhlIGV4YWN0IHJlcHJvZHVjdGlvbiBvZiB0aGUgY3VycmVudCBhdWRpdGVkClNFTEVHRU4gZXhlY3V0aW9uIGFyZSBzZXBhcmF0ZSBxdWVzdGlvbnMuCg==</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("selegen_model193_reproduction.Rmd");
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
