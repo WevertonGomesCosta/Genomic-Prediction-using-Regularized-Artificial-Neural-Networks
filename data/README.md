@@ -24,7 +24,8 @@ The real-data workflow uses two distinct source components.
 
 ### Longitudinal phenotypic data
 
-The complete repeated field observations are the input to
+The canonical longitudinal field source is
+`data/dados_reais/coffee_longitudinal_phenotypes.txt`, which is the input to
 `analysis/real_data_phenotype.Rmd`.
 
 The phenotypic module uses all observations required by the experimental
@@ -52,7 +53,5 @@ object used by validation, GBLUP-ADE, ANN, and model-comparison modules.
 - `code/` — reusable analytical functions and utilities;
 - `output/` — derived analytical objects and scientific results;
 - `docs/` — rendered analytical website;
-- `.local/` — machine-local runtime files that are not part of the scientific
-  output contract.
 
 Source data are not modified in place by downstream analysis modules.
