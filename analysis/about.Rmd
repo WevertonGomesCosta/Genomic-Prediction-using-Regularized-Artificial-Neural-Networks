@@ -15,65 +15,110 @@ editor_options:
 # Research objective
 
 This project investigates genomic prediction using regularized artificial
-neural networks, with emphasis on whether L1 and L2 weight penalties improve
-predictive generalization relative to an unregularized neural network and a
-GBLUP-ADE genomic mixed model.
+neural networks. Its main objective is to determine whether L1 and L2 weight
+penalties improve predictive generalization relative to an unregularized
+neural network and a GBLUP-ADE genomic mixed model.
 
-The scientific design combines controlled simulation with a planned applied
-extension to real *Coffea arabica* genomic and phenotypic data.
+The study combines controlled simulation with real longitudinal
+*Coffea arabica* phenotypic and genomic data.
 
-# Scientific scope
+# Scientific design
 
-The validated public analysis currently covers the simulated-data branch. This
-branch provides controlled genetic architectures and known true genetic values,
-allowing predictive performance to be evaluated independently of the phenotype
-used for model fitting.
+The simulated and real-data branches use the same general analytical
+separation:
 
-The study compares GBLUP-ADE with unregularized, L1-, L2-, and L1+L2-regularized
-artificial neural networks under the same frozen validation design.
+1. preparation of the analytical data;
+2. definition of the validation design;
+3. independent fitting of GBLUP-ADE and ANN models;
+4. terminal comparison of predictions obtained on matched held-out
+   individuals.
 
-# Why simulated genomic data
+The real-data branch contains one additional stage because repeated field
+observations must be converted into individual phenotypic targets before
+genomic prediction.
 
-The simulated branch contains six scenarios spanning a gradient of genetic
-complexity and nominal heritability. Because the scenarios do not form a
-complete factorial combination of QTL number and heritability, changes across
-the full C1--C6 sequence are not interpreted as the isolated causal effect of
-either factor.
+# Simulated data
 
-The known true genetic value provides a primary evaluation target that is
-separate from the observed phenotype. Phenotype prediction is retained as a
-secondary outcome.
+The simulated branch contains six genetic scenarios with known true genetic
+values.
 
-# Methodological principles
+Observed phenotypes provide the response used for model fitting, while the
+known true genetic values remain excluded from model development and provide
+an independent target for predictive assessment.
 
-The project follows a common comparison framework across competing methods:
+GBLUP-ADE is compared with ANN-0, ANN-L1, ANN-L2, and ANN-L1+L2 under common
+outer-assessment partitions.
 
-- the same frozen outer-assessment partitions are used for all models;
-- model selection and preprocessing are restricted to training or
-  outer-analysis data;
-- outer-assessment individuals are excluded from ANN hyperparameter and epoch
-  selection;
-- true simulated genetic values are excluded from model fitting and selection;
-- final method comparisons use directly matched held-out individuals.
+# Real Coffea arabica data
 
-These principles are designed to preserve separation between model selection
-and final predictive assessment.
+The real-data branch begins with the complete longitudinal field dataset.
 
-# Planned Coffea arabica extension
+Phenotypic preparation and genomic prediction are deliberately separated.
 
-A real-data extension will apply the same separation between data audit,
-validation, model fitting, and terminal comparison to *Coffea arabica* genomic
-and phenotypic data.
+## Phenotypic mixed model
 
-Genotype provenance, genotype quality control, phenotype provenance, and
-phenotype preparation will be audited before genomic prediction. This
-real-data branch is not yet part of the validated public workflow.
+`real_data_phenotype.Rmd` operates only on the longitudinal phenotypic data.
+
+The module:
+
+- describes the observations and experimental structure;
+- organizes repeated measurements and model factors;
+- fits the defined mixed model by REML with `sommer`;
+- summarizes the estimated variance components;
+- obtains one final genotypic BLUP per individual and trait.
+
+These BLUPs form the phenotypic targets used by the genomic-prediction branch.
+
+## Genotype and phenotype integration
+
+`real_data_audit.Rmd` combines the phenotypic BLUPs with the canonical
+`geno_real.rds` genotype object.
+
+This stage defines the common set and order of individuals, performs genotype
+quality control, prepares the marker representation used by the genomic
+models, and creates the common analytical object consumed downstream.
+
+The phenotypic mixed model is not refitted during this integration stage.
+
+# Genomic-prediction models
+
+Five model configurations are evaluated:
+
+- GBLUP-ADE;
+- ANN-0;
+- ANN-L1;
+- ANN-L2;
+- ANN-L1+L2.
+
+GBLUP-ADE and ANN fitting are implemented in separate modules and use the same
+outer-assessment design.
+
+ANN model selection is restricted to the corresponding outer-analysis sample.
+
+# Interpretation boundaries
+
+The simulated and real-data branches answer related but distinct predictive
+questions.
+
+For simulated data, true genetic values are known and can be used directly for
+independent evaluation.
+
+For real data, the response used for genomic prediction is an estimated
+genotypic BLUP obtained from the phenotypic mixed model. Predictive results
+therefore describe the ability of genomic models to recover these adjusted
+phenotypic genetic signals within the represented population and validation
+design.
+
+Held-out genomic predictions are not interpreted as final breeding values from
+a model fitted with all available responses.
 
 # Reproducible research
 
-The project is implemented in R using `workflowr` and `renv`. Source analyses,
-rendered pages, dependency information, and reproducibility metadata are kept
-within the same version-controlled research workflow.
+The repository uses R, R Markdown, `workflowr`, and `renv`.
 
-The detailed scientific methods and results are presented in the public
-analysis modules linked from the project home page.
+Each analytical module has a specific responsibility and consumes defined
+outputs from the preceding stage rather than repeating upstream processing.
+
+Source pages are stored under `analysis/`, canonical derived objects under
+`output/`, and the rendered website under `docs/`. Package versions required
+by the project are recorded in `renv.lock`.

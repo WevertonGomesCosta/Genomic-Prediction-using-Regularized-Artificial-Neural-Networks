@@ -18,98 +18,105 @@ GBLUP-ADE genomic mixed model and artificial neural networks with no
 regularization, L1 regularization, L2 regularization, or simultaneous L1+L2
 regularization.
 
-The validated analysis contains both simulated genomic data, where true
-genetic values are known and can be used for independent predictive assessment,
-and a real *Coffea arabica* branch evaluated under the same frozen validation
-principles.
+The analytical design contains two complementary branches: controlled
+simulated genomic data and real longitudinal *Coffea arabica* data.
 
 ## Scientific question
 
-The simulated-data branch asks whether neural-network weight regularization
-improves predictive performance and generalization across a gradient of genetic
-architectures when all competing methods are evaluated under the same frozen
-cross-validation design.
+The central question is whether neural-network weight regularization improves
+predictive performance and generalization relative to an unregularized ANN and
+a genomic mixed-model benchmark when all competing methods are evaluated under
+a common validation design.
 
-Prediction of the **true simulated genetic value** is the primary outcome.
-Phenotype prediction is retained as a secondary outcome.
+For simulated data, known true genetic values provide an independent target
+for predictive assessment.
+
+For real data, repeated field observations are first analyzed with a
+phenotypic mixed model. Individual genotypic BLUPs from that model become the
+phenotypic targets for the genomic-prediction workflow.
+
+## Simulated-data workflow
+
+```text
+simulated_data_audit.Rmd
+        |
+        v
+simulated_data_validation.Rmd
+        |
+        +-------------------+
+        |                   |
+        v                   v
+simulated_data_gblup.Rmd   simulated_data_ann.Rmd
+        |                   |
+        +---------+---------+
+                  |
+                  v
+      simulated_data_comparison.Rmd
+```
+
+## Real-data workflow
+
+```text
+real_data_phenotype.Rmd
+        |
+        v
+real_data_audit.Rmd
+        |
+        v
+real_data_validation.Rmd
+        |
+        +-------------------+
+        |                   |
+        v                   v
+real_data_gblup.Rmd       real_data_ann.Rmd
+        |                   |
+        +---------+---------+
+                  |
+                  v
+        real_data_comparison.Rmd
+```
+
+The real-data workflow begins with the complete longitudinal phenotypic
+dataset. `real_data_phenotype.Rmd` performs descriptive analysis, organizes the
+experimental data, fits the phenotypic mixed model with `sommer`, and obtains
+individual genotypic BLUPs.
+
+`real_data_audit.Rmd` then integrates those BLUPs with `geno_real.rds`, aligns
+the common individuals, performs genotype quality control, and creates the
+common object consumed by the remaining real-data modules.
+
+Validation design, GBLUP-ADE fitting, ANN fitting, and terminal comparison are
+kept in separate pages.
+
+## Models
+
+Five genomic-prediction configurations are compared:
+
+- GBLUP-ADE;
+- ANN without L1/L2 regularization;
+- ANN-L1;
+- ANN-L2;
+- ANN-L1+L2.
+
+All competing models use the same outer-assessment partitions within each
+dataset and task.
 
 ## Validation principles
 
-The public analysis follows a common validation contract:
+The analytical design separates model development from final predictive
+assessment.
 
-1. the same outer partitions are used by all competing models;
-2. ANN hyperparameter selection is restricted to the outer-analysis sample;
-3. outer-assessment individuals are excluded from hyperparameter and epoch
-   selection;
-4. preprocessing parameters are estimated from training data only;
-5. true simulated genetic values are excluded from fitting and selection and
-   used only for final evaluation;
-6. predictive correlation, RMSE, MAE, bias, slope, and \(R^2\) are computed
-   under the same held-out design.
+Outer-assessment responses do not enter model fitting, ANN hyperparameter
+selection, or ANN epoch selection. Competing methods are evaluated on matched
+held-out individuals using the same task definitions and predictive metrics.
 
-## Public analysis workflow
-
-The simulated-data workflow is organized into five modules:
-
-1. [Data audit](simulated_data_audit.html) — verifies data integrity,
-   provenance, genotype and phenotype structure, QTL information, and scenario
-   properties.
-2. [Validation design](simulated_data_validation.html) — defines the frozen
-   outer and inner cross-validation design shared by all competing methods.
-3. Parallel modeling branches:
-   - [GBLUP-ADE](simulated_data_gblup.html)
-   - [Regularized ANN](simulated_data_ann.html)
-4. [Model comparison](simulated_data_comparison.html) — performs the terminal,
-   task-matched comparison after both modeling branches are complete.
-
-ANN hyperparameter tuning is part of the ANN analysis rather than a separate
-public module.
-
-The real-data workflow uses the corresponding modules:
-
-1. [Phenotypic SELEGEN Model 193 reproduction](selegen_model193_reproduction.html) — reproduces the audited longitudinal phenotypic mixed-model results in R before genomic prediction.
-2. [Real-data audit](real_data_audit.html)
-3. [Real-data validation](real_data_validation.html)
-4. Parallel modeling branches:
-   - [Real-data GBLUP-ADE](real_data_gblup.html)
-   - [Real-data regularized ANN](real_data_ann.html)
-5. [Real-data model comparison](real_data_comparison.html)
-
-The terminal real-data comparison reads the frozen model outputs and does not
-refit either model family.
-
-## Key result
-
-Within the prespecified canonical model and ANN architecture search space,
-**GBLUP-ADE provides the strongest overall predictive performance** and has the
-highest mean genetic correlation and \(R^2\), and the lowest mean genetic RMSE,
-in all six simulated scenarios.
-
-Among the neural networks, **ANN-L1+L2 has the best overall averages by a very
-small margin over ANN-L1**. ANN-L2 remains close to the unregularized ANN,
-indicating that the observed regularization gain is driven mainly by the L1
-component.
-
-These results describe the frozen validation design and bounded model search
-evaluated here; they do not establish a universal ranking between genomic mixed
-models and all possible neural-network architectures.
-
-## Validated real-data extension
-
-The *Coffea arabica* branch follows the same separation between data audit,
-validation, model fitting, and terminal comparison.
-
-Under the frozen real-data design, all evaluated models show weak held-out
-discrimination. GBLUP-ADE has the lowest mean RMSE and MAE and the highest mean
-R-squared for all three traits. The ANN variants do not demonstrate a useful
-predictive advantage, and prediction-dispersion diagnostics show substantial
-shrinkage in both modeling families, especially for ANN variants containing L1
-regularization.
+For the simulated branch, true genetic values are excluded from model fitting
+and model selection and are used as an independent evaluation target.
 
 ## Reproducibility
 
-The project is organized with `workflowr`, with source analyses under
-`analysis/` and the generated website under `docs/`. Project-level package
-versions are recorded in `renv.lock`, while the generated scientific pages
-record repository provenance and workflowr reproducibility checks for each
-render.
+The project is organized with `workflowr`. Source analyses are stored under
+`analysis/`, derived analytical objects under `output/`, and the rendered site
+under `docs/`.
+
+Project-level R package versions are recorded in `renv.lock`.

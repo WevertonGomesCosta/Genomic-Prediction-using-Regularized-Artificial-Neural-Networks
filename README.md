@@ -2,37 +2,36 @@
 
 This repository contains a reproducible genomic-prediction study comparing
 L1/L2-regularized artificial neural networks with a GBLUP-ADE genomic mixed
-model under a common frozen cross-validation design.
+model.
+
+The project contains two complementary analytical branches:
+
+- simulated genomic data, for which true genetic values are known;
+- real *Coffea arabica* data, for which longitudinal field observations are
+  analyzed with mixed models before genomic prediction.
+
+Both branches use modular `workflowr` analyses with separate stages for data
+preparation, validation design, model fitting, and model comparison.
+
+## Scientific objective
 
 The primary objective is to evaluate whether neural-network weight
-regularization improves predictive performance and generalization in
-high-dimensional genomic prediction problems.
+regularization improves predictive performance and generalization in genomic
+prediction relative to a GBLUP-ADE benchmark.
 
-## Scientific scope
+Four artificial-neural-network configurations are evaluated:
 
-The validated workflow now contains two complementary branches:
+- **ANN-0** — no L1/L2 weight penalty;
+- **ANN-L1** — L1 regularization;
+- **ANN-L2** — L2 regularization;
+- **ANN-L1+L2** — simultaneous L1 and L2 regularization.
 
-- a **simulated-data branch**, where true genetic values are known and provide
-  an independent target for predictive assessment;
-- a **real-data branch** based on *Coffea arabica*, evaluated under the same
-  frozen outer-validation and nested ANN tuning principles.
+The genomic mixed-model benchmark is **GBLUP-ADE**, including additive,
+dominance, and epistatic genomic effects.
 
-Both branches compare GBLUP-ADE with the same four ANN regularization variants
-under matched held-out partitions.
+## Simulated-data workflow
 
-## Models
-
-Five models are compared under the same outer validation design:
-
-- **GBLUP-ADE** — additive, dominance, and epistatic genomic effects;
-- **ANN-0** — artificial neural network without L1/L2 weight penalties;
-- **ANN-L1** — ANN with L1 weight regularization;
-- **ANN-L2** — ANN with L2 weight regularization;
-- **ANN-L1+L2** — ANN with simultaneous L1 and L2 weight penalties.
-
-## Canonical simulated-data workflow
-
-The public workflow is:
+The simulated-data branch follows five analytical modules:
 
 ```text
 simulated_data_audit.Rmd
@@ -51,28 +50,27 @@ simulated_data_gblup.Rmd   simulated_data_ann.Rmd
       simulated_data_comparison.Rmd
 ```
 
-The modules have distinct roles:
+The modules have distinct responsibilities:
 
-1. `simulated_data_audit.Rmd` — audits data integrity, provenance, genotype and
-   phenotype structure, QTL information, and simulation-scenario properties;
-2. `simulated_data_validation.Rmd` — defines the frozen outer and inner
-   cross-validation design shared by all competing methods;
-3. `simulated_data_gblup.Rmd` — fits and evaluates the GBLUP-ADE branch;
-4. `simulated_data_ann.Rmd` — defines the regularized ANN branch, including
-   nested hyperparameter selection, epoch selection, final refitting, and
-   held-out prediction;
-5. `simulated_data_comparison.Rmd` — performs the terminal, task-matched
-   comparison of GBLUP-ADE and ANN results under the shared frozen validation
-   design.
+1. `simulated_data_audit.Rmd` prepares and describes the simulated genotype,
+   phenotype, true genetic-value, genetic-map, and simulation-scenario data.
+2. `simulated_data_validation.Rmd` defines the common outer and inner
+   cross-validation design.
+3. `simulated_data_gblup.Rmd` fits and evaluates GBLUP-ADE.
+4. `simulated_data_ann.Rmd` fits the four ANN configurations and performs
+   training-only hyperparameter and epoch selection.
+5. `simulated_data_comparison.Rmd` compares the saved model results under the
+   common validation design.
 
-ANN hyperparameter tuning is part of the ANN analysis itself rather than a
-separate public module.
+## Real-data workflow
 
-## Canonical real-data workflow
-
-The real-data workflow follows the same terminal-comparison architecture:
+The real-data branch adds an explicit phenotypic-analysis stage before genomic
+data are introduced:
 
 ```text
+real_data_phenotype.Rmd
+        |
+        v
 real_data_audit.Rmd
         |
         v
@@ -89,62 +87,74 @@ real_data_gblup.Rmd       real_data_ann.Rmd
         real_data_comparison.Rmd
 ```
 
-The real-data branch audits genotype and phenotype inputs, freezes the common
-outer and inner validation design, evaluates GBLUP-ADE and regularized ANN
-models independently, and performs the final task-matched comparison without
-refitting either model family.
+The six modules have separate responsibilities.
 
-## Validation design
+1. **Phenotypic analysis — `real_data_phenotype.Rmd`**
 
-The simulated-data comparison uses the same frozen outer partitions for all
-models.
+   Uses the complete longitudinal *Coffea arabica* field dataset. The module
+   describes and organizes the repeated observations, specifies the phenotypic
+   mixed model, estimates variance components by REML with `sommer`, and
+   obtains the final individual genotypic BLUPs used as phenotypic targets for
+   genomic prediction.
 
-- ANN hyperparameter selection is restricted to the outer-analysis sample.
-- Outer-assessment individuals are excluded from ANN hyperparameter and epoch
-  selection.
-- Preprocessing parameters are estimated from training data only.
-- True simulated genetic values are excluded from fitting and selection and are
-  used only for final evaluation.
-- GBLUP-ADE and all ANN variants are evaluated on the same held-out individuals
-  within each task.
-- Genetic-value prediction is the primary outcome; phenotype prediction is
-  retained as a secondary outcome.
-- Correlation, RMSE, MAE, bias, slope, and R-squared are computed under the same
-  held-out design.
+   Genomic marker data are not used in this module.
 
-## Main findings
+2. **Data integration and genotype preparation — `real_data_audit.Rmd`**
 
-Within the prespecified canonical model and ANN architecture search space,
-**GBLUP-ADE provides the strongest overall predictive performance**. It has the
-highest mean genetic correlation and R-squared, and the lowest mean genetic
-RMSE, in all six simulated scenarios.
+   Reads the phenotypic BLUPs and `geno_real.rds`, establishes the common set
+   and order of individuals, verifies genotype structure, applies the defined
+   marker quality-control rules, and creates the common real-data object used
+   by all subsequent modules.
 
-Among the neural networks, **ANN-L1+L2 has the best overall averages by a very
-small margin over ANN-L1**. ANN-L2 remains close to the unregularized ANN,
-indicating that the observed regularization gain is driven mainly by the L1
-component.
+3. **Validation design — `real_data_validation.Rmd`**
 
-In the real *Coffea arabica* data, predictive discrimination is weak for all
-evaluated models. GBLUP-ADE nevertheless has the lowest mean RMSE and MAE and
-the highest mean R-squared for all three traits. ANN-L2 has the highest mean
-correlation for `Prod.Cor`, but that correlation remains close to zero. Both
-modeling families show substantial prediction shrinkage, particularly the
-L1-containing ANN variants.
+   Defines the common outer and inner cross-validation partitions used by
+   GBLUP-ADE and all ANN configurations.
 
-These results describe the frozen validation designs and bounded model searches
-evaluated in this project; they do not establish a universal ranking between
-genomic mixed models and all possible neural-network architectures.
+4. **GBLUP-ADE — `real_data_gblup.Rmd`**
+
+   Fits the genomic mixed model and generates held-out genomic predictions
+   under the common validation design.
+
+5. **Regularized ANN — `real_data_ann.Rmd`**
+
+   Fits ANN-0, ANN-L1, ANN-L2, and ANN-L1+L2. Hyperparameter and epoch
+   selection are restricted to the corresponding analysis sample.
+
+6. **Model comparison — `real_data_comparison.Rmd`**
+
+   Reads the saved GBLUP-ADE and ANN results and performs the terminal
+   task-matched comparison without refitting either model family.
+
+## Validation principles
+
+The model-comparison design follows common rules across methods:
+
+- competing models use the same outer-assessment partitions;
+- outer-assessment responses are excluded from model fitting and model
+  selection;
+- ANN hyperparameter and epoch selection use only the corresponding
+  outer-analysis sample;
+- preprocessing that depends on the response or training sample is estimated
+  without access to the outer-assessment responses;
+- model comparisons use matched held-out individuals;
+- predictive metrics are calculated under the same task definitions.
+
+For simulated data, known true genetic values provide an independent primary
+evaluation target. For real data, the phenotypic mixed-model stage supplies
+the individual genotypic BLUPs used as the response for genomic prediction.
 
 ## Repository structure
 
-- `analysis/` — workflowr source pages for the public analysis;
-- `data/` — input-data area and data documentation;
-- `code/` — reusable helper code;
-- `output/` — validated derived objects and canonical analysis results;
-- `docs/` — generated workflowr website;
+- `analysis/` — `workflowr` source pages defining the analytical modules;
+- `data/` — canonical source data and data contracts;
+- `code/` — reusable functions and command-line utilities shared across
+  modules;
+- `output/` — derived analytical objects, model outputs, tables, and figures;
+- `docs/` — rendered `workflowr` website;
 - `renv.lock` — project dependency lockfile.
 
-More detailed contracts are documented in:
+Detailed directory contracts are documented in:
 
 - [`data/README.md`](data/README.md);
 - [`code/README.md`](code/README.md);
@@ -154,13 +164,14 @@ More detailed contracts are documented in:
 
 The project is implemented in R using R Markdown, `workflowr`, and `renv`.
 
-Routine site rendering uses the validated saved analysis outputs rather than
-repeating computationally intensive model fitting. The generated workflowr pages
-record repository provenance and reproducibility checks for each render, while
-project-level package versions are recorded in `renv.lock`.
+Each analytical stage has a defined input and output contract. Computationally
+intensive fitting can be executed deliberately and its derived objects saved
+under `output/`, allowing the rendered site to present the complete analytical
+procedure without requiring expensive model fitting during every routine
+render.
 
-The generated website is stored under `docs/`, and the corresponding source
-analyses remain under `analysis/`.
+Package versions are recorded in `renv.lock`, source analyses are stored under
+`analysis/`, and the rendered website is stored under `docs/`.
 
 ## Citation
 
@@ -172,6 +183,4 @@ If you use this repository, please cite it using the metadata provided in
 Except where otherwise indicated, the original analytical materials in this
 repository are licensed under the Creative Commons
 Attribution-NonCommercial-ShareAlike 4.0 International license
-(CC BY-NC-SA 4.0). See [`LICENSE.md`](LICENSE.md) for the repository-level
-license statement. Source data and third-party materials remain subject to
-their own provenance, authorization, and licensing conditions.
+(CC BY-NC-SA 4.0). See [`LICENSE.md`](LICENSE.md).
