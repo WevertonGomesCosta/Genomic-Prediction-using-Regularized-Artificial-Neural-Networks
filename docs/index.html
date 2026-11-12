@@ -9,11 +9,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Weverton Gomes da Costa" />
+<meta name="author" content="Costa, W. G." />
 
 <meta name="date" content="2026-11-12" />
 
-<title>Regularized Artificial Neural Networks for Genomic Prediction</title>
+<title>Regularized Artificial Neural Networks for Genomic Prediction / Redes Neurais Artificiais Regularizadas para Predição Genômica</title>
 
 <script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -31,8 +31,14 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -55,117 +61,25 @@ div.section {
   ul.task-list{list-style: none;}
     </style>
 
-
-
-<style type="text/css">
-  code {
-    white-space: pre;
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
   }
-  .sourceCode {
-    overflow: visible;
-  }
-</style>
-<style type="text/css" data-origin="pandoc">
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
 }
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
-code span.al { color: #ff0000; } /* Alert */
-code span.an { color: #008000; } /* Annotation */
-code span.at { } /* Attribute */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #0000ff; } /* ControlFlow */
-code span.ch { color: #008080; } /* Char */
-code span.cn { } /* Constant */
-code span.co { color: #008000; } /* Comment */
-code span.cv { color: #008000; } /* CommentVar */
-code span.do { color: #008000; } /* Documentation */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.im { } /* Import */
-code span.in { color: #008000; } /* Information */
-code span.kw { color: #0000ff; } /* Keyword */
-code span.op { } /* Operator */
-code span.ot { color: #ff4000; } /* Other */
-code span.pp { color: #ff4000; } /* Preprocessor */
-code span.sc { color: #008080; } /* SpecialChar */
-code span.ss { color: #008080; } /* SpecialString */
-code span.st { color: #008080; } /* String */
-code span.va { } /* Variable */
-code span.vs { color: #008080; } /* VerbatimString */
-code span.wa { color: #008000; font-weight: bold; } /* Warning */
-
-.sourceCode .row {
-  width: 100%;
-}
-.sourceCode {
-  overflow-x: auto;
-}
-.code-folding-btn {
-  margin-right: -30px;
-}
-</style>
-<script>
-// apply pandoc div.sourceCode style to pre.sourceCode instead
-(function() {
-  var sheets = document.styleSheets;
-  for (var i = 0; i < sheets.length; i++) {
-    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
-    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    var j = 0;
-    while (j < rules.length) {
-      var rule = rules[j];
-      // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
-        j++;
-        continue;
-      }
-      var style = rule.style.cssText;
-      // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') {
-        j++;
-        continue;
-      }
-      // replace div.sourceCode by a pre.sourceCode rule
-      sheets[i].deleteRule(j);
-      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
-    }
-  }
-})();
 </script>
 
 
+
+
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
 
 
 
@@ -332,6 +246,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -339,6 +316,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -394,6 +381,7 @@ $(document).ready(function () {
   <a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks">
     <span class="fa fa-github"></span>
      
+    Source code
   </a>
 </li>
       </ul>
@@ -408,14 +396,18 @@ $(document).ready(function () {
 <ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
 <li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
 <li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+<li role="separator" class="divider"></li>
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
 </ul>
 </div>
 
 
 
 <h1 class="title toc-ignore">Regularized Artificial Neural Networks for
-Genomic Prediction</h1>
-<h4 class="author">Weverton Gomes da Costa</h4>
+Genomic Prediction / Redes Neurais Artificiais Regularizadas para
+Predição Genômica</h1>
+<h4 class="author">Costa, W. G.<a href="#fn1" class="footnote-ref"
+id="fnref1"><sup>1</sup></a></h4>
 <h4 class="date">2026-11-12</h4>
 
 </div>
@@ -580,15 +572,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree70b7c9ef2ab9625c8ee598156523aec08b3c2ac7targetblank70b7c9ea">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree5e18e3fcce69f8f0645ca463f52d3d59e815586ctargetblank5e18e3fa">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/70b7c9ef2ab9625c8ee598156523aec08b3c2ac7" target="_blank">70b7c9e</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/5e18e3fcce69f8f0645ca463f52d3d59e815586c" target="_blank">5e18e3f</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree70b7c9ef2ab9625c8ee598156523aec08b3c2ac7targetblank70b7c9ea"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree5e18e3fcce69f8f0645ca463f52d3d59e815586ctargetblank5e18e3fa"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -598,7 +590,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/70b7c9ef2ab9625c8ee598156523aec08b3c2ac7" target="_blank">70b7c9e</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/5e18e3fcce69f8f0645ca463f52d3d59e815586c" target="_blank">5e18e3f</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -638,12 +630,12 @@ Ignored files:
     Ignored:    renv/staging/
 
 Unstaged changes:
+    Modified:   LICENSE.md
     Modified:   README.md
+    Modified:   analysis/_site.yml
     Modified:   analysis/about.Rmd
     Modified:   analysis/index.Rmd
-    Modified:   code/README.md
-    Modified:   data/README.md
-    Modified:   output/README.md
+    Modified:   analysis/license.Rmd
 
 </code></pre>
 <p>
@@ -687,6 +679,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/5e18e3fcce69f8f0645ca463f52d3d59e815586c/analysis/index.Rmd" target="_blank">5e18e3f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Define canonical real-data analysis pipeline
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/5e18e3fcce69f8f0645ca463f52d3d59e815586c/docs/index.html" target="_blank">5e18e3f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Define canonical real-data analysis pipeline
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -966,108 +992,193 @@ Start workflowr project.
 </div>
 </div>
 </div>
-<div id="project-overview" class="section level1">
-<h1>Project overview</h1>
-<p>This reproducible research project evaluates genomic prediction with
-a GBLUP-ADE genomic mixed model and artificial neural networks with no
-regularization, L1 regularization, L2 regularization, or simultaneous
-L1+L2 regularization.</p>
-<p>The analytical design contains two complementary branches: controlled
-simulated genomic data and real longitudinal <em>Coffea arabica</em>
-data.</p>
-<div id="scientific-question" class="section level2">
-<h2>Scientific question</h2>
-<p>The central question is whether neural-network weight regularization
-improves predictive performance and generalization relative to an
-unregularized ANN and a genomic mixed-model benchmark when all competing
-methods are evaluated under a common validation design.</p>
-<p>For simulated data, known true genetic values provide an independent
-target for predictive assessment.</p>
-<p>For real data, repeated field observations are first analyzed with a
-phenotypic mixed model. Individual genotypic BLUPs from that model
-become the phenotypic targets for the genomic-prediction workflow.</p>
+<div id="english" class="section level2">
+<h2>English</h2>
+<div id="start-here" class="section level3">
+<h3>Start here</h3>
+<p>This website documents a reproducible study of genomic prediction
+using regularized artificial neural networks and a GBLUP-ADE genomic
+mixed-model benchmark.</p>
+<p>The project combines controlled simulated genomic data with real
+longitudinal <em>Coffea arabica</em> data. Its central question is
+whether L1 and L2 weight regularization improves predictive performance
+and generalization relative to an unregularized ANN and GBLUP-ADE when
+all methods are evaluated under matched validation designs.</p>
 </div>
-<div id="simulated-data-workflow" class="section level2">
-<h2>Simulated-data workflow</h2>
-<pre class="text"><code>simulated_data_audit.Rmd
-        |
-        v
-simulated_data_validation.Rmd
-        |
-        +-------------------+
-        |                   |
-        v                   v
-simulated_data_gblup.Rmd   simulated_data_ann.Rmd
-        |                   |
-        +---------+---------+
-                  |
-                  v
-      simulated_data_comparison.Rmd</code></pre>
-</div>
-<div id="real-data-workflow" class="section level2">
-<h2>Real-data workflow</h2>
-<pre class="text"><code>real_data_phenotype.Rmd
-        |
-        v
-real_data_audit.Rmd
-        |
-        v
-real_data_validation.Rmd
-        |
-        +-------------------+
-        |                   |
-        v                   v
-real_data_gblup.Rmd       real_data_ann.Rmd
-        |                   |
-        +---------+---------+
-                  |
-                  v
-        real_data_comparison.Rmd</code></pre>
-<p>The real-data workflow begins with the complete longitudinal
-phenotypic dataset. <code>real_data_phenotype.Rmd</code> performs
-descriptive analysis, organizes the experimental data, fits the
-phenotypic mixed model with <code>sommer</code>, and obtains individual
-genotypic BLUPs.</p>
-<p><code>real_data_audit.Rmd</code> then integrates those BLUPs with
-<code>geno_real.rds</code>, aligns the common individuals, performs
-genotype quality control, and creates the common object consumed by the
-remaining real-data modules.</p>
-<p>Validation design, GBLUP-ADE fitting, ANN fitting, and terminal
-comparison are kept in separate pages.</p>
-</div>
-<div id="models" class="section level2">
-<h2>Models</h2>
-<p>Five genomic-prediction configurations are compared:</p>
+<div id="project-at-a-glance" class="section level3">
+<h3>Project at a glance</h3>
+<p>The genomic-prediction comparison includes:</p>
 <ul>
-<li>GBLUP-ADE;</li>
+<li>GBLUP-ADE with additive, dominance, and epistatic genomic
+effects;</li>
 <li>ANN without L1/L2 regularization;</li>
 <li>ANN-L1;</li>
 <li>ANN-L2;</li>
 <li>ANN-L1+L2.</li>
 </ul>
-<p>All competing models use the same outer-assessment partitions within
-each dataset and task.</p>
+<p>The simulated branch uses known true genetic values as an independent
+evaluation target. The real-data branch derives individual genotypic
+BLUPs from the complete longitudinal phenotypic dataset before
+integration with the genomic marker data.</p>
 </div>
-<div id="validation-principles" class="section level2">
-<h2>Validation principles</h2>
-<p>The analytical design separates model development from final
-predictive assessment.</p>
-<p>Outer-assessment responses do not enter model fitting, ANN
-hyperparameter selection, or ANN epoch selection. Competing methods are
-evaluated on matched held-out individuals using the same task
-definitions and predictive metrics.</p>
-<p>For the simulated branch, true genetic values are excluded from model
-fitting and model selection and are used as an independent evaluation
-target.</p>
+<div id="recommended-reading-path" class="section level3">
+<h3>Recommended reading path</h3>
+<p>The simulated-data workflow is organized as:</p>
+<ol style="list-style-type: decimal">
+<li><a href="simulated_data_audit.html">Data audit</a> — source-data
+preparation, integrity checks, genotype and phenotype structure,
+genetic-map information, QTL information, and simulation-scenario
+summaries.</li>
+<li><a href="simulated_data_validation.html">Validation design</a> —
+common outer and inner validation partitions shared by all competing
+models.</li>
+<li>Parallel genomic-prediction branches:
+<ul>
+<li><a href="simulated_data_gblup.html">GBLUP-ADE</a></li>
+<li><a href="simulated_data_ann.html">Regularized ANN</a></li>
+</ul></li>
+<li><a href="simulated_data_comparison.html">Model comparison</a> —
+terminal comparison of saved predictions and performance summaries under
+the common validation design.</li>
+</ol>
+<p>The real-data workflow is defined as:</p>
+<ol style="list-style-type: decimal">
+<li><code>real_data_phenotype.Rmd</code> — longitudinal phenotypic
+organization, descriptive analysis, REML mixed-model fitting with
+<code>sommer</code>, variance components, and individual genotypic
+BLUPs;</li>
+<li><code>real_data_audit.Rmd</code> — integration of phenotypic BLUPs
+with <code>geno_real.rds</code>, individual alignment, marker quality
+control, and construction of the common real-data object;</li>
+<li><code>real_data_validation.Rmd</code> — shared validation
+design;</li>
+<li>parallel GBLUP-ADE and ANN modeling branches;</li>
+<li><code>real_data_comparison.Rmd</code> — terminal task-matched model
+comparison.</li>
+</ol>
 </div>
-<div id="reproducibility" class="section level2">
-<h2>Reproducibility</h2>
-<p>The project is organized with <code>workflowr</code>. Source analyses
-are stored under <code>analysis/</code>, derived analytical objects
-under <code>output/</code>, and the rendered site under
-<code>docs/</code>.</p>
-<p>Project-level R package versions are recorded in
-<code>renv.lock</code>.</p>
+<div id="validation-scope" class="section level3">
+<h3>Validation scope</h3>
+<p>Outer-assessment responses are excluded from model fitting and model
+selection. ANN hyperparameter and epoch selection are restricted to the
+corresponding outer-analysis sample, and all competing methods are
+evaluated on matched held-out individuals.</p>
+<p>For simulated data, true genetic values are excluded from fitting and
+selection and are used only for independent predictive assessment.</p>
+<p>For real data, genomic prediction uses the individual genotypic BLUPs
+obtained from the longitudinal phenotypic mixed model. Held-out genomic
+predictions should not be interpreted as final breeding values from a
+model refitted with all available responses.</p>
+</div>
+<div id="reproducibility-and-project-information"
+class="section level3">
+<h3>Reproducibility and project information</h3>
+<p>The source analyses are stored under <code>analysis/</code>, derived
+analytical objects under <code>output/</code>, and the rendered
+<code>workflowr</code> site under <code>docs/</code>. Package
+dependencies are recorded with <code>renv</code>.</p>
+<p>The repository <a
+href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme">README</a>
+documents the project structure and reconstruction principles. Detailed
+source-data and output contracts are documented in the corresponding
+repository directories.</p>
+</div>
+</div>
+<div id="português" class="section level2">
+<h2>Português</h2>
+<div id="comece-aqui" class="section level3">
+<h3>Comece aqui</h3>
+<p>Este site documenta um estudo reprodutível de predição genômica
+utilizando redes neurais artificiais regularizadas e um modelo misto
+genômico GBLUP-ADE como referência de comparação.</p>
+<p>O projeto combina dados genômicos simulados controlados com dados
+longitudinais reais de <em>Coffea arabica</em>. A pergunta central é se
+a regularização L1 e L2 dos pesos melhora o desempenho preditivo e a
+generalização em relação a uma ANN não regularizada e ao GBLUP-ADE
+quando todos os métodos são avaliados sob desenhos de validação
+equivalentes.</p>
+</div>
+<div id="projeto-em-resumo" class="section level3">
+<h3>Projeto em resumo</h3>
+<p>A comparação de predição genômica inclui:</p>
+<ul>
+<li>GBLUP-ADE com efeitos genômicos aditivos, de dominância e
+epistáticos;</li>
+<li>ANN sem regularização L1/L2;</li>
+<li>ANN-L1;</li>
+<li>ANN-L2;</li>
+<li>ANN-L1+L2.</li>
+</ul>
+<p>O ramo simulado utiliza valores genéticos verdadeiros conhecidos como
+alvo independente de avaliação. O ramo de dados reais obtém BLUPs
+genotípicos individuais a partir do conjunto fenotípico longitudinal
+completo antes da integração com os dados de marcadores genômicos.</p>
+</div>
+<div id="ordem-recomendada-de-leitura" class="section level3">
+<h3>Ordem recomendada de leitura</h3>
+<p>O fluxo de dados simulados está organizado em:</p>
+<ol style="list-style-type: decimal">
+<li><a href="simulated_data_audit.html">Auditoria dos dados</a> —
+preparação dos dados-fonte, verificações de integridade, estrutura
+genotípica e fenotípica, mapa genético, informações de QTL e resumos dos
+cenários de simulação.</li>
+<li><a href="simulated_data_validation.html">Desenho de validação</a> —
+partições externas e internas comuns a todos os modelos
+concorrentes.</li>
+<li>Ramos paralelos de predição genômica:
+<ul>
+<li><a href="simulated_data_gblup.html">GBLUP-ADE</a></li>
+<li><a href="simulated_data_ann.html">ANN regularizadas</a></li>
+</ul></li>
+<li><a href="simulated_data_comparison.html">Comparação dos modelos</a>
+— comparação terminal das predições e dos resumos de desempenho sob o
+desenho comum de validação.</li>
+</ol>
+<p>O fluxo de dados reais é definido como:</p>
+<ol style="list-style-type: decimal">
+<li><code>real_data_phenotype.Rmd</code> — organização fenotípica
+longitudinal, análises descritivas, ajuste do modelo misto por REML com
+<code>sommer</code>, componentes de variância e BLUPs genotípicos
+individuais;</li>
+<li><code>real_data_audit.Rmd</code> — integração dos BLUPs fenotípicos
+com <code>geno_real.rds</code>, alinhamento dos indivíduos, controle de
+qualidade dos marcadores e construção do objeto comum dos dados
+reais;</li>
+<li><code>real_data_validation.Rmd</code> — desenho comum de
+validação;</li>
+<li>ramos paralelos de modelagem GBLUP-ADE e ANN;</li>
+<li><code>real_data_comparison.Rmd</code> — comparação terminal dos
+modelos em tarefas correspondentes.</li>
+</ol>
+</div>
+<div id="escopo-da-validação" class="section level3">
+<h3>Escopo da validação</h3>
+<p>As respostas dos indivíduos de avaliação externa são excluídas do
+ajuste e da seleção dos modelos. A seleção de hiperparâmetros e de
+épocas das ANN é restrita à respectiva amostra de análise externa, e
+todos os métodos concorrentes são avaliados nos mesmos indivíduos
+mantidos fora do ajuste.</p>
+<p>Nos dados simulados, os valores genéticos verdadeiros são excluídos
+do ajuste e da seleção e são utilizados apenas na avaliação preditiva
+independente.</p>
+<p>Nos dados reais, a predição genômica utiliza os BLUPs genotípicos
+individuais obtidos do modelo misto fenotípico longitudinal. As
+predições genômicas obtidas fora da amostra não devem ser interpretadas
+como valores genéticos finais provenientes de um modelo reajustado com
+todas as respostas disponíveis.</p>
+</div>
+<div id="reprodutibilidade-e-informações-do-projeto"
+class="section level3">
+<h3>Reprodutibilidade e informações do projeto</h3>
+<p>As análises-fonte estão em <code>analysis/</code>, os objetos
+analíticos derivados em <code>output/</code> e o site
+<code>workflowr</code> renderizado em <code>docs/</code>. As
+dependências dos pacotes são registradas com <code>renv</code>.</p>
+<p>O <a
+href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme">README</a>
+do repositório documenta a estrutura do projeto e os princípios de
+reconstrução. Os contratos detalhados dos dados-fonte e das saídas estão
+documentados nos respectivos diretórios do repositório.</p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -1076,7 +1187,7 @@ Session information
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26300)
@@ -1118,7 +1229,18 @@ loaded via a namespace (and not attached):
 </div>
 </div>
 </div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>Weverton Gomes da Costa, Pós-Doutorando, Departamento de
+Estatística - Universidade Federal de Viçosa, <a
+href="mailto:weverton.costa@ufv.br"
+class="email">weverton.costa@ufv.br</a><a href="#fnref1"
+class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
 
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlJlZ3VsYXJpemVkIEFydGlmaWNpYWwgTmV1cmFsIE5ldHdvcmtzIGZvciBHZW5vbWljIFByZWRpY3Rpb24gLyBSZWRlcyBOZXVyYWlzIEFydGlmaWNpYWlzIFJlZ3VsYXJpemFkYXMgcGFyYSBQcmVkacOnw6NvIEdlbsO0bWljYSINCmF1dGhvcjoNCiAgLSBDb3N0YSwgVy4gRy5eW1dldmVydG9uIEdvbWVzIGRhIENvc3RhLCBQw7NzLURvdXRvcmFuZG8sIERlcGFydGFtZW50byBkZSBFc3RhdMOtc3RpY2EgLSBVbml2ZXJzaWRhZGUgRmVkZXJhbCBkZSBWacOnb3NhLCB3ZXZlcnRvbi5jb3N0YUB1ZnYuYnJdDQpkYXRlOiAiYHIgU3lzLkRhdGUoKWAiDQpzaXRlOiB3b3JrZmxvd3I6OndmbG93X3NpdGUNCnVybDogaHR0cHM6Ly93ZXZlcnRvbmdvbWVzY29zdGEuZ2l0aHViLmlvL0dlbm9taWMtUHJlZGljdGlvbi11c2luZy1SZWd1bGFyaXplZC1BcnRpZmljaWFsLU5ldXJhbC1OZXR3b3Jrcy8NCm91dHB1dDoNCiAgd29ya2Zsb3dyOjp3Zmxvd19odG1sOg0KICAgIHRvYzogdHJ1ZQ0KICAgIHRvY19kZXB0aDogMw0KICAgIHRvY19mbG9hdDogdHJ1ZQ0KICAgIGNvZGVfZG93bmxvYWQ6IHRydWUNCmVkaXRvcl9vcHRpb25zOg0KICBjaHVua19vdXRwdXRfdHlwZTogY29uc29sZQ0KZ2l0aHViLXJlcG86IFdldmVydG9uR29tZXNDb3N0YS9HZW5vbWljLVByZWRpY3Rpb24tdXNpbmctUmVndWxhcml6ZWQtQXJ0aWZpY2lhbC1OZXVyYWwtTmV0d29ya3MNCi0tLQ0KDQpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0NCmtuaXRyOjpvcHRzX2NodW5rJHNldCgNCiAgZWNobyA9IFRSVUUsDQogIHdhcm5pbmcgPSBGQUxTRSwNCiAgbWVzc2FnZSA9IEZBTFNFLA0KICBjYWNoZSA9IEZBTFNFLA0KICBmaWcuYWxpZ24gPSAiY2VudGVyIiwNCiAgb3V0LndpZHRoID0gIjEwMCUiDQopDQpgYGANCg0KIyMgRW5nbGlzaA0KDQojIyMgU3RhcnQgaGVyZQ0KDQpUaGlzIHdlYnNpdGUgZG9jdW1lbnRzIGEgcmVwcm9kdWNpYmxlIHN0dWR5IG9mIGdlbm9taWMgcHJlZGljdGlvbiB1c2luZyByZWd1bGFyaXplZCBhcnRpZmljaWFsIG5ldXJhbCBuZXR3b3JrcyBhbmQgYSBHQkxVUC1BREUgZ2Vub21pYyBtaXhlZC1tb2RlbCBiZW5jaG1hcmsuDQoNClRoZSBwcm9qZWN0IGNvbWJpbmVzIGNvbnRyb2xsZWQgc2ltdWxhdGVkIGdlbm9taWMgZGF0YSB3aXRoIHJlYWwgbG9uZ2l0dWRpbmFsICpDb2ZmZWEgYXJhYmljYSogZGF0YS4gSXRzIGNlbnRyYWwgcXVlc3Rpb24gaXMgd2hldGhlciBMMSBhbmQgTDIgd2VpZ2h0IHJlZ3VsYXJpemF0aW9uIGltcHJvdmVzIHByZWRpY3RpdmUgcGVyZm9ybWFuY2UgYW5kIGdlbmVyYWxpemF0aW9uIHJlbGF0aXZlIHRvIGFuIHVucmVndWxhcml6ZWQgQU5OIGFuZCBHQkxVUC1BREUgd2hlbiBhbGwgbWV0aG9kcyBhcmUgZXZhbHVhdGVkIHVuZGVyIG1hdGNoZWQgdmFsaWRhdGlvbiBkZXNpZ25zLg0KDQojIyMgUHJvamVjdCBhdCBhIGdsYW5jZQ0KDQpUaGUgZ2Vub21pYy1wcmVkaWN0aW9uIGNvbXBhcmlzb24gaW5jbHVkZXM6DQoNCi0gR0JMVVAtQURFIHdpdGggYWRkaXRpdmUsIGRvbWluYW5jZSwgYW5kIGVwaXN0YXRpYyBnZW5vbWljIGVmZmVjdHM7DQotIEFOTiB3aXRob3V0IEwxL0wyIHJlZ3VsYXJpemF0aW9uOw0KLSBBTk4tTDE7DQotIEFOTi1MMjsNCi0gQU5OLUwxK0wyLg0KDQpUaGUgc2ltdWxhdGVkIGJyYW5jaCB1c2VzIGtub3duIHRydWUgZ2VuZXRpYyB2YWx1ZXMgYXMgYW4gaW5kZXBlbmRlbnQgZXZhbHVhdGlvbiB0YXJnZXQuIFRoZSByZWFsLWRhdGEgYnJhbmNoIGRlcml2ZXMgaW5kaXZpZHVhbCBnZW5vdHlwaWMgQkxVUHMgZnJvbSB0aGUgY29tcGxldGUgbG9uZ2l0dWRpbmFsIHBoZW5vdHlwaWMgZGF0YXNldCBiZWZvcmUgaW50ZWdyYXRpb24gd2l0aCB0aGUgZ2Vub21pYyBtYXJrZXIgZGF0YS4NCg0KIyMjIFJlY29tbWVuZGVkIHJlYWRpbmcgcGF0aA0KDQpUaGUgc2ltdWxhdGVkLWRhdGEgd29ya2Zsb3cgaXMgb3JnYW5pemVkIGFzOg0KDQoxLiBbRGF0YSBhdWRpdF0oc2ltdWxhdGVkX2RhdGFfYXVkaXQuaHRtbCkg4oCUIHNvdXJjZS1kYXRhIHByZXBhcmF0aW9uLCBpbnRlZ3JpdHkgY2hlY2tzLCBnZW5vdHlwZSBhbmQgcGhlbm90eXBlIHN0cnVjdHVyZSwgZ2VuZXRpYy1tYXAgaW5mb3JtYXRpb24sIFFUTCBpbmZvcm1hdGlvbiwgYW5kIHNpbXVsYXRpb24tc2NlbmFyaW8gc3VtbWFyaWVzLg0KMi4gW1ZhbGlkYXRpb24gZGVzaWduXShzaW11bGF0ZWRfZGF0YV92YWxpZGF0aW9uLmh0bWwpIOKAlCBjb21tb24gb3V0ZXIgYW5kIGlubmVyIHZhbGlkYXRpb24gcGFydGl0aW9ucyBzaGFyZWQgYnkgYWxsIGNvbXBldGluZyBtb2RlbHMuDQozLiBQYXJhbGxlbCBnZW5vbWljLXByZWRpY3Rpb24gYnJhbmNoZXM6DQogICAtIFtHQkxVUC1BREVdKHNpbXVsYXRlZF9kYXRhX2dibHVwLmh0bWwpDQogICAtIFtSZWd1bGFyaXplZCBBTk5dKHNpbXVsYXRlZF9kYXRhX2Fubi5odG1sKQ0KNC4gW01vZGVsIGNvbXBhcmlzb25dKHNpbXVsYXRlZF9kYXRhX2NvbXBhcmlzb24uaHRtbCkg4oCUIHRlcm1pbmFsIGNvbXBhcmlzb24gb2Ygc2F2ZWQgcHJlZGljdGlvbnMgYW5kIHBlcmZvcm1hbmNlIHN1bW1hcmllcyB1bmRlciB0aGUgY29tbW9uIHZhbGlkYXRpb24gZGVzaWduLg0KDQpUaGUgcmVhbC1kYXRhIHdvcmtmbG93IGlzIGRlZmluZWQgYXM6DQoNCjEuIGByZWFsX2RhdGFfcGhlbm90eXBlLlJtZGAg4oCUIGxvbmdpdHVkaW5hbCBwaGVub3R5cGljIG9yZ2FuaXphdGlvbiwgZGVzY3JpcHRpdmUgYW5hbHlzaXMsIFJFTUwgbWl4ZWQtbW9kZWwgZml0dGluZyB3aXRoIGBzb21tZXJgLCB2YXJpYW5jZSBjb21wb25lbnRzLCBhbmQgaW5kaXZpZHVhbCBnZW5vdHlwaWMgQkxVUHM7DQoyLiBgcmVhbF9kYXRhX2F1ZGl0LlJtZGAg4oCUIGludGVncmF0aW9uIG9mIHBoZW5vdHlwaWMgQkxVUHMgd2l0aCBgZ2Vub19yZWFsLnJkc2AsIGluZGl2aWR1YWwgYWxpZ25tZW50LCBtYXJrZXIgcXVhbGl0eSBjb250cm9sLCBhbmQgY29uc3RydWN0aW9uIG9mIHRoZSBjb21tb24gcmVhbC1kYXRhIG9iamVjdDsNCjMuIGByZWFsX2RhdGFfdmFsaWRhdGlvbi5SbWRgIOKAlCBzaGFyZWQgdmFsaWRhdGlvbiBkZXNpZ247DQo0LiBwYXJhbGxlbCBHQkxVUC1BREUgYW5kIEFOTiBtb2RlbGluZyBicmFuY2hlczsNCjUuIGByZWFsX2RhdGFfY29tcGFyaXNvbi5SbWRgIOKAlCB0ZXJtaW5hbCB0YXNrLW1hdGNoZWQgbW9kZWwgY29tcGFyaXNvbi4NCg0KIyMjIFZhbGlkYXRpb24gc2NvcGUNCg0KT3V0ZXItYXNzZXNzbWVudCByZXNwb25zZXMgYXJlIGV4Y2x1ZGVkIGZyb20gbW9kZWwgZml0dGluZyBhbmQgbW9kZWwgc2VsZWN0aW9uLiBBTk4gaHlwZXJwYXJhbWV0ZXIgYW5kIGVwb2NoIHNlbGVjdGlvbiBhcmUgcmVzdHJpY3RlZCB0byB0aGUgY29ycmVzcG9uZGluZyBvdXRlci1hbmFseXNpcyBzYW1wbGUsIGFuZCBhbGwgY29tcGV0aW5nIG1ldGhvZHMgYXJlIGV2YWx1YXRlZCBvbiBtYXRjaGVkIGhlbGQtb3V0IGluZGl2aWR1YWxzLg0KDQpGb3Igc2ltdWxhdGVkIGRhdGEsIHRydWUgZ2VuZXRpYyB2YWx1ZXMgYXJlIGV4Y2x1ZGVkIGZyb20gZml0dGluZyBhbmQgc2VsZWN0aW9uIGFuZCBhcmUgdXNlZCBvbmx5IGZvciBpbmRlcGVuZGVudCBwcmVkaWN0aXZlIGFzc2Vzc21lbnQuDQoNCkZvciByZWFsIGRhdGEsIGdlbm9taWMgcHJlZGljdGlvbiB1c2VzIHRoZSBpbmRpdmlkdWFsIGdlbm90eXBpYyBCTFVQcyBvYnRhaW5lZCBmcm9tIHRoZSBsb25naXR1ZGluYWwgcGhlbm90eXBpYyBtaXhlZCBtb2RlbC4gSGVsZC1vdXQgZ2Vub21pYyBwcmVkaWN0aW9ucyBzaG91bGQgbm90IGJlIGludGVycHJldGVkIGFzIGZpbmFsIGJyZWVkaW5nIHZhbHVlcyBmcm9tIGEgbW9kZWwgcmVmaXR0ZWQgd2l0aCBhbGwgYXZhaWxhYmxlIHJlc3BvbnNlcy4NCg0KIyMjIFJlcHJvZHVjaWJpbGl0eSBhbmQgcHJvamVjdCBpbmZvcm1hdGlvbg0KDQpUaGUgc291cmNlIGFuYWx5c2VzIGFyZSBzdG9yZWQgdW5kZXIgYGFuYWx5c2lzL2AsIGRlcml2ZWQgYW5hbHl0aWNhbCBvYmplY3RzIHVuZGVyIGBvdXRwdXQvYCwgYW5kIHRoZSByZW5kZXJlZCBgd29ya2Zsb3dyYCBzaXRlIHVuZGVyIGBkb2NzL2AuIFBhY2thZ2UgZGVwZW5kZW5jaWVzIGFyZSByZWNvcmRlZCB3aXRoIGByZW52YC4NCg0KVGhlIHJlcG9zaXRvcnkgW1JFQURNRV0oaHR0cHM6Ly9naXRodWIuY29tL1dldmVydG9uR29tZXNDb3N0YS9HZW5vbWljLVByZWRpY3Rpb24tdXNpbmctUmVndWxhcml6ZWQtQXJ0aWZpY2lhbC1OZXVyYWwtTmV0d29ya3MjcmVhZG1lKSBkb2N1bWVudHMgdGhlIHByb2plY3Qgc3RydWN0dXJlIGFuZCByZWNvbnN0cnVjdGlvbiBwcmluY2lwbGVzLiBEZXRhaWxlZCBzb3VyY2UtZGF0YSBhbmQgb3V0cHV0IGNvbnRyYWN0cyBhcmUgZG9jdW1lbnRlZCBpbiB0aGUgY29ycmVzcG9uZGluZyByZXBvc2l0b3J5IGRpcmVjdG9yaWVzLg0KDQojIyBQb3J0dWd1w6pzDQoNCiMjIyBDb21lY2UgYXF1aQ0KDQpFc3RlIHNpdGUgZG9jdW1lbnRhIHVtIGVzdHVkbyByZXByb2R1dMOtdmVsIGRlIHByZWRpw6fDo28gZ2Vuw7RtaWNhIHV0aWxpemFuZG8gcmVkZXMgbmV1cmFpcyBhcnRpZmljaWFpcyByZWd1bGFyaXphZGFzIGUgdW0gbW9kZWxvIG1pc3RvIGdlbsO0bWljbyBHQkxVUC1BREUgY29tbyByZWZlcsOqbmNpYSBkZSBjb21wYXJhw6fDo28uDQoNCk8gcHJvamV0byBjb21iaW5hIGRhZG9zIGdlbsO0bWljb3Mgc2ltdWxhZG9zIGNvbnRyb2xhZG9zIGNvbSBkYWRvcyBsb25naXR1ZGluYWlzIHJlYWlzIGRlICpDb2ZmZWEgYXJhYmljYSouIEEgcGVyZ3VudGEgY2VudHJhbCDDqSBzZSBhIHJlZ3VsYXJpemHDp8OjbyBMMSBlIEwyIGRvcyBwZXNvcyBtZWxob3JhIG8gZGVzZW1wZW5obyBwcmVkaXRpdm8gZSBhIGdlbmVyYWxpemHDp8OjbyBlbSByZWxhw6fDo28gYSB1bWEgQU5OIG7Do28gcmVndWxhcml6YWRhIGUgYW8gR0JMVVAtQURFIHF1YW5kbyB0b2RvcyBvcyBtw6l0b2RvcyBzw6NvIGF2YWxpYWRvcyBzb2IgZGVzZW5ob3MgZGUgdmFsaWRhw6fDo28gZXF1aXZhbGVudGVzLg0KDQojIyMgUHJvamV0byBlbSByZXN1bW8NCg0KQSBjb21wYXJhw6fDo28gZGUgcHJlZGnDp8OjbyBnZW7DtG1pY2EgaW5jbHVpOg0KDQotIEdCTFVQLUFERSBjb20gZWZlaXRvcyBnZW7DtG1pY29zIGFkaXRpdm9zLCBkZSBkb21pbsOibmNpYSBlIGVwaXN0w6F0aWNvczsNCi0gQU5OIHNlbSByZWd1bGFyaXphw6fDo28gTDEvTDI7DQotIEFOTi1MMTsNCi0gQU5OLUwyOw0KLSBBTk4tTDErTDIuDQoNCk8gcmFtbyBzaW11bGFkbyB1dGlsaXphIHZhbG9yZXMgZ2Vuw6l0aWNvcyB2ZXJkYWRlaXJvcyBjb25oZWNpZG9zIGNvbW8gYWx2byBpbmRlcGVuZGVudGUgZGUgYXZhbGlhw6fDo28uIE8gcmFtbyBkZSBkYWRvcyByZWFpcyBvYnTDqW0gQkxVUHMgZ2Vub3TDrXBpY29zIGluZGl2aWR1YWlzIGEgcGFydGlyIGRvIGNvbmp1bnRvIGZlbm90w61waWNvIGxvbmdpdHVkaW5hbCBjb21wbGV0byBhbnRlcyBkYSBpbnRlZ3Jhw6fDo28gY29tIG9zIGRhZG9zIGRlIG1hcmNhZG9yZXMgZ2Vuw7RtaWNvcy4NCg0KIyMjIE9yZGVtIHJlY29tZW5kYWRhIGRlIGxlaXR1cmENCg0KTyBmbHV4byBkZSBkYWRvcyBzaW11bGFkb3MgZXN0w6Egb3JnYW5pemFkbyBlbToNCg0KMS4gW0F1ZGl0b3JpYSBkb3MgZGFkb3NdKHNpbXVsYXRlZF9kYXRhX2F1ZGl0Lmh0bWwpIOKAlCBwcmVwYXJhw6fDo28gZG9zIGRhZG9zLWZvbnRlLCB2ZXJpZmljYcOnw7VlcyBkZSBpbnRlZ3JpZGFkZSwgZXN0cnV0dXJhIGdlbm90w61waWNhIGUgZmVub3TDrXBpY2EsIG1hcGEgZ2Vuw6l0aWNvLCBpbmZvcm1hw6fDtWVzIGRlIFFUTCBlIHJlc3Vtb3MgZG9zIGNlbsOhcmlvcyBkZSBzaW11bGHDp8Ojby4NCjIuIFtEZXNlbmhvIGRlIHZhbGlkYcOnw6NvXShzaW11bGF0ZWRfZGF0YV92YWxpZGF0aW9uLmh0bWwpIOKAlCBwYXJ0acOnw7VlcyBleHRlcm5hcyBlIGludGVybmFzIGNvbXVucyBhIHRvZG9zIG9zIG1vZGVsb3MgY29uY29ycmVudGVzLg0KMy4gUmFtb3MgcGFyYWxlbG9zIGRlIHByZWRpw6fDo28gZ2Vuw7RtaWNhOg0KICAgLSBbR0JMVVAtQURFXShzaW11bGF0ZWRfZGF0YV9nYmx1cC5odG1sKQ0KICAgLSBbQU5OIHJlZ3VsYXJpemFkYXNdKHNpbXVsYXRlZF9kYXRhX2Fubi5odG1sKQ0KNC4gW0NvbXBhcmHDp8OjbyBkb3MgbW9kZWxvc10oc2ltdWxhdGVkX2RhdGFfY29tcGFyaXNvbi5odG1sKSDigJQgY29tcGFyYcOnw6NvIHRlcm1pbmFsIGRhcyBwcmVkacOnw7VlcyBlIGRvcyByZXN1bW9zIGRlIGRlc2VtcGVuaG8gc29iIG8gZGVzZW5obyBjb211bSBkZSB2YWxpZGHDp8Ojby4NCg0KTyBmbHV4byBkZSBkYWRvcyByZWFpcyDDqSBkZWZpbmlkbyBjb21vOg0KDQoxLiBgcmVhbF9kYXRhX3BoZW5vdHlwZS5SbWRgIOKAlCBvcmdhbml6YcOnw6NvIGZlbm90w61waWNhIGxvbmdpdHVkaW5hbCwgYW7DoWxpc2VzIGRlc2NyaXRpdmFzLCBhanVzdGUgZG8gbW9kZWxvIG1pc3RvIHBvciBSRU1MIGNvbSBgc29tbWVyYCwgY29tcG9uZW50ZXMgZGUgdmFyacOibmNpYSBlIEJMVVBzIGdlbm90w61waWNvcyBpbmRpdmlkdWFpczsNCjIuIGByZWFsX2RhdGFfYXVkaXQuUm1kYCDigJQgaW50ZWdyYcOnw6NvIGRvcyBCTFVQcyBmZW5vdMOtcGljb3MgY29tIGBnZW5vX3JlYWwucmRzYCwgYWxpbmhhbWVudG8gZG9zIGluZGl2w61kdW9zLCBjb250cm9sZSBkZSBxdWFsaWRhZGUgZG9zIG1hcmNhZG9yZXMgZSBjb25zdHJ1w6fDo28gZG8gb2JqZXRvIGNvbXVtIGRvcyBkYWRvcyByZWFpczsNCjMuIGByZWFsX2RhdGFfdmFsaWRhdGlvbi5SbWRgIOKAlCBkZXNlbmhvIGNvbXVtIGRlIHZhbGlkYcOnw6NvOw0KNC4gcmFtb3MgcGFyYWxlbG9zIGRlIG1vZGVsYWdlbSBHQkxVUC1BREUgZSBBTk47DQo1LiBgcmVhbF9kYXRhX2NvbXBhcmlzb24uUm1kYCDigJQgY29tcGFyYcOnw6NvIHRlcm1pbmFsIGRvcyBtb2RlbG9zIGVtIHRhcmVmYXMgY29ycmVzcG9uZGVudGVzLg0KDQojIyMgRXNjb3BvIGRhIHZhbGlkYcOnw6NvDQoNCkFzIHJlc3Bvc3RhcyBkb3MgaW5kaXbDrWR1b3MgZGUgYXZhbGlhw6fDo28gZXh0ZXJuYSBzw6NvIGV4Y2x1w61kYXMgZG8gYWp1c3RlIGUgZGEgc2VsZcOnw6NvIGRvcyBtb2RlbG9zLiBBIHNlbGXDp8OjbyBkZSBoaXBlcnBhcsOibWV0cm9zIGUgZGUgw6lwb2NhcyBkYXMgQU5OIMOpIHJlc3RyaXRhIMOgIHJlc3BlY3RpdmEgYW1vc3RyYSBkZSBhbsOhbGlzZSBleHRlcm5hLCBlIHRvZG9zIG9zIG3DqXRvZG9zIGNvbmNvcnJlbnRlcyBzw6NvIGF2YWxpYWRvcyBub3MgbWVzbW9zIGluZGl2w61kdW9zIG1hbnRpZG9zIGZvcmEgZG8gYWp1c3RlLg0KDQpOb3MgZGFkb3Mgc2ltdWxhZG9zLCBvcyB2YWxvcmVzIGdlbsOpdGljb3MgdmVyZGFkZWlyb3Mgc8OjbyBleGNsdcOtZG9zIGRvIGFqdXN0ZSBlIGRhIHNlbGXDp8OjbyBlIHPDo28gdXRpbGl6YWRvcyBhcGVuYXMgbmEgYXZhbGlhw6fDo28gcHJlZGl0aXZhIGluZGVwZW5kZW50ZS4NCg0KTm9zIGRhZG9zIHJlYWlzLCBhIHByZWRpw6fDo28gZ2Vuw7RtaWNhIHV0aWxpemEgb3MgQkxVUHMgZ2Vub3TDrXBpY29zIGluZGl2aWR1YWlzIG9idGlkb3MgZG8gbW9kZWxvIG1pc3RvIGZlbm90w61waWNvIGxvbmdpdHVkaW5hbC4gQXMgcHJlZGnDp8O1ZXMgZ2Vuw7RtaWNhcyBvYnRpZGFzIGZvcmEgZGEgYW1vc3RyYSBuw6NvIGRldmVtIHNlciBpbnRlcnByZXRhZGFzIGNvbW8gdmFsb3JlcyBnZW7DqXRpY29zIGZpbmFpcyBwcm92ZW5pZW50ZXMgZGUgdW0gbW9kZWxvIHJlYWp1c3RhZG8gY29tIHRvZGFzIGFzIHJlc3Bvc3RhcyBkaXNwb27DrXZlaXMuDQoNCiMjIyBSZXByb2R1dGliaWxpZGFkZSBlIGluZm9ybWHDp8O1ZXMgZG8gcHJvamV0bw0KDQpBcyBhbsOhbGlzZXMtZm9udGUgZXN0w6NvIGVtIGBhbmFseXNpcy9gLCBvcyBvYmpldG9zIGFuYWzDrXRpY29zIGRlcml2YWRvcyBlbSBgb3V0cHV0L2AgZSBvIHNpdGUgYHdvcmtmbG93cmAgcmVuZGVyaXphZG8gZW0gYGRvY3MvYC4gQXMgZGVwZW5kw6puY2lhcyBkb3MgcGFjb3RlcyBzw6NvIHJlZ2lzdHJhZGFzIGNvbSBgcmVudmAuDQoNCk8gW1JFQURNRV0oaHR0cHM6Ly9naXRodWIuY29tL1dldmVydG9uR29tZXNDb3N0YS9HZW5vbWljLVByZWRpY3Rpb24tdXNpbmctUmVndWxhcml6ZWQtQXJ0aWZpY2lhbC1OZXVyYWwtTmV0d29ya3MjcmVhZG1lKSBkbyByZXBvc2l0w7NyaW8gZG9jdW1lbnRhIGEgZXN0cnV0dXJhIGRvIHByb2pldG8gZSBvcyBwcmluY8OtcGlvcyBkZSByZWNvbnN0cnXDp8Ojby4gT3MgY29udHJhdG9zIGRldGFsaGFkb3MgZG9zIGRhZG9zLWZvbnRlIGUgZGFzIHNhw61kYXMgZXN0w6NvIGRvY3VtZW50YWRvcyBub3MgcmVzcGVjdGl2b3MgZGlyZXTDs3Jpb3MgZG8gcmVwb3NpdMOzcmlvLg0K</div>
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
 TeX fonts only; see
@@ -1135,6 +1257,8 @@ footer is added to webpages before the MathJax javascript. -->
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -1168,10 +1292,40 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
+  window.initializeSourceEmbed("index.Rmd");
   window.initializeCodeFolding("show" === "show");
 });
 </script>
 
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
