@@ -45,7 +45,7 @@ The genomic-prediction comparison includes:
 - ANN-L2;
 - ANN-L1+L2.
 
-The simulated branch uses known true genetic values as an independent evaluation target. The real-data branch derives individual genotypic BLUPs from the complete longitudinal phenotypic dataset before integration with the genomic marker data.
+The simulated branch uses known true genetic values as an independent evaluation target. The real-data branch derives individual BLUPs from the complete longitudinal phenotypic dataset before integration with the genomic marker data.
 
 ### Recommended reading path
 
@@ -60,7 +60,7 @@ The simulated-data workflow is organized as:
 
 The real-data workflow is defined as:
 
-1. `real_data_phenotype.Rmd` — longitudinal phenotypic organization, descriptive analysis, REML mixed-model fitting with `sommer`, variance components, and individual genotypic BLUPs;
+1. `real_data_phenotype.Rmd` — longitudinal phenotypic organization, descriptive analysis, REML mixed-model fitting, variance components, and individual BLUPs;
 2. `real_data_audit.Rmd` — integration of phenotypic BLUPs with `geno_real.rds`, individual alignment, marker quality control, and construction of the common real-data object;
 3. `real_data_validation.Rmd` — shared validation design;
 4. parallel GBLUP-ADE and ANN modeling branches;
@@ -72,7 +72,7 @@ Outer-assessment responses are excluded from model fitting and model selection. 
 
 For simulated data, true genetic values are excluded from fitting and selection and are used only for independent predictive assessment.
 
-For real data, genomic prediction uses the individual genotypic BLUPs obtained from the longitudinal phenotypic mixed model. Held-out genomic predictions should not be interpreted as final breeding values from a model refitted with all available responses.
+For real data, genomic prediction uses the individual BLUPs obtained from the longitudinal phenotypic mixed model. Held-out genomic predictions should not be interpreted as final breeding values from a model refitted with all available responses.
 
 ### Reproducibility and project information
 
@@ -98,7 +98,7 @@ A comparação de predição genômica inclui:
 - ANN-L2;
 - ANN-L1+L2.
 
-O ramo simulado utiliza valores genéticos verdadeiros conhecidos como alvo independente de avaliação. O ramo de dados reais obtém BLUPs genotípicos individuais a partir do conjunto fenotípico longitudinal completo antes da integração com os dados de marcadores genômicos.
+O ramo simulado utiliza valores genéticos verdadeiros conhecidos como alvo independente de avaliação. O ramo de dados reais obtém BLUPs individuais a partir do conjunto fenotípico longitudinal completo antes da integração com os dados de marcadores genômicos.
 
 ### Ordem recomendada de leitura
 
@@ -113,7 +113,7 @@ O fluxo de dados simulados está organizado em:
 
 O fluxo de dados reais é definido como:
 
-1. `real_data_phenotype.Rmd` — organização fenotípica longitudinal, análises descritivas, ajuste do modelo misto por REML com `sommer`, componentes de variância e BLUPs genotípicos individuais;
+1. `real_data_phenotype.Rmd` — organização fenotípica longitudinal, análises descritivas, ajuste do modelo misto por REML, componentes de variância e BLUPs individuais;
 2. `real_data_audit.Rmd` — integração dos BLUPs fenotípicos com `geno_real.rds`, alinhamento dos indivíduos, controle de qualidade dos marcadores e construção do objeto comum dos dados reais;
 3. `real_data_validation.Rmd` — desenho comum de validação;
 4. ramos paralelos de modelagem GBLUP-ADE e ANN;
@@ -125,7 +125,7 @@ As respostas dos indivíduos de avaliação externa são excluídas do ajuste e 
 
 Nos dados simulados, os valores genéticos verdadeiros são excluídos do ajuste e da seleção e são utilizados apenas na avaliação preditiva independente.
 
-Nos dados reais, a predição genômica utiliza os BLUPs genotípicos individuais obtidos do modelo misto fenotípico longitudinal. As predições genômicas obtidas fora da amostra não devem ser interpretadas como valores genéticos finais provenientes de um modelo reajustado com todas as respostas disponíveis.
+Nos dados reais, a predição genômica utiliza os BLUPs individuais obtidos do modelo misto fenotípico longitudinal. As predições genômicas obtidas fora da amostra não devem ser interpretadas como valores genéticos finais provenientes de um modelo reajustado com todas as respostas disponíveis.
 
 ### Reprodutibilidade e informações do projeto
 

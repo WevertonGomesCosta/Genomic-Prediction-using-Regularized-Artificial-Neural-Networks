@@ -31,7 +31,7 @@ The canonical longitudinal field source is
 The phenotypic module uses all observations required by the experimental
 mixed-model analysis before any integration with genomic marker data.
 
-It produces individual genotypic BLUPs for the target traits. These BLUPs are
+It produces individual BLUPs for the target traits. These BLUPs are
 derived analytical objects and are stored under `output/real/phenotype/`.
 
 ### Genomic marker data

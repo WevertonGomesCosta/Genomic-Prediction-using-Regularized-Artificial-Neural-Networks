@@ -73,7 +73,7 @@ real_data_gblup.Rmd       real_data_ann.Rmd
         real_data_comparison.Rmd
 ```
 
-The real-data branch begins with the complete longitudinal field dataset. The phenotypic module fits the defined mixed model by REML with `sommer` and obtains individual genotypic BLUPs. The data-audit module then integrates those BLUPs with the canonical `geno_real.rds` genotype object, aligns individuals, performs marker quality control, and creates the common object used by validation and genomic prediction.
+The real-data branch begins with the complete longitudinal field dataset. The phenotypic module fits the defined longitudinal mixed model by REML and obtains individual BLUPs. The data-preparation module then integrates those BLUPs with the canonical `geno_real.rds` genotype object, aligns individuals, performs marker quality control, and creates the common object used by validation and genomic prediction.
 
 Phenotypic analysis, genotype integration, validation design, model fitting, and terminal comparison are kept in separate modules.
 
@@ -83,7 +83,7 @@ All competing genomic-prediction methods use matched outer-assessment partitions
 
 Outer-assessment responses are excluded from model fitting and model selection. ANN hyperparameter and epoch selection are restricted to the corresponding outer-analysis sample, and competing methods are evaluated on the same held-out individuals.
 
-For simulated data, true genetic values are used only as an independent assessment target. For real data, the response for genomic prediction consists of individual genotypic BLUPs estimated from the longitudinal phenotypic mixed model.
+For simulated data, true genetic values are used only as an independent assessment target. For real data, the response for genomic prediction consists of individual BLUPs estimated from the longitudinal phenotypic mixed model.
 
 Held-out genomic predictions are predictive quantities generated under the documented validation design and should not be interpreted as final breeding values from a model refitted with all available responses.
 
@@ -183,7 +183,7 @@ real_data_gblup.Rmd       real_data_ann.Rmd
         real_data_comparison.Rmd
 ```
 
-O ramo de dados reais começa com o conjunto longitudinal completo de observações de campo. O módulo fenotípico ajusta o modelo misto definido por REML com `sommer` e obtém BLUPs genotípicos individuais. Em seguida, o módulo de auditoria integra esses BLUPs ao objeto genotípico canônico `geno_real.rds`, alinha os indivíduos, aplica o controle de qualidade dos marcadores e cria o objeto comum utilizado pela validação e pela predição genômica.
+O ramo de dados reais começa com o conjunto longitudinal completo de observações de campo. O módulo fenotípico ajusta o modelo misto longitudinal definido por REML e obtém BLUPs individuais. Em seguida, o módulo de preparação dos dados integra esses BLUPs ao objeto genotípico canônico `geno_real.rds`, alinha os indivíduos, aplica o controle de qualidade dos marcadores e cria o objeto comum utilizado pela validação e pela predição genômica.
 
 A análise fenotípica, a integração genótipo-fenótipo, o desenho de validação, os ajustes dos modelos e a comparação terminal permanecem em módulos separados.
 
@@ -193,7 +193,7 @@ Todos os métodos concorrentes de predição genômica utilizam partições exte
 
 As respostas dos indivíduos de avaliação externa são excluídas do ajuste e da seleção dos modelos. A seleção de hiperparâmetros e de épocas das ANN é restrita à respectiva amostra de análise externa, e os métodos concorrentes são avaliados sobre os mesmos indivíduos mantidos fora do ajuste.
 
-Nos dados simulados, os valores genéticos verdadeiros são utilizados somente como alvo independente de avaliação. Nos dados reais, a resposta da predição genômica consiste nos BLUPs genotípicos individuais estimados a partir do modelo misto fenotípico longitudinal.
+Nos dados simulados, os valores genéticos verdadeiros são utilizados somente como alvo independente de avaliação. Nos dados reais, a resposta da predição genômica consiste nos BLUPs individuais estimados a partir do modelo misto fenotípico longitudinal.
 
 As predições genômicas obtidas fora da amostra são quantidades preditivas geradas sob o desenho de validação documentado e não devem ser interpretadas como valores genéticos finais provenientes de um modelo reajustado com todas as respostas disponíveis.
 

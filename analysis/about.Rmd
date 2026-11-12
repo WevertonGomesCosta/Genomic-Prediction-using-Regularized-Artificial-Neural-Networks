@@ -39,7 +39,7 @@ The study combines controlled simulated genomic data with real longitudinal *Cof
 
 The simulated-data branch begins with phenotype, genotype, genetic-map, QTL, and known true genetic-value information. The known true genetic values remain outside model fitting and selection and provide an independent predictive-assessment target.
 
-The real-data branch contains an additional phenotypic stage. Complete longitudinal field observations are analyzed with a mixed model fitted by REML using `sommer`. The resulting individual genotypic BLUPs are then integrated with the canonical genomic marker object in a separate data-audit module.
+The real-data branch contains an additional phenotypic stage. Complete longitudinal field observations are analyzed with the defined longitudinal mixed model fitted by REML. The resulting individual BLUPs are then integrated with the canonical genomic marker object in a separate data-preparation module.
 
 After data preparation, both branches use common outer-assessment partitions for GBLUP-ADE and ANN models and keep terminal model comparison separate from model fitting.
 
@@ -59,7 +59,7 @@ Outer-assessment responses are excluded from model development. ANN hyperparamet
 
 For simulated data, predictive performance against true genetic values measures recovery of the known simulated genetic signal under the documented validation design.
 
-For real data, the genomic-prediction response consists of estimated individual genotypic BLUPs from the longitudinal phenotypic mixed model. Predictive performance therefore describes the ability of the genomic models to recover these adjusted phenotypic genetic signals within the represented population and validation design.
+For real data, the genomic-prediction response consists of estimated individual BLUPs from the longitudinal phenotypic mixed model. Predictive performance therefore describes the ability of the genomic models to recover these adjusted phenotypic signals within the represented population and validation design.
 
 Held-out genomic predictions are not final breeding values from a full-data refit.
 
@@ -95,7 +95,7 @@ O estudo combina dados genômicos simulados controlados com dados fenotípicos e
 
 O ramo de dados simulados começa com informações de fenótipos, genótipos, mapa genético, QTL e valores genéticos verdadeiros conhecidos. Os valores genéticos verdadeiros permanecem fora do ajuste e da seleção dos modelos e fornecem um alvo independente de avaliação preditiva.
 
-O ramo de dados reais contém uma etapa fenotípica adicional. As observações longitudinais completas de campo são analisadas por um modelo misto ajustado por REML com `sommer`. Os BLUPs genotípicos individuais resultantes são então integrados ao objeto canônico de marcadores genômicos em um módulo separado de auditoria dos dados.
+O ramo de dados reais contém uma etapa fenotípica adicional. As observações longitudinais completas de campo são analisadas pelo modelo misto longitudinal definido, ajustado por REML. Os BLUPs individuais resultantes são então integrados ao objeto canônico de marcadores genômicos em um módulo separado de preparação dos dados.
 
 Após a preparação dos dados, os dois ramos utilizam partições externas de avaliação comuns para GBLUP-ADE e ANN e mantêm a comparação terminal separada do ajuste dos modelos.
 
@@ -115,7 +115,7 @@ As respostas dos indivíduos de avaliação externa são excluídas do desenvolv
 
 Nos dados simulados, o desempenho preditivo em relação aos valores genéticos verdadeiros mede a recuperação do sinal genético simulado conhecido sob o desenho de validação documentado.
 
-Nos dados reais, a resposta da predição genômica consiste em BLUPs genotípicos individuais estimados pelo modelo misto fenotípico longitudinal. O desempenho preditivo descreve, portanto, a capacidade dos modelos genômicos de recuperar esses sinais genéticos fenotípicos ajustados dentro da população representada e do desenho de validação utilizado.
+Nos dados reais, a resposta da predição genômica consiste em BLUPs individuais estimados pelo modelo misto fenotípico longitudinal. O desempenho preditivo descreve, portanto, a capacidade dos modelos genômicos de recuperar esses sinais fenotípicos ajustados dentro da população representada e do desenho de validação utilizado.
 
 As predições genômicas obtidas fora da amostra não são valores genéticos finais provenientes de um reajuste com todos os dados.
 

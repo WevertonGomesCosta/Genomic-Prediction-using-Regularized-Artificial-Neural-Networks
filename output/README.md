@@ -58,7 +58,7 @@ summaries.
 
 - descriptive summaries of the longitudinal field data;
 - mixed-model variance-component summaries;
-- final individual genotypic BLUPs for each target trait;
+- final individual BLUPs for each target trait;
 - machine-readable BLUP objects consumed by the data-integration stage;
 - execution metadata describing the phenotypic model specification.
 
