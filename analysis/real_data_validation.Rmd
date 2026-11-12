@@ -1,0 +1,766 @@
+---
+title: "Real data: nested validation design"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+    code_folding: show
+editor_options:
+  chunk_output_type: console
+---
+
+<style>
+table {
+  width: 100% !important;
+}
+table th,
+table td {
+  white-space: normal !important;
+  vertical-align: middle !important;
+}
+</style>
+
+## 1. Purpose
+
+This module defines the nested cross-validation design used by every
+genomic-prediction method fitted to the real *Coffea arabica* population. The
+partitions are created before model fitting and are reused unchanged by
+GBLUP-ADE and all ANN variants.
+
+The validation design has four fixed features:
+
+- **Repeated outer cross-validation:** 5 repetitions of 5 outer folds provide
+  25 held-out evaluations.
+- **Nested inner cross-validation:** each outer analysis set is divided into 4
+  inner folds for ANN model selection.
+- **Common partitions:** the same outer and inner assignments are reused for
+  `Cer`, `BM`, `LP`, GBLUP-ADE, and all ANN configurations.
+- **Information separation:** BLUP values, genomic marker values, and model
+  identity do not participate in fold generation.
+
+Throughout this module, **analysis set** denotes individuals available for model
+development at the current validation level, whereas **assessment set** denotes
+individuals held out for evaluation at that level.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
+
+options(stringsAsFactors = FALSE)
+
+dir.create(
+  "output/real/validation",
+  showWarnings = FALSE,
+  recursive = TRUE
+)
+```
+
+## 2. Package and fixed validation settings
+
+`knitr` is used to present validation settings and partition summaries as
+reader-facing tables.
+
+```{r packages, warning=FALSE, message=FALSE}
+library(knitr)
+```
+
+The partitioning procedure is controlled by four fixed values.
+
+```{r validation-parameters}
+SEED_GLOBAL <- 20261105L
+N_OUTER_REPEATS <- 5L
+N_OUTER_FOLDS <- 5L
+N_INNER_FOLDS <- 4L
+
+validation_parameters <- data.frame(
+  Parameter = c(
+    "Global seed",
+    "Outer repetitions",
+    "Outer folds per repetition",
+    "Inner folds per outer split"
+  ),
+  Value = c(
+    SEED_GLOBAL,
+    N_OUTER_REPEATS,
+    N_OUTER_FOLDS,
+    N_INNER_FOLDS
+  ),
+  Role = c(
+    "reproducible partition generation",
+    "repeat held-out evaluation",
+    "define outer assessment sets",
+    "compare ANN candidates inside each outer analysis set"
+  ),
+  stringsAsFactors = FALSE
+)
+
+validation_parameters |>
+  knitr::kable(
+    format = "html",
+    caption = "Fixed nested cross-validation settings",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+## 3. Population entering validation
+
+The validation module reads only the common object prepared in the preceding
+data-preparation stage. The 195 aligned individuals and the common genomic
+matrix are therefore fixed before partition generation.
+
+```{r validation-input}
+common <- readRDS(
+  "output/real/audit/preprocessed_real_common.rds"
+)
+
+ids <- rownames(
+  common$genotype
+)
+
+input_summary <- data.frame(
+  Quantity = c(
+    "Individuals",
+    "Prediction traits",
+    "Markers after common QC"
+  ),
+  Value = c(
+    length(ids),
+    paste(common$traits, collapse = ", "),
+    ncol(common$genotype)
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Real-data population entering validation",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+
+stopifnot(
+  length(ids) == 195L,
+  length(unique(ids)) == 195L,
+  nrow(common$phenotype) == 195L,
+  identical(
+    ids,
+    common$phenotype$Phenotype_ID
+  ),
+  identical(
+    common$traits,
+    c("Cer", "BM", "LP")
+  ),
+  ncol(common$genotype) == 20887L
+)
+```
+
+Only the individual identifiers and deterministic seeds are used to create the
+folds. Phenotypic targets and genomic marker values remain outside partition
+generation.
+
+## 4. Repeated outer cross-validation
+
+In each repetition, the 195 individuals are randomly shuffled and divided into
+five folds of equal size. Because 195 is exactly divisible by five, every outer
+assessment fold contains 39 individuals and the remaining 156 individuals form
+the corresponding outer analysis set.
+
+### 4.1 Outer fold assignments
+
+```{r outer-folds}
+outer_assignment_list <- vector(
+  "list",
+  N_OUTER_REPEATS
+)
+
+outer_splits <- list()
+
+for (rep_id in seq_len(N_OUTER_REPEATS)) {
+
+  set.seed(
+    SEED_GLOBAL + rep_id
+  )
+
+  shuffled_ids <- sample(
+    ids,
+    size = length(ids),
+    replace = FALSE
+  )
+
+  assigned_folds <- rep(
+    seq_len(N_OUTER_FOLDS),
+    each = length(ids) / N_OUTER_FOLDS
+  )
+
+  assignment <- data.frame(
+    Repetition = rep_id,
+    ID = shuffled_ids,
+    OuterFold = assigned_folds,
+    stringsAsFactors = FALSE
+  )
+
+  assignment <- assignment[
+    order(assignment$ID),
+    ,
+    drop = FALSE
+  ]
+
+  rownames(
+    assignment
+  ) <- NULL
+
+  assignment$SplitID <- sprintf(
+    "R%02d_F%02d",
+    assignment$Repetition,
+    assignment$OuterFold
+  )
+
+  outer_assignment_list[[rep_id]] <- assignment
+
+  for (outer_fold in seq_len(N_OUTER_FOLDS)) {
+
+    split_id <- sprintf(
+      "R%02d_F%02d",
+      rep_id,
+      outer_fold
+    )
+
+    assessment_ids <- assignment$ID[
+      assignment$OuterFold == outer_fold
+    ]
+
+    analysis_ids <- ids[
+      !ids %in% assessment_ids
+    ]
+
+    outer_splits[[split_id]] <- list(
+      split_id = split_id,
+      repetition = rep_id,
+      outer_fold = outer_fold,
+      analysis_ids = analysis_ids,
+      assessment_ids = assessment_ids
+    )
+  }
+}
+
+outer_assignments <- do.call(
+  rbind,
+  outer_assignment_list
+)
+
+rownames(
+  outer_assignments
+) <- NULL
+```
+
+### 4.2 Outer split checks
+
+```{r outer-checks}
+outer_split_ids <- names(
+  outer_splits
+)
+
+outer_sizes_list <- vector(
+  "list",
+  length(outer_split_ids)
+)
+
+for (i in seq_along(outer_split_ids)) {
+
+  split_id <- outer_split_ids[i]
+  current_split <- outer_splits[[split_id]]
+
+  outer_sizes_list[[i]] <- data.frame(
+    SplitID = split_id,
+    Analysis_N = length(
+      current_split$analysis_ids
+    ),
+    Assessment_N = length(
+      current_split$assessment_ids
+    ),
+    Overlap_N = length(
+      intersect(
+        current_split$analysis_ids,
+        current_split$assessment_ids
+      )
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+outer_sizes <- do.call(
+  rbind,
+  outer_sizes_list
+)
+
+rownames(
+  outer_sizes
+) <- NULL
+
+outer_coverage <- TRUE
+
+for (rep_id in seq_len(N_OUTER_REPEATS)) {
+
+  assessed <- character(0)
+
+  for (outer_fold in seq_len(N_OUTER_FOLDS)) {
+
+    split_id <- sprintf(
+      "R%02d_F%02d",
+      rep_id,
+      outer_fold
+    )
+
+    assessed <- c(
+      assessed,
+      outer_splits[[split_id]]$assessment_ids
+    )
+  }
+
+  if (
+    length(assessed) != 195L ||
+    !identical(
+      sort(assessed),
+      sort(ids)
+    ) ||
+    any(table(assessed) != 1L)
+  ) {
+    outer_coverage <- FALSE
+  }
+}
+
+outer_contract <- data.frame(
+  Check = c(
+    "25 outer splits",
+    "156 analysis individuals per split",
+    "39 assessment individuals per split",
+    "No analysis-assessment overlap",
+    "Every individual assessed exactly once per repetition"
+  ),
+  Passed = c(
+    length(outer_splits) == 25L,
+    all(outer_sizes$Analysis_N == 156L),
+    all(outer_sizes$Assessment_N == 39L),
+    all(outer_sizes$Overlap_N == 0L),
+    outer_coverage
+  ),
+  stringsAsFactors = FALSE
+)
+
+outer_contract |>
+  knitr::kable(
+    format = "html",
+    caption = "Outer validation design checks",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+
+stopifnot(
+  all(outer_contract$Passed)
+)
+```
+
+Across the complete outer design, every individual is assessed once in each
+repetition and five times in total.
+
+## 5. Nested inner cross-validation
+
+Each outer analysis set contains 156 individuals. Within each outer split,
+these individuals are randomly shuffled and divided into four equal inner folds.
+
+Each inner assessment set therefore contains 39 individuals, while the
+remaining 117 individuals form the corresponding inner analysis set. The outer
+assessment individuals do not participate in inner partition generation.
+
+### 5.1 Inner fold assignments
+
+```{r inner-folds}
+inner_assignments_list <- vector(
+  "list",
+  length(outer_splits)
+)
+
+names(
+  inner_assignments_list
+) <- names(
+  outer_splits
+)
+
+inner_splits <- vector(
+  "list",
+  length(outer_splits)
+)
+
+names(
+  inner_splits
+) <- names(
+  outer_splits
+)
+
+for (split_id in names(outer_splits)) {
+
+  outer_split <- outer_splits[[split_id]]
+
+  rep_id <- outer_split$repetition
+  outer_fold <- outer_split$outer_fold
+
+  outer_analysis_ids <- outer_split$analysis_ids
+
+  set.seed(
+    SEED_GLOBAL +
+      100000L +
+      rep_id * 100L +
+      outer_fold
+  )
+
+  shuffled_inner_ids <- sample(
+    outer_analysis_ids,
+    size = length(outer_analysis_ids),
+    replace = FALSE
+  )
+
+  assigned_inner_folds <- rep(
+    seq_len(N_INNER_FOLDS),
+    each = length(outer_analysis_ids) / N_INNER_FOLDS
+  )
+
+  inner_assignment <- data.frame(
+    SplitID = split_id,
+    Repetition = rep_id,
+    OuterFold = outer_fold,
+    ID = shuffled_inner_ids,
+    InnerFold = assigned_inner_folds,
+    stringsAsFactors = FALSE
+  )
+
+  inner_assignment <- inner_assignment[
+    order(inner_assignment$ID),
+    ,
+    drop = FALSE
+  ]
+
+  rownames(
+    inner_assignment
+  ) <- NULL
+
+  inner_assignments_list[[split_id]] <- inner_assignment
+
+  current_inner_splits <- vector(
+    "list",
+    N_INNER_FOLDS
+  )
+
+  names(
+    current_inner_splits
+  ) <- paste0(
+    "I",
+    seq_len(N_INNER_FOLDS)
+  )
+
+  for (inner_fold in seq_len(N_INNER_FOLDS)) {
+
+    assessment_ids <- inner_assignment$ID[
+      inner_assignment$InnerFold == inner_fold
+    ]
+
+    analysis_ids <- outer_analysis_ids[
+      !outer_analysis_ids %in% assessment_ids
+    ]
+
+    current_inner_splits[[paste0("I", inner_fold)]] <- list(
+      split_id = split_id,
+      inner_fold = inner_fold,
+      analysis_ids = analysis_ids,
+      assessment_ids = assessment_ids
+    )
+  }
+
+  inner_splits[[split_id]] <- current_inner_splits
+}
+
+inner_assignments <- do.call(
+  rbind,
+  inner_assignments_list
+)
+
+rownames(
+  inner_assignments
+) <- NULL
+```
+
+### 5.2 Inner split checks
+
+```{r inner-checks}
+inner_sizes_list <- vector(
+  "list",
+  length(outer_splits) * N_INNER_FOLDS
+)
+
+inner_row <- 1L
+outer_leakage <- FALSE
+inner_coverage <- TRUE
+
+for (split_id in names(inner_splits)) {
+
+  outer_analysis <- outer_splits[[split_id]]$analysis_ids
+  outer_assessment <- outer_splits[[split_id]]$assessment_ids
+  inner_assessed <- character(0)
+
+  for (inner_name in names(inner_splits[[split_id]])) {
+
+    current_inner <- inner_splits[[split_id]][[inner_name]]
+
+    inner_sizes_list[[inner_row]] <- data.frame(
+      SplitID = split_id,
+      InnerFold = current_inner$inner_fold,
+      Analysis_N = length(
+        current_inner$analysis_ids
+      ),
+      Assessment_N = length(
+        current_inner$assessment_ids
+      ),
+      Overlap_N = length(
+        intersect(
+          current_inner$analysis_ids,
+          current_inner$assessment_ids
+        )
+      ),
+      stringsAsFactors = FALSE
+    )
+
+    inner_assessed <- c(
+      inner_assessed,
+      current_inner$assessment_ids
+    )
+
+    inner_ids <- c(
+      current_inner$analysis_ids,
+      current_inner$assessment_ids
+    )
+
+    if (
+      length(
+        intersect(
+          outer_assessment,
+          inner_ids
+        )
+      ) > 0L
+    ) {
+      outer_leakage <- TRUE
+    }
+
+    inner_row <- inner_row + 1L
+  }
+
+  if (
+    length(inner_assessed) != 156L ||
+    !identical(
+      sort(inner_assessed),
+      sort(outer_analysis)
+    ) ||
+    any(table(inner_assessed) != 1L)
+  ) {
+    inner_coverage <- FALSE
+  }
+}
+
+inner_sizes <- do.call(
+  rbind,
+  inner_sizes_list
+)
+
+rownames(
+  inner_sizes
+) <- NULL
+
+inner_contract <- data.frame(
+  Check = c(
+    "100 inner splits",
+    "117 inner-analysis individuals per split",
+    "39 inner-assessment individuals per split",
+    "No inner analysis-assessment overlap",
+    "Every outer-analysis individual assessed once across the four inner folds",
+    "No outer-assessment individual enters inner validation"
+  ),
+  Passed = c(
+    nrow(inner_sizes) == 100L,
+    all(inner_sizes$Analysis_N == 117L),
+    all(inner_sizes$Assessment_N == 39L),
+    all(inner_sizes$Overlap_N == 0L),
+    inner_coverage,
+    !outer_leakage
+  ),
+  stringsAsFactors = FALSE
+)
+
+inner_contract |>
+  knitr::kable(
+    format = "html",
+    caption = "Nested inner-validation design checks",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+
+stopifnot(
+  all(inner_contract$Passed)
+)
+```
+
+The inner assessment sets are used only for model selection within the
+corresponding outer analysis sample. The outer assessment set remains untouched
+until final prediction for that split.
+
+## 6. Information used to create partitions
+
+The fold-generation variables are separated explicitly from the information
+used later for genomic prediction.
+
+```{r partition-information}
+partition_information <- data.frame(
+  Information = c(
+    "Individual ID",
+    "Deterministic seed",
+    "Cer BLUP",
+    "BM BLUP",
+    "LP BLUP",
+    "Genomic marker values",
+    "Prediction model"
+  ),
+  Partition_role = c(
+    "Used",
+    "Used",
+    "Not used",
+    "Not used",
+    "Not used",
+    "Not used",
+    "Not used"
+  ),
+  stringsAsFactors = FALSE
+)
+
+partition_information |>
+  knitr::kable(
+    format = "html",
+    caption = "Information used and excluded during partition generation",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+The same stored partitions are therefore valid for all three prediction traits
+and all prediction methods.
+
+## 7. Validation design summary
+
+```{r validation-summary}
+design_summary <- data.frame(
+  Item = c(
+    "Individuals",
+    "Outer repetitions",
+    "Outer folds per repetition",
+    "Total outer splits",
+    "Outer analysis N",
+    "Outer assessment N",
+    "Inner folds per outer split",
+    "Total inner splits",
+    "Inner analysis N",
+    "Inner assessment N"
+  ),
+  Value = c(
+    length(ids),
+    N_OUTER_REPEATS,
+    N_OUTER_FOLDS,
+    length(outer_splits),
+    unique(outer_sizes$Analysis_N),
+    unique(outer_sizes$Assessment_N),
+    N_INNER_FOLDS,
+    nrow(inner_sizes),
+    unique(inner_sizes$Analysis_N),
+    unique(inner_sizes$Assessment_N)
+  ),
+  stringsAsFactors = FALSE
+)
+
+design_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Common real-data validation design",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+## 8. Common validation object
+
+The stored validation object contains the assignment tables and explicit ID
+vectors required by the subsequent model-fitting modules.
+
+```{r build-validation-object}
+cv_design <- list(
+  dataset = "real",
+  seed_global = SEED_GLOBAL,
+  n_outer_repeats = N_OUTER_REPEATS,
+  n_outer_folds = N_OUTER_FOLDS,
+  n_inner_folds = N_INNER_FOLDS,
+  ids = ids,
+  outer_assignments = outer_assignments,
+  outer_splits = outer_splits,
+  inner_assignments = inner_assignments,
+  inner_splits = inner_splits,
+  checks = list(
+    outer_contract = outer_contract,
+    inner_contract = inner_contract,
+    outer_coverage = outer_coverage,
+    inner_coverage = inner_coverage,
+    outer_leakage = outer_leakage
+  )
+)
+```
+
+```{r save-validation-outputs, include=FALSE}
+saveRDS(
+  cv_design,
+  "output/real/validation/real_cv_design.rds",
+  compress = "gzip"
+)
+
+write.csv(
+  outer_assignments,
+  "output/real/validation/real_outer_assignments.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  inner_assignments,
+  "output/real/validation/real_inner_assignments.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  design_summary,
+  "output/real/validation/real_validation_summary.csv",
+  row.names = FALSE
+)
+```
+
+## 9. Validation input for genomic prediction
+
+The primary model comparison uses the same 25 outer assessment sets for
+GBLUP-ADE and every ANN configuration. ANN model selection is restricted to the
+100 inner splits nested within the corresponding outer analysis sets.
+
+No phenotypic or genomic values are used to create the validation partitions.
