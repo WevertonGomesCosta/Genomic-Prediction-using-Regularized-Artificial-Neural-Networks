@@ -31,7 +31,7 @@ table td {
 This module defines the nested cross-validation design used by every
 genomic-prediction method fitted to the real *Coffea arabica* population. The
 partitions are created before model fitting and are reused unchanged by
-GBLUP-ADE and all ANN variants.
+GBLUP-A, GBLUP-AD, GBLUP-ADE, and all ANN variants.
 
 The validation design has four fixed features:
 
@@ -40,7 +40,7 @@ The validation design has four fixed features:
 - **Nested inner cross-validation:** each outer analysis set is divided into 4
   inner folds for ANN model selection.
 - **Common partitions:** the same outer and inner assignments are reused for
-  `Cer`, `BM`, `LP`, GBLUP-ADE, and all ANN configurations.
+  `Cer`, `BM`, `LP`, GBLUP-A, GBLUP-AD, GBLUP-ADE, and all ANN configurations.
 - **Information separation:** BLUP values, genomic marker values, and model
   identity do not participate in fold generation.
 
@@ -760,7 +760,8 @@ write.csv(
 ## 9. Validation input for genomic prediction
 
 The primary model comparison uses the same 25 outer assessment sets for
-GBLUP-ADE and every ANN configuration. ANN model selection is restricted to the
-100 inner splits nested within the corresponding outer analysis sets.
+GBLUP-A, GBLUP-AD, GBLUP-ADE, and every ANN configuration. ANN model
+selection is restricted to the 100 inner splits nested within the corresponding
+outer analysis sets.
 
 No phenotypic or genomic values are used to create the validation partitions.
