@@ -1,79 +1,140 @@
 ---
-title: "About the project"
+title: "About / Sobre"
 author:
-  - Weverton Gomes da Costa
+  - Costa, W. G.^[Weverton Gomes da Costa, Pós-Doutorando, Departamento de Estatística - Universidade Federal de Viçosa, weverton.costa@ufv.br]
 date: "`r Sys.Date()`"
 site: workflowr::wflow_site
+url: https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/
 output:
   workflowr::wflow_html:
     toc: true
+    toc_depth: 3
     toc_float: true
+    code_download: true
 editor_options:
   chunk_output_type: console
+github-repo: WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks
 ---
 
-# Research objective
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
+```
 
-This project investigates genomic prediction using regularized artificial
-neural networks, with emphasis on whether L1 and L2 weight penalties improve
-predictive generalization relative to an unregularized neural network and a
-GBLUP-ADE genomic mixed model.
+## English
 
-The scientific design combines controlled simulation with a planned applied
-extension to real *Coffea arabica* genomic and phenotypic data.
+### Purpose and scientific scope
 
-# Scientific scope
+This project investigates genomic prediction using regularized artificial neural networks. Its primary objective is to determine whether L1 and L2 weight penalties improve predictive generalization relative to an unregularized neural network and a GBLUP-ADE genomic mixed model.
 
-The validated public analysis currently covers the simulated-data branch. This
-branch provides controlled genetic architectures and known true genetic values,
-allowing predictive performance to be evaluated independently of the phenotype
-used for model fitting.
+The study combines controlled simulated genomic data with real longitudinal *Coffea arabica* phenotypic and genomic data. The two branches address related predictive questions while preserving a common separation between data preparation, validation design, model fitting, and terminal model comparison.
 
-The study compares GBLUP-ADE with unregularized, L1-, L2-, and L1+L2-regularized
-artificial neural networks under the same frozen validation design.
+### Analytical design
 
-# Why simulated genomic data
+The simulated-data branch begins with phenotype, genotype, genetic-map, QTL, and known true genetic-value information. The known true genetic values remain outside model fitting and selection and provide an independent predictive-assessment target.
 
-The simulated branch contains six scenarios spanning a gradient of genetic
-complexity and nominal heritability. Because the scenarios do not form a
-complete factorial combination of QTL number and heritability, changes across
-the full C1--C6 sequence are not interpreted as the isolated causal effect of
-either factor.
+The real-data branch contains an additional phenotypic stage. Complete longitudinal field observations are analyzed with the defined longitudinal mixed model fitted by REML. The resulting individual BLUPs are then integrated with the canonical genomic marker object in a separate data-preparation module.
 
-The known true genetic value provides a primary evaluation target that is
-separate from the observed phenotype. Phenotype prediction is retained as a
-secondary outcome.
+After data preparation, both branches use common outer-assessment partitions for GBLUP-ADE and ANN models and keep terminal model comparison separate from model fitting.
 
-# Methodological principles
+### Prediction design
 
-The project follows a common comparison framework across competing methods:
+Five genomic-prediction configurations are evaluated:
 
-- the same frozen outer-assessment partitions are used for all models;
-- model selection and preprocessing are restricted to training or
-  outer-analysis data;
-- outer-assessment individuals are excluded from ANN hyperparameter and epoch
-  selection;
-- true simulated genetic values are excluded from model fitting and selection;
-- final method comparisons use directly matched held-out individuals.
+- GBLUP-ADE;
+- ANN without L1/L2 regularization;
+- ANN-L1;
+- ANN-L2;
+- ANN-L1+L2.
 
-These principles are designed to preserve separation between model selection
-and final predictive assessment.
+Outer-assessment responses are excluded from model development. ANN hyperparameter and epoch selection are restricted to the corresponding outer-analysis sample. Model comparisons are therefore based on matched held-out individuals rather than on different data partitions.
 
-# Planned Coffea arabica extension
+### Interpretation boundaries
 
-A real-data extension will apply the same separation between data audit,
-validation, model fitting, and terminal comparison to *Coffea arabica* genomic
-and phenotypic data.
+For simulated data, predictive performance against true genetic values measures recovery of the known simulated genetic signal under the documented validation design.
 
-Genotype provenance, genotype quality control, phenotype provenance, and
-phenotype preparation will be audited before genomic prediction. This
-real-data branch is not yet part of the validated public workflow.
+For real data, the genomic-prediction response consists of estimated individual BLUPs from the longitudinal phenotypic mixed model. Predictive performance therefore describes the ability of the genomic models to recover these adjusted phenotypic signals within the represented population and validation design.
 
-# Reproducible research
+Held-out genomic predictions are not final breeding values from a full-data refit.
 
-The project is implemented in R using `workflowr` and `renv`. Source analyses,
-rendered pages, dependency information, and reproducibility metadata are kept
-within the same version-controlled research workflow.
+Associations among predictions from different traits should not be interpreted automatically as multivariate genetic correlations unless they are estimated under an explicit multivariate genetic model.
 
-The detailed scientific methods and results are presented in the public
-analysis modules linked from the project home page.
+No model class is assumed to be universally superior. Conclusions are restricted to the datasets, model specifications, search spaces, and validation designs documented in the project.
+
+### Reproducibility and provenance
+
+The project uses R, R Markdown, `workflowr`, and `renv`.
+
+The repository separates source data, analytical definitions, derived outputs, and rendered documentation. Each analysis module consumes defined inputs and produces outputs for the next stage rather than repeating upstream processing.
+
+The rendered site under `docs/` provides the versioned public analytical record. Full computational reconstruction additionally requires the canonical source data and deliberate regeneration of computationally intensive analytical objects when those objects are not included in the repository.
+
+### Contact
+
+**Weverton Gomes da Costa**<br>
+Postdoctoral Researcher<br>
+Department of Statistics<br>
+Federal University of Viçosa<br>
+[weverton.costa@ufv.br](mailto:weverton.costa@ufv.br)
+
+## Português
+
+### Objetivo e escopo científico
+
+Este projeto investiga predição genômica utilizando redes neurais artificiais regularizadas. Seu objetivo principal é determinar se penalizações L1 e L2 dos pesos melhoram a generalização preditiva em relação a uma rede neural não regularizada e a um modelo misto genômico GBLUP-ADE.
+
+O estudo combina dados genômicos simulados controlados com dados fenotípicos e genômicos longitudinais reais de *Coffea arabica*. Os dois ramos respondem a perguntas preditivas relacionadas, preservando uma separação comum entre preparação dos dados, desenho de validação, ajuste dos modelos e comparação terminal.
+
+### Desenho analítico
+
+O ramo de dados simulados começa com informações de fenótipos, genótipos, mapa genético, QTL e valores genéticos verdadeiros conhecidos. Os valores genéticos verdadeiros permanecem fora do ajuste e da seleção dos modelos e fornecem um alvo independente de avaliação preditiva.
+
+O ramo de dados reais contém uma etapa fenotípica adicional. As observações longitudinais completas de campo são analisadas pelo modelo misto longitudinal definido, ajustado por REML. Os BLUPs individuais resultantes são então integrados ao objeto canônico de marcadores genômicos em um módulo separado de preparação dos dados.
+
+Após a preparação dos dados, os dois ramos utilizam partições externas de avaliação comuns para GBLUP-ADE e ANN e mantêm a comparação terminal separada do ajuste dos modelos.
+
+### Desenho de predição
+
+Cinco configurações de predição genômica são avaliadas:
+
+- GBLUP-ADE;
+- ANN sem regularização L1/L2;
+- ANN-L1;
+- ANN-L2;
+- ANN-L1+L2.
+
+As respostas dos indivíduos de avaliação externa são excluídas do desenvolvimento dos modelos. A seleção de hiperparâmetros e de épocas das ANN é restrita à respectiva amostra de análise externa. As comparações dos modelos são, portanto, baseadas nos mesmos indivíduos mantidos fora do ajuste, e não em diferentes partições dos dados.
+
+### Limites de interpretação
+
+Nos dados simulados, o desempenho preditivo em relação aos valores genéticos verdadeiros mede a recuperação do sinal genético simulado conhecido sob o desenho de validação documentado.
+
+Nos dados reais, a resposta da predição genômica consiste em BLUPs individuais estimados pelo modelo misto fenotípico longitudinal. O desempenho preditivo descreve, portanto, a capacidade dos modelos genômicos de recuperar esses sinais fenotípicos ajustados dentro da população representada e do desenho de validação utilizado.
+
+As predições genômicas obtidas fora da amostra não são valores genéticos finais provenientes de um reajuste com todos os dados.
+
+Associações entre predições de características diferentes não devem ser interpretadas automaticamente como correlações genéticas multivariadas, a menos que sejam estimadas por um modelo genético multivariado explícito.
+
+Nenhuma classe de modelo é assumida como universalmente superior. As conclusões são restritas aos conjuntos de dados, especificações dos modelos, espaços de busca e desenhos de validação documentados no projeto.
+
+### Reprodutibilidade e proveniência
+
+O projeto utiliza R, R Markdown, `workflowr` e `renv`.
+
+O repositório separa dados-fonte, definições analíticas, saídas derivadas e documentação renderizada. Cada módulo analítico consome entradas definidas e produz saídas para a etapa seguinte, em vez de repetir processamentos anteriores.
+
+O site renderizado em `docs/` fornece o registro analítico público versionado. A reconstrução computacional completa exige adicionalmente os dados-fonte canônicos e a regeneração deliberada de objetos analíticos computacionalmente intensivos quando esses objetos não estiverem incluídos no repositório.
+
+### Contato
+
+**Weverton Gomes da Costa**<br>
+Pesquisador Pós-Doutoral<br>
+Departamento de Estatística<br>
+Universidade Federal de Viçosa<br>
+[weverton.costa@ufv.br](mailto:weverton.costa@ufv.br)
