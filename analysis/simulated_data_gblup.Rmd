@@ -18,7 +18,7 @@ editor_options:
 ## 1. Purpose
 
 This module evaluates three GBLUP structures under the six simulated scenarios
-and the validation design defined previously:
+and the cross-validation partitions defined previously:
 
 - **GBLUP-A:** additive genomic effect;
 - **GBLUP-AD:** additive and dominance genomic effects;
@@ -85,7 +85,7 @@ if (RUN_GBLUP) {
 }
 ```
 
-The simulated-data object and the validation design are the same objects used by
+The simulated data and the cross-validation partitions are also used by
 the other simulated-data modules.
 
 ```{r inputs}
@@ -137,7 +137,7 @@ input_summary <- data.frame(
     "Response used for model fitting.",
     "Primary held-out evaluation target.",
     "Marker information used to construct the genomic relationship matrices.",
-    "Common held-out evaluation design used by all models."
+    "Common outer cross-validation partitions for all models."
   ),
   stringsAsFactors = FALSE
 )
@@ -277,10 +277,7 @@ used in the ADE model. These matrices depend only on marker information and do
 not use phenotype or true genetic value.
 
 The matrices are built once and reused across all scenarios, models, and outer
-splits. A standard page build reads the saved matrix summary, whereas a complete
-rerun reconstructs the matrices directly from the marker data.
-
-```{r genomic-kernels}
+splits. ```{r genomic-kernels}
 if (RUN_GBLUP) {
 
   A_matrix <- sommer::A.mat(
@@ -1242,17 +1239,16 @@ simulation and directly measures recovery of the simulated genetic signal.
 The **phenotype** is retained as a secondary target because it includes the
 genetic signal together with residual variation.
 
-The held-out predictive metrics follow the common real/simulated contract:
+Held-out predictive performance is summarized using the following metrics:
 
 - **Pearson correlation:** linear association between GEBV and the target;
 - **Spearman correlation:** rank association between GEBV and the target;
 - **RMSE:** prediction error on the original scale;
 - **MAE:** mean absolute prediction error on the original scale.
 
-Bias and calibration slope are retained only as secondary diagnostics. Bias is
+Bias and calibration slope are complementary measures. Bias is
 `mean(prediction - target)`, and calibration slope is the coefficient of
-prediction in `lm(target ~ prediction)`. R-squared is not part of the analytical
-contract.
+prediction in `lm(target ~ prediction)`. R-squared is not used.
 
 No evaluation target is used during model fitting.
 
@@ -1452,7 +1448,7 @@ ggsave(
 ```
 
 The boxplots summarize variation among the 25 held-out splits. They are
-descriptive summaries of the repeated validation design and are not treated as
+descriptive summaries of repeated cross-validation and are not treated as
 independent inferential replicates.
 
 ## 8. Split-level variability
@@ -1594,4 +1590,4 @@ of the models.
 
 ## 10. Navigation
 
-[Previous: Validation design](simulated_data_validation.html) | [Parallel branch: Regularized ANN](simulated_data_ann.html) | [Next: Model comparison](simulated_data_comparison.html)
+[Previous: Pre-validation](simulated_data_validation.html) | [Regularized ANN](simulated_data_ann.html) | [Next: Model comparison](simulated_data_comparison.html)
