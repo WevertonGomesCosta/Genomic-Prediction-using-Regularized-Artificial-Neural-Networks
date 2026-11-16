@@ -29,11 +29,11 @@ knitr::opts_chunk$set(
 
 ## English
 
-### Start here
+### Study overview
 
 This website documents a reproducible study of genomic prediction comparing three GBLUP genomic mixed models with four regularized artificial neural-network configurations.
 
-The project combines controlled simulated genomic data with real longitudinal *Coffea arabica* data. Its central comparison includes GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations evaluated under matched validation designs, with specific interest in the effect of L1 and L2 weight regularization relative to the unregularized ANN.
+The project combines controlled simulated genomic data with real longitudinal *Coffea arabica* data. Its central comparison includes GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations evaluated under matched cross-validation procedures, with specific interest in the effect of L1 and L2 weight regularization relative to the unregularized ANN.
 
 ### Project at a glance
 
@@ -47,36 +47,30 @@ The genomic-prediction comparison includes:
 - ANN-L2;
 - ANN-L1+L2.
 
-### Metric and tuning contract
+### Model selection and performance metrics
 
-ANN tuning uses **mean inner-assessment RMSE** as the primary performance criterion and **mean inner-assessment Pearson correlation** as the only performance tie-breaker. No other predictive metric is calculated, stored, or used in ANN tuning.
+ANN hyperparameters are selected by mean inner-assessment RMSE, with mean Pearson correlation used to resolve ties. Predictive performance is evaluated using Pearson and Spearman correlations, RMSE, and MAE. Bias and calibration slope provide complementary measures.
 
-Held-out evaluation uses **Pearson, Spearman, RMSE, and MAE** as common predictive metrics. Bias and calibration slope are secondary diagnostics. R-squared is not used.
+True genetic values from simulations are used only for independent predictive assessment. For real data, individual BLUPs are estimated from phenotypic observations before integration with genomic markers.
 
-The simulated branch uses known true genetic values as an independent evaluation target. The real-data branch derives individual BLUPs from the complete longitudinal phenotypic dataset before integration with the genomic marker data.
+### Analytical sequence
 
-### Recommended reading path
+#### Simulated data
 
-The simulated-data workflow is organized as:
+1. [Data preprocessing](simulated_data_audit.html) — preparation of phenotypes, genotypes, genetic maps, QTL information, and simulation scenarios.
+2. [Pre-validation](simulated_data_validation.html) — common outer and inner cross-validation partitions.
+3. Genomic prediction models: [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) and [regularized ANN](simulated_data_ann.html).
+4. [Model comparison](simulated_data_comparison.html) — predictive performance in matched assessment partitions.
 
-1. [Data audit](simulated_data_audit.html) — source-data preparation, integrity checks, genotype and phenotype structure, genetic-map information, QTL information, and simulation-scenario summaries.
-2. [Validation design](simulated_data_validation.html) — common outer and inner validation partitions shared by all competing models.
-3. Parallel genomic-prediction branches:
-   - [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html)
-   - [Regularized ANN](simulated_data_ann.html)
-4. [Model comparison](simulated_data_comparison.html) — terminal comparison of saved predictions and performance summaries under the common validation design.
+#### Real data
 
-The real-data workflow follows this sequence:
+1. [Phenotypes](real_data_phenotype.html) — descriptive analyses, longitudinal mixed-model fitting by REML, variance components, and individual BLUPs.
+2. [Data preprocessing](real_data_audit.html) — integration with `geno_real.rds`, individual correspondence, and marker quality control.
+3. [Pre-validation](real_data_validation.html) — shared outer and inner cross-validation partitions.
+4. Genomic prediction models: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) and [regularized ANN](real_data_ann.html).
+5. [Model comparison](real_data_comparison.html) — evaluation of genomic predictions and rankings.
 
-1. [Longitudinal phenotypes and BLUPs](real_data_phenotype.html) — phenotypic organization, descriptive analysis, REML mixed-model fitting, variance components, and individual BLUPs.
-2. [Genomic data audit](real_data_audit.html) — integration of phenotypic BLUPs with `geno_real.rds`, individual alignment, marker quality control, and preparation of the common genomic object.
-3. [Validation design](real_data_validation.html) — shared outer and inner validation partitions.
-4. Parallel genomic-prediction branches:
-   - [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html)
-   - [Regularized ANN](real_data_ann.html)
-5. [Model comparison](real_data_comparison.html) — matched evaluation of saved genomic predictions and ranking results.
-
-### Validation scope
+### Cross-validation
 
 Outer-assessment responses are excluded from model fitting and model selection. ANN hyperparameter and epoch selection are restricted to the corresponding outer-analysis sample, and all competing methods are evaluated on matched held-out individuals.
 
@@ -84,19 +78,15 @@ For simulated data, true genetic values are excluded from fitting and selection 
 
 For real data, genomic prediction uses the individual BLUPs obtained from the longitudinal phenotypic mixed model. Held-out genomic predictions should not be interpreted as final breeding values from a model refitted with all available responses.
 
-### Reproducibility and project information
 
-The source analyses are stored under `analysis/`, derived analytical objects under `output/`, and the rendered `workflowr` site under `docs/`. Package dependencies are recorded with `renv`.
-
-The repository [README](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme) documents the project structure and reconstruction principles. Detailed source-data and output contracts are documented in the corresponding repository directories.
 
 ## Português
 
-### Comece aqui
+### Visão geral do estudo
 
 Este site documenta um estudo reprodutível de predição genômica comparando três modelos mistos genômicos GBLUP com quatro configurações de redes neurais artificiais regularizadas.
 
-O projeto combina dados genômicos simulados controlados com dados longitudinais reais de *Coffea arabica*. A comparação central inclui GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob desenhos de validação equivalentes, com interesse específico no efeito das regularizações L1 e L2 em relação à ANN não regularizada.
+O projeto combina dados genômicos simulados controlados com dados longitudinais reais de *Coffea arabica*. A comparação central inclui GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob procedimentos equivalentes de validação cruzada, com interesse específico no efeito das regularizações L1 e L2 em relação à ANN não regularizada.
 
 ### Projeto em resumo
 
@@ -110,45 +100,33 @@ A comparação de predição genômica inclui:
 - ANN-L2;
 - ANN-L1+L2.
 
-### Contrato de métricas e tuning
+### Seleção dos modelos e métricas de avaliação
 
-O tuning das ANN utiliza **RMSE médio na avaliação interna** como critério primário de desempenho e **correlação de Pearson média na avaliação interna** como único desempate de desempenho. Nenhuma outra métrica preditiva é calculada, armazenada ou utilizada no tuning das ANN.
+Os hiperparâmetros das ANN são selecionados pelo RMSE médio nas partições internas de avaliação, com a correlação média de Pearson como critério de desempate. O desempenho preditivo é avaliado pelas correlações de Pearson e Spearman, RMSE e MAE. O viés e a inclinação de calibração são medidas complementares.
 
-A avaliação externa utiliza **Pearson, Spearman, RMSE e MAE** como métricas preditivas comuns. Viés e inclinação de calibração são diagnósticos secundários. R-quadrado não é utilizado.
+Nos dados simulados, os valores genéticos verdadeiros são utilizados exclusivamente na avaliação preditiva independente. Nos dados reais, os BLUPs individuais são estimados a partir das observações fenotípicas antes da integração com os marcadores genômicos.
 
-O ramo simulado utiliza valores genéticos verdadeiros conhecidos como alvo independente de avaliação. O ramo de dados reais obtém BLUPs individuais a partir do conjunto fenotípico longitudinal completo antes da integração com os dados de marcadores genômicos.
+### Sequência analítica
 
-### Ordem recomendada de leitura
+#### Dados simulados
 
-O fluxo de dados simulados está organizado em:
+1. [Pré-processamento dos dados](simulated_data_audit.html) — preparação dos fenótipos, genótipos, mapas genéticos, informações de QTL e cenários de simulação.
+2. [Pré-validação](simulated_data_validation.html) — partições externas e internas compartilhadas de validação cruzada.
+3. Modelos de predição genômica: [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) e [ANN regularizadas](simulated_data_ann.html).
+4. [Comparação dos modelos](simulated_data_comparison.html) — desempenho preditivo nas mesmas partições de avaliação.
 
-1. [Auditoria dos dados](simulated_data_audit.html) — preparação dos dados-fonte, verificações de integridade, estrutura genotípica e fenotípica, mapa genético, informações de QTL e resumos dos cenários de simulação.
-2. [Desenho de validação](simulated_data_validation.html) — partições externas e internas comuns a todos os modelos concorrentes.
-3. Ramos paralelos de predição genômica:
-   - [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html)
-   - [ANN regularizadas](simulated_data_ann.html)
-4. [Comparação dos modelos](simulated_data_comparison.html) — comparação terminal das predições e dos resumos de desempenho sob o desenho comum de validação.
+#### Dados reais
 
-O fluxo de dados reais segue esta sequência:
+1. [Fenótipos](real_data_phenotype.html) — análises descritivas, ajuste do modelo misto longitudinal por REML, componentes de variância e BLUPs individuais.
+2. [Pré-processamento dos dados](real_data_audit.html) — integração com `geno_real.rds`, correspondência entre indivíduos e controle de qualidade dos marcadores.
+3. [Pré-validação](real_data_validation.html) — partições externas e internas compartilhadas de validação cruzada.
+4. Modelos de predição genômica: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) e [ANN regularizadas](real_data_ann.html).
+5. [Comparação dos modelos](real_data_comparison.html) — avaliação das predições genômicas e das classificações.
 
-1. [Fenótipos longitudinais e BLUPs](real_data_phenotype.html) — organização fenotípica, análises descritivas, ajuste do modelo misto por REML, componentes de variância e BLUPs individuais.
-2. [Auditoria dos dados genômicos](real_data_audit.html) — integração dos BLUPs com `geno_real.rds`, alinhamento dos indivíduos, controle de qualidade dos marcadores e preparação do objeto genômico comum.
-3. [Desenho de validação](real_data_validation.html) — partições externas e internas compartilhadas.
-4. Ramos paralelos de predição genômica:
-   - [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html)
-   - [ANN regularizadas](real_data_ann.html)
-5. [Comparação dos modelos](real_data_comparison.html) — avaliação correspondente das predições genômicas e dos resultados de classificação.
-
-### Escopo da validação
+### Validação cruzada
 
 As respostas dos indivíduos de avaliação externa são excluídas do ajuste e da seleção dos modelos. A seleção de hiperparâmetros e de épocas das ANN é restrita à respectiva amostra de análise externa, e todos os métodos concorrentes são avaliados nos mesmos indivíduos mantidos fora do ajuste.
 
 Nos dados simulados, os valores genéticos verdadeiros são excluídos do ajuste e da seleção e são utilizados apenas na avaliação preditiva independente.
 
 Nos dados reais, a predição genômica utiliza os BLUPs individuais obtidos do modelo misto fenotípico longitudinal. As predições genômicas obtidas fora da amostra não devem ser interpretadas como valores genéticos finais provenientes de um modelo reajustado com todas as respostas disponíveis.
-
-### Reprodutibilidade e informações do projeto
-
-As análises-fonte estão em `analysis/`, os objetos analíticos derivados em `output/` e o site `workflowr` renderizado em `docs/`. As dependências dos pacotes são registradas com `renv`.
-
-O [README](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme) do repositório documenta a estrutura do projeto e os princípios de reconstrução. Os contratos detalhados dos dados-fonte e das saídas estão documentados nos respectivos diretórios do repositório.
