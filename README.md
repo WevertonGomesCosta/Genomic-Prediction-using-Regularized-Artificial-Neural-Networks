@@ -49,7 +49,7 @@ Known true genetic values provide an independent target for predictive assessmen
 
 #### Real data
 
-1. [Phenotypes](analysis/real_data_phenotype.Rmd): phenotypic characterization, mixed-model analysis of repeated phenotypic measurements by REML, variance components, and individual BLUPs.
+1. [Phenotypes](analysis/real_data_phenotype.Rmd): phenotypic characterization, phenotypic mixed-model analysis by REML, variance components, and individual BLUPs.
 2. [Data preprocessing](analysis/real_data_audit.Rmd): integration of BLUPs with the `geno_real.rds` genotype data, correspondence among individuals, and marker quality control.
 3. [Pre-validation](analysis/real_data_validation.Rmd): shared outer and inner cross-validation partitions.
 4. Genomic prediction models: [GBLUP-A, GBLUP-AD, and GBLUP-ADE](analysis/real_data_gblup.Rmd) and [regularized ANN](analysis/real_data_ann.Rmd).
@@ -63,7 +63,7 @@ All competing genomic-prediction methods use matched outer-assessment partitions
 
 Outer-assessment responses are excluded from model fitting and model selection. ANN hyperparameter and epoch selection are restricted to the corresponding outer-analysis sample, and competing methods are evaluated on the same held-out individuals.
 
-For simulated data, true genetic values are used only as an independent assessment target. For real data, the response for genomic prediction consists of individual BLUPs estimated from the phenotypic mixed model for repeated measurements.
+For simulated data, true genetic values are used only as an independent assessment target. For real data, the response for genomic prediction consists of individual BLUPs estimated from the phenotypic mixed model.
 
 Held-out genomic predictions are predictive quantities generated under the specified validation procedure and should not be interpreted as final breeding values from a model refitted with all available responses.
 
@@ -129,7 +129,7 @@ Os valores genéticos verdadeiros são utilizados como referência independente 
 
 #### Dados reais
 
-1. [Fenótipos](analysis/real_data_phenotype.Rmd): caracterização fenotípica, análise de medidas repetidas por modelos mistos e REML, componentes de variância e BLUPs individuais.
+1. [Fenótipos](analysis/real_data_phenotype.Rmd): caracterização fenotípica, análise fenotípica por modelos mistos e REML, componentes de variância e BLUPs individuais.
 2. [Pré-processamento dos dados](analysis/real_data_audit.Rmd): integração dos BLUPs ao conjunto genotípico `geno_real.rds`, correspondência entre indivíduos e controle de qualidade dos marcadores.
 3. [Pré-validação](analysis/real_data_validation.Rmd): partições externas e internas compartilhadas de validação cruzada.
 4. Modelos de predição genômica: [GBLUP-A, GBLUP-AD e GBLUP-ADE](analysis/real_data_gblup.Rmd) e [ANN regularizadas](analysis/real_data_ann.Rmd).
@@ -143,7 +143,7 @@ Todos os métodos concorrentes de predição genômica utilizam partições exte
 
 As respostas dos indivíduos de avaliação externa são excluídas do ajuste e da seleção dos modelos. A seleção de hiperparâmetros e de épocas das ANN é restrita à respectiva amostra de análise externa, e os métodos concorrentes são avaliados sobre os mesmos indivíduos mantidos fora do ajuste.
 
-Nos dados simulados, os valores genéticos verdadeiros são utilizados somente como alvo independente de avaliação. Nos dados reais, a resposta da predição genômica consiste nos BLUPs individuais estimados a partir do modelo misto fenotípico para medidas repetidas.
+Nos dados simulados, os valores genéticos verdadeiros são utilizados somente como alvo independente de avaliação. Nos dados reais, a resposta da predição genômica consiste nos BLUPs individuais estimados a partir do modelo misto fenotípico.
 
 As predições genômicas obtidas fora da amostra são quantidades preditivas geradas sob o procedimento de validação especificado e não devem ser interpretadas como valores genéticos finais provenientes de um modelo reajustado com todas as respostas disponíveis.
 
