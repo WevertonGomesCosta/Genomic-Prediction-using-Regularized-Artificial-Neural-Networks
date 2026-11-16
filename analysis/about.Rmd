@@ -31,7 +31,7 @@ knitr::opts_chunk$set(
 
 ### Purpose and scientific scope
 
-This project investigates genomic prediction using regularized artificial neural networks and three GBLUP genomic mixed models. Its primary objective is to compare GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations under matched cross-validation procedures, including whether L1 and L2 weight penalties improve predictive generalization relative to the unregularized ANN.
+This project investigates genomic prediction using three GBLUP genomic mixed models and four artificial neural-network configurations: one unregularized baseline and three variants with L1 and/or L2 weight penalties. Its primary objective is to compare GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations under matched cross-validation procedures, including whether L1 and L2 weight penalties improve predictive generalization relative to the unregularized ANN.
 
 The study combines controlled simulated genomic data with real *Coffea arabica* phenotypic and genomic data. The simulated and real datasets support complementary predictive analyses, with data preprocessing, cross-validation, model fitting, and model comparison carried out in distinct stages.
 
@@ -65,6 +65,8 @@ For simulated data, predictive performance against true genetic values measures 
 
 For real data, the genomic-prediction response consists of estimated individual BLUPs from the phenotypic mixed model. Predictive performance therefore describes the ability of the genomic models to recover these adjusted phenotypic signals within the studied population and cross-validation procedure.
 
+These BLUPs are estimated from the available field observations before the genomic cross-validation partitions are defined. The separation of training and assessment individuals applies to genomic prediction models, not to estimation of the BLUP targets.
+
 Held-out genomic predictions are not final breeding values from a full-data refit.
 
 Associations among predictions from different traits should not be interpreted automatically as multivariate genetic correlations unless they are estimated under an explicit multivariate genetic model.
@@ -85,7 +87,7 @@ Federal University of Viçosa<br>
 
 ### Objetivo e escopo científico
 
-Este projeto investiga predição genômica utilizando redes neurais artificiais regularizadas e três modelos mistos genômicos GBLUP. Seu objetivo principal é comparar GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob procedimentos equivalentes de validação cruzada, incluindo se as penalizações L1 e L2 dos pesos melhoram a generalização preditiva em relação à ANN não regularizada.
+Este projeto investiga predição genômica utilizando três modelos mistos genômicos GBLUP e quatro configurações de redes neurais artificiais: uma sem regularização e três com penalizações L1 e/ou L2 dos pesos. Seu objetivo principal é comparar GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob procedimentos equivalentes de validação cruzada, incluindo se as penalizações L1 e L2 dos pesos melhoram a generalização preditiva em relação à ANN não regularizada.
 
 O estudo combina dados genômicos simulados controlados com dados fenotípicos e genômicos reais de *Coffea arabica*. Os dados simulados e reais permitem análises preditivas complementares, com etapas distintas de pré-processamento, validação cruzada, ajuste e comparação dos modelos.
 
@@ -111,13 +113,15 @@ Sete configurações de predição genômica são avaliadas:
 
 As respostas dos indivíduos de avaliação externa são excluídas do desenvolvimento dos modelos. A seleção de hiperparâmetros e de épocas das ANN é restrita à respectiva amostra de análise externa. As comparações dos modelos são, portanto, baseadas nos mesmos indivíduos mantidos fora do ajuste, e não em diferentes partições dos dados.
 
-O tuning das ANN utiliza o RMSE médio na avaliação interna como critério primário de desempenho e a correlação de Pearson média na avaliação interna como único desempate de desempenho. A avaliação externa utiliza Pearson, Spearman, RMSE e MAE como métricas preditivas comuns; viés das predições e inclinação de calibração são medidas complementares.
+A seleção dos hiperparâmetros das ANN utiliza o RMSE médio na avaliação interna como critério primário de desempenho e a correlação de Pearson média na avaliação interna como único desempate de desempenho. A avaliação externa utiliza Pearson, Spearman, RMSE e MAE como métricas preditivas comuns; viés das predições e inclinação de calibração são medidas complementares.
 
 ### Interpretação dos resultados
 
 Nos dados simulados, o desempenho preditivo em relação aos valores genéticos verdadeiros mede a recuperação do sinal genético simulado conhecido sob o procedimento de validação cruzada especificado.
 
 Nos dados reais, a resposta da predição genômica consiste em BLUPs individuais estimados pelo modelo misto fenotípico. O desempenho preditivo descreve, portanto, a capacidade dos modelos genômicos de recuperar esses sinais fenotípicos ajustados dentro da população representada e do procedimento de validação cruzada utilizado.
+
+Esses BLUPs são estimados a partir das observações de campo disponíveis antes da definição das partições de validação cruzada genômica. A separação entre indivíduos de treinamento e avaliação aplica-se aos modelos de predição genômica, não à estimação dos BLUPs de referência.
 
 As predições genômicas obtidas fora da amostra não são valores genéticos finais provenientes de um reajuste com todos os dados.
 

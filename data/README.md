@@ -49,7 +49,6 @@ object used by cross-validation, GBLUP-A, GBLUP-AD, GBLUP-ADE, ANN, and model co
 
 - `data/` — canonical source data;
 - `analysis/` — scientific analysis definitions;
-- `code/` — reusable analytical functions and utilities;
 - `output/` — derived analytical objects and scientific results;
 - `docs/` — rendered analytical website;
 

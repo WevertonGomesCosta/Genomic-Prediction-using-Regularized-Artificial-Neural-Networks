@@ -31,7 +31,7 @@ knitr::opts_chunk$set(
 
 ### Study overview
 
-This website documents a reproducible study of genomic prediction comparing three GBLUP genomic mixed models with four regularized artificial neural-network configurations.
+This website documents a reproducible study of genomic prediction comparing three GBLUP genomic mixed models with four artificial neural-network (ANN) configurations: one unregularized baseline and three variants with L1 and/or L2 weight penalties.
 
 The project combines controlled simulated genomic data with real phenotypic and genomic *Coffea arabica* data. Its central comparison includes GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations evaluated under matched cross-validation procedures, with specific interest in the effect of L1 and L2 weight regularization relative to the unregularized ANN.
 
@@ -59,7 +59,7 @@ True genetic values from simulations are used only for independent predictive as
 
 1. [Data preprocessing](simulated_data_audit.html) — preparation of phenotypes, genotypes, genetic maps, QTL information, and simulation scenarios.
 2. [Pre-validation](simulated_data_validation.html) — common outer and inner cross-validation partitions.
-3. Genomic prediction models: [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) and [regularized ANN](simulated_data_ann.html).
+3. Genomic prediction models: [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) and [ANN configurations](simulated_data_ann.html).
 4. [Model comparison](simulated_data_comparison.html) — predictive performance in matched assessment partitions.
 
 #### Real data
@@ -67,7 +67,7 @@ True genetic values from simulations are used only for independent predictive as
 1. [Phenotypes](real_data_phenotype.html) — descriptive analyses, phenotypic mixed-model fitting by REML, variance components, and individual BLUPs.
 2. [Data preprocessing](real_data_audit.html) — integration with `geno_real.rds`, individual correspondence, and marker quality control.
 3. [Pre-validation](real_data_validation.html) — shared outer and inner cross-validation partitions.
-4. Genomic prediction models: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) and [regularized ANN](real_data_ann.html).
+4. Genomic prediction models: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) and [ANN configurations](real_data_ann.html).
 5. [Model comparison](real_data_comparison.html) — evaluation of genomic predictions and rankings.
 
 ### Cross-validation
@@ -84,7 +84,7 @@ For real data, genomic prediction uses the individual BLUPs obtained from the ph
 
 ### Visão geral do estudo
 
-Este site documenta um estudo reprodutível de predição genômica comparando três modelos mistos genômicos GBLUP com quatro configurações de redes neurais artificiais regularizadas.
+Este site documenta um estudo reprodutível de predição genômica comparando três modelos mistos genômicos GBLUP com quatro configurações de redes neurais artificiais (ANN): uma sem regularização e três com penalizações L1 e/ou L2 dos pesos.
 
 O projeto combina dados genômicos simulados controlados com dados fenotípicos e genômicos reais de *Coffea arabica*. A comparação central inclui GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob procedimentos equivalentes de validação cruzada, com interesse específico no efeito das regularizações L1 e L2 em relação à ANN não regularizada.
 
@@ -112,7 +112,7 @@ Nos dados simulados, os valores genéticos verdadeiros são utilizados exclusiva
 
 1. [Pré-processamento dos dados](simulated_data_audit.html) — preparação dos fenótipos, genótipos, mapas genéticos, informações de QTL e cenários de simulação.
 2. [Pré-validação](simulated_data_validation.html) — partições externas e internas compartilhadas de validação cruzada.
-3. Modelos de predição genômica: [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) e [ANN regularizadas](simulated_data_ann.html).
+3. Modelos de predição genômica: [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) e [configurações de ANN](simulated_data_ann.html).
 4. [Comparação dos modelos](simulated_data_comparison.html) — desempenho preditivo nas mesmas partições de avaliação.
 
 #### Dados reais
@@ -120,7 +120,7 @@ Nos dados simulados, os valores genéticos verdadeiros são utilizados exclusiva
 1. [Fenótipos](real_data_phenotype.html) — análises descritivas, ajuste do modelo misto fenotípico por REML, componentes de variância e BLUPs individuais.
 2. [Pré-processamento dos dados](real_data_audit.html) — integração com `geno_real.rds`, correspondência entre indivíduos e controle de qualidade dos marcadores.
 3. [Pré-validação](real_data_validation.html) — partições externas e internas compartilhadas de validação cruzada.
-4. Modelos de predição genômica: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) e [ANN regularizadas](real_data_ann.html).
+4. Modelos de predição genômica: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) e [configurações de ANN](real_data_ann.html).
 5. [Comparação dos modelos](real_data_comparison.html) — avaliação das predições genômicas e das classificações.
 
 ### Validação cruzada
