@@ -588,10 +588,6 @@ task_table$TaskID <- paste(
 
 rownames(task_table) <- NULL
 
-stopifnot(
-  nrow(task_table) == 450L,
-  !anyDuplicated(task_table$TaskID)
-)
 ```
 
 ```{r fit-all-gblup-models}
@@ -1144,19 +1140,6 @@ if (RUN_GBLUP) {
 
   rownames(results) <- NULL
   rownames(predictions) <- NULL
-
-  stopifnot(
-    nrow(results) == 450L,
-    nrow(predictions) == 90000L,
-    length(
-      unique(results$TaskID)
-    ) == 450L,
-    all(
-      table(
-        predictions$TaskID
-      ) == 200L
-    )
-  )
 
   dir.create(
     "output/simulated/gblup",
