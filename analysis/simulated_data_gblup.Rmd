@@ -276,7 +276,9 @@ covariance, and E represents the second-order additive-by-additive relationship
 used in the ADE model. These matrices depend only on marker information and do
 not use phenotype or true genetic value.
 
-The genomic relationship matrices are derived from marker information and are common to the evaluated models and validation partitions. ```{r genomic-kernels}
+The genomic relationship matrices are derived from marker information and are common to the evaluated models and validation partitions.
+
+```{r genomic-kernels}
 if (RUN_GBLUP) {
 
   A_matrix <- sommer::A.mat(
