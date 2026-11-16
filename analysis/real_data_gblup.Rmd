@@ -21,7 +21,7 @@ editor_options:
 ## 1. Objective
 
 This module fits three nested genomic best linear unbiased prediction models
-under the common outer validation design:
+under the common outer cross-validation procedure:
 
 \[
 \text{GBLUP-A}: \quad y = \mu + a + \varepsilon,
@@ -42,8 +42,7 @@ splits. Increasing model complexity is therefore treated as an empirical
 question: dominance and epistatic components are retained as candidate
 structures, but predictive superiority is not assumed from model completeness.
 
-The response in every task is the individual BLUP obtained in the longitudinal
-phenotype module. The 39 BLUPs assigned to the outer assessment set are masked
+The response in every task is the individual BLUP obtained from the phenotypic mixed-model analysis. The 39 BLUPs assigned to the outer assessment set are masked
 before model fitting and are used only for held-out evaluation.
 
 ## 2. Computational setup
@@ -174,7 +173,7 @@ The same numerical controls are used for the three structures. No model is
 changed after inspecting an outer assessment set, and no split-specific
 hyperparameter search is performed.
 
-## 3. Common genomic object and validation design
+## 3. Genomic data and cross-validation
 
 ```{r load-common-validation}
 stopifnot(
@@ -641,8 +640,7 @@ model therefore receives all genomic relationships but no held-out response
 information.
 
 All three structures use the same `sommer::mmes()` fitting controls. Numerical
-diagnostics are recorded for inspection but do not trigger split-specific model
-changes.
+convergence results are summarized without changing model specifications for individual validation partitions.
 
 ```{r fit-all-gblup-models, eval=RUN_GBLUP}
 set.seed(
@@ -1472,9 +1470,7 @@ run_metadata <- readRDS(
 
 ## 8. Numerical behavior
 
-The numerical diagnostics are reported because they help interpret model
-complexity. They are not used to replace one candidate structure by another
-within a validation split.
+The numerical behavior of each model helps interpret differences in model complexity. Candidate structures are retained consistently across validation partitions.
 
 ```{r numerical-summary}
 numerical_summary <- data.frame(
@@ -1560,7 +1556,7 @@ numerical_summary |>
 ```
 
 A variance component estimated near the boundary can be numerically difficult
-for a more complex covariance structure. These diagnostics are therefore
+for a more complex covariance structure. These numerical results are therefore
 interpreted together with held-out predictive performance rather than as a
 criterion for changing the model assigned to a specific split.
 
@@ -2314,7 +2310,7 @@ print(rmse_plot)
 print(observed_predicted_plot)
 ```
 
-## 12. Output contract
+## 12. Prediction results
 
 The saved result table contains one row per trait, outer split, and GBLUP
 structure. The prediction table contains one row per held-out individual and
@@ -2473,4 +2469,4 @@ for (
 ```
 
 The three fixed GBLUP structures are now ready for comparison with the
-regularized ANN models under the same outer validation design.
+regularized ANN models under the same outer cross-validation procedure.
