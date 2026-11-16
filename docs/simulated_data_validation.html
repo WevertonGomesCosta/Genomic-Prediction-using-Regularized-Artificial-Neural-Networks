@@ -11,7 +11,7 @@
 
 <meta name="author" content="Weverton Gomes da Costa" />
 
-<meta name="date" content="2026-09-08" />
+<meta name="date" content="2026-11-16" />
 
 <title>Simulated data: nested validation design</title>
 
@@ -37,6 +37,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -59,115 +61,18 @@ div.section {
   ul.task-list{list-style: none;}
     </style>
 
-
-
-<style type="text/css">
-  code {
-    white-space: pre;
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
   }
-  .sourceCode {
-    overflow: visible;
-  }
-</style>
-<style type="text/css" data-origin="pandoc">
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
 }
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
-code span.al { color: #ff0000; } /* Alert */
-code span.an { color: #008000; } /* Annotation */
-code span.at { } /* Attribute */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #0000ff; } /* ControlFlow */
-code span.ch { color: #008080; } /* Char */
-code span.cn { } /* Constant */
-code span.co { color: #008000; } /* Comment */
-code span.cv { color: #008000; } /* CommentVar */
-code span.do { color: #008000; } /* Documentation */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.im { } /* Import */
-code span.in { color: #008000; } /* Information */
-code span.kw { color: #0000ff; } /* Keyword */
-code span.op { } /* Operator */
-code span.ot { color: #ff4000; } /* Other */
-code span.pp { color: #ff4000; } /* Preprocessor */
-code span.sc { color: #008080; } /* SpecialChar */
-code span.ss { color: #008080; } /* SpecialString */
-code span.st { color: #008080; } /* String */
-code span.va { } /* Variable */
-code span.vs { color: #008080; } /* VerbatimString */
-code span.wa { color: #008000; font-weight: bold; } /* Warning */
-
-.sourceCode .row {
-  width: 100%;
-}
-.sourceCode {
-  overflow-x: auto;
-}
-.code-folding-btn {
-  margin-right: -30px;
-}
-</style>
-<script>
-// apply pandoc div.sourceCode style to pre.sourceCode instead
-(function() {
-  var sheets = document.styleSheets;
-  for (var i = 0; i < sheets.length; i++) {
-    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
-    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    var j = 0;
-    while (j < rules.length) {
-      var rule = rules[j];
-      // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
-        j++;
-        continue;
-      }
-      var style = rule.style.cssText;
-      // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') {
-        j++;
-        continue;
-      }
-      // replace div.sourceCode by a pre.sourceCode rule
-      sheets[i].deleteRule(j);
-      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
-    }
-  }
-})();
 </script>
+
+
 
 
 <style type="text/css">
@@ -454,13 +359,40 @@ div.tocify {
       <a href="simulated_data_validation.html">Validation design</a>
     </li>
     <li>
-      <a href="simulated_data_gblup.html">GBLUP-ADE</a>
+      <a href="simulated_data_gblup.html">GBLUP A / AD / ADE</a>
     </li>
     <li>
       <a href="simulated_data_ann.html">ANN</a>
     </li>
     <li>
       <a href="simulated_data_comparison.html">Model comparison</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Real data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="real_data_phenotype.html">1. Longitudinal phenotypes and BLUPs</a>
+    </li>
+    <li>
+      <a href="real_data_audit.html">2. Genomic data audit</a>
+    </li>
+    <li>
+      <a href="real_data_validation.html">3. Validation design</a>
+    </li>
+    <li>
+      <a href="real_data_gblup.html">4A. GBLUP A / AD / ADE</a>
+    </li>
+    <li>
+      <a href="real_data_ann.html">4B. Regularized ANN</a>
+    </li>
+    <li>
+      <a href="real_data_comparison.html">5. Model comparison</a>
     </li>
   </ul>
 </li>
@@ -476,6 +408,7 @@ div.tocify {
   <a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks">
     <span class="fa fa-github"></span>
      
+    Source code
   </a>
 </li>
       </ul>
@@ -500,7 +433,7 @@ div.tocify {
 <h1 class="title toc-ignore">Simulated data: nested validation
 design</h1>
 <h4 class="author">Weverton Gomes da Costa</h4>
-<h4 class="date">2026-09-08</h4>
+<h4 class="date">2026-11-16</h4>
 
 </div>
 
@@ -529,7 +462,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-09-08
+<strong>Last updated:</strong> 2026-11-16
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -661,15 +594,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree97010e73e37325042eb701f9a2b749cfb4173823targetblank97010e7a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree818db1eef730b082e603d85e0f2fc336d84d55ectargetblank818db1ea">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/97010e73e37325042eb701f9a2b749cfb4173823" target="_blank">97010e7</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/818db1eef730b082e603d85e0f2fc336d84d55ec" target="_blank">818db1e</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree97010e73e37325042eb701f9a2b749cfb4173823targetblank97010e7a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree818db1eef730b082e603d85e0f2fc336d84d55ectargetblank818db1ea"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -679,7 +612,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/97010e73e37325042eb701f9a2b749cfb4173823" target="_blank">97010e7</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/818db1eef730b082e603d85e0f2fc336d84d55ec" target="_blank">818db1e</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -697,24 +630,8 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    .github/
-    Ignored:    .local/
-    Ignored:    code/legacy/
-    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica (1).xlsx
-    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica.xlsx
-    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012
-    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.indv
-    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.pos
-    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.indv.txt
-    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.pos.txt
-    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.txt
-    Ignored:    data/dados_reais/Rótulos C. arabica_Proj_Piloto.xlsx
-    Ignored:    data/dados_reais/Rótulos Novos SNPs.xls
-    Ignored:    data/dados_reais/dados_cafe.xlsx
-    Ignored:    data/dados_reais/fpls-09-01934.pdf
     Ignored:    data/dados_reais/geno_real.rds
-    Ignored:    data/dados_reais/pheno_real.rds
-    Ignored:    data/dados_reais/plants-13-01876-v2.pdf
-    Ignored:    data/dados_reais/pos_geno_real.rds
+    Ignored:    output/simulated/gblup/figures/
     Ignored:    renv/library/
     Ignored:    renv/staging/
 
@@ -762,6 +679,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/e9f3f1d99a3ad2c9150d7ddb6fd42f34abe2ee0e/docs/simulated_data_validation.html" target="_blank">e9f3f1d</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-09-08
+</td>
+<td>
+Refresh workflowr provenance after M01-M05 merge
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -1192,9 +1126,9 @@ validation levels.</li>
 theme and color scale adopted in the preceding module so the project
 keeps a consistent visual style.</li>
 </ul>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(knitr)     <span class="co"># Format validation summaries as readable HTML tables.</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(ggplot2)   <span class="co"># Draw the nested cross-validation structure.</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(ggthemes)  <span class="co"># Apply the Google Docs theme and matching color scale.</span></span></code></pre></div>
+<pre class="r"><code>library(knitr)     # Format validation summaries as readable HTML tables.
+library(ggplot2)   # Draw the nested cross-validation structure.
+library(ggthemes)  # Apply the Google Docs theme and matching color scale.</code></pre>
 </div>
 <div id="fixed-settings" class="section level3">
 <h3>2.2 Fixed settings</h3>
@@ -1211,39 +1145,39 @@ assessment groups per repetition.</li>
 <li><strong>Inner folds:</strong> divide each 800-individual outer
 analysis set into four groups for ANN tuning.</li>
 </ul>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20260821</span><span class="dt">L</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>N_OUTER_REPEATS <span class="ot">&lt;-</span> <span class="dv">5</span><span class="dt">L</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>N_OUTER_FOLDS <span class="ot">&lt;-</span> <span class="dv">5</span><span class="dt">L</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>N_INNER_FOLDS <span class="ot">&lt;-</span> <span class="dv">4</span><span class="dt">L</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>validation_parameters <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">Parameter =</span> <span class="fu">c</span>(</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>    <span class="st">&quot;Global seed&quot;</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    <span class="st">&quot;Outer repetitions&quot;</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>    <span class="st">&quot;Outer folds per repetition&quot;</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>    <span class="st">&quot;Inner folds per outer split&quot;</span></span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  ),</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>    SEED_GLOBAL,</span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>    N_OUTER_REPEATS,</span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>    N_OUTER_FOLDS,</span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>    N_INNER_FOLDS</span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>  ),</span>
-<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  <span class="at">Role =</span> <span class="fu">c</span>(</span>
-<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>    <span class="st">&quot;reproducible partition generation&quot;</span>,</span>
-<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>    <span class="st">&quot;repeat held-out evaluation&quot;</span>,</span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>    <span class="st">&quot;define outer assessment sets&quot;</span>,</span>
-<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>    <span class="st">&quot;compare ANN candidates inside outer analysis&quot;</span></span>
-<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>  )</span>
-<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>)</span>
-<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>validation_parameters <span class="sc">|&gt;</span></span>
-<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Fixed nested cross-validation settings&quot;</span>,</span>
-<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>SEED_GLOBAL &lt;- 20260821L
+N_OUTER_REPEATS &lt;- 5L
+N_OUTER_FOLDS &lt;- 5L
+N_INNER_FOLDS &lt;- 4L
+
+validation_parameters &lt;- data.frame(
+  Parameter = c(
+    &quot;Global seed&quot;,
+    &quot;Outer repetitions&quot;,
+    &quot;Outer folds per repetition&quot;,
+    &quot;Inner folds per outer split&quot;
+  ),
+  Value = c(
+    SEED_GLOBAL,
+    N_OUTER_REPEATS,
+    N_OUTER_FOLDS,
+    N_INNER_FOLDS
+  ),
+  Role = c(
+    &quot;reproducible partition generation&quot;,
+    &quot;repeat held-out evaluation&quot;,
+    &quot;define outer assessment sets&quot;,
+    &quot;compare ANN candidates inside outer analysis&quot;
+  )
+)
+
+validation_parameters |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Fixed nested cross-validation settings&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Fixed nested cross-validation settings
@@ -1328,32 +1262,32 @@ available for partitioning.</p>
 <li>extracts the row identifiers that will be used to construct every
 fold.</li>
 </ul>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Read the shared simulated-data object prepared in M01.</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>simulated_common <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="st">&quot;output/simulated/audit/preprocessed_simulated_common.rds&quot;</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>)</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>input_components <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">Component =</span> <span class="fu">c</span>(<span class="st">&quot;phenotype&quot;</span>, <span class="st">&quot;true_genetic_value&quot;</span>, <span class="st">&quot;genotype_m101&quot;</span>),</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">Rows =</span> <span class="fu">c</span>(</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>    <span class="fu">nrow</span>(simulated_common<span class="sc">$</span>phenotype),</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    <span class="fu">nrow</span>(simulated_common<span class="sc">$</span>true_genetic_value),</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>    <span class="fu">nrow</span>(simulated_common<span class="sc">$</span>genotype_m101)</span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  ),</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">Columns =</span> <span class="fu">c</span>(</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>    <span class="fu">ncol</span>(simulated_common<span class="sc">$</span>phenotype),</span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>    <span class="fu">ncol</span>(simulated_common<span class="sc">$</span>true_genetic_value),</span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>    <span class="fu">ncol</span>(simulated_common<span class="sc">$</span>genotype_m101)</span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  )</span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>)</span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>input_components <span class="sc">|&gt;</span></span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Aligned objects available before partition generation&quot;</span>,</span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code># Read the shared simulated-data object prepared in M01.
+simulated_common &lt;- readRDS(
+  &quot;output/simulated/audit/preprocessed_simulated_common.rds&quot;
+)
+
+input_components &lt;- data.frame(
+  Component = c(&quot;phenotype&quot;, &quot;true_genetic_value&quot;, &quot;genotype_m101&quot;),
+  Rows = c(
+    nrow(simulated_common$phenotype),
+    nrow(simulated_common$true_genetic_value),
+    nrow(simulated_common$genotype_m101)
+  ),
+  Columns = c(
+    ncol(simulated_common$phenotype),
+    ncol(simulated_common$true_genetic_value),
+    ncol(simulated_common$genotype_m101)
+  )
+)
+
+input_components |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Aligned objects available before partition generation&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Aligned objects available before partition generation
@@ -1407,29 +1341,29 @@ genotype_m101
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Use only the stored row identifiers to generate the folds.</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>ids <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(simulated_common<span class="sc">$</span>metadata<span class="sc">$</span>row_identifier)</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>individual_universe <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="at">Quantity =</span> <span class="fu">c</span>(</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>    <span class="st">&quot;Individuals used to generate folds&quot;</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>    <span class="st">&quot;First row identifier&quot;</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    <span class="st">&quot;Last row identifier&quot;</span></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  ),</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  <span class="at">Observed =</span> <span class="fu">c</span>(</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>    <span class="fu">length</span>(ids),</span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>    <span class="fu">min</span>(ids),</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>    <span class="fu">max</span>(ids)</span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  )</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>)</span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>individual_universe <span class="sc">|&gt;</span></span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Individual universe used for partition generation&quot;</span>,</span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code># Use only the stored row identifiers to generate the folds.
+ids &lt;- as.integer(simulated_common$metadata$row_identifier)
+
+individual_universe &lt;- data.frame(
+  Quantity = c(
+    &quot;Individuals used to generate folds&quot;,
+    &quot;First row identifier&quot;,
+    &quot;Last row identifier&quot;
+  ),
+  Observed = c(
+    length(ids),
+    min(ids),
+    max(ids)
+  )
+)
+
+individual_universe |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Individual universe used for partition generation&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Individual universe used for partition generation
@@ -1503,77 +1437,77 @@ individuals.</li>
 times. The seed changes with the repetition number, which gives each
 repetition a distinct assignment while preserving exact
 reproducibility.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>outer_assignment_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="st">&quot;list&quot;</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  N_OUTER_REPEATS</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>)</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co"># Build one balanced five-fold assignment for each repetition.</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="cf">for</span> (rep_id <span class="cf">in</span> <span class="fu">seq_len</span>(N_OUTER_REPEATS)) {</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="fu">set.seed</span>(SEED_GLOBAL <span class="sc">+</span> rep_id)</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  shuffled_ids <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>    ids,</span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>    <span class="at">size =</span> <span class="fu">length</span>(ids),</span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>    <span class="at">replace =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>  )</span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>  assigned_folds <span class="ot">&lt;-</span> <span class="fu">rep</span>(</span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>    <span class="fu">seq_len</span>(N_OUTER_FOLDS),</span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>    <span class="at">length.out =</span> <span class="fu">length</span>(ids)</span>
-<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>  )</span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a></span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>  assignment <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>    <span class="at">ID =</span> shuffled_ids,</span>
-<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>    <span class="at">Fold =</span> assigned_folds,</span>
-<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a>  )</span>
-<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a></span>
-<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>  <span class="co"># Sort only the displayed/stored rows; fold membership is already fixed.</span></span>
-<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a>  assignment <span class="ot">&lt;-</span> assignment[</span>
-<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>    <span class="fu">order</span>(assignment<span class="sc">$</span>ID),</span>
-<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a>    ,</span>
-<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a>    drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
-<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a>  ]</span>
-<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a>  <span class="fu">rownames</span>(assignment) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a></span>
-<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a>  outer_assignment_list[[rep_id]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a>    <span class="at">Repetition =</span> rep_id,</span>
-<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a>    <span class="at">ID =</span> assignment<span class="sc">$</span>ID,</span>
-<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a>    <span class="at">OuterFold =</span> assignment<span class="sc">$</span>Fold,</span>
-<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a>  )</span>
-<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a>}</span>
-<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a></span>
-<span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a>outer_assignments <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
-<span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a>  rbind,</span>
-<span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a>  outer_assignment_list</span>
-<span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a>)</span>
-<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a><span class="fu">rownames</span>(outer_assignments) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a></span>
-<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a>outer_assignments<span class="sc">$</span>SplitID <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(</span>
-<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a>  <span class="st">&quot;R%02d_F%02d&quot;</span>,</span>
-<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a>  outer_assignments<span class="sc">$</span>Repetition,</span>
-<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a>  outer_assignments<span class="sc">$</span>OuterFold</span>
-<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a>)</span>
-<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a></span>
-<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a><span class="co"># Count the assessment and analysis individuals in every outer split.</span></span>
-<span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a>outer_sizes <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
-<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a>  ID <span class="sc">~</span> Repetition <span class="sc">+</span> OuterFold <span class="sc">+</span> SplitID,</span>
-<span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a>  <span class="at">data =</span> outer_assignments,</span>
-<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a>  <span class="at">FUN =</span> length</span>
-<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a>)</span>
-<span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a><span class="fu">names</span>(outer_sizes)[<span class="fu">names</span>(outer_sizes) <span class="sc">==</span> <span class="st">&quot;ID&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;Assessment_N&quot;</span></span>
-<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a>outer_sizes<span class="sc">$</span>Analysis_N <span class="ot">&lt;-</span> <span class="fu">length</span>(ids) <span class="sc">-</span> outer_sizes<span class="sc">$</span>Assessment_N</span>
-<span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a></span>
-<span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a>outer_sizes <span class="sc">|&gt;</span></span>
-<span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb5-67"><a href="#cb5-67" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb5-68"><a href="#cb5-68" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Sizes of the 25 outer validation splits&quot;</span>,</span>
-<span id="cb5-69"><a href="#cb5-69" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb5-70"><a href="#cb5-70" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb5-71"><a href="#cb5-71" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>outer_assignment_list &lt;- vector(
+  &quot;list&quot;,
+  N_OUTER_REPEATS
+)
+
+# Build one balanced five-fold assignment for each repetition.
+for (rep_id in seq_len(N_OUTER_REPEATS)) {
+
+  set.seed(SEED_GLOBAL + rep_id)
+
+  shuffled_ids &lt;- sample(
+    ids,
+    size = length(ids),
+    replace = FALSE
+  )
+
+  assigned_folds &lt;- rep(
+    seq_len(N_OUTER_FOLDS),
+    length.out = length(ids)
+  )
+
+  assignment &lt;- data.frame(
+    ID = shuffled_ids,
+    Fold = assigned_folds,
+    stringsAsFactors = FALSE
+  )
+
+  # Sort only the displayed/stored rows; fold membership is already fixed.
+  assignment &lt;- assignment[
+    order(assignment$ID),
+    ,
+    drop = FALSE
+  ]
+  rownames(assignment) &lt;- NULL
+
+  outer_assignment_list[[rep_id]] &lt;- data.frame(
+    Repetition = rep_id,
+    ID = assignment$ID,
+    OuterFold = assignment$Fold,
+    stringsAsFactors = FALSE
+  )
+}
+
+outer_assignments &lt;- do.call(
+  rbind,
+  outer_assignment_list
+)
+rownames(outer_assignments) &lt;- NULL
+
+outer_assignments$SplitID &lt;- sprintf(
+  &quot;R%02d_F%02d&quot;,
+  outer_assignments$Repetition,
+  outer_assignments$OuterFold
+)
+
+# Count the assessment and analysis individuals in every outer split.
+outer_sizes &lt;- aggregate(
+  ID ~ Repetition + OuterFold + SplitID,
+  data = outer_assignments,
+  FUN = length
+)
+names(outer_sizes)[names(outer_sizes) == &quot;ID&quot;] &lt;- &quot;Assessment_N&quot;
+outer_sizes$Analysis_N &lt;- length(ids) - outer_sizes$Assessment_N
+
+outer_sizes |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Sizes of the 25 outer validation splits&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Sizes of the 25 outer validation splits
@@ -2046,75 +1980,75 @@ modules need explicit ID vectors. The next chunk converts every
 assessment IDs.</p>
 <p>An example from the first split is displayed so the reader can
 inspect both sizes and confirm that the overlap is zero.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>outer_split_ids <span class="ot">&lt;-</span> <span class="fu">sort</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="fu">unique</span>(outer_assignments<span class="sc">$</span>SplitID)</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>)</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>outer_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(outer_split_ids)),</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  outer_split_ids</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>)</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co"># Store the two ID sets consumed later by GBLUP-ADE and ANN.</span></span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="cf">for</span> (split_id <span class="cf">in</span> outer_split_ids) {</span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  assessment_ids <span class="ot">&lt;-</span> outer_assignments<span class="sc">$</span>ID[</span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>    outer_assignments<span class="sc">$</span>SplitID <span class="sc">==</span> split_id</span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>  ]</span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a></span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>  analysis_ids <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(</span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>    ids,</span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>    assessment_ids</span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>  )</span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a></span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>  outer_splits[[split_id]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>    <span class="at">split_id =</span> split_id,</span>
-<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>    <span class="at">analysis_ids =</span> <span class="fu">sort</span>(analysis_ids),</span>
-<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>    <span class="at">assessment_ids =</span> <span class="fu">sort</span>(assessment_ids)</span>
-<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>  )</span>
-<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>}</span>
-<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a></span>
-<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>example_outer_split <span class="ot">&lt;-</span> outer_splits[[<span class="dv">1</span>]]</span>
-<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a></span>
-<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>outer_object_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>  <span class="at">Component =</span> <span class="fu">c</span>(</span>
-<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>    <span class="st">&quot;analysis_ids&quot;</span>,</span>
-<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>    <span class="st">&quot;assessment_ids&quot;</span>,</span>
-<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>    <span class="st">&quot;overlap&quot;</span></span>
-<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>  ),</span>
-<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>  <span class="at">N =</span> <span class="fu">c</span>(</span>
-<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>    <span class="fu">length</span>(example_outer_split<span class="sc">$</span>analysis_ids),</span>
-<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>    <span class="fu">length</span>(example_outer_split<span class="sc">$</span>assessment_ids),</span>
-<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a>    <span class="fu">length</span>(</span>
-<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>      <span class="fu">intersect</span>(</span>
-<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>        example_outer_split<span class="sc">$</span>analysis_ids,</span>
-<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>        example_outer_split<span class="sc">$</span>assessment_ids</span>
-<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a>      )</span>
-<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>    )</span>
-<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a>  ),</span>
-<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a>  <span class="at">First_IDs =</span> <span class="fu">c</span>(</span>
-<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>    <span class="fu">paste</span>(</span>
-<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>      <span class="fu">head</span>(example_outer_split<span class="sc">$</span>analysis_ids, <span class="dv">6</span>),</span>
-<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>      <span class="at">collapse =</span> <span class="st">&quot;, &quot;</span></span>
-<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a>    ),</span>
-<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a>    <span class="fu">paste</span>(</span>
-<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a>      <span class="fu">head</span>(example_outer_split<span class="sc">$</span>assessment_ids, <span class="dv">6</span>),</span>
-<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a>      <span class="at">collapse =</span> <span class="st">&quot;, &quot;</span></span>
-<span id="cb6-55"><a href="#cb6-55" tabindex="-1"></a>    ),</span>
-<span id="cb6-56"><a href="#cb6-56" tabindex="-1"></a>    <span class="st">&quot;-&quot;</span></span>
-<span id="cb6-57"><a href="#cb6-57" tabindex="-1"></a>  )</span>
-<span id="cb6-58"><a href="#cb6-58" tabindex="-1"></a>)</span>
-<span id="cb6-59"><a href="#cb6-59" tabindex="-1"></a></span>
-<span id="cb6-60"><a href="#cb6-60" tabindex="-1"></a>outer_object_summary <span class="sc">|&gt;</span></span>
-<span id="cb6-61"><a href="#cb6-61" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb6-62"><a href="#cb6-62" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb6-63"><a href="#cb6-63" tabindex="-1"></a>    <span class="at">caption =</span> <span class="fu">paste</span>(</span>
-<span id="cb6-64"><a href="#cb6-64" tabindex="-1"></a>      <span class="st">&quot;Structure of outer split&quot;</span>,</span>
-<span id="cb6-65"><a href="#cb6-65" tabindex="-1"></a>      example_outer_split<span class="sc">$</span>split_id</span>
-<span id="cb6-66"><a href="#cb6-66" tabindex="-1"></a>    ),</span>
-<span id="cb6-67"><a href="#cb6-67" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb6-68"><a href="#cb6-68" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb6-69"><a href="#cb6-69" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>outer_split_ids &lt;- sort(
+  unique(outer_assignments$SplitID)
+)
+
+outer_splits &lt;- setNames(
+  vector(&quot;list&quot;, length(outer_split_ids)),
+  outer_split_ids
+)
+
+# Store the two ID sets consumed later by GBLUP-ADE and ANN.
+for (split_id in outer_split_ids) {
+
+  assessment_ids &lt;- outer_assignments$ID[
+    outer_assignments$SplitID == split_id
+  ]
+
+  analysis_ids &lt;- setdiff(
+    ids,
+    assessment_ids
+  )
+
+  outer_splits[[split_id]] &lt;- list(
+    split_id = split_id,
+    analysis_ids = sort(analysis_ids),
+    assessment_ids = sort(assessment_ids)
+  )
+}
+
+example_outer_split &lt;- outer_splits[[1]]
+
+outer_object_summary &lt;- data.frame(
+  Component = c(
+    &quot;analysis_ids&quot;,
+    &quot;assessment_ids&quot;,
+    &quot;overlap&quot;
+  ),
+  N = c(
+    length(example_outer_split$analysis_ids),
+    length(example_outer_split$assessment_ids),
+    length(
+      intersect(
+        example_outer_split$analysis_ids,
+        example_outer_split$assessment_ids
+      )
+    )
+  ),
+  First_IDs = c(
+    paste(
+      head(example_outer_split$analysis_ids, 6),
+      collapse = &quot;, &quot;
+    ),
+    paste(
+      head(example_outer_split$assessment_ids, 6),
+      collapse = &quot;, &quot;
+    ),
+    &quot;-&quot;
+  )
+)
+
+outer_object_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = paste(
+      &quot;Structure of outer split&quot;,
+      example_outer_split$split_id
+    ),
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Structure of outer split R01_F01
@@ -2198,125 +2132,125 @@ sets.</li>
 100 inner splits in total. The outer assessment IDs never enter the
 inner assignment operation because the starting vector is always
 <code>outer_split$analysis_ids</code>.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>inner_assignments_list <span class="ot">&lt;-</span> <span class="fu">vector</span>(</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="st">&quot;list&quot;</span>,</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">length</span>(outer_splits)</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>)</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="fu">names</span>(inner_assignments_list) <span class="ot">&lt;-</span> <span class="fu">names</span>(outer_splits)</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>inner_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, <span class="fu">length</span>(outer_splits)),</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="fu">names</span>(outer_splits)</span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>)</span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a></span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co"># Generate four inner folds separately within each outer analysis set.</span></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="cf">for</span> (split_id <span class="cf">in</span> <span class="fu">names</span>(outer_splits)) {</span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  outer_split <span class="ot">&lt;-</span> outer_splits[[split_id]]</span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a></span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  split_tokens <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(</span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>    <span class="fu">sub</span>(<span class="st">&quot;^R&quot;</span>, <span class="st">&quot;&quot;</span>, split_id),</span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>    <span class="st">&quot;_F&quot;</span></span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  )[[<span class="dv">1</span>]]</span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>  rep_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(split_tokens[<span class="dv">1</span>])</span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  outer_fold <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(split_tokens[<span class="dv">2</span>])</span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>  inner_seed <span class="ot">&lt;-</span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>    SEED_GLOBAL <span class="sc">+</span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>    <span class="dv">100000</span><span class="dt">L</span> <span class="sc">+</span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>    rep_id <span class="sc">*</span> <span class="dv">100</span><span class="dt">L</span> <span class="sc">+</span></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>    outer_fold</span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a></span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>  <span class="fu">set.seed</span>(inner_seed)</span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a></span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>  shuffled_ids <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>    outer_split<span class="sc">$</span>analysis_ids,</span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>    <span class="at">size =</span> <span class="fu">length</span>(outer_split<span class="sc">$</span>analysis_ids),</span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>    <span class="at">replace =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a>  )</span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>  assigned_folds <span class="ot">&lt;-</span> <span class="fu">rep</span>(</span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>    <span class="fu">seq_len</span>(N_INNER_FOLDS),</span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a>    <span class="at">length.out =</span> <span class="fu">length</span>(outer_split<span class="sc">$</span>analysis_ids)</span>
-<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>  )</span>
-<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a></span>
-<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a>  assignment <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a>    <span class="at">ID =</span> shuffled_ids,</span>
-<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a>    <span class="at">Fold =</span> assigned_folds,</span>
-<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>  )</span>
-<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a></span>
-<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>  assignment <span class="ot">&lt;-</span> assignment[</span>
-<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>    <span class="fu">order</span>(assignment<span class="sc">$</span>ID),</span>
-<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a>    ,</span>
-<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a>    drop <span class="ot">=</span> <span class="cn">FALSE</span></span>
-<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a>  ]</span>
-<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a>  <span class="fu">rownames</span>(assignment) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb7-56"><a href="#cb7-56" tabindex="-1"></a></span>
-<span id="cb7-57"><a href="#cb7-57" tabindex="-1"></a>  inner_assignments_list[[split_id]] <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb7-58"><a href="#cb7-58" tabindex="-1"></a>    <span class="at">SplitID =</span> split_id,</span>
-<span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a>    <span class="at">Repetition =</span> rep_id,</span>
-<span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a>    <span class="at">OuterFold =</span> outer_fold,</span>
-<span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a>    <span class="at">ID =</span> assignment<span class="sc">$</span>ID,</span>
-<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a>    <span class="at">InnerFold =</span> assignment<span class="sc">$</span>Fold,</span>
-<span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a>  )</span>
-<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a></span>
-<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a>  current_inner_splits <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
-<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a>    <span class="fu">vector</span>(<span class="st">&quot;list&quot;</span>, N_INNER_FOLDS),</span>
-<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">&quot;I&quot;</span>, <span class="fu">seq_len</span>(N_INNER_FOLDS))</span>
-<span id="cb7-69"><a href="#cb7-69" tabindex="-1"></a>  )</span>
-<span id="cb7-70"><a href="#cb7-70" tabindex="-1"></a></span>
-<span id="cb7-71"><a href="#cb7-71" tabindex="-1"></a>  <span class="co"># Convert every inner fold into explicit analysis and assessment ID sets.</span></span>
-<span id="cb7-72"><a href="#cb7-72" tabindex="-1"></a>  <span class="cf">for</span> (inner_fold <span class="cf">in</span> <span class="fu">seq_len</span>(N_INNER_FOLDS)) {</span>
-<span id="cb7-73"><a href="#cb7-73" tabindex="-1"></a></span>
-<span id="cb7-74"><a href="#cb7-74" tabindex="-1"></a>    inner_assessment_ids <span class="ot">&lt;-</span> assignment<span class="sc">$</span>ID[</span>
-<span id="cb7-75"><a href="#cb7-75" tabindex="-1"></a>      assignment<span class="sc">$</span>Fold <span class="sc">==</span> inner_fold</span>
-<span id="cb7-76"><a href="#cb7-76" tabindex="-1"></a>    ]</span>
-<span id="cb7-77"><a href="#cb7-77" tabindex="-1"></a></span>
-<span id="cb7-78"><a href="#cb7-78" tabindex="-1"></a>    inner_analysis_ids <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(</span>
-<span id="cb7-79"><a href="#cb7-79" tabindex="-1"></a>      outer_split<span class="sc">$</span>analysis_ids,</span>
-<span id="cb7-80"><a href="#cb7-80" tabindex="-1"></a>      inner_assessment_ids</span>
-<span id="cb7-81"><a href="#cb7-81" tabindex="-1"></a>    )</span>
-<span id="cb7-82"><a href="#cb7-82" tabindex="-1"></a></span>
-<span id="cb7-83"><a href="#cb7-83" tabindex="-1"></a>    current_inner_splits[[<span class="fu">paste0</span>(<span class="st">&quot;I&quot;</span>, inner_fold)]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb7-84"><a href="#cb7-84" tabindex="-1"></a>      <span class="at">split_id =</span> split_id,</span>
-<span id="cb7-85"><a href="#cb7-85" tabindex="-1"></a>      <span class="at">inner_fold =</span> inner_fold,</span>
-<span id="cb7-86"><a href="#cb7-86" tabindex="-1"></a>      <span class="at">analysis_ids =</span> <span class="fu">sort</span>(inner_analysis_ids),</span>
-<span id="cb7-87"><a href="#cb7-87" tabindex="-1"></a>      <span class="at">assessment_ids =</span> <span class="fu">sort</span>(inner_assessment_ids)</span>
-<span id="cb7-88"><a href="#cb7-88" tabindex="-1"></a>    )</span>
-<span id="cb7-89"><a href="#cb7-89" tabindex="-1"></a>  }</span>
-<span id="cb7-90"><a href="#cb7-90" tabindex="-1"></a></span>
-<span id="cb7-91"><a href="#cb7-91" tabindex="-1"></a>  inner_splits[[split_id]] <span class="ot">&lt;-</span> current_inner_splits</span>
-<span id="cb7-92"><a href="#cb7-92" tabindex="-1"></a>}</span>
-<span id="cb7-93"><a href="#cb7-93" tabindex="-1"></a></span>
-<span id="cb7-94"><a href="#cb7-94" tabindex="-1"></a>inner_assignments <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
-<span id="cb7-95"><a href="#cb7-95" tabindex="-1"></a>  rbind,</span>
-<span id="cb7-96"><a href="#cb7-96" tabindex="-1"></a>  inner_assignments_list</span>
-<span id="cb7-97"><a href="#cb7-97" tabindex="-1"></a>)</span>
-<span id="cb7-98"><a href="#cb7-98" tabindex="-1"></a><span class="fu">rownames</span>(inner_assignments) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb7-99"><a href="#cb7-99" tabindex="-1"></a></span>
-<span id="cb7-100"><a href="#cb7-100" tabindex="-1"></a>inner_sizes <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
-<span id="cb7-101"><a href="#cb7-101" tabindex="-1"></a>  ID <span class="sc">~</span> SplitID <span class="sc">+</span> Repetition <span class="sc">+</span> OuterFold <span class="sc">+</span> InnerFold,</span>
-<span id="cb7-102"><a href="#cb7-102" tabindex="-1"></a>  <span class="at">data =</span> inner_assignments,</span>
-<span id="cb7-103"><a href="#cb7-103" tabindex="-1"></a>  <span class="at">FUN =</span> length</span>
-<span id="cb7-104"><a href="#cb7-104" tabindex="-1"></a>)</span>
-<span id="cb7-105"><a href="#cb7-105" tabindex="-1"></a><span class="fu">names</span>(inner_sizes)[<span class="fu">names</span>(inner_sizes) <span class="sc">==</span> <span class="st">&quot;ID&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;Assessment_N&quot;</span></span>
-<span id="cb7-106"><a href="#cb7-106" tabindex="-1"></a>inner_sizes<span class="sc">$</span>Analysis_N <span class="ot">&lt;-</span> <span class="dv">800</span><span class="dt">L</span> <span class="sc">-</span> inner_sizes<span class="sc">$</span>Assessment_N</span></code></pre></div>
+<pre class="r"><code>inner_assignments_list &lt;- vector(
+  &quot;list&quot;,
+  length(outer_splits)
+)
+names(inner_assignments_list) &lt;- names(outer_splits)
+
+inner_splits &lt;- setNames(
+  vector(&quot;list&quot;, length(outer_splits)),
+  names(outer_splits)
+)
+
+# Generate four inner folds separately within each outer analysis set.
+for (split_id in names(outer_splits)) {
+
+  outer_split &lt;- outer_splits[[split_id]]
+
+  split_tokens &lt;- strsplit(
+    sub(&quot;^R&quot;, &quot;&quot;, split_id),
+    &quot;_F&quot;
+  )[[1]]
+
+  rep_id &lt;- as.integer(split_tokens[1])
+  outer_fold &lt;- as.integer(split_tokens[2])
+
+  inner_seed &lt;-
+    SEED_GLOBAL +
+    100000L +
+    rep_id * 100L +
+    outer_fold
+
+  set.seed(inner_seed)
+
+  shuffled_ids &lt;- sample(
+    outer_split$analysis_ids,
+    size = length(outer_split$analysis_ids),
+    replace = FALSE
+  )
+
+  assigned_folds &lt;- rep(
+    seq_len(N_INNER_FOLDS),
+    length.out = length(outer_split$analysis_ids)
+  )
+
+  assignment &lt;- data.frame(
+    ID = shuffled_ids,
+    Fold = assigned_folds,
+    stringsAsFactors = FALSE
+  )
+
+  assignment &lt;- assignment[
+    order(assignment$ID),
+    ,
+    drop = FALSE
+  ]
+  rownames(assignment) &lt;- NULL
+
+  inner_assignments_list[[split_id]] &lt;- data.frame(
+    SplitID = split_id,
+    Repetition = rep_id,
+    OuterFold = outer_fold,
+    ID = assignment$ID,
+    InnerFold = assignment$Fold,
+    stringsAsFactors = FALSE
+  )
+
+  current_inner_splits &lt;- setNames(
+    vector(&quot;list&quot;, N_INNER_FOLDS),
+    paste0(&quot;I&quot;, seq_len(N_INNER_FOLDS))
+  )
+
+  # Convert every inner fold into explicit analysis and assessment ID sets.
+  for (inner_fold in seq_len(N_INNER_FOLDS)) {
+
+    inner_assessment_ids &lt;- assignment$ID[
+      assignment$Fold == inner_fold
+    ]
+
+    inner_analysis_ids &lt;- setdiff(
+      outer_split$analysis_ids,
+      inner_assessment_ids
+    )
+
+    current_inner_splits[[paste0(&quot;I&quot;, inner_fold)]] &lt;- list(
+      split_id = split_id,
+      inner_fold = inner_fold,
+      analysis_ids = sort(inner_analysis_ids),
+      assessment_ids = sort(inner_assessment_ids)
+    )
+  }
+
+  inner_splits[[split_id]] &lt;- current_inner_splits
+}
+
+inner_assignments &lt;- do.call(
+  rbind,
+  inner_assignments_list
+)
+rownames(inner_assignments) &lt;- NULL
+
+inner_sizes &lt;- aggregate(
+  ID ~ SplitID + Repetition + OuterFold + InnerFold,
+  data = inner_assignments,
+  FUN = length
+)
+names(inner_sizes)[names(inner_sizes) == &quot;ID&quot;] &lt;- &quot;Assessment_N&quot;
+inner_sizes$Analysis_N &lt;- 800L - inner_sizes$Assessment_N</code></pre>
 </div>
 <div id="inner-split-sizes" class="section level3">
 <h3>5.2 Inner split sizes</h3>
 <p>Displaying all 100 rows would add little information because every
 split has the same size. The first 20 are shown as a representative
 sample of the stored design.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">head</span>(inner_sizes, <span class="dv">20</span>) <span class="sc">|&gt;</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;First 20 of the 100 inner validation splits&quot;</span>,</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>head(inner_sizes, 20) |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;First 20 of the 100 inner validation splits&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 First 20 of the 100 inner validation splits
@@ -2770,79 +2704,79 @@ analysis</strong> and <strong>200 inner assessment</strong>
 individuals;</li>
 <li>the final 200 remain outside the inner process entirely.</li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>validation_flow <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">Level =</span> <span class="fu">c</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>    <span class="dv">2</span>, <span class="dv">2</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>    <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span></span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  ),</span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">xmin =</span> <span class="fu">c</span>(</span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>    <span class="dv">0</span>, <span class="dv">800</span>,</span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>    <span class="dv">0</span>, <span class="dv">600</span>, <span class="dv">800</span></span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  ),</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  <span class="at">xmax =</span> <span class="fu">c</span>(</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>    <span class="dv">800</span>, <span class="dv">1000</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>    <span class="dv">600</span>, <span class="dv">800</span>, <span class="dv">1000</span></span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  ),</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  <span class="at">Role =</span> <span class="fu">c</span>(</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>    <span class="st">&quot;Analysis set&quot;</span>,</span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>    <span class="st">&quot;Assessment set&quot;</span>,</span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>    <span class="st">&quot;Analysis set&quot;</span>,</span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>    <span class="st">&quot;Assessment set&quot;</span>,</span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>    <span class="st">&quot;Held-out outer assessment&quot;</span></span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>  ),</span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>  <span class="at">Label =</span> <span class="fu">c</span>(</span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>    <span class="st">&quot;Outer analysis</span><span class="sc">\n</span><span class="st">800&quot;</span>,</span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>    <span class="st">&quot;Outer assessment</span><span class="sc">\n</span><span class="st">200&quot;</span>,</span>
-<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>    <span class="st">&quot;Inner analysis</span><span class="sc">\n</span><span class="st">600&quot;</span>,</span>
-<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>    <span class="st">&quot;Inner assessment</span><span class="sc">\n</span><span class="st">200&quot;</span>,</span>
-<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>    <span class="st">&quot;Outer assessment</span><span class="sc">\n</span><span class="st">not used&quot;</span></span>
-<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>  ),</span>
-<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>)</span>
-<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a></span>
-<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>p_validation <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(validation_flow) <span class="sc">+</span></span>
-<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>  <span class="fu">geom_rect</span>(</span>
-<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
-<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a>      <span class="at">xmin =</span> xmin,</span>
-<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>      <span class="at">xmax =</span> xmax,</span>
-<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>      <span class="at">ymin =</span> Level <span class="sc">-</span> <span class="fl">0.30</span>,</span>
-<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a>      <span class="at">ymax =</span> Level <span class="sc">+</span> <span class="fl">0.30</span>,</span>
-<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a>      <span class="at">fill =</span> Role</span>
-<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a>    ),</span>
-<span id="cb9-40"><a href="#cb9-40" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">&quot;white&quot;</span>,</span>
-<span id="cb9-41"><a href="#cb9-41" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">0.8</span></span>
-<span id="cb9-42"><a href="#cb9-42" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-43"><a href="#cb9-43" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
-<span id="cb9-44"><a href="#cb9-44" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
-<span id="cb9-45"><a href="#cb9-45" tabindex="-1"></a>      <span class="at">x =</span> (xmin <span class="sc">+</span> xmax) <span class="sc">/</span> <span class="dv">2</span>,</span>
-<span id="cb9-46"><a href="#cb9-46" tabindex="-1"></a>      <span class="at">y =</span> Level,</span>
-<span id="cb9-47"><a href="#cb9-47" tabindex="-1"></a>      <span class="at">label =</span> Label</span>
-<span id="cb9-48"><a href="#cb9-48" tabindex="-1"></a>    ),</span>
-<span id="cb9-49"><a href="#cb9-49" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">3.6</span>,</span>
-<span id="cb9-50"><a href="#cb9-50" tabindex="-1"></a>    <span class="at">lineheight =</span> <span class="fl">0.9</span></span>
-<span id="cb9-51"><a href="#cb9-51" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-52"><a href="#cb9-52" tabindex="-1"></a>  <span class="fu">scale_fill_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb9-53"><a href="#cb9-53" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(</span>
-<span id="cb9-54"><a href="#cb9-54" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1000</span>, <span class="dv">200</span>),</span>
-<span id="cb9-55"><a href="#cb9-55" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1000</span>),</span>
-<span id="cb9-56"><a href="#cb9-56" tabindex="-1"></a>    <span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>)</span>
-<span id="cb9-57"><a href="#cb9-57" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-58"><a href="#cb9-58" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
-<span id="cb9-59"><a href="#cb9-59" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
-<span id="cb9-60"><a href="#cb9-60" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Inner level&quot;</span>, <span class="st">&quot;Outer level&quot;</span>),</span>
-<span id="cb9-61"><a href="#cb9-61" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">2.5</span>)</span>
-<span id="cb9-62"><a href="#cb9-62" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-63"><a href="#cb9-63" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb9-64"><a href="#cb9-64" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Individuals represented in one outer split&quot;</span>,</span>
-<span id="cb9-65"><a href="#cb9-65" tabindex="-1"></a>    <span class="at">y =</span> <span class="cn">NULL</span>,</span>
-<span id="cb9-66"><a href="#cb9-66" tabindex="-1"></a>    <span class="at">fill =</span> <span class="cn">NULL</span></span>
-<span id="cb9-67"><a href="#cb9-67" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-68"><a href="#cb9-68" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb9-69"><a href="#cb9-69" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb9-70"><a href="#cb9-70" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">&quot;bottom&quot;</span></span>
-<span id="cb9-71"><a href="#cb9-71" tabindex="-1"></a>  )</span>
-<span id="cb9-72"><a href="#cb9-72" tabindex="-1"></a></span>
-<span id="cb9-73"><a href="#cb9-73" tabindex="-1"></a><span class="fu">print</span>(p_validation)</span></code></pre></div>
+<pre class="r"><code>validation_flow &lt;- data.frame(
+  Level = c(
+    2, 2,
+    1, 1, 1
+  ),
+  xmin = c(
+    0, 800,
+    0, 600, 800
+  ),
+  xmax = c(
+    800, 1000,
+    600, 800, 1000
+  ),
+  Role = c(
+    &quot;Analysis set&quot;,
+    &quot;Assessment set&quot;,
+    &quot;Analysis set&quot;,
+    &quot;Assessment set&quot;,
+    &quot;Held-out outer assessment&quot;
+  ),
+  Label = c(
+    &quot;Outer analysis\n800&quot;,
+    &quot;Outer assessment\n200&quot;,
+    &quot;Inner analysis\n600&quot;,
+    &quot;Inner assessment\n200&quot;,
+    &quot;Outer assessment\nnot used&quot;
+  ),
+  stringsAsFactors = FALSE
+)
+
+p_validation &lt;- ggplot(validation_flow) +
+  geom_rect(
+    aes(
+      xmin = xmin,
+      xmax = xmax,
+      ymin = Level - 0.30,
+      ymax = Level + 0.30,
+      fill = Role
+    ),
+    color = &quot;white&quot;,
+    linewidth = 0.8
+  ) +
+  geom_text(
+    aes(
+      x = (xmin + xmax) / 2,
+      y = Level,
+      label = Label
+    ),
+    size = 3.6,
+    lineheight = 0.9
+  ) +
+  scale_fill_gdocs() +
+  scale_x_continuous(
+    breaks = seq(0, 1000, 200),
+    limits = c(0, 1000),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    breaks = c(1, 2),
+    labels = c(&quot;Inner level&quot;, &quot;Outer level&quot;),
+    limits = c(0.5, 2.5)
+  ) +
+  labs(
+    x = &quot;Individuals represented in one outer split&quot;,
+    y = NULL,
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = &quot;bottom&quot;
+  )
+
+print(p_validation)</code></pre>
 <div class="figure" style="text-align: center">
 <img src="figure/simulated_data_validation.Rmd/nested-validation-figure-1.png" alt="Nested cross-validation structure for one outer split. Inner validation is restricted to the 800 outer-analysis individuals; the 200 outer-assessment individuals remain held out." width="100%" />
 <p class="caption">
@@ -2902,32 +2836,32 @@ information. This prevents the partition structure from adapting to the
 response, the simulated truth, or the prediction method.</p>
 <p>The table distinguishes what participates in fold generation from
 what remains outside it:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>partition_information <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="at">Information =</span> <span class="fu">c</span>(</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>    <span class="st">&quot;Individual row identifier&quot;</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>    <span class="st">&quot;Deterministic seed&quot;</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>    <span class="st">&quot;Simulation scenario&quot;</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>    <span class="st">&quot;Phenotype&quot;</span>,</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>    <span class="st">&quot;True genetic value&quot;</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>    <span class="st">&quot;Prediction model&quot;</span></span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>  ),</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>  <span class="at">Partition_role =</span> <span class="fu">c</span>(</span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>    <span class="st">&quot;Used&quot;</span>,</span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>    <span class="st">&quot;Used&quot;</span>,</span>
-<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>    <span class="st">&quot;Not used&quot;</span>,</span>
-<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>    <span class="st">&quot;Not used&quot;</span>,</span>
-<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>    <span class="st">&quot;Not used&quot;</span>,</span>
-<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>    <span class="st">&quot;Not used&quot;</span></span>
-<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>  )</span>
-<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>)</span>
-<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a></span>
-<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>partition_information <span class="sc">|&gt;</span></span>
-<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Information used and excluded when generating validation partitions&quot;</span>,</span>
-<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>partition_information &lt;- data.frame(
+  Information = c(
+    &quot;Individual row identifier&quot;,
+    &quot;Deterministic seed&quot;,
+    &quot;Simulation scenario&quot;,
+    &quot;Phenotype&quot;,
+    &quot;True genetic value&quot;,
+    &quot;Prediction model&quot;
+  ),
+  Partition_role = c(
+    &quot;Used&quot;,
+    &quot;Used&quot;,
+    &quot;Not used&quot;,
+    &quot;Not used&quot;,
+    &quot;Not used&quot;,
+    &quot;Not used&quot;
+  )
+)
+
+partition_information |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Information used and excluded when generating validation partitions&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Information used and excluded when generating validation partitions
@@ -3011,44 +2945,44 @@ partitions or ANN tuning.</li>
 <p>The complete structure can now be summarized without reference to any
 fitted model. These counts define the number and size of comparisons
 used later by both modeling branches.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>design_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>    <span class="st">&quot;Individuals&quot;</span>,</span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>    <span class="st">&quot;Scenarios&quot;</span>,</span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>    <span class="st">&quot;Outer repetitions&quot;</span>,</span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>    <span class="st">&quot;Outer folds per repetition&quot;</span>,</span>
-<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>    <span class="st">&quot;Total outer splits&quot;</span>,</span>
-<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>    <span class="st">&quot;Outer analysis N&quot;</span>,</span>
-<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>    <span class="st">&quot;Outer assessment N&quot;</span>,</span>
-<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>    <span class="st">&quot;Inner folds per outer split&quot;</span>,</span>
-<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>    <span class="st">&quot;Total inner splits&quot;</span>,</span>
-<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>    <span class="st">&quot;Inner analysis N&quot;</span>,</span>
-<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>    <span class="st">&quot;Inner assessment N&quot;</span>,</span>
-<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>    <span class="st">&quot;Global seed&quot;</span></span>
-<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>  ),</span>
-<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
-<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>    <span class="fu">length</span>(ids),</span>
-<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>    simulated_common<span class="sc">$</span>metadata<span class="sc">$</span>n_scenarios,</span>
-<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>    N_OUTER_REPEATS,</span>
-<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>    N_OUTER_FOLDS,</span>
-<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>    N_OUTER_REPEATS <span class="sc">*</span> N_OUTER_FOLDS,</span>
-<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>    <span class="dv">800</span>,</span>
-<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>    <span class="dv">200</span>,</span>
-<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a>    N_INNER_FOLDS,</span>
-<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a>    N_OUTER_REPEATS <span class="sc">*</span> N_OUTER_FOLDS <span class="sc">*</span> N_INNER_FOLDS,</span>
-<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a>    <span class="dv">600</span>,</span>
-<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a>    <span class="dv">200</span>,</span>
-<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a>    SEED_GLOBAL</span>
-<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a>  )</span>
-<span id="cb11-30"><a href="#cb11-30" tabindex="-1"></a>)</span>
-<span id="cb11-31"><a href="#cb11-31" tabindex="-1"></a></span>
-<span id="cb11-32"><a href="#cb11-32" tabindex="-1"></a>design_summary <span class="sc">|&gt;</span></span>
-<span id="cb11-33"><a href="#cb11-33" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb11-34"><a href="#cb11-34" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb11-35"><a href="#cb11-35" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Nested validation design used for the simulated data&quot;</span>,</span>
-<span id="cb11-36"><a href="#cb11-36" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb11-37"><a href="#cb11-37" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb11-38"><a href="#cb11-38" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>design_summary &lt;- data.frame(
+  Item = c(
+    &quot;Individuals&quot;,
+    &quot;Scenarios&quot;,
+    &quot;Outer repetitions&quot;,
+    &quot;Outer folds per repetition&quot;,
+    &quot;Total outer splits&quot;,
+    &quot;Outer analysis N&quot;,
+    &quot;Outer assessment N&quot;,
+    &quot;Inner folds per outer split&quot;,
+    &quot;Total inner splits&quot;,
+    &quot;Inner analysis N&quot;,
+    &quot;Inner assessment N&quot;,
+    &quot;Global seed&quot;
+  ),
+  Value = c(
+    length(ids),
+    simulated_common$metadata$n_scenarios,
+    N_OUTER_REPEATS,
+    N_OUTER_FOLDS,
+    N_OUTER_REPEATS * N_OUTER_FOLDS,
+    800,
+    200,
+    N_INNER_FOLDS,
+    N_OUTER_REPEATS * N_OUTER_FOLDS * N_INNER_FOLDS,
+    600,
+    200,
+    SEED_GLOBAL
+  )
+)
+
+design_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Nested validation design used for the simulated data&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Nested validation design used for the simulated data
@@ -3178,81 +3112,81 @@ analysis set for ANN tuning.</li>
 <p>The next summary is calculated from the generated objects rather than
 from the settings above. It verifies that the stored partitions have the
 intended sizes and that analysis and assessment sets do not overlap.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Measure overlap directly from every stored outer split.</span></span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>outer_overlap_values <span class="ot">&lt;-</span> <span class="fu">integer</span>(</span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">length</span>(outer_splits)</span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>)</span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(outer_splits)) {</span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  outer_overlap_values[i] <span class="ot">&lt;-</span> <span class="fu">length</span>(</span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>    <span class="fu">intersect</span>(</span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>      outer_splits[[i]]<span class="sc">$</span>analysis_ids,</span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>      outer_splits[[i]]<span class="sc">$</span>assessment_ids</span>
-<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>    )</span>
-<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>  )</span>
-<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>}</span>
-<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a></span>
-<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>outer_overlap <span class="ot">&lt;-</span> <span class="fu">max</span>(outer_overlap_values)</span>
-<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a></span>
-<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co"># Measure overlap directly from all 100 inner splits.</span></span>
-<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>inner_overlap_values <span class="ot">&lt;-</span> <span class="fu">integer</span>(</span>
-<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>  <span class="fu">length</span>(outer_splits) <span class="sc">*</span> N_INNER_FOLDS</span>
-<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>)</span>
-<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a></span>
-<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>position <span class="ot">&lt;-</span> <span class="dv">1</span><span class="dt">L</span></span>
-<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a></span>
-<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a><span class="cf">for</span> (split_id <span class="cf">in</span> <span class="fu">names</span>(inner_splits)) {</span>
-<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>  <span class="cf">for</span> (inner_id <span class="cf">in</span> <span class="fu">names</span>(inner_splits[[split_id]])) {</span>
-<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a></span>
-<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>    current_split <span class="ot">&lt;-</span> inner_splits[[split_id]][[inner_id]]</span>
-<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a></span>
-<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>    inner_overlap_values[position] <span class="ot">&lt;-</span> <span class="fu">length</span>(</span>
-<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>      <span class="fu">intersect</span>(</span>
-<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a>        current_split<span class="sc">$</span>analysis_ids,</span>
-<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a>        current_split<span class="sc">$</span>assessment_ids</span>
-<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>      )</span>
-<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a>    )</span>
-<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a></span>
-<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a>    position <span class="ot">&lt;-</span> position <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span></span>
-<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a>  }</span>
-<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a>}</span>
-<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a></span>
-<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a>inner_overlap <span class="ot">&lt;-</span> <span class="fu">max</span>(inner_overlap_values)</span>
-<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a></span>
-<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a>validation_observed <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a>  <span class="at">Quantity =</span> <span class="fu">c</span>(</span>
-<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a>    <span class="st">&quot;Outer assignment rows&quot;</span>,</span>
-<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a>    <span class="st">&quot;Outer splits&quot;</span>,</span>
-<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a>    <span class="st">&quot;Outer analysis N&quot;</span>,</span>
-<span id="cb12-47"><a href="#cb12-47" tabindex="-1"></a>    <span class="st">&quot;Outer assessment N&quot;</span>,</span>
-<span id="cb12-48"><a href="#cb12-48" tabindex="-1"></a>    <span class="st">&quot;Maximum outer overlap&quot;</span>,</span>
-<span id="cb12-49"><a href="#cb12-49" tabindex="-1"></a>    <span class="st">&quot;Inner assignment rows&quot;</span>,</span>
-<span id="cb12-50"><a href="#cb12-50" tabindex="-1"></a>    <span class="st">&quot;Inner splits&quot;</span>,</span>
-<span id="cb12-51"><a href="#cb12-51" tabindex="-1"></a>    <span class="st">&quot;Inner analysis N&quot;</span>,</span>
-<span id="cb12-52"><a href="#cb12-52" tabindex="-1"></a>    <span class="st">&quot;Inner assessment N&quot;</span>,</span>
-<span id="cb12-53"><a href="#cb12-53" tabindex="-1"></a>    <span class="st">&quot;Maximum inner overlap&quot;</span></span>
-<span id="cb12-54"><a href="#cb12-54" tabindex="-1"></a>  ),</span>
-<span id="cb12-55"><a href="#cb12-55" tabindex="-1"></a>  <span class="at">Observed =</span> <span class="fu">c</span>(</span>
-<span id="cb12-56"><a href="#cb12-56" tabindex="-1"></a>    <span class="fu">nrow</span>(outer_assignments),</span>
-<span id="cb12-57"><a href="#cb12-57" tabindex="-1"></a>    <span class="fu">length</span>(outer_splits),</span>
-<span id="cb12-58"><a href="#cb12-58" tabindex="-1"></a>    <span class="fu">unique</span>(outer_sizes<span class="sc">$</span>Analysis_N),</span>
-<span id="cb12-59"><a href="#cb12-59" tabindex="-1"></a>    <span class="fu">unique</span>(outer_sizes<span class="sc">$</span>Assessment_N),</span>
-<span id="cb12-60"><a href="#cb12-60" tabindex="-1"></a>    outer_overlap,</span>
-<span id="cb12-61"><a href="#cb12-61" tabindex="-1"></a>    <span class="fu">nrow</span>(inner_assignments),</span>
-<span id="cb12-62"><a href="#cb12-62" tabindex="-1"></a>    <span class="fu">length</span>(outer_splits) <span class="sc">*</span> N_INNER_FOLDS,</span>
-<span id="cb12-63"><a href="#cb12-63" tabindex="-1"></a>    <span class="fu">unique</span>(inner_sizes<span class="sc">$</span>Analysis_N),</span>
-<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a>    <span class="fu">unique</span>(inner_sizes<span class="sc">$</span>Assessment_N),</span>
-<span id="cb12-65"><a href="#cb12-65" tabindex="-1"></a>    inner_overlap</span>
-<span id="cb12-66"><a href="#cb12-66" tabindex="-1"></a>  )</span>
-<span id="cb12-67"><a href="#cb12-67" tabindex="-1"></a>)</span>
-<span id="cb12-68"><a href="#cb12-68" tabindex="-1"></a></span>
-<span id="cb12-69"><a href="#cb12-69" tabindex="-1"></a>validation_observed <span class="sc">|&gt;</span></span>
-<span id="cb12-70"><a href="#cb12-70" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb12-71"><a href="#cb12-71" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb12-72"><a href="#cb12-72" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Observed structure of the generated nested validation design&quot;</span>,</span>
-<span id="cb12-73"><a href="#cb12-73" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb12-74"><a href="#cb12-74" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb12-75"><a href="#cb12-75" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code># Measure overlap directly from every stored outer split.
+outer_overlap_values &lt;- integer(
+  length(outer_splits)
+)
+
+for (i in seq_along(outer_splits)) {
+  outer_overlap_values[i] &lt;- length(
+    intersect(
+      outer_splits[[i]]$analysis_ids,
+      outer_splits[[i]]$assessment_ids
+    )
+  )
+}
+
+outer_overlap &lt;- max(outer_overlap_values)
+
+# Measure overlap directly from all 100 inner splits.
+inner_overlap_values &lt;- integer(
+  length(outer_splits) * N_INNER_FOLDS
+)
+
+position &lt;- 1L
+
+for (split_id in names(inner_splits)) {
+  for (inner_id in names(inner_splits[[split_id]])) {
+
+    current_split &lt;- inner_splits[[split_id]][[inner_id]]
+
+    inner_overlap_values[position] &lt;- length(
+      intersect(
+        current_split$analysis_ids,
+        current_split$assessment_ids
+      )
+    )
+
+    position &lt;- position + 1L
+  }
+}
+
+inner_overlap &lt;- max(inner_overlap_values)
+
+validation_observed &lt;- data.frame(
+  Quantity = c(
+    &quot;Outer assignment rows&quot;,
+    &quot;Outer splits&quot;,
+    &quot;Outer analysis N&quot;,
+    &quot;Outer assessment N&quot;,
+    &quot;Maximum outer overlap&quot;,
+    &quot;Inner assignment rows&quot;,
+    &quot;Inner splits&quot;,
+    &quot;Inner analysis N&quot;,
+    &quot;Inner assessment N&quot;,
+    &quot;Maximum inner overlap&quot;
+  ),
+  Observed = c(
+    nrow(outer_assignments),
+    length(outer_splits),
+    unique(outer_sizes$Analysis_N),
+    unique(outer_sizes$Assessment_N),
+    outer_overlap,
+    nrow(inner_assignments),
+    length(outer_splits) * N_INNER_FOLDS,
+    unique(inner_sizes$Analysis_N),
+    unique(inner_sizes$Assessment_N),
+    inner_overlap
+  )
+)
+
+validation_observed |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Observed structure of the generated nested validation design&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Observed structure of the generated nested validation design
@@ -3399,10 +3333,10 @@ Session information
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
-Running under: Windows 11 x64 (build 26200)
+Running under: Windows 11 x64 (build 26300)
 
 Matrix products: default
   LAPACK version 3.12.1

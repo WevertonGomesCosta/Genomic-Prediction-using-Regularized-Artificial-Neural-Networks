@@ -2096,7 +2096,7 @@ predicted ranking.
 
 ## 11. Predictive distributions across outer splits
 
-```{r performance-figures, eval=RUN_GBLUP}
+```{r performance-figures, eval=TRUE}
 plot_results <- results
 
 plot_results$Structure <- factor(
@@ -2191,7 +2191,7 @@ spearman_plot <- ggplot(
   labs(
     x = "GBLUP structure",
     y = "Spearman correlation between observed and predicted BLUPs",
-    title = "Held-out BLUP Spearman correlation across outer splits"
+    title = "Held-out BLUP Spearman correlation"
   ) +
   ggthemes::theme_gdocs() +
   theme(
@@ -2299,39 +2299,19 @@ ggsave(
 ```
 
 ```{r show-correlation-figure}
-knitr::include_graphics(
-  file.path(
-    FIGURE_DIR,
-    "real_gblup_correlation_by_model_trait.tiff"
-  )
-)
+print(correlation_plot)
 ```
 
 ```{r show-spearman-figure}
-knitr::include_graphics(
-  file.path(
-    FIGURE_DIR,
-    "real_gblup_spearman_by_model_trait.tiff"
-  )
-)
+print(spearman_plot)
 ```
 
 ```{r show-rmse-figure}
-knitr::include_graphics(
-  file.path(
-    FIGURE_DIR,
-    "real_gblup_rmse_by_model_trait.tiff"
-  )
-)
+print(rmse_plot)
 ```
 
 ```{r show-observed-predicted-figure}
-knitr::include_graphics(
-  file.path(
-    FIGURE_DIR,
-    "real_gblup_observed_vs_predicted_by_model_trait.tiff"
-  )
-)
+print(observed_predicted_plot)
 ```
 
 ## 12. Output contract

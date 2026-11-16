@@ -66,13 +66,15 @@ The simulated-data workflow is organized as:
    - [Regularized ANN](simulated_data_ann.html)
 4. [Model comparison](simulated_data_comparison.html) — terminal comparison of saved predictions and performance summaries under the common validation design.
 
-The real-data workflow is defined as:
+The real-data workflow follows this sequence:
 
-1. `real_data_phenotype.Rmd` — longitudinal phenotypic organization, descriptive analysis, REML mixed-model fitting, variance components, and individual BLUPs;
-2. `real_data_audit.Rmd` — integration of phenotypic BLUPs with `geno_real.rds`, individual alignment, marker quality control, and construction of the common real-data object;
-3. `real_data_validation.Rmd` — shared validation design;
-4. parallel GBLUP-A / GBLUP-AD / GBLUP-ADE and ANN modeling branches;
-5. `real_data_comparison.Rmd` — terminal task-matched model comparison.
+1. [Longitudinal phenotypes and BLUPs](real_data_phenotype.html) — phenotypic organization, descriptive analysis, REML mixed-model fitting, variance components, and individual BLUPs.
+2. [Genomic data audit](real_data_audit.html) — integration of phenotypic BLUPs with `geno_real.rds`, individual alignment, marker quality control, and preparation of the common genomic object.
+3. [Validation design](real_data_validation.html) — shared outer and inner validation partitions.
+4. Parallel genomic-prediction branches:
+   - [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html)
+   - [Regularized ANN](real_data_ann.html)
+5. [Model comparison](real_data_comparison.html) — matched evaluation of saved genomic predictions and ranking results.
 
 ### Validation scope
 
@@ -127,13 +129,15 @@ O fluxo de dados simulados está organizado em:
    - [ANN regularizadas](simulated_data_ann.html)
 4. [Comparação dos modelos](simulated_data_comparison.html) — comparação terminal das predições e dos resumos de desempenho sob o desenho comum de validação.
 
-O fluxo de dados reais é definido como:
+O fluxo de dados reais segue esta sequência:
 
-1. `real_data_phenotype.Rmd` — organização fenotípica longitudinal, análises descritivas, ajuste do modelo misto por REML, componentes de variância e BLUPs individuais;
-2. `real_data_audit.Rmd` — integração dos BLUPs fenotípicos com `geno_real.rds`, alinhamento dos indivíduos, controle de qualidade dos marcadores e construção do objeto comum dos dados reais;
-3. `real_data_validation.Rmd` — desenho comum de validação;
-4. ramos paralelos de modelagem GBLUP-A / GBLUP-AD / GBLUP-ADE e ANN;
-5. `real_data_comparison.Rmd` — comparação terminal dos modelos em tarefas correspondentes.
+1. [Fenótipos longitudinais e BLUPs](real_data_phenotype.html) — organização fenotípica, análises descritivas, ajuste do modelo misto por REML, componentes de variância e BLUPs individuais.
+2. [Auditoria dos dados genômicos](real_data_audit.html) — integração dos BLUPs com `geno_real.rds`, alinhamento dos indivíduos, controle de qualidade dos marcadores e preparação do objeto genômico comum.
+3. [Desenho de validação](real_data_validation.html) — partições externas e internas compartilhadas.
+4. Ramos paralelos de predição genômica:
+   - [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html)
+   - [ANN regularizadas](real_data_ann.html)
+5. [Comparação dos modelos](real_data_comparison.html) — avaliação correspondente das predições genômicas e dos resultados de classificação.
 
 ### Escopo da validação
 
