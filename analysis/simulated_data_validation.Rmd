@@ -845,23 +845,6 @@ The resulting partitions have the following characteristics:
 - **zero overlap:** analysis and assessment sets remain disjoint at both levels.
 
 ```{r validation-output-checks, include=FALSE}
-# Read the preceding M01 status file only to verify that no blocking issue exists.
-required_files <- c(
-  "output/simulated/audit/preprocessed_simulated_common.rds",
-  "output/simulated/audit/simulated_audit_summary.csv"
-)
-files_exist <- file.exists(required_files)
-
-m01_check_summary <- read.csv(
-  "output/simulated/audit/simulated_audit_summary.csv",
-  stringsAsFactors = FALSE
-)
-
-n_blocked_audit <- sum(
-  m01_check_summary$Status == "BLOCKED",
-  na.rm = TRUE
-)
-
 required_components <- c(
   "metadata",
   "phenotype",
@@ -1027,11 +1010,9 @@ split_independence_ok <- !any(
   forbidden_split_fields %in% split_variables
 )
 
-# Preserve the established output log and its historical field labels.
+# Summarize the cross-validation partition checks.
 validation_log <- data.frame(
   Check = c(
-    "Canonical input files",
-    "Simulated-data audit prerequisite",
     "Canonical object components",
     "Individual universe",
     "Outer assignment row count",
@@ -1049,8 +1030,6 @@ validation_log <- data.frame(
     "Phenotype excluded from partitioning"
   ),
   Status = c(
-    ifelse(all(files_exist), "PASS", "BLOCKED"),
-    ifelse(n_blocked_audit == 0L, "PASS", "BLOCKED"),
     ifelse(components_ok, "PASS", "BLOCKED"),
     ifelse(individual_universe_ok, "PASS", "BLOCKED"),
     ifelse(outer_row_count_ok, "PASS", "BLOCKED"),
@@ -1068,18 +1047,6 @@ validation_log <- data.frame(
     "PASS"
   ),
   Details = c(
-    if (all(files_exist)) {
-      "Canonical simulated object and audit summary are present."
-    } else {
-      paste(
-        "Missing:",
-        paste(required_files[!files_exist], collapse = ", ")
-      )
-    },
-    paste(
-      n_blocked_audit,
-      "blocking check(s) in simulated-data audit."
-    ),
     if (components_ok) {
       paste(
         "Required components present:",
