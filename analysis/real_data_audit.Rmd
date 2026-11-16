@@ -1,5 +1,5 @@
 ---
-title: "Real genomic data: structure and preparation"
+title: "Real genomic data: preprocessing"
 author:
   - Weverton Gomes da Costa
 date: "`r Sys.Date()`"
@@ -64,7 +64,7 @@ dir.create(
 
 ## 2. Packages and fixed settings
 
-Three packages support the reader-facing analysis:
+The genomic analyses use three packages:
 
 - **`knitr`** formats data summaries as HTML tables;
 - **`ggplot2`** constructs the marker-quality figure;
@@ -86,7 +86,7 @@ MAF_MIN <- 0.05
 ## 3. Genomic and phenotypic inputs
 
 The genomic input contains individuals in rows and SNPs in columns. The
-phenotypic input contains the individual BLUPs obtained from the longitudinal
+phenotypic input contains the individual BLUPs obtained from the phenotypic
 mixed-model analysis for cercosporiosis (`Cer`), leaf-miner incidence (`BM`),
 and the production-related trait (`LP`).
 
@@ -676,5 +676,4 @@ The real-data workflow proceeds with one common dataset:
 - identical individuals, marker panel, and prediction targets for every
   downstream method.
 
-The next module defines the common validation design before GBLUP-ADE and ANN
-are fitted.
+The subsequent pre-validation stage defines common cross-validation partitions for the GBLUP and ANN models.

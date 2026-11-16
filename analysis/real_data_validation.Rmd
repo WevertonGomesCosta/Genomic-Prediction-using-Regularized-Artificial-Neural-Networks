@@ -1,5 +1,5 @@
 ---
-title: "Real data: nested validation design"
+title: "Real data: pre-validation"
 author:
   - Weverton Gomes da Costa
 date: "`r Sys.Date()`"
@@ -28,12 +28,12 @@ table td {
 
 ## 1. Purpose
 
-This module defines the nested cross-validation design used by every
+This module defines the nested cross-validation procedure used by every
 genomic-prediction method fitted to the real *Coffea arabica* population. The
 partitions are created before model fitting and are reused unchanged by
 GBLUP-A, GBLUP-AD, GBLUP-ADE, and all ANN variants.
 
-The validation design has four fixed features:
+Cross-validation follows four specifications:
 
 - **Repeated outer cross-validation:** 5 repetitions of 5 outer folds provide
   25 held-out evaluations.
@@ -70,7 +70,7 @@ dir.create(
 ## 2. Package and fixed validation settings
 
 `knitr` is used to present validation settings and partition summaries as
-reader-facing tables.
+formatted tables.
 
 ```{r packages, warning=FALSE, message=FALSE}
 library(knitr)
@@ -117,9 +117,7 @@ validation_parameters |>
 
 ## 3. Population entering validation
 
-The validation module reads only the common object prepared in the preceding
-data-preparation stage. The 195 aligned individuals and the common genomic
-matrix are therefore fixed before partition generation.
+Cross-validation is performed on the 195 genotyped individuals with aligned phenotypic BLUPs and genomic markers.
 
 ```{r validation-input}
 common <- readRDS(
@@ -364,7 +362,7 @@ outer_contract <- data.frame(
 outer_contract |>
   knitr::kable(
     format = "html",
-    caption = "Outer validation design checks",
+    caption = "Outer cross-validation partition properties",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
@@ -374,7 +372,7 @@ stopifnot(
 )
 ```
 
-Across the complete outer design, every individual is assessed once in each
+Across all outer partitions, every individual is assessed once in each
 repetition and five times in total.
 
 ## 5. Nested inner cross-validation
@@ -610,7 +608,7 @@ inner_contract <- data.frame(
 inner_contract |>
   knitr::kable(
     format = "html",
-    caption = "Nested inner-validation design checks",
+    caption = "Inner cross-validation partition properties",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
@@ -664,7 +662,7 @@ partition_information |>
 The same stored partitions are therefore valid for all three prediction traits
 and all prediction methods.
 
-## 7. Validation design summary
+## 7. Cross-validation summary
 
 ```{r validation-summary}
 design_summary <- data.frame(
@@ -698,7 +696,7 @@ design_summary <- data.frame(
 design_summary |>
   knitr::kable(
     format = "html",
-    caption = "Common real-data validation design",
+    caption = "Cross-validation structure for real data",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )

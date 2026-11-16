@@ -1,17 +1,14 @@
 # Code
 
-This directory is reserved for reusable functions and command-line utilities
-shared by multiple analysis modules.
+This directory contains reusable functions and analytical utilities shared by multiple modules.
 
-Scientific stages that define or interpret results belong in the corresponding
-R Markdown source page under `analysis/`.
+Scientific analyses and their interpretation are presented in the corresponding R Markdown modules under `analysis/`.
 
-The main analysis sequence is implemented in the dataset-specific `workflowr`
-modules rather than in standalone scripts.
+The main analyses are implemented in the dataset-specific `workflowr` modules.
 
 Reusable code placed in this directory should:
 
-- have a clearly defined input and output contract;
+- define inputs and outputs explicitly;
 - avoid machine-specific absolute paths;
 - avoid duplicating scientific logic defined in an analysis module;
 - be called explicitly by the analysis pages that depend on it;

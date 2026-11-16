@@ -2,8 +2,7 @@
 
 This directory contains the source data used by the project.
 
-Derived analytical objects, fitted-model results, predictions, diagnostics,
-tables, and figures belong under `output/`.
+Derived analytical objects, fitted-model results, predictions, tables, and figures are organized under `output/`.
 
 ## Simulated data
 
@@ -14,7 +13,7 @@ The source files provide simulated phenotypes, true genetic values, genotype
 representations, genetic-map information, parental information, and
 simulation-scenario metadata.
 
-`analysis/simulated_data_audit.Rmd` prepares these sources and creates the
+`analysis/simulated_data_audit.Rmd` preprocesses these sources and creates the
 common simulated-data object consumed by the validation and model-fitting
 modules.
 
@@ -22,10 +21,10 @@ modules.
 
 The real-data workflow uses two distinct source components.
 
-### Longitudinal phenotypic data
+### Phenotypic data
 
-The canonical longitudinal field source is
-`data/dados_reais/coffee_longitudinal_phenotypes.txt`, which is the input to
+The phenotypic data file is
+`data/dados_reais/coffee_phenotypes.txt`, which is the input to
 `analysis/real_data_phenotype.Rmd`.
 
 The phenotypic module uses all observations required by the experimental
@@ -39,14 +38,14 @@ derived analytical objects and are stored under `output/real/phenotype/`.
 `geno_real.rds` is the canonical genotype object for the real-data genomic
 workflow.
 
-The genotype object is introduced only in `analysis/real_data_audit.Rmd`,
+Genotypes are integrated in `analysis/real_data_audit.Rmd`,
 after the phenotypic mixed-model stage is complete.
 
 That module aligns the genotyped individuals with the phenotypic BLUPs,
 performs the defined marker quality control, and creates the common real-data
-object used by validation, GBLUP-ADE, ANN, and model-comparison modules.
+object used by cross-validation, GBLUP-A, GBLUP-AD, GBLUP-ADE, ANN, and model comparison.
 
-## Directory contract
+## Data and analysis directories
 
 - `data/` — canonical source data;
 - `analysis/` — scientific analysis definitions;

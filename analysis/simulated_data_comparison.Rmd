@@ -24,10 +24,7 @@ M02:
 - `GBLUP_A`, `GBLUP_AD`, and `GBLUP_ADE`;
 - `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2`.
 
-The comparison uses only predictions already produced in M03 and M04. No model
-is refitted and no hyperparameter is selected here. The known **true simulated
-genetic value** is the primary evaluation target; the **observed phenotype** is
-reported as a secondary target because it also contains residual variation.
+Predictive performance is evaluated using the known **true simulated genetic value** as the primary target. The **observed phenotype** is a complementary target because it includes residual variation.
 
 Three principles define the comparison:
 
@@ -56,7 +53,7 @@ dir.create(
 )
 ```
 
-## 2. Inputs and matched evaluation design
+## 2. Prediction data and matched evaluation
 
 ### 2.1 Saved model results
 
@@ -138,8 +135,7 @@ input_summary |>
 
 The inputs contain 450 GBLUP task-by-model results, 600 ANN task-by-model
 results, 90,000 GBLUP held-out predictions, and 120,000 ANN held-out
-predictions. The comparison therefore operates on completed model outputs
-rather than reconstructing either modeling branch.
+predictions. The comparison comprises the prediction results from all seven models.
 
 ### 2.2 Matched tasks and assessment individuals
 
@@ -287,7 +283,7 @@ methods are evaluated on identical targets for identical held-out individuals.
 
 ## 3. Evaluation metrics
 
-M03, M04, and M05 use the same held-out evaluation contract.
+The seven models are assessed using the same held-out performance measures.
 
 - **Pearson correlation** measures linear association between prediction and
   target; larger values are better.
@@ -295,17 +291,17 @@ M03, M04, and M05 use the same held-out evaluation contract.
   and target; larger values are better.
 - **RMSE** and **MAE** measure prediction error on the original target scale;
   smaller values are better.
-- **Bias** is `mean(prediction - target)` and is retained as a secondary
-  calibration diagnostic; values nearer zero are preferable.
+- **Bias** is `mean(prediction - target)` and is retained as a complementary
+  calibration measure; values nearer zero are preferable.
 - **Slope** is the prediction coefficient in `lm(target ~ prediction)` and is
-  retained as a secondary calibration diagnostic; values nearer one are
+  retained as a complementary calibration measure; values nearer one are
   preferable.
 - No \(R^2\) metric is used.
 
 For the simulated benchmark, the known true genetic value is the primary
 evaluation target. Therefore the matched pairwise comparisons use exactly four
 primary genetic metrics: Pearson, Spearman, RMSE, and MAE. Phenotype metrics and
-the Bias/Slope diagnostics remain available for descriptive summaries but are
+bias and calibration slope are reported descriptively but are
 not included in the pairwise performance-contrast table.
 
 ```{r metric-definitions, include=FALSE}
@@ -499,7 +495,7 @@ genetic Pearson correlation (`r sprintf("%.4f", best_pearson_value)`),
 lowest mean genetic RMSE (`r sprintf("%.4f", best_rmse_value)`), and
 **`r best_mae_model`** has the lowest mean genetic MAE
 (`r sprintf("%.4f", best_mae_value)`). These summaries are descriptive results
-for the evaluated models under the frozen validation design.
+for the evaluated models under common cross-validation partitions.
 
 ### 4.2 Distribution across outer tasks
 
@@ -925,7 +921,7 @@ pairwise_primary |>
 `Model_1_better` and `Model_2_better` count matched outer tasks, so every
 comparison uses the same held-out sample for both methods. These counts describe
 how often one method performs better within the repeated cross-validation
-design; they are not used as independent observations for a naive fold-level
+cross-validation procedure; they are not treated as independent observations for a fold-level
 significance test.
 
 ### 6.2 Pairwise matched contrasts by scenario
@@ -1030,7 +1026,7 @@ The scenario-level contrasts show whether pairwise differences are concentrated
 in a subset of simulation conditions or recur across the full C1-C6 sequence.
 They remain descriptive summaries of matched held-out tasks.
 
-## 7. Regularization within the ANN branch
+## 7. Regularization effects among ANN models
 
 The four ANN variants share, within each outer task, the architecture and
 learning rate selected with ANN_0 in M04. Their overall contrast therefore
@@ -1100,7 +1096,7 @@ mainly with the L1 component.
 Within the prespecified simulated-data benchmark, model performance is evaluated
 with four primary held-out metrics against the known true genetic value:
 Pearson correlation, Spearman correlation, RMSE, and MAE. Bias and calibration
-slope are retained as secondary diagnostics, and no \(R^2\) metric is used.
+slope are complementary measures, and no \(R^2\) metric is used.
 
 The seven methods are compared on the same frozen outer splits. All 21 unordered
 method pairs are evaluated within matched outer tasks, so no GBLUP or ANN method

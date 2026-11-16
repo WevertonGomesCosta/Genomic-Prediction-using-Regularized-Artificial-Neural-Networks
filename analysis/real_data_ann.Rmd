@@ -37,10 +37,10 @@ real *Coffea arabica* genomic-prediction data:
 - `ANN_L1_L2`: simultaneous L1 and L2 weight regularization.
 
 All four variants use the same 195 individuals, 20,887-marker panel, three
-individual-BLUP prediction targets, and nested validation design established in
+individual-BLUP prediction targets, and nested cross-validation procedure established in
 the preceding modules.
 
-The validation contract is fixed:
+Cross-validation and model selection follow these specifications:
 
 1. each outer task contains 156 analysis individuals and 39 untouched
    assessment individuals;
@@ -260,7 +260,7 @@ dir.create(
 The epoch limits are optimization caps rather than fixed training lengths.
 Early stopping can terminate a run before the corresponding cap.
 
-## 3. Common genomic object and validation design
+## 3. Genomic data and cross-validation
 
 ```{r inputs}
 stopifnot(
@@ -577,7 +577,7 @@ Architecture and learning rate are selected only once per trait and outer split
 using `ANN_0`. The three regularized variants then compare only their applicable
 penalty values under that selected structure.
 
-## 5. Runtime device
+## 5. Computational resources
 
 ```{r runtime-device, eval=ANN_RUNTIME_REQUIRED}
 cuda_available <- torch::cuda_is_available()
@@ -616,10 +616,6 @@ cat(
   "\n"
 )
 ```
-
-The runtime is sequential and checkpointed by outer task. This keeps the
-implementation explicit and allows an interrupted analysis to resume without
-changing the scientific search.
 
 ## 6. Nested tuning
 
@@ -706,7 +702,7 @@ stopifnot(
 )
 ```
 
-### 6.2 Tuning execution
+### 6.2 Hyperparameter optimization
 
 For every inner fold, the 117 inner-analysis individuals are divided once more
 for optimization. Fifteen percent form an early-validation subset; the
@@ -4977,8 +4973,8 @@ stopifnot(
 ## 9. Held-out predictive performance
 
 Pearson correlation, Spearman correlation, RMSE, and MAE are the primary
-held-out metrics. Bias and calibration slope are retained as secondary
-diagnostics. No \(R^2\) metric is used.
+held-out metrics. Bias and calibration slope are complementary measures.
+No \(R^2\) metric is used.
 
 ```{r performance-summary, eval=FINAL_OUTPUTS_AVAILABLE}
 performance_summary <- data.frame(
@@ -5645,7 +5641,7 @@ print(p_rmse)
 print(p_observed_predicted)
 ```
 
-## 12. Output contract
+## 12. Prediction results
 
 ```{r output-contract}
 output_contract <- data.frame(

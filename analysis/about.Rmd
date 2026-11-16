@@ -31,19 +31,19 @@ knitr::opts_chunk$set(
 
 ### Purpose and scientific scope
 
-This project investigates genomic prediction using regularized artificial neural networks and three GBLUP genomic mixed models. Its primary objective is to compare GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations under matched validation designs, including whether L1 and L2 weight penalties improve predictive generalization relative to the unregularized ANN.
+This project investigates genomic prediction using regularized artificial neural networks and three GBLUP genomic mixed models. Its primary objective is to compare GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations under matched cross-validation procedures, including whether L1 and L2 weight penalties improve predictive generalization relative to the unregularized ANN.
 
-The study combines controlled simulated genomic data with real longitudinal *Coffea arabica* phenotypic and genomic data. The two branches address related predictive questions while preserving a common separation between data preparation, validation design, model fitting, and terminal model comparison.
+The study combines controlled simulated genomic data with real *Coffea arabica* phenotypic and genomic data. The simulated and real datasets support complementary predictive analyses, with data preprocessing, cross-validation, model fitting, and model comparison carried out in distinct stages.
 
-### Analytical design
+### Data and analysis
 
-The simulated-data branch begins with phenotype, genotype, genetic-map, QTL, and known true genetic-value information. The known true genetic values remain outside model fitting and selection and provide an independent predictive-assessment target.
+The simulated data include phenotypes, genotypes, genetic maps, QTL, and known true genetic values. The known true genetic values remain outside model fitting and selection and provide an independent predictive-assessment target.
 
-The real-data branch contains an additional phenotypic stage. Complete longitudinal field observations are analyzed with the defined longitudinal mixed model fitted by REML. The resulting individual BLUPs are then integrated with the canonical genomic marker object in a separate data-preparation module.
+The real-data analysis begins with phenotypic measurements. Field observations collected across evaluation years are analyzed using a phenotypic mixed model fitted by REML. The resulting individual BLUPs are then integrated with the canonical genomic marker object in a separate data-preparation module.
 
-After data preparation, both branches use common outer-assessment partitions for GBLUP-A, GBLUP-AD, GBLUP-ADE, and the four ANN configurations, while keeping terminal model comparison separate from model fitting.
+For each dataset, GBLUP-A, GBLUP-AD, GBLUP-ADE, and the four ANN configurations are evaluated in common outer cross-validation partitions. Model comparison follows the independent fits.
 
-### Prediction design
+### Genomic prediction models
 
 Seven genomic-prediction configurations are evaluated:
 
@@ -57,27 +57,21 @@ Seven genomic-prediction configurations are evaluated:
 
 Outer-assessment responses are excluded from model development. ANN hyperparameter and epoch selection are restricted to the corresponding outer-analysis sample. Model comparisons are therefore based on matched held-out individuals rather than on different data partitions.
 
-ANN tuning uses mean inner-assessment RMSE as the primary performance criterion and mean inner-assessment Pearson correlation as the only performance tie-breaker. No other predictive metric is calculated, stored, or used in ANN hyperparameter tuning. Held-out evaluation uses Pearson, Spearman, RMSE, and MAE as common predictive metrics; bias and calibration slope are secondary diagnostics, and R-squared is not used.
+ANN tuning uses mean inner-assessment RMSE as the primary performance criterion and mean inner-assessment Pearson correlation as the only performance tie-breaker. Held-out evaluation uses Pearson, Spearman, RMSE, and MAE as common predictive metrics; prediction bias and calibration slope provide complementary measures.
 
-### Interpretation boundaries
+### Interpretation of results
 
-For simulated data, predictive performance against true genetic values measures recovery of the known simulated genetic signal under the documented validation design.
+For simulated data, predictive performance against true genetic values measures recovery of the known simulated genetic signal under the specified cross-validation procedure.
 
-For real data, the genomic-prediction response consists of estimated individual BLUPs from the longitudinal phenotypic mixed model. Predictive performance therefore describes the ability of the genomic models to recover these adjusted phenotypic signals within the represented population and validation design.
+For real data, the genomic-prediction response consists of estimated individual BLUPs from the phenotypic mixed model. Predictive performance therefore describes the ability of the genomic models to recover these adjusted phenotypic signals within the studied population and cross-validation procedure.
 
 Held-out genomic predictions are not final breeding values from a full-data refit.
 
 Associations among predictions from different traits should not be interpreted automatically as multivariate genetic correlations unless they are estimated under an explicit multivariate genetic model.
 
-No model class is assumed to be universally superior. Conclusions are restricted to the datasets, model specifications, search spaces, and validation designs documented in the project.
+No model class is assumed to be universally superior. Conclusions are restricted to the datasets, model specifications, search spaces, and cross-validation procedures used in the study.
 
-### Reproducibility and provenance
 
-The project uses R, R Markdown, `workflowr`, and `renv`.
-
-The repository separates source data, analytical definitions, derived outputs, and rendered documentation. Each analysis module consumes defined inputs and produces outputs for the next stage rather than repeating upstream processing.
-
-The rendered site under `docs/` provides the versioned public analytical record. Full computational reconstruction additionally requires the canonical source data and deliberate regeneration of computationally intensive analytical objects when those objects are not included in the repository.
 
 ### Contact
 
@@ -91,19 +85,19 @@ Federal University of Viçosa<br>
 
 ### Objetivo e escopo científico
 
-Este projeto investiga predição genômica utilizando redes neurais artificiais regularizadas e três modelos mistos genômicos GBLUP. Seu objetivo principal é comparar GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob desenhos de validação equivalentes, incluindo se as penalizações L1 e L2 dos pesos melhoram a generalização preditiva em relação à ANN não regularizada.
+Este projeto investiga predição genômica utilizando redes neurais artificiais regularizadas e três modelos mistos genômicos GBLUP. Seu objetivo principal é comparar GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob procedimentos equivalentes de validação cruzada, incluindo se as penalizações L1 e L2 dos pesos melhoram a generalização preditiva em relação à ANN não regularizada.
 
-O estudo combina dados genômicos simulados controlados com dados fenotípicos e genômicos longitudinais reais de *Coffea arabica*. Os dois ramos respondem a perguntas preditivas relacionadas, preservando uma separação comum entre preparação dos dados, desenho de validação, ajuste dos modelos e comparação terminal.
+O estudo combina dados genômicos simulados controlados com dados fenotípicos e genômicos reais de *Coffea arabica*. Os dados simulados e reais permitem análises preditivas complementares, com etapas distintas de pré-processamento, validação cruzada, ajuste e comparação dos modelos.
 
-### Desenho analítico
+### Dados e análises
 
-O ramo de dados simulados começa com informações de fenótipos, genótipos, mapa genético, QTL e valores genéticos verdadeiros conhecidos. Os valores genéticos verdadeiros permanecem fora do ajuste e da seleção dos modelos e fornecem um alvo independente de avaliação preditiva.
+Os dados simulados incluem fenótipos, genótipos, mapa genético, QTL e valores genéticos verdadeiros conhecidos. Os valores genéticos verdadeiros permanecem fora do ajuste e da seleção dos modelos e fornecem um alvo independente de avaliação preditiva.
 
-O ramo de dados reais contém uma etapa fenotípica adicional. As observações longitudinais completas de campo são analisadas pelo modelo misto longitudinal definido, ajustado por REML. Os BLUPs individuais resultantes são então integrados ao objeto canônico de marcadores genômicos em um módulo separado de preparação dos dados.
+A análise dos dados reais começa pelas observações fenotípicas. As observações de campo obtidas nos diferentes anos de avaliação são analisadas por um modelo misto fenotípico, ajustado por REML. Os BLUPs individuais resultantes são então integrados ao objeto canônico de marcadores genômicos em um módulo separado de preparação dos dados.
 
-Após a preparação dos dados, os dois ramos utilizam partições externas de avaliação comuns para GBLUP-A, GBLUP-AD, GBLUP-ADE e as quatro configurações de ANN, mantendo a comparação terminal separada do ajuste dos modelos.
+Em cada conjunto de dados, GBLUP-A, GBLUP-AD, GBLUP-ADE e as quatro configurações de ANN são avaliados nas mesmas partições externas de validação cruzada. A comparação dos modelos sucede os ajustes independentes.
 
-### Desenho de predição
+### Modelos de predição genômica
 
 Sete configurações de predição genômica são avaliadas:
 
@@ -117,27 +111,21 @@ Sete configurações de predição genômica são avaliadas:
 
 As respostas dos indivíduos de avaliação externa são excluídas do desenvolvimento dos modelos. A seleção de hiperparâmetros e de épocas das ANN é restrita à respectiva amostra de análise externa. As comparações dos modelos são, portanto, baseadas nos mesmos indivíduos mantidos fora do ajuste, e não em diferentes partições dos dados.
 
-O tuning das ANN utiliza o RMSE médio na avaliação interna como critério primário de desempenho e a correlação de Pearson média na avaliação interna como único desempate de desempenho. Nenhuma outra métrica preditiva é calculada, armazenada ou utilizada no tuning dos hiperparâmetros das ANN. A avaliação externa utiliza Pearson, Spearman, RMSE e MAE como métricas preditivas comuns; viés e inclinação de calibração são diagnósticos secundários, e R-quadrado não é utilizado.
+O tuning das ANN utiliza o RMSE médio na avaliação interna como critério primário de desempenho e a correlação de Pearson média na avaliação interna como único desempate de desempenho. A avaliação externa utiliza Pearson, Spearman, RMSE e MAE como métricas preditivas comuns; viés das predições e inclinação de calibração são medidas complementares.
 
-### Limites de interpretação
+### Interpretação dos resultados
 
-Nos dados simulados, o desempenho preditivo em relação aos valores genéticos verdadeiros mede a recuperação do sinal genético simulado conhecido sob o desenho de validação documentado.
+Nos dados simulados, o desempenho preditivo em relação aos valores genéticos verdadeiros mede a recuperação do sinal genético simulado conhecido sob o procedimento de validação cruzada especificado.
 
-Nos dados reais, a resposta da predição genômica consiste em BLUPs individuais estimados pelo modelo misto fenotípico longitudinal. O desempenho preditivo descreve, portanto, a capacidade dos modelos genômicos de recuperar esses sinais fenotípicos ajustados dentro da população representada e do desenho de validação utilizado.
+Nos dados reais, a resposta da predição genômica consiste em BLUPs individuais estimados pelo modelo misto fenotípico. O desempenho preditivo descreve, portanto, a capacidade dos modelos genômicos de recuperar esses sinais fenotípicos ajustados dentro da população representada e do procedimento de validação cruzada utilizado.
 
 As predições genômicas obtidas fora da amostra não são valores genéticos finais provenientes de um reajuste com todos os dados.
 
 Associações entre predições de características diferentes não devem ser interpretadas automaticamente como correlações genéticas multivariadas, a menos que sejam estimadas por um modelo genético multivariado explícito.
 
-Nenhuma classe de modelo é assumida como universalmente superior. As conclusões são restritas aos conjuntos de dados, especificações dos modelos, espaços de busca e desenhos de validação documentados no projeto.
+Nenhuma classe de modelo é assumida como universalmente superior. As conclusões são restritas aos conjuntos de dados, especificações dos modelos, espaços de busca e procedimentos de validação cruzada utilizados no estudo.
 
-### Reprodutibilidade e proveniência
 
-O projeto utiliza R, R Markdown, `workflowr` e `renv`.
-
-O repositório separa dados-fonte, definições analíticas, saídas derivadas e documentação renderizada. Cada módulo analítico consome entradas definidas e produz saídas para a etapa seguinte, em vez de repetir processamentos anteriores.
-
-O site renderizado em `docs/` fornece o registro analítico público versionado. A reconstrução computacional completa exige adicionalmente os dados-fonte canônicos e a regeneração deliberada de objetos analíticos computacionalmente intensivos quando esses objetos não estiverem incluídos no repositório.
 
 ### Contato
 
