@@ -66,24 +66,22 @@ dir.create(
 
 ## 2. Packages and inputs
 
+### 2.1 Packages
+
+The code uses `knitr` to format tables; `ggplot2` and `ggthemes` for figures;
+`sommer` for genomic relationship matrices and mixed models; and `foreach`
+with `doParallel` for parallel model fitting.
+
 ```{r packages, warning=FALSE, message=FALSE}
-RUN_GBLUP <- identical(
-  Sys.getenv("RUN_GBLUP", "0"),
-  "1"
-)
-
-N_ITERS_SOMMER <- 50L
-
 library(knitr)
 library(ggplot2)
 library(ggthemes)
 library(sommer)
-
-if (RUN_GBLUP) {
-  library(foreach)
-  library(doParallel)
-}
+library(foreach)
+library(doParallel)
 ```
+
+### 2.2 Input data
 
 The simulated data and the cross-validation partitions are also used by
 the other simulated-data modules.
@@ -277,110 +275,111 @@ not use phenotype or true genetic value.
 
 The genomic relationship matrices are derived from marker information and are common to the evaluated models and validation partitions.
 
-```{r genomic-kernels}
-if (RUN_GBLUP) {
+The matrix construction and the complete set of GBLUP fits are shown as code,
+but are not repeated when this page is rendered (`eval=FALSE`). The tables and
+figures below use the results already saved in `output/simulated/gblup/`.
+To recompute the full analysis, evaluate the matrix-construction chunk followed
+by the model-fitting chunk in the same R session.
 
-  A_matrix <- sommer::A.mat(
-    geno,
-    min.MAF = 0
-  )
+```{r genomic-kernels, eval=FALSE}
+A_matrix <- sommer::A.mat(
+  geno,
+  min.MAF = 0
+)
 
-  D_matrix <- sommer::D.mat(
-    geno,
-    nishio = TRUE,
-    min.MAF = 0
-  )
+D_matrix <- sommer::D.mat(
+  geno,
+  nishio = TRUE,
+  min.MAF = 0
+)
 
-  E_matrix <- sommer::E.mat(
-    geno,
-    nishio = TRUE,
-    type = "A#A",
-    min.MAF = 0
-  )
+E_matrix <- sommer::E.mat(
+  geno,
+  nishio = TRUE,
+  type = "A#A",
+  min.MAF = 0
+)
 
-  rownames(A_matrix) <- id_labels
-  colnames(A_matrix) <- id_labels
+rownames(A_matrix) <- id_labels
+colnames(A_matrix) <- id_labels
 
-  rownames(D_matrix) <- id_labels
-  colnames(D_matrix) <- id_labels
+rownames(D_matrix) <- id_labels
+colnames(D_matrix) <- id_labels
 
-  rownames(E_matrix) <- id_labels
-  colnames(E_matrix) <- id_labels
+rownames(E_matrix) <- id_labels
+colnames(E_matrix) <- id_labels
 
-  kernel_summary <- data.frame(
-    Kernel = c(
-      "Additive",
-      "Dominance",
-      "Epistatic"
-    ),
-    Rows = c(
-      nrow(A_matrix),
-      nrow(D_matrix),
-      nrow(E_matrix)
-    ),
-    Columns = c(
-      ncol(A_matrix),
-      ncol(D_matrix),
-      ncol(E_matrix)
-    ),
-    Symmetric = c(
-      isTRUE(
-        all.equal(
-          A_matrix,
-          t(A_matrix),
-          tolerance = 1e-8
-        )
-      ),
-      isTRUE(
-        all.equal(
-          D_matrix,
-          t(D_matrix),
-          tolerance = 1e-8
-        )
-      ),
-      isTRUE(
-        all.equal(
-          E_matrix,
-          t(E_matrix),
-          tolerance = 1e-8
-        )
+kernel_summary <- data.frame(
+  Kernel = c(
+    "Additive",
+    "Dominance",
+    "Epistatic"
+  ),
+  Rows = c(
+    nrow(A_matrix),
+    nrow(D_matrix),
+    nrow(E_matrix)
+  ),
+  Columns = c(
+    ncol(A_matrix),
+    ncol(D_matrix),
+    ncol(E_matrix)
+  ),
+  Symmetric = c(
+    isTRUE(
+      all.equal(
+        A_matrix,
+        t(A_matrix),
+        tolerance = 1e-8
       )
     ),
-    Finite = c(
-      all(is.finite(A_matrix)),
-      all(is.finite(D_matrix)),
-      all(is.finite(E_matrix))
+    isTRUE(
+      all.equal(
+        D_matrix,
+        t(D_matrix),
+        tolerance = 1e-8
+      )
     ),
-    Mean_diagonal = c(
-      mean(diag(A_matrix)),
-      mean(diag(D_matrix)),
-      mean(diag(E_matrix))
-    ),
-    stringsAsFactors = FALSE
-  )
+    isTRUE(
+      all.equal(
+        E_matrix,
+        t(E_matrix),
+        tolerance = 1e-8
+      )
+    )
+  ),
+  Finite = c(
+    all(is.finite(A_matrix)),
+    all(is.finite(D_matrix)),
+    all(is.finite(E_matrix))
+  ),
+  Mean_diagonal = c(
+    mean(diag(A_matrix)),
+    mean(diag(D_matrix)),
+    mean(diag(E_matrix))
+  ),
+  stringsAsFactors = FALSE
+)
 
-  dir.create(
-    "output/simulated/gblup",
-    recursive = TRUE,
-    showWarnings = FALSE
-  )
+dir.create(
+  "output/simulated/gblup",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
 
-  write.csv(
-    kernel_summary,
-    "output/simulated/gblup/simulated_gblup_kernel_summary.csv",
-    row.names = FALSE
-  )
-
-} else {
-
-  kernel_summary <- read.csv(
-    "output/simulated/gblup/simulated_gblup_kernel_summary.csv",
-    stringsAsFactors = FALSE
-  )
-}
+write.csv(
+  kernel_summary,
+  "output/simulated/gblup/simulated_gblup_kernel_summary.csv",
+  row.names = FALSE
+)
 ```
 
 ```{r kernel-summary}
+kernel_summary <- read.csv(
+  "output/simulated/gblup/simulated_gblup_kernel_summary.csv",
+  stringsAsFactors = FALSE
+)
+
 kernel_summary[
   ,
   c(
@@ -460,7 +459,7 @@ fit_A <- sommer::mmes(
       Gu = A_matrix
     ),
   rcov = ~ units,
-  nIters = N_ITERS_SOMMER,
+  nIters = 50L,
   tolParConvLL = 1e-4,
   data = dat,
   verbose = FALSE,
@@ -479,7 +478,7 @@ fit_AD <- sommer::mmes(
       Gu = D_matrix
     ),
   rcov = ~ units,
-  nIters = N_ITERS_SOMMER,
+  nIters = 50L,
   tolParConvLL = 1e-4,
   data = dat,
   verbose = FALSE,
@@ -502,7 +501,7 @@ fit_ADE <- sommer::mmes(
       Gu = E_matrix
     ),
   rcov = ~ units,
-  nIters = N_ITERS_SOMMER,
+  nIters = 50L,
   tolParConvLL = 1e-4,
   data = dat,
   verbose = FALSE,
@@ -590,597 +589,591 @@ rownames(task_table) <- NULL
 
 ```
 
-```{r fit-all-gblup-models}
-if (RUN_GBLUP) {
+```{r fit-all-gblup-models, eval=FALSE}
+logical_cores <- parallel::detectCores(
+  logical = TRUE
+)
 
-  logical_cores <- parallel::detectCores(
-    logical = TRUE
+if (is.na(logical_cores)) {
+  logical_cores <- 2L
+}
+
+default_workers <- max(
+  1L,
+  min(
+    10L,
+    floor(logical_cores / 2L),
+    max(
+      1L,
+      logical_cores - 2L
+    )
   )
+)
 
-  if (is.na(logical_cores)) {
-    logical_cores <- 2L
+requested_workers <- suppressWarnings(
+  as.integer(
+    Sys.getenv(
+      "GBLUP_WORKERS",
+      ""
+    )
+  )
+)
+
+if (
+  is.na(requested_workers) ||
+  requested_workers < 1L
+) {
+  N_WORKERS <- default_workers
+} else {
+  N_WORKERS <- min(
+    requested_workers,
+    max(
+      1L,
+      logical_cores - 2L
+    )
+  )
+}
+
+control <- common$scenario_control
+
+cluster <- parallel::makeCluster(
+  N_WORKERS
+)
+
+worker_libpaths <- .libPaths()
+
+parallel::clusterExport(
+  cluster,
+  "worker_libpaths",
+  envir = environment()
+)
+
+parallel::clusterEvalQ(
+  cluster,
+  {
+    .libPaths(
+      worker_libpaths
+    )
+
+    library(foreach)
+    library(doParallel)
+    library(sommer)
+
+    NULL
   }
+)
 
-  default_workers <- max(
-    1L,
-    min(
-      10L,
-      floor(logical_cores / 2L),
-      max(
-        1L,
-        logical_cores - 2L
-      )
+doParallel::registerDoParallel(
+  cluster
+)
+
+parallel_results <-
+  foreach::foreach(
+    i = seq_len(
+      nrow(task_table)
+    ),
+    .packages = "sommer",
+    .inorder = TRUE,
+    .errorhandling = "stop"
+  ) %dopar% {
+
+    task <- task_table[
+      i,
+      ,
+      drop = FALSE
+    ]
+
+    scenario <- task$Scenario
+    structure <- task$Structure
+
+    scenario_index <- match(
+      scenario,
+      scenario_names
     )
-  )
 
-  requested_workers <- suppressWarnings(
-    as.integer(
-      Sys.getenv(
-        "GBLUP_WORKERS",
-        ""
-      )
+    split <- cv$outer_splits[[
+      task$SplitID
+    ]]
+
+    analysis_index <- match(
+      split$analysis_ids,
+      ids
     )
-  )
 
-  if (
-    is.na(requested_workers) ||
-    requested_workers < 1L
-  ) {
-    N_WORKERS <- default_workers
-  } else {
-    N_WORKERS <- min(
-      requested_workers,
-      max(
-        1L,
-        logical_cores - 2L
-      )
+    assessment_index <- match(
+      split$assessment_ids,
+      ids
     )
-  }
 
-  control <- common$scenario_control
+    phenotype_vector <- phenotype[
+      ,
+      scenario_index
+    ]
 
-  cluster <- parallel::makeCluster(
-    N_WORKERS
-  )
+    id_factor <- factor(
+      id_labels,
+      levels = id_labels
+    )
 
-  worker_libpaths <- .libPaths()
+    dat <- data.frame(
+      y = phenotype_vector,
+      id = id_factor,
+      idd = id_factor,
+      ide = id_factor
+    )
 
-  parallel::clusterExport(
-    cluster,
-    "worker_libpaths",
-    envir = environment()
-  )
+    dat$y[
+      assessment_index
+    ] <- NA_real_
 
-  parallel::clusterEvalQ(
-    cluster,
-    {
-      .libPaths(
-        worker_libpaths
+    fit_start <- proc.time()[[
+      "elapsed"
+    ]]
+
+    if (structure == "A") {
+
+      fit <- sommer::mmes(
+        y ~ 1,
+        random = ~
+          vsm(
+            ism(id),
+            Gu = A_matrix
+          ),
+        rcov = ~ units,
+        nIters = 50L,
+        tolParConvLL = 1e-4,
+        data = dat,
+        verbose = FALSE,
+        dateWarning = FALSE
       )
 
-      library(foreach)
-      library(doParallel)
-      library(sommer)
+    } else if (structure == "AD") {
 
-      NULL
+      fit <- sommer::mmes(
+        y ~ 1,
+        random = ~
+          vsm(
+            ism(id),
+            Gu = A_matrix
+          ) +
+          vsm(
+            ism(idd),
+            Gu = D_matrix
+          ),
+        rcov = ~ units,
+        nIters = 50L,
+        tolParConvLL = 1e-4,
+        data = dat,
+        verbose = FALSE,
+        dateWarning = FALSE
+      )
+
+    } else {
+
+      fit <- sommer::mmes(
+        y ~ 1,
+        random = ~
+          vsm(
+            ism(id),
+            Gu = A_matrix
+          ) +
+          vsm(
+            ism(idd),
+            Gu = D_matrix
+          ) +
+          vsm(
+            ism(ide),
+            Gu = E_matrix
+          ),
+        rcov = ~ units,
+        nIters = 50L,
+        tolParConvLL = 1e-4,
+        data = dat,
+        verbose = FALSE,
+        dateWarning = FALSE
+      )
     }
-  )
 
-  doParallel::registerDoParallel(
-    cluster
-  )
-
-  parallel_results <-
-    foreach::foreach(
-      i = seq_len(
-        nrow(task_table)
-      ),
-      .packages = "sommer",
-      .inorder = TRUE,
-      .errorhandling = "stop"
-    ) %dopar% {
-
-      task <- task_table[
-        i,
-        ,
-        drop = FALSE
-      ]
-
-      scenario <- task$Scenario
-      structure <- task$Structure
-
-      scenario_index <- match(
-        scenario,
-        scenario_names
-      )
-
-      split <- cv$outer_splits[[
-        task$SplitID
-      ]]
-
-      analysis_index <- match(
-        split$analysis_ids,
-        ids
-      )
-
-      assessment_index <- match(
-        split$assessment_ids,
-        ids
-      )
-
-      phenotype_vector <- phenotype[
-        ,
-        scenario_index
-      ]
-
-      id_factor <- factor(
-        id_labels,
-        levels = id_labels
-      )
-
-      dat <- data.frame(
-        y = phenotype_vector,
-        id = id_factor,
-        idd = id_factor,
-        ide = id_factor
-      )
-
-      dat$y[
-        assessment_index
-      ] <- NA_real_
-
-      fit_start <- proc.time()[[
+    fit_seconds <-
+      proc.time()[[
         "elapsed"
+      ]] -
+      fit_start
+
+    prediction_start <- proc.time()[[
+      "elapsed"
+    ]]
+
+    additive <- rep(
+      0,
+      length(ids)
+    )
+
+    dominance <- rep(
+      0,
+      length(ids)
+    )
+
+    epistatic <- rep(
+      0,
+      length(ids)
+    )
+
+    additive_effect <- as.matrix(
+      fit$uList[[
+        "vsm(ism(id), Gu = A_matrix)"
       ]]
+    )
 
-      if (structure == "A") {
+    additive_incidence <- model.matrix(
+      ~ id - 1,
+      data = dat
+    )
 
-        fit <- sommer::mmes(
-          y ~ 1,
-          random = ~
-            vsm(
-              ism(id),
-              Gu = A_matrix
-            ),
-          rcov = ~ units,
-          nIters = N_ITERS_SOMMER,
-          tolParConvLL = 1e-4,
-          data = dat,
-          verbose = FALSE,
-          dateWarning = FALSE
-        )
+    additive <- as.numeric(
+      additive_incidence %*%
+        additive_effect[
+          ,
+          1L,
+          drop = FALSE
+        ]
+    )
 
-      } else if (structure == "AD") {
+    if (
+      structure == "AD" ||
+      structure == "ADE"
+    ) {
 
-        fit <- sommer::mmes(
-          y ~ 1,
-          random = ~
-            vsm(
-              ism(id),
-              Gu = A_matrix
-            ) +
-            vsm(
-              ism(idd),
-              Gu = D_matrix
-            ),
-          rcov = ~ units,
-          nIters = N_ITERS_SOMMER,
-          tolParConvLL = 1e-4,
-          data = dat,
-          verbose = FALSE,
-          dateWarning = FALSE
-        )
-
-      } else {
-
-        fit <- sommer::mmes(
-          y ~ 1,
-          random = ~
-            vsm(
-              ism(id),
-              Gu = A_matrix
-            ) +
-            vsm(
-              ism(idd),
-              Gu = D_matrix
-            ) +
-            vsm(
-              ism(ide),
-              Gu = E_matrix
-            ),
-          rcov = ~ units,
-          nIters = N_ITERS_SOMMER,
-          tolParConvLL = 1e-4,
-          data = dat,
-          verbose = FALSE,
-          dateWarning = FALSE
-        )
-      }
-
-      fit_seconds <-
-        proc.time()[[
-          "elapsed"
-        ]] -
-        fit_start
-
-      prediction_start <- proc.time()[[
-        "elapsed"
-      ]]
-
-      additive <- rep(
-        0,
-        length(ids)
-      )
-
-      dominance <- rep(
-        0,
-        length(ids)
-      )
-
-      epistatic <- rep(
-        0,
-        length(ids)
-      )
-
-      additive_effect <- as.matrix(
+      dominance_effect <- as.matrix(
         fit$uList[[
-          "vsm(ism(id), Gu = A_matrix)"
+          "vsm(ism(idd), Gu = D_matrix)"
         ]]
       )
 
-      additive_incidence <- model.matrix(
-        ~ id - 1,
+      dominance_incidence <- model.matrix(
+        ~ idd - 1,
         data = dat
       )
 
-      additive <- as.numeric(
-        additive_incidence %*%
-          additive_effect[
+      dominance <- as.numeric(
+        dominance_incidence %*%
+          dominance_effect[
             ,
             1L,
             drop = FALSE
           ]
       )
+    }
 
-      if (
-        structure == "AD" ||
-        structure == "ADE"
-      ) {
+    if (structure == "ADE") {
 
-        dominance_effect <- as.matrix(
-          fit$uList[[
-            "vsm(ism(idd), Gu = D_matrix)"
-          ]]
-        )
-
-        dominance_incidence <- model.matrix(
-          ~ idd - 1,
-          data = dat
-        )
-
-        dominance <- as.numeric(
-          dominance_incidence %*%
-            dominance_effect[
-              ,
-              1L,
-              drop = FALSE
-            ]
-        )
-      }
-
-      if (structure == "ADE") {
-
-        epistatic_effect <- as.matrix(
-          fit$uList[[
-            "vsm(ism(ide), Gu = E_matrix)"
-          ]]
-        )
-
-        epistatic_incidence <- model.matrix(
-          ~ ide - 1,
-          data = dat
-        )
-
-        epistatic <- as.numeric(
-          epistatic_incidence %*%
-            epistatic_effect[
-              ,
-              1L,
-              drop = FALSE
-            ]
-        )
-      }
-
-      genomic_component <-
-        additive +
-        dominance +
-        epistatic
-
-      intercept <- as.numeric(
-        fit$b
-      )[
-        1L
-      ]
-
-      gebv <-
-        intercept +
-        genomic_component
-
-      predict_seconds <-
-        proc.time()[[
-          "elapsed"
-        ]] -
-        prediction_start
-
-      observed_test <- phenotype_vector[
-        assessment_index
-      ]
-
-      true_g_test <- true_g[
-        assessment_index,
-        scenario_index
-      ]
-
-      gebv_test <- gebv[
-        assessment_index
-      ]
-
-      genetic_pearson <- cor(
-        gebv_test,
-        true_g_test,
-        method = "pearson"
+      epistatic_effect <- as.matrix(
+        fit$uList[[
+          "vsm(ism(ide), Gu = E_matrix)"
+        ]]
       )
 
-      genetic_spearman <- cor(
-        gebv_test,
-        true_g_test,
-        method = "spearman"
+      epistatic_incidence <- model.matrix(
+        ~ ide - 1,
+        data = dat
       )
 
-      genetic_rmse <- sqrt(
-        mean(
-          (
-            gebv_test -
-            true_g_test
-          )^2
-        )
-      )
-
-      genetic_mae <- mean(
-        abs(
-          gebv_test -
-          true_g_test
-        )
-      )
-
-      genetic_bias <- mean(
-        gebv_test -
-          true_g_test
-      )
-
-      genetic_slope <- as.numeric(
-        coef(
-          lm(
-            true_g_test ~ gebv_test
-          )
-        )[2L]
-      )
-
-      phenotype_pearson <- cor(
-        gebv_test,
-        observed_test,
-        method = "pearson"
-      )
-
-      phenotype_spearman <- cor(
-        gebv_test,
-        observed_test,
-        method = "spearman"
-      )
-
-      phenotype_rmse <- sqrt(
-        mean(
-          (
-            gebv_test -
-            observed_test
-          )^2
-        )
-      )
-
-      phenotype_mae <- mean(
-        abs(
-          gebv_test -
-          observed_test
-        )
-      )
-
-      phenotype_bias <- mean(
-        gebv_test -
-          observed_test
-      )
-
-      phenotype_slope <- as.numeric(
-        coef(
-          lm(
-            observed_test ~ gebv_test
-          )
-        )[2L]
-      )
-
-      meta <- control[
-        control$Scenario == scenario,
-        ,
-        drop = FALSE
-      ]
-
-      result_row <- data.frame(
-        Dataset = "simulated",
-        Scenario = scenario,
-        QTL_N = meta$QTL_N,
-        H2_nominal = meta$H2_nominal,
-        Repetition = task$Repetition,
-        Fold = task$OuterFold,
-        SplitID = task$SplitID,
-        TaskID = task$TaskID,
-        Model = task$Model,
-        Structure = structure,
-        N_train = length(
-          analysis_index
-        ),
-        N_test = length(
-          assessment_index
-        ),
-        Genetic_Pearson =
-          genetic_pearson,
-        Genetic_Spearman =
-          genetic_spearman,
-        Genetic_RMSE =
-          genetic_rmse,
-        Genetic_MAE =
-          genetic_mae,
-        Genetic_Bias =
-          genetic_bias,
-        Genetic_Slope =
-          genetic_slope,
-        Phenotype_Pearson =
-          phenotype_pearson,
-        Phenotype_Spearman =
-          phenotype_spearman,
-        Phenotype_RMSE =
-          phenotype_rmse,
-        Phenotype_MAE =
-          phenotype_mae,
-        Phenotype_Bias =
-          phenotype_bias,
-        Phenotype_Slope =
-          phenotype_slope,
-        Fit_seconds =
-          fit_seconds,
-        Predict_seconds =
-          predict_seconds,
-        stringsAsFactors = FALSE
-      )
-
-      prediction_rows <- data.frame(
-        Dataset = "simulated",
-        Scenario = scenario,
-        QTL_N = meta$QTL_N,
-        H2_nominal = meta$H2_nominal,
-        Repetition = task$Repetition,
-        Fold = task$OuterFold,
-        SplitID = task$SplitID,
-        TaskID = task$TaskID,
-        Model = task$Model,
-        Structure = structure,
-        ID = ids[
-          assessment_index
-        ],
-        Observed_Phenotype =
-          observed_test,
-        True_Genetic_Value =
-          true_g_test,
-        GEBV =
-          gebv_test,
-        Additive_Prediction =
-          additive[
-            assessment_index
-          ],
-        Dominance_Prediction =
-          dominance[
-            assessment_index
-          ],
-        Epistatic_Prediction =
-          epistatic[
-            assessment_index
-          ],
-        stringsAsFactors = FALSE
-      )
-
-      list(
-        result = result_row,
-        predictions = prediction_rows
+      epistatic <- as.numeric(
+        epistatic_incidence %*%
+          epistatic_effect[
+            ,
+            1L,
+            drop = FALSE
+          ]
       )
     }
 
-  parallel::stopCluster(
-    cluster
-  )
+    genomic_component <-
+      additive +
+      dominance +
+      epistatic
 
-  result_list <- vector(
-    "list",
-    length(parallel_results)
-  )
+    intercept <- as.numeric(
+      fit$b
+    )[
+      1L
+    ]
 
-  prediction_list <- vector(
-    "list",
-    length(parallel_results)
-  )
+    gebv <-
+      intercept +
+      genomic_component
 
-  for (
-    i in
-      seq_along(parallel_results)
-  ) {
+    predict_seconds <-
+      proc.time()[[
+        "elapsed"
+      ]] -
+      prediction_start
 
-    result_list[[i]] <-
-      parallel_results[[i]]$result
+    observed_test <- phenotype_vector[
+      assessment_index
+    ]
 
-    prediction_list[[i]] <-
-      parallel_results[[i]]$predictions
+    true_g_test <- true_g[
+      assessment_index,
+      scenario_index
+    ]
+
+    gebv_test <- gebv[
+      assessment_index
+    ]
+
+    genetic_pearson <- cor(
+      gebv_test,
+      true_g_test,
+      method = "pearson"
+    )
+
+    genetic_spearman <- cor(
+      gebv_test,
+      true_g_test,
+      method = "spearman"
+    )
+
+    genetic_rmse <- sqrt(
+      mean(
+        (
+          gebv_test -
+          true_g_test
+        )^2
+      )
+    )
+
+    genetic_mae <- mean(
+      abs(
+        gebv_test -
+        true_g_test
+      )
+    )
+
+    genetic_bias <- mean(
+      gebv_test -
+        true_g_test
+    )
+
+    genetic_slope <- as.numeric(
+      coef(
+        lm(
+          true_g_test ~ gebv_test
+        )
+      )[2L]
+    )
+
+    phenotype_pearson <- cor(
+      gebv_test,
+      observed_test,
+      method = "pearson"
+    )
+
+    phenotype_spearman <- cor(
+      gebv_test,
+      observed_test,
+      method = "spearman"
+    )
+
+    phenotype_rmse <- sqrt(
+      mean(
+        (
+          gebv_test -
+          observed_test
+        )^2
+      )
+    )
+
+    phenotype_mae <- mean(
+      abs(
+        gebv_test -
+        observed_test
+      )
+    )
+
+    phenotype_bias <- mean(
+      gebv_test -
+        observed_test
+    )
+
+    phenotype_slope <- as.numeric(
+      coef(
+        lm(
+          observed_test ~ gebv_test
+        )
+      )[2L]
+    )
+
+    meta <- control[
+      control$Scenario == scenario,
+      ,
+      drop = FALSE
+    ]
+
+    result_row <- data.frame(
+      Dataset = "simulated",
+      Scenario = scenario,
+      QTL_N = meta$QTL_N,
+      H2_nominal = meta$H2_nominal,
+      Repetition = task$Repetition,
+      Fold = task$OuterFold,
+      SplitID = task$SplitID,
+      TaskID = task$TaskID,
+      Model = task$Model,
+      Structure = structure,
+      N_train = length(
+        analysis_index
+      ),
+      N_test = length(
+        assessment_index
+      ),
+      Genetic_Pearson =
+        genetic_pearson,
+      Genetic_Spearman =
+        genetic_spearman,
+      Genetic_RMSE =
+        genetic_rmse,
+      Genetic_MAE =
+        genetic_mae,
+      Genetic_Bias =
+        genetic_bias,
+      Genetic_Slope =
+        genetic_slope,
+      Phenotype_Pearson =
+        phenotype_pearson,
+      Phenotype_Spearman =
+        phenotype_spearman,
+      Phenotype_RMSE =
+        phenotype_rmse,
+      Phenotype_MAE =
+        phenotype_mae,
+      Phenotype_Bias =
+        phenotype_bias,
+      Phenotype_Slope =
+        phenotype_slope,
+      Fit_seconds =
+        fit_seconds,
+      Predict_seconds =
+        predict_seconds,
+      stringsAsFactors = FALSE
+    )
+
+    prediction_rows <- data.frame(
+      Dataset = "simulated",
+      Scenario = scenario,
+      QTL_N = meta$QTL_N,
+      H2_nominal = meta$H2_nominal,
+      Repetition = task$Repetition,
+      Fold = task$OuterFold,
+      SplitID = task$SplitID,
+      TaskID = task$TaskID,
+      Model = task$Model,
+      Structure = structure,
+      ID = ids[
+        assessment_index
+      ],
+      Observed_Phenotype =
+        observed_test,
+      True_Genetic_Value =
+        true_g_test,
+      GEBV =
+        gebv_test,
+      Additive_Prediction =
+        additive[
+          assessment_index
+        ],
+      Dominance_Prediction =
+        dominance[
+          assessment_index
+        ],
+      Epistatic_Prediction =
+        epistatic[
+          assessment_index
+        ],
+      stringsAsFactors = FALSE
+    )
+
+    list(
+      result = result_row,
+      predictions = prediction_rows
+    )
   }
 
-  results <- do.call(
-    rbind,
-    result_list
-  )
+parallel::stopCluster(
+  cluster
+)
 
-  predictions <- do.call(
-    rbind,
-    prediction_list
-  )
+result_list <- vector(
+  "list",
+  length(parallel_results)
+)
 
-  rownames(results) <- NULL
-  rownames(predictions) <- NULL
+prediction_list <- vector(
+  "list",
+  length(parallel_results)
+)
 
-  dir.create(
-    "output/simulated/gblup",
-    recursive = TRUE,
-    showWarnings = FALSE
-  )
+for (
+  i in
+    seq_along(parallel_results)
+) {
 
-  saveRDS(
-    results,
-    "output/simulated/gblup/simulated_gblup_results.rds",
-    compress = "gzip"
-  )
+  result_list[[i]] <-
+    parallel_results[[i]]$result
 
-  write.csv(
-    results,
-    "output/simulated/gblup/simulated_gblup_results.csv",
-    row.names = FALSE
-  )
-
-  saveRDS(
-    predictions,
-    "output/simulated/gblup/simulated_gblup_predictions.rds",
-    compress = "gzip"
-  )
-
-  write.csv(
-    predictions,
-    "output/simulated/gblup/simulated_gblup_predictions.csv",
-    row.names = FALSE
-  )
-
-} else {
-
-  results <- readRDS(
-    "output/simulated/gblup/simulated_gblup_results.rds"
-  )
-
+  prediction_list[[i]] <-
+    parallel_results[[i]]$predictions
 }
+
+results <- do.call(
+  rbind,
+  result_list
+)
+
+predictions <- do.call(
+  rbind,
+  prediction_list
+)
+
+rownames(results) <- NULL
+rownames(predictions) <- NULL
+
+dir.create(
+  "output/simulated/gblup",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+saveRDS(
+  results,
+  "output/simulated/gblup/simulated_gblup_results.rds",
+  compress = "gzip"
+)
+
+write.csv(
+  results,
+  "output/simulated/gblup/simulated_gblup_results.csv",
+  row.names = FALSE
+)
+
+saveRDS(
+  predictions,
+  "output/simulated/gblup/simulated_gblup_predictions.rds",
+  compress = "gzip"
+)
+
+write.csv(
+  predictions,
+  "output/simulated/gblup/simulated_gblup_predictions.csv",
+  row.names = FALSE
+)
 ```
 
 ```{r task-summary}
+results <- readRDS(
+  "output/simulated/gblup/simulated_gblup_results.rds"
+)
+
 results$Model <- factor(
   results$Model,
   levels = model_names
