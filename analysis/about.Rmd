@@ -39,7 +39,7 @@ The study combines controlled simulated genomic data with real *Coffea arabica* 
 
 The simulated data include phenotypes, genotypes, genetic maps, QTL, and known true genetic values. The known true genetic values remain outside model fitting and selection and provide an independent predictive-assessment target.
 
-The real-data analysis begins with phenotypic measurements. Field observations collected across evaluation years are analyzed with a mixed model for repeated measurements, fitted by REML. The resulting individual BLUPs are then integrated with the canonical genomic marker object in a separate data-preparation module.
+The real-data analysis begins with phenotypic measurements. Field observations collected across evaluation years are analyzed using a phenotypic mixed model fitted by REML. The resulting individual BLUPs are then integrated with the canonical genomic marker object in a separate data-preparation module.
 
 For each dataset, GBLUP-A, GBLUP-AD, GBLUP-ADE, and the four ANN configurations are evaluated in common outer cross-validation partitions. Model comparison follows the independent fits.
 
@@ -63,7 +63,7 @@ ANN tuning uses mean inner-assessment RMSE as the primary performance criterion 
 
 For simulated data, predictive performance against true genetic values measures recovery of the known simulated genetic signal under the specified cross-validation procedure.
 
-For real data, the genomic-prediction response consists of estimated individual BLUPs from the phenotypic mixed model for repeated measurements. Predictive performance therefore describes the ability of the genomic models to recover these adjusted phenotypic signals within the studied population and cross-validation procedure.
+For real data, the genomic-prediction response consists of estimated individual BLUPs from the phenotypic mixed model. Predictive performance therefore describes the ability of the genomic models to recover these adjusted phenotypic signals within the studied population and cross-validation procedure.
 
 Held-out genomic predictions are not final breeding values from a full-data refit.
 
@@ -93,7 +93,7 @@ O estudo combina dados genômicos simulados controlados com dados fenotípicos e
 
 Os dados simulados incluem fenótipos, genótipos, mapa genético, QTL e valores genéticos verdadeiros conhecidos. Os valores genéticos verdadeiros permanecem fora do ajuste e da seleção dos modelos e fornecem um alvo independente de avaliação preditiva.
 
-A análise dos dados reais começa pelas observações fenotípicas. As observações de campo obtidas nos diferentes anos de avaliação são analisadas por um modelo misto para medidas repetidas, ajustado por REML. Os BLUPs individuais resultantes são então integrados ao objeto canônico de marcadores genômicos em um módulo separado de preparação dos dados.
+A análise dos dados reais começa pelas observações fenotípicas. As observações de campo obtidas nos diferentes anos de avaliação são analisadas por um modelo misto fenotípico, ajustado por REML. Os BLUPs individuais resultantes são então integrados ao objeto canônico de marcadores genômicos em um módulo separado de preparação dos dados.
 
 Em cada conjunto de dados, GBLUP-A, GBLUP-AD, GBLUP-ADE e as quatro configurações de ANN são avaliados nas mesmas partições externas de validação cruzada. A comparação dos modelos sucede os ajustes independentes.
 
@@ -117,7 +117,7 @@ O tuning das ANN utiliza o RMSE médio na avaliação interna como critério pri
 
 Nos dados simulados, o desempenho preditivo em relação aos valores genéticos verdadeiros mede a recuperação do sinal genético simulado conhecido sob o procedimento de validação cruzada especificado.
 
-Nos dados reais, a resposta da predição genômica consiste em BLUPs individuais estimados pelo modelo misto fenotípico para medidas repetidas. O desempenho preditivo descreve, portanto, a capacidade dos modelos genômicos de recuperar esses sinais fenotípicos ajustados dentro da população representada e do procedimento de validação cruzada utilizado.
+Nos dados reais, a resposta da predição genômica consiste em BLUPs individuais estimados pelo modelo misto fenotípico. O desempenho preditivo descreve, portanto, a capacidade dos modelos genômicos de recuperar esses sinais fenotípicos ajustados dentro da população representada e do procedimento de validação cruzada utilizado.
 
 As predições genômicas obtidas fora da amostra não são valores genéticos finais provenientes de um reajuste com todos os dados.
 
