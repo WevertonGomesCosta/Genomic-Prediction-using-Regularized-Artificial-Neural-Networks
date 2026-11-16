@@ -797,9 +797,9 @@ parallel_results <-
         dateWarning = FALSE
       )
 
-    # Additive-dominance model: include both genetic components.
     } else if (structure == "AD") {
 
+      # Additive-dominance model: include both genetic components.
       fit <- sommer::mmes(
         y ~ 1,
         random = ~
@@ -819,9 +819,9 @@ parallel_results <-
         dateWarning = FALSE
       )
 
-    # Full ADE model: include additive, dominance, and epistatic effects.
     } else {
 
+      # Full ADE model: include additive, dominance, and epistatic effects.
       fit <- sommer::mmes(
         y ~ 1,
         random = ~
