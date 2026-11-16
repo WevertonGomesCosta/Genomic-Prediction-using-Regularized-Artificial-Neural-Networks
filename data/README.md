@@ -35,8 +35,10 @@ derived analytical objects and are stored under `output/real/phenotype/`.
 
 ### Genomic marker data
 
-`geno_real.rds` is the canonical genotype object for the real-data genomic
-workflow.
+`data/dados_reais/geno_real.rds` is the canonical genotype object for the
+real-data genomic workflow. This file is excluded from Git versioning and is
+not distributed with the repository. Reproducing the real-data genomic analyses
+requires obtaining it separately, subject to applicable access and use conditions.
 
 Genotypes are integrated in `analysis/real_data_audit.Rmd`,
 after the phenotypic mixed-model stage is complete.
