@@ -276,8 +276,7 @@ covariance, and E represents the second-order additive-by-additive relationship
 used in the ADE model. These matrices depend only on marker information and do
 not use phenotype or true genetic value.
 
-The matrices are built once and reused across all scenarios, models, and outer
-splits. ```{r genomic-kernels}
+The genomic relationship matrices are derived from marker information and are common to the evaluated models and validation partitions. ```{r genomic-kernels}
 if (RUN_GBLUP) {
 
   A_matrix <- sommer::A.mat(
@@ -510,11 +509,7 @@ fit_ADE <- sommer::mmes(
 )
 ```
 
-The complete run contains 450 fits. A standard page build reads the saved
-results. To regenerate the complete GBLUP analysis from M01 and M02, set
-`RUN_GBLUP=1` before building this page. The optional environment variable
-`GBLUP_WORKERS` controls the number of parallel workers; when it is omitted, a
-conservative value is selected from the available logical processors.
+Across six scenarios and 25 outer partitions, the three GBLUP structures comprise 450 model fits.
 
 ```{r task-table}
 structures <- c(
