@@ -1,5 +1,5 @@
 ---
-title: "Simulated data: nested validation design"
+title: "Simulated data: pre-validation"
 author:
   - Weverton Gomes da Costa
 date: "`r Sys.Date()`"
@@ -17,12 +17,12 @@ editor_options:
 
 ## 1. Purpose
 
-This module defines the nested cross-validation design used by every genomic
+This module defines the nested cross-validation procedure used by every genomic
 prediction model fitted to the simulated population. The partitions are created
 **before model fitting** so model development and final evaluation use the same
 individuals for GBLUP-ADE and all ANN variants.
 
-The validation design has four fixed features:
+Cross-validation follows four specifications:
 
 - **Repeated outer cross-validation:** 5 repetitions of 5 outer folds produce
   25 outer held-out evaluations.
@@ -68,10 +68,9 @@ dir.create(
 
 ### 2.1 Packages
 
-Three packages are used, each for a specific reader-facing task:
+Three R packages are used:
 
-- **`knitr`** formats the validation settings, partition sizes, and design
-  summaries as tables that can be inspected directly in the page.
+- **`knitr`** formats the validation settings, partition sizes, and cross-validation summaries as tables.
 - **`ggplot2`** constructs the diagram that shows how the 1,000 individuals are
   separated at the outer and inner validation levels.
 - **`ggthemes`** applies the same Google Docs theme and color scale adopted in
@@ -139,8 +138,7 @@ using any response or model information.
 
 The shared simulated-data object created in M01 contains the aligned phenotype,
 true genetic value, and genotype matrices. Before any fold is generated, the
-reader needs to verify which rows define the population available for
-partitioning.
+population is defined by the aligned individual identifiers used to generate the partitions.
 
 The next chunk therefore does three things:
 
@@ -311,7 +309,7 @@ The outer table should be read as follows:
 - **Analysis_N = 800:** individuals available for all model development within
   that split;
 - **one assessment appearance per repetition:** each individual is assessed once
-  in every repetition and therefore five times across the complete outer design.
+  in every repetition and therefore five times across all outer partitions.
 
 ### 4.2 Explicit outer analysis and assessment sets
 
@@ -319,8 +317,7 @@ The fold assignment table identifies membership, but the modeling modules need
 explicit ID vectors. The next chunk converts every `SplitID` into a list with
 its 800 analysis IDs and 200 assessment IDs.
 
-An example from the first split is displayed so the reader can inspect both
-sizes and confirm that the overlap is zero.
+The first split illustrates the analysis and assessment sample sizes and their absence of overlap.
 
 ```{r outer-split-objects}
 outer_split_ids <- sort(
@@ -552,7 +549,7 @@ The inner structure is constant across all outer splits:
   population are absent from inner validation and remain reserved for final
   evaluation.
 
-### 5.3 Nested design at a glance
+### 5.3 Nested cross-validation summary
 
 The diagram below places the two levels on the same 1,000-individual scale. It
 shows why the outer assessment set cannot leak into ANN tuning:
@@ -703,11 +700,11 @@ This separation has direct consequences for model comparison:
 - **True genetic value not used:** known simulated genetic values are reserved for
   held-out evaluation and never determine partitions or ANN tuning.
 
-## 7. Validation design summary
+## 7. Cross-validation summary
 
 The complete structure can now be summarized without reference to any fitted
 model. These counts define the number and size of comparisons used later by both
-modeling branches.
+prediction methods.
 
 ```{r design-summary}
 design_summary <- data.frame(
@@ -744,13 +741,13 @@ design_summary <- data.frame(
 design_summary |>
   knitr::kable(
     format = "html",
-    caption = "Nested validation design used for the simulated data",
+    caption = "Nested cross-validation for simulated data",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
 
-The fixed design therefore contains:
+The cross-validation procedure comprises:
 
 - **25 outer evaluations** = 5 repetitions x 5 folds;
 - **100 inner splits** = 25 outer splits x 4 inner folds;
@@ -835,13 +832,13 @@ validation_observed <- data.frame(
 validation_observed |>
   knitr::kable(
     format = "html",
-    caption = "Observed structure of the generated nested validation design",
+    caption = "Observed structure of the nested cross-validation partitions",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
 
-The observed objects confirm the intended design:
+The resulting partitions have the following characteristics:
 
 - **5,000 outer assignment rows:** 1,000 individuals x 5 repetitions;
 - **25 outer splits:** each with 800 analysis and 200 assessment individuals;
@@ -1160,18 +1157,14 @@ rownames(validation_log) <- NULL
 
 ## 8. Saved validation object
 
-The modeling modules do not regenerate these partitions. Instead, the complete
-design is saved once and then read directly by GBLUP-ADE and ANN.
+The GBLUP and ANN methods use a common set of cross-validation partitions.
 
 The saved files retain:
 
 - the 5,000 outer assignment rows;
 - the 20,000 inner assignment rows;
 - the explicit analysis and assessment ID vectors for every split;
-- the fixed validation settings and the internal consistency checks.
-
-The output-writing chunk is hidden because it records already established
-objects rather than introducing a new analytical step.
+- the cross-validation settings.
 
 ```{r save-validation-design, include=FALSE}
 dir.create(
@@ -1237,10 +1230,7 @@ saveRDS(
 )
 ```
 
-The resulting `simulated_cv_design.rds` is the single partition object consumed
-by the prediction modules. Keeping this object fixed ensures that differences
-between GBLUP-ADE and ANN results reflect the models rather than different
-validation samples.
+The common cross-validation partitions allow direct comparison of GBLUP and ANN methods on identical assessment individuals.
 
 ## 9. Navigation
 
