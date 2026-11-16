@@ -33,7 +33,7 @@ knitr::opts_chunk$set(
 
 This website documents a reproducible study of genomic prediction comparing three GBLUP genomic mixed models with four regularized artificial neural-network configurations.
 
-The project combines controlled simulated genomic data with real longitudinal *Coffea arabica* data. Its central comparison includes GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations evaluated under matched cross-validation procedures, with specific interest in the effect of L1 and L2 weight regularization relative to the unregularized ANN.
+The project combines controlled simulated genomic data with real phenotypic and genomic *Coffea arabica* data. Its central comparison includes GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations evaluated under matched cross-validation procedures, with specific interest in the effect of L1 and L2 weight regularization relative to the unregularized ANN.
 
 ### Project at a glance
 
@@ -64,7 +64,7 @@ True genetic values from simulations are used only for independent predictive as
 
 #### Real data
 
-1. [Phenotypes](real_data_phenotype.html) — descriptive analyses, longitudinal mixed-model fitting by REML, variance components, and individual BLUPs.
+1. [Phenotypes](real_data_phenotype.html) — descriptive analyses, mixed-model fitting for repeated measurements by REML, variance components, and individual BLUPs.
 2. [Data preprocessing](real_data_audit.html) — integration with `geno_real.rds`, individual correspondence, and marker quality control.
 3. [Pre-validation](real_data_validation.html) — shared outer and inner cross-validation partitions.
 4. Genomic prediction models: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) and [regularized ANN](real_data_ann.html).
@@ -76,7 +76,7 @@ Outer-assessment responses are excluded from model fitting and model selection. 
 
 For simulated data, true genetic values are excluded from fitting and selection and are used only for independent predictive assessment.
 
-For real data, genomic prediction uses the individual BLUPs obtained from the longitudinal phenotypic mixed model. Held-out genomic predictions should not be interpreted as final breeding values from a model refitted with all available responses.
+For real data, genomic prediction uses the individual BLUPs obtained from the phenotypic mixed model for repeated measurements. Held-out genomic predictions should not be interpreted as final breeding values from a model refitted with all available responses.
 
 
 
@@ -86,7 +86,7 @@ For real data, genomic prediction uses the individual BLUPs obtained from the lo
 
 Este site documenta um estudo reprodutível de predição genômica comparando três modelos mistos genômicos GBLUP com quatro configurações de redes neurais artificiais regularizadas.
 
-O projeto combina dados genômicos simulados controlados com dados longitudinais reais de *Coffea arabica*. A comparação central inclui GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob procedimentos equivalentes de validação cruzada, com interesse específico no efeito das regularizações L1 e L2 em relação à ANN não regularizada.
+O projeto combina dados genômicos simulados controlados com dados fenotípicos e genômicos reais de *Coffea arabica*. A comparação central inclui GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob procedimentos equivalentes de validação cruzada, com interesse específico no efeito das regularizações L1 e L2 em relação à ANN não regularizada.
 
 ### Projeto em resumo
 
@@ -117,7 +117,7 @@ Nos dados simulados, os valores genéticos verdadeiros são utilizados exclusiva
 
 #### Dados reais
 
-1. [Fenótipos](real_data_phenotype.html) — análises descritivas, ajuste do modelo misto longitudinal por REML, componentes de variância e BLUPs individuais.
+1. [Fenótipos](real_data_phenotype.html) — análises descritivas, ajuste do modelo misto para medidas repetidas por REML, componentes de variância e BLUPs individuais.
 2. [Pré-processamento dos dados](real_data_audit.html) — integração com `geno_real.rds`, correspondência entre indivíduos e controle de qualidade dos marcadores.
 3. [Pré-validação](real_data_validation.html) — partições externas e internas compartilhadas de validação cruzada.
 4. Modelos de predição genômica: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) e [ANN regularizadas](real_data_ann.html).
@@ -129,4 +129,4 @@ As respostas dos indivíduos de avaliação externa são excluídas do ajuste e 
 
 Nos dados simulados, os valores genéticos verdadeiros são excluídos do ajuste e da seleção e são utilizados apenas na avaliação preditiva independente.
 
-Nos dados reais, a predição genômica utiliza os BLUPs individuais obtidos do modelo misto fenotípico longitudinal. As predições genômicas obtidas fora da amostra não devem ser interpretadas como valores genéticos finais provenientes de um modelo reajustado com todas as respostas disponíveis.
+Nos dados reais, a predição genômica utiliza os BLUPs individuais obtidos do modelo misto fenotípico para medidas repetidas. As predições genômicas obtidas fora da amostra não devem ser interpretadas como valores genéticos finais provenientes de um modelo reajustado com todas as respostas disponíveis.
