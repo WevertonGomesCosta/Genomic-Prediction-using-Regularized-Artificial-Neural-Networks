@@ -22,7 +22,7 @@ prediction workflow. The data were generated with **GENES**, a software package
 for experimental statistics, quantitative genetics, and genetic simulation
 (Cruz, 2013, 2016).
 
-The module has four reader-facing goals:
+The preprocessing stage has four objectives:
 
 - **Identify the input data:** distinguish phenotype, true genetic value,
   genotype matrix, genetic map, parental genotypes, and simulation settings.
@@ -57,38 +57,26 @@ dir.create(
 )
 ```
 
-## 2. Packages and reproducibility
+## 2. Software and simulation settings
 
 ### 2.1 Packages
 
-Three packages support different parts of the reader-facing analysis:
+The analysis uses three R packages:
 
 - **`knitr`** converts R objects into formatted HTML tables, allowing dimensions,
   simulation settings, genotype summaries, and LD values to be inspected
-  directly in the page.
+  in the results tables.
 - **`ggplot2`** constructs every statistical and genomic figure, including the
   phenotype distributions, chromosome-like linkage-group map, QTL distribution,
   F2 segregation, and LD curve.
 - **`ggthemes`** provides `theme_gdocs()` and the matching Google Docs color
   scales so all figures share the same visual language.
 
-The comments in the code provide a short reminder of these roles when the reader
-executes the chunk independently.
-
 ```{r packages, warning=FALSE, message=FALSE}
 library(knitr)     # Format data summaries as readable HTML tables.
 library(ggplot2)   # Construct the statistical and genomic figures.
 library(ggthemes)  # Apply the Google Docs theme and matching color scales.
 ```
-
-For figure output, two rules are applied consistently:
-
-- figures shown in the HTML use `theme_gdocs()` and Google Docs color/fill
-  scales whenever categories are distinguished by color;
-- publication-quality TIFF copies are written to
-  `output/simulated/m01/figures/`, while the `ggsave()` commands remain in
-  `include=FALSE` chunks so file-export instructions do not interrupt the
-  analytical code shown to the reader.
 
 ### 2.2 Random seed
 
@@ -122,8 +110,7 @@ The first two GENES files describe complementary quantities for the same
 
 ### 3.1 Phenotypic values
 
-The phenotypic file is read before any transformation so the reader can see
-how the response is organized. The chunk performs three steps:
+The phenotypic data are organized in three steps:
 
 - read the matrix with individuals in rows and scenarios in columns;
 - label the six scenario columns as C1-C6;
@@ -188,7 +175,7 @@ The phenotype object now establishes two facts used later:
   `r ncol(phenotype)` scenarios.
 - **Use in prediction:** phenotype is the response available to a model only for
   individuals belonging to the corresponding analysis set defined by the
-  validation design.
+  cross-validation procedure.
 
 ### 3.2 True genetic values
 
@@ -215,7 +202,7 @@ true_genetic_value <- as.matrix(
 
 colnames(true_genetic_value) <- paste0("C", 1:6)
 
-# Reshape a copy only for the reader-facing figure.
+# Reshape a copy for the distribution figure.
 true_g_long <- stack(as.data.frame(true_genetic_value))
 names(true_g_long) <- c("True_genetic_value", "Scenario")
 
@@ -266,8 +253,7 @@ This second response-related object has three properties to retain:
 
 ### 4.1 Genotype matrix
 
-The GENES genotype file must first be oriented in the same direction as the
-response matrices. The reader should note four points:
+The GENES genotype data and response matrices have the following characteristics:
 
 - **Source orientation:** markers are stored in rows and individuals in columns.
 - **Analysis orientation:** the matrix is transposed once, producing individuals
@@ -526,9 +512,7 @@ without mixing the two levels of information:
 - **QTL architecture:** Section 6 places the QTL from each scenario on that fixed
   framework and compares their distribution across C1-C6.
 
-Keeping these layers separate lets the reader first understand where markers are
-located and then examine which of those positions were selected as QTL in each
-scenario.
+The genetic map identifies marker positions, while the QTL information specifies the genomic positions associated with each simulation scenario.
 
 ## 6. Simulation settings and QTL architecture
 
@@ -560,8 +544,7 @@ models fitted later.
 ### 6.2 Scenario settings and QTL distribution
 
 The control file contains six repeated blocks, one for each scenario C1-C6.
-The code reads the blocks directly because the fields occur in a fixed order.
-The reader can follow the preparation in four steps:
+The simulation settings and QTL information are organized in four steps:
 
 - **Read the scenario settings:** number of QTL, specified heritability, genetic
   model, constant, scale, and CV setting.
@@ -1552,8 +1535,7 @@ remove markers.
 
 ## 11. Summary of the simulated data
 
-Before moving to the validation design, the final table collects the main
-structural facts established in the module:
+The summary table characterizes the simulated data:
 
 - population size and number of simulation scenarios;
 - total markers, linkage groups, and markers per linkage group;
@@ -1807,11 +1789,6 @@ Its most important roles are:
 - **map and scenario objects:** linkage groups, QTL, scenario definitions, marker
   summaries, and LD values reused unchanged downstream.
 
-The saving code is hidden because it is workflow plumbing rather than a new
-scientific calculation. The historical field name `CV_metadata` is preserved
-only inside the saved objects and CSV schema for compatibility; the visible
-text consistently calls this quantity the **GENES CV setting**.
-
 ```{r save-shared-data, include=FALSE}
 dir.create(
   "output/simulated/audit",
@@ -1819,7 +1796,6 @@ dir.create(
   recursive = TRUE
 )
 
-# Preserve the historical saved schema without exposing that terminology above.
 control_table_saved <- control_table
 names(control_table_saved)[
   names(control_table_saved) == "CV_setting"
@@ -1927,4 +1903,4 @@ and Selegen. *Acta Scientiarum*, 38(4), 547-552.
 
 ## 14. Navigation
 
-[Home](index.html) | [Next: Validation design](simulated_data_validation.html)
+[Home](index.html) | [Next: Pre-validation](simulated_data_validation.html)
