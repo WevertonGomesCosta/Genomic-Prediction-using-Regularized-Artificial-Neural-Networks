@@ -1,5 +1,5 @@
 ---
-title: "Real data: longitudinal phenotypic analysis and BLUPs"
+title: "Real data: phenotypic analysis and BLUPs"
 author:
   - Weverton Gomes da Costa
 date: "`r Sys.Date()`"
@@ -30,7 +30,7 @@ table.table td {
 
 ## 1. Purpose
 
-This module prepares the longitudinal *Coffea arabica* phenotypes used as
+This module analyzes the *Coffea arabica* phenotypes used as
 responses in the real-data genomic prediction workflow. The experiment contains
 three annual evaluations, 13 experimental progenies, two checks, and an
 augmented-block structure.
@@ -40,7 +40,7 @@ The module has four goals:
 - **Describe the experiment:** make the years, progenies, checks, blocks,
   populations, plants, and traits explicit.
 - **Fit the reference mixed model:** estimate fixed year means and the five
-  random components used in the longitudinal phenotypic analysis.
+  random components in the phenotypic mixed model.
 - **Estimate variance components and BLUPs:** quantify progeny, permanent plant,
   population, block, progeny-by-year, and residual variation.
 - **Prepare the genomic-prediction targets:** retain one BLUP for each of the 195
@@ -61,7 +61,7 @@ knitr::opts_chunk$set(
 
 options(stringsAsFactors = FALSE)
 
-PHENOTYPE_INPUT <- "data/dados_reais/coffee_longitudinal_phenotypes.txt"
+PHENOTYPE_INPUT <- "data/dados_reais/coffee_phenotypes.txt"
 OUTPUT_DIR <- "output/real/phenotype"
 FIGURE_DIR <- file.path(OUTPUT_DIR, "figures")
 
@@ -72,7 +72,7 @@ dir.create(FIGURE_DIR, showWarnings = FALSE, recursive = TRUE)
 
 ### 2.1 Packages
 
-Three packages support the reader-facing analysis:
+The phenotypic analysis uses three packages:
 
 - **`knitr`** formats experimental summaries and model results as HTML tables.
 - **`ggplot2`** displays the annual phenotypic distributions.
@@ -158,7 +158,7 @@ variable_dictionary <- data.frame(
     "Plant number within progeny",
     "Cercosporiosis score",
     "Vegetative vigor score",
-    "Yield-related longitudinal measurement"
+    "Production-related phenotype"
   ),
   stringsAsFactors = FALSE
 )
@@ -166,13 +166,13 @@ variable_dictionary <- data.frame(
 variable_dictionary |>
   knitr::kable(
     format = "html",
-    caption = "Variables in the longitudinal phenotype file",
+    caption = "Variables in the phenotypic data",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
   )
 ```
 
-### 3.2 Longitudinal and augmented-block structure
+### 3.2 Experimental structure and augmented blocks
 
 The 684 records correspond to 228 permanent plant identifiers evaluated in
 2014, 2015, and 2016. Progenies 1-13 form the genomic-prediction population.
@@ -185,7 +185,7 @@ checks <- phenotype[phenotype$Progenie %in% 14:15, , drop = FALSE]
 
 structure_summary <- data.frame(
   Quantity = c(
-    "Longitudinal observations", "Evaluation years", "Progenies",
+    "Phenotypic observations", "Evaluation years", "Progenies",
     "Experimental progenies", "Check progenies", "Permanent plant identifiers",
     "Target plants", "Check plant identifiers", "Blocks", "Populations",
     "Progeny-by-year levels"
@@ -204,7 +204,7 @@ structure_summary <- data.frame(
 structure_summary |>
   knitr::kable(
     format = "html",
-    caption = "Experimental structure of the longitudinal coffee data",
+    caption = "Experimental structure of the coffee phenotypic data",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
   )
@@ -378,7 +378,7 @@ ggsave(
 )
 ```
 
-## 5. Longitudinal mixed model
+## 5. Phenotypic mixed model
 
 ### 5.1 Statistical formulation
 
@@ -431,7 +431,7 @@ model_terms <- data.frame(
 model_terms |>
   knitr::kable(
     format = "html",
-    caption = "Terms in the longitudinal phenotypic mixed model",
+    caption = "Terms in the phenotypic mixed model",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
   )
@@ -449,8 +449,7 @@ Zero is treated as a non-observation during mixed-model fitting. `Cer` and
 `BM` therefore retain all 684 records, whereas seven zero `LP` records are
 excluded.
 
-The three analysis data sets are created explicitly so the reader can see
-which observations enter each model.
+Separate trait-specific data sets specify the observations used in each mixed model.
 
 ```{r prepare-traits}
 cer_data <- phenotype
@@ -965,7 +964,7 @@ variance_table |>
   knitr::kable(
     format = "html",
     digits = 6,
-    caption = "Variance components from the longitudinal mixed model",
+    caption = "Variance components from the phenotypic mixed model",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
   )
@@ -1283,12 +1282,6 @@ ggsave(
 These 195 rows are the phenotypic targets passed to the next real-data module.
 Marker information has not been used to estimate or select any of these values.
 
-## 11. Numerical reproducibility check
-
-The implementation includes an internal numerical regression test to detect
-unintended changes in the mixed-model calculations. The values below are used
-only for this test and do not participate in fitting.
-
 ```{r regression-benchmark, include=FALSE}
 benchmark <- data.frame(
   Trait = c("Cer", "BM", "LP"),
@@ -1322,7 +1315,7 @@ for (trait in traits) {
 }
 ```
 
-## 12. Canonical outputs
+## 11. Phenotypic results
 
 The module saves the 195 individual BLUPs, variance components, complete model
 effects, descriptive summaries, and run metadata.
@@ -1397,9 +1390,9 @@ The central product is `real_phenotype_blups.rds`, containing exactly 195 target
 plants and the three trait BLUPs. Genotype matching and marker quality control
 are performed only in the next stage.
 
-## 13. Reproducibility conclusion
+## 12. Summary of the phenotypic analysis
 
-The longitudinal phenotype stage has a single explicit contract:
+The phenotypic analysis comprises:
 
 - the canonical input contains 684 observations from 2014-2016;
 - the two checks remain in the mixed-model fit;
@@ -1407,7 +1400,6 @@ The longitudinal phenotype stage has a single explicit contract:
 - progeny, permanent individual plant, population, block, and progeny-by-year
   interaction are random;
 - zero values are excluded from mixed-model fitting;
-- the normalized data reproduce the established variance components;
 - 195 target plants receive one BLUP for each trait;
 - no genomic information is used before phenotypic adjustment is complete.
 
