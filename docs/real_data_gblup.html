@@ -1,0 +1,5154 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Weverton Gomes da Costa" />
+
+<meta name="date" content="2026-11-12" />
+
+<title>Real data: GBLUP A, AD, and ADE</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Regularized ANN Genomic Prediction</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Simulated data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="simulated_data_audit.html">Data audit</a>
+    </li>
+    <li>
+      <a href="simulated_data_validation.html">Validation design</a>
+    </li>
+    <li>
+      <a href="simulated_data_gblup.html">GBLUP-ADE</a>
+    </li>
+    <li>
+      <a href="simulated_data_ann.html">ANN</a>
+    </li>
+    <li>
+      <a href="simulated_data_comparison.html">Model comparison</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+<li role="separator" class="divider"></li>
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Real data: GBLUP A, AD, and ADE</h1>
+<h4 class="author">Weverton Gomes da Costa</h4>
+<h4 class="date">2026-11-12</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-11-12
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/</code>
+<span class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has staged changes. To know which version of the
+R Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20260821code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20260821)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20260821code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20260821)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree66d3372b14c9447722c7b43881302b8fb49708a0targetblank66d3372a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/66d3372b14c9447722c7b43881302b8fb49708a0" target="_blank">66d3372</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree66d3372b14c9447722c7b43881302b8fb49708a0targetblank66d3372a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/66d3372b14c9447722c7b43881302b8fb49708a0" target="_blank">66d3372</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .github/
+    Ignored:    .local/
+    Ignored:    data/dados_reais/geno_real.rds
+    Ignored:    renv/library/
+    Ignored:    renv/staging/
+
+Untracked files:
+    Untracked:  add_real_gblup_top20_selection (1).py
+    Untracked:  add_real_gblup_top20_selection.py
+    Untracked:  add_real_gblup_top20_selection_v3.py
+    Untracked:  update_real_gblup_metrics_ranking.py
+    Untracked:  update_real_gblup_metrics_ranking_v2.py
+
+Unstaged changes:
+    Modified:   analysis/real_data_gblup.Rmd
+
+Staged changes:
+    New:        analysis/real_data_gblup.Rmd
+    New:        output/real/gblup/figures/real_gblup_correlation_by_model_trait.tiff
+    New:        output/real/gblup/figures/real_gblup_observed_vs_predicted_by_model_trait.tiff
+    New:        output/real/gblup/figures/real_gblup_rmse_by_model_trait.tiff
+    New:        output/real/gblup/figures/real_gblup_spearman_by_model_trait.tiff
+    New:        output/real/gblup/real_gblup_individual_ranking.csv
+    New:        output/real/gblup/real_gblup_individual_ranking.rds
+    New:        output/real/gblup/real_gblup_kernel_summary.csv
+    New:        output/real/gblup/real_gblup_numerical_summary.csv
+    New:        output/real/gblup/real_gblup_performance_summary.csv
+    New:        output/real/gblup/real_gblup_predictions.csv
+    New:        output/real/gblup/real_gblup_predictions.rds
+    New:        output/real/gblup/real_gblup_ranking_summary.csv
+    New:        output/real/gblup/real_gblup_results.csv
+    New:        output/real/gblup/real_gblup_results.rds
+    New:        output/real/gblup/real_gblup_run_metadata.rds
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/real_data_gblup.Rmd</code>) and
+HTML (<code>docs/real_data_gblup.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/a6a1d2fb02223cda24638c2def431b6d5c810aa5/analysis/real_data_gblup.Rmd" target="_blank">a6a1d2f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Remove obsolete real-data workflow and diagnostics
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/a6a1d2fb02223cda24638c2def431b6d5c810aa5/docs/real_data_gblup.html" target="_blank">a6a1d2f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Remove obsolete real-data workflow and diagnostics
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/cdbac19b5f4e1fb6f56821183659b525a9fc57a9/docs/real_data_gblup.html" target="_blank">cdbac19</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-09
+</td>
+<td>
+Build real-data workflowr pages
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/4fa5d7caefab014a232aacf96ca974999589066c/analysis/real_data_gblup.Rmd" target="_blank">4fa5d7c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-05
+</td>
+<td>
+Add audited real-data workflow through GBLUP-ADE
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="gblup-models-for-the-real-data-analysis"
+class="section level1">
+<h1>GBLUP models for the real-data analysis</h1>
+<div id="objective" class="section level2">
+<h2>1. Objective</h2>
+<p>This module fits three nested genomic best linear unbiased prediction
+models under the common outer validation design:</p>
+<p><span class="math display">\[
+\text{GBLUP-A}: \quad y = \mu + a + \varepsilon,
+\]</span></p>
+<p><span class="math display">\[
+\text{GBLUP-AD}: \quad y = \mu + a + d + \varepsilon,
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\text{GBLUP-ADE}: \quad y = \mu + a + d + aa + \varepsilon.
+\]</span></p>
+<p>The three structures are evaluated independently in exactly the same
+outer splits. Increasing model complexity is therefore treated as an
+empirical question: dominance and epistatic components are retained as
+candidate structures, but predictive superiority is not assumed from
+model completeness.</p>
+<p>The response in every task is the individual BLUP obtained in the
+longitudinal phenotype module. The 39 BLUPs assigned to the outer
+assessment set are masked before model fitting and are used only for
+held-out evaluation.</p>
+</div>
+<div id="computational-setup" class="section level2">
+<h2>2. Computational setup</h2>
+<pre class="r"><code>suppressPackageStartupMessages(
+  library(sommer)
+)</code></pre>
+<pre><code>Warning: pacote &#39;sommer&#39; foi compilado no R versão 4.5.2</code></pre>
+<pre><code>Warning: pacote &#39;Matrix&#39; foi compilado no R versão 4.5.2</code></pre>
+<pre><code>Warning: pacote &#39;MASS&#39; foi compilado no R versão 4.5.3</code></pre>
+<pre><code>Warning: pacote &#39;enhancer&#39; foi compilado no R versão 4.5.2</code></pre>
+<pre class="r"><code>suppressPackageStartupMessages(
+  library(ggplot2)
+)
+
+suppressPackageStartupMessages(
+  library(ggthemes)
+)</code></pre>
+<pre><code>Warning: pacote &#39;ggthemes&#39; foi compilado no R versão 4.5.3</code></pre>
+<pre class="r"><code>knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE
+)
+
+RUN_GBLUP &lt;- identical(
+  Sys.getenv(&quot;RUN_GBLUP&quot;),
+  &quot;1&quot;
+)
+
+SEED_GLOBAL &lt;- 20261105L
+N_ITERS_SOMMER &lt;- 50L
+TOL_LLIK &lt;- 1e-4
+
+COMMON_PATH &lt;-
+  &quot;output/real/audit/preprocessed_real_common.rds&quot;
+
+VALIDATION_PATH &lt;-
+  &quot;output/real/validation/real_cv_design.rds&quot;
+
+OUTPUT_DIR &lt;-
+  &quot;output/real/gblup&quot;
+
+FIGURE_DIR &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;figures&quot;
+  )
+
+RESULTS_RDS &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_results.rds&quot;
+  )
+
+RESULTS_CSV &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_results.csv&quot;
+  )
+
+PREDICTIONS_RDS &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_predictions.rds&quot;
+  )
+
+PREDICTIONS_CSV &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_predictions.csv&quot;
+  )
+
+KERNEL_SUMMARY_CSV &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_kernel_summary.csv&quot;
+  )
+
+NUMERICAL_SUMMARY_CSV &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_numerical_summary.csv&quot;
+  )
+
+PERFORMANCE_SUMMARY_CSV &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_performance_summary.csv&quot;
+  )
+
+RUN_METADATA_RDS &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_run_metadata.rds&quot;
+  )
+
+RANKING_RDS &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_individual_ranking.rds&quot;
+  )
+
+RANKING_CSV &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_individual_ranking.csv&quot;
+  )
+
+RANKING_SUMMARY_CSV &lt;-
+  file.path(
+    OUTPUT_DIR,
+    &quot;real_gblup_ranking_summary.csv&quot;
+  )
+
+dir.create(
+  OUTPUT_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+dir.create(
+  FIGURE_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)</code></pre>
+<p>The same numerical controls are used for the three structures. No
+model is changed after inspecting an outer assessment set, and no
+split-specific hyperparameter search is performed.</p>
+</div>
+<div id="common-genomic-object-and-validation-design"
+class="section level2">
+<h2>3. Common genomic object and validation design</h2>
+<pre class="r"><code>stopifnot(
+  file.exists(COMMON_PATH),
+  file.exists(VALIDATION_PATH)
+)
+
+common &lt;- readRDS(
+  COMMON_PATH
+)
+
+cv &lt;- readRDS(
+  VALIDATION_PATH
+)
+
+geno &lt;- as.matrix(
+  common$genotype
+)
+
+blups &lt;- common$phenotype
+traits &lt;- common$traits
+ids &lt;- rownames(geno)
+
+stopifnot(
+  identical(
+    traits,
+    c(
+      &quot;Cer&quot;,
+      &quot;BM&quot;,
+      &quot;LP&quot;
+    )
+  ),
+  nrow(geno) == 195L,
+  ncol(geno) == 20887L,
+  length(ids) == 195L,
+  !anyDuplicated(ids),
+  all(
+    c(
+      &quot;Phenotype_ID&quot;,
+      &quot;Cer&quot;,
+      &quot;BM&quot;,
+      &quot;LP&quot;
+    ) %in%
+      names(blups)
+  )
+)
+
+phenotype_ids &lt;- as.character(
+  blups$Phenotype_ID
+)
+
+stopifnot(
+  identical(
+    phenotype_ids,
+    ids
+  )
+)
+
+outer_meta &lt;- unique(
+  cv$outer_assignments[
+    ,
+    c(
+      &quot;Repetition&quot;,
+      &quot;OuterFold&quot;,
+      &quot;SplitID&quot;
+    )
+  ]
+)
+
+outer_meta &lt;- outer_meta[
+  order(
+    outer_meta$Repetition,
+    outer_meta$OuterFold
+  ),
+  ,
+  drop = FALSE
+]
+
+rownames(
+  outer_meta
+) &lt;- NULL
+
+stopifnot(
+  nrow(outer_meta) == 25L,
+  length(
+    unique(
+      outer_meta$SplitID
+    )
+  ) == 25L
+)
+
+input_summary &lt;- data.frame(
+  Item = c(
+    &quot;Individuals&quot;,
+    &quot;Markers after QC&quot;,
+    &quot;Traits&quot;,
+    &quot;Outer splits&quot;,
+    &quot;Outer analysis size&quot;,
+    &quot;Outer assessment size&quot;,
+    &quot;Candidate GBLUP structures&quot;
+  ),
+  Value = c(
+    nrow(geno),
+    ncol(geno),
+    length(traits),
+    nrow(outer_meta),
+    156L,
+    39L,
+    3L
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Common inputs used by the GBLUP models&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Common inputs used by the GBLUP models
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Item
+</th>
+<th style="text-align:right;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Individuals
+</td>
+<td style="text-align:right;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Markers after QC
+</td>
+<td style="text-align:right;">
+20887
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Traits
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer splits
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer analysis size
+</td>
+<td style="text-align:right;">
+156
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer assessment size
+</td>
+<td style="text-align:right;">
+39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Candidate GBLUP structures
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+</tbody>
+</table>
+<p>The validation object is consumed without modification. Consequently,
+A, AD, and ADE are compared on identical training and held-out
+individuals.</p>
+</div>
+<div id="genomic-relationship-matrices" class="section level2">
+<h2>4. Genomic relationship matrices</h2>
+<p>The three covariance structures are built once from the frozen
+20,887-marker matrix and reused throughout the 225 model fits.</p>
+<p>The additive matrix represents realized additive relationships. The
+dominance matrix represents realized dominance relationships. The
+epistatic matrix is the additive-by-additive genomic relationship
+matrix.</p>
+<pre class="r"><code>kernel_start &lt;- proc.time()[[&quot;elapsed&quot;]]
+
+A_matrix &lt;- sommer::A.mat(
+  geno,
+  min.MAF = 0
+)
+
+D_matrix &lt;- sommer::D.mat(
+  geno,
+  nishio = TRUE,
+  min.MAF = 0
+)
+
+E_matrix &lt;- sommer::E.mat(
+  geno,
+  nishio = TRUE,
+  type = &quot;A#A&quot;,
+  min.MAF = 0
+)
+
+kernel_seconds &lt;-
+  proc.time()[[&quot;elapsed&quot;]] -
+  kernel_start
+
+rownames(A_matrix) &lt;- ids
+colnames(A_matrix) &lt;- ids
+
+rownames(D_matrix) &lt;- ids
+colnames(D_matrix) &lt;- ids
+
+rownames(E_matrix) &lt;- ids
+colnames(E_matrix) &lt;- ids
+
+kernel_summary &lt;- data.frame(
+  Kernel = c(
+    &quot;Additive&quot;,
+    &quot;Dominance&quot;,
+    &quot;Epistatic_AxA&quot;
+  ),
+  Rows = c(
+    nrow(A_matrix),
+    nrow(D_matrix),
+    nrow(E_matrix)
+  ),
+  Columns = c(
+    ncol(A_matrix),
+    ncol(D_matrix),
+    ncol(E_matrix)
+  ),
+  Symmetric = c(
+    isTRUE(
+      all.equal(
+        A_matrix,
+        t(A_matrix),
+        tolerance = 1e-8
+      )
+    ),
+    isTRUE(
+      all.equal(
+        D_matrix,
+        t(D_matrix),
+        tolerance = 1e-8
+      )
+    ),
+    isTRUE(
+      all.equal(
+        E_matrix,
+        t(E_matrix),
+        tolerance = 1e-8
+      )
+    )
+  ),
+  Finite = c(
+    all(
+      is.finite(
+        A_matrix
+      )
+    ),
+    all(
+      is.finite(
+        D_matrix
+      )
+    ),
+    all(
+      is.finite(
+        E_matrix
+      )
+    )
+  ),
+  Mean_diagonal = c(
+    mean(
+      diag(
+        A_matrix
+      )
+    ),
+    mean(
+      diag(
+        D_matrix
+      )
+    ),
+    mean(
+      diag(
+        E_matrix
+      )
+    )
+  ),
+  Kernel_build_seconds = rep(
+    kernel_seconds,
+    3L
+  ),
+  stringsAsFactors = FALSE
+)
+
+stopifnot(
+  all(
+    kernel_summary$Rows == 195L
+  ),
+  all(
+    kernel_summary$Columns == 195L
+  ),
+  all(
+    kernel_summary$Symmetric
+  ),
+  all(
+    kernel_summary$Finite
+  )
+)
+
+write.csv(
+  kernel_summary,
+  KERNEL_SUMMARY_CSV,
+  row.names = FALSE
+)</code></pre>
+<pre class="r"><code>stopifnot(
+  file.exists(
+    KERNEL_SUMMARY_CSV
+  )
+)
+
+kernel_summary &lt;- read.csv(
+  KERNEL_SUMMARY_CSV,
+  stringsAsFactors = FALSE
+)</code></pre>
+<pre class="r"><code>kernel_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 6,
+    caption = &quot;Genomic relationship matrices used by the three GBLUP structures&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Genomic relationship matrices used by the three GBLUP structures
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Kernel
+</th>
+<th style="text-align:right;">
+Rows
+</th>
+<th style="text-align:right;">
+Columns
+</th>
+<th style="text-align:left;">
+Symmetric
+</th>
+<th style="text-align:left;">
+Finite
+</th>
+<th style="text-align:right;">
+Mean_diagonal
+</th>
+<th style="text-align:right;">
+Kernel_build_seconds
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Additive
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:right;">
+0.339623
+</td>
+<td style="text-align:right;">
+1.54
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dominance
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:right;">
+0.631842
+</td>
+<td style="text-align:right;">
+1.54
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Epistatic_AxA
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+<td style="text-align:right;">
+0.140144
+</td>
+<td style="text-align:right;">
+1.54
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="fixed-candidate-structures" class="section level2">
+<h2>5. Fixed candidate structures</h2>
+<p>The model structures are fixed before assessment performance is
+inspected.</p>
+<pre class="r"><code>model_contract &lt;- data.frame(
+  Structure = c(
+    &quot;A&quot;,
+    &quot;AD&quot;,
+    &quot;ADE&quot;
+  ),
+  Model = c(
+    &quot;GBLUP_A&quot;,
+    &quot;GBLUP_AD&quot;,
+    &quot;GBLUP_ADE&quot;
+  ),
+  Genomic_components = c(
+    &quot;Additive&quot;,
+    &quot;Additive + dominance&quot;,
+    &quot;Additive + dominance + additive-by-additive epistasis&quot;
+  ),
+  stringsAsFactors = FALSE
+)
+
+model_contract |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Fixed GBLUP candidate structures&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Fixed GBLUP candidate structures
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Structure
+</th>
+<th style="text-align:left;">
+Model
+</th>
+<th style="text-align:left;">
+Genomic_components
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+GBLUP_A
+</td>
+<td style="text-align:left;">
+Additive
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+GBLUP_AD
+</td>
+<td style="text-align:left;">
+Additive + dominance
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+GBLUP_ADE
+</td>
+<td style="text-align:left;">
+Additive + dominance + additive-by-additive epistasis
+</td>
+</tr>
+</tbody>
+</table>
+<p>The model comparison therefore evaluates whether additional genomic
+components improve prediction. The most complete structure is not
+assumed to be the best predictive structure.</p>
+</div>
+<div id="evaluation-grid" class="section level2">
+<h2>6. Evaluation grid</h2>
+<p>Three traits, 25 outer splits, and three fixed GBLUP structures
+produce 225 independent fitting tasks.</p>
+<pre class="r"><code>task_table &lt;- data.frame(
+  Dataset = character(0),
+  Trait = character(0),
+  Repetition = integer(0),
+  OuterFold = integer(0),
+  SplitID = character(0),
+  Structure = character(0),
+  Model = character(0),
+  TaskID = character(0),
+  stringsAsFactors = FALSE
+)
+
+for (trait in traits) {
+
+  for (
+    split_row in
+      seq_len(
+        nrow(
+          outer_meta
+        )
+      )
+  ) {
+
+    for (
+      model_row in
+        seq_len(
+          nrow(
+            model_contract
+          )
+        )
+    ) {
+
+      task_table &lt;- rbind(
+        task_table,
+        data.frame(
+          Dataset = &quot;real&quot;,
+          Trait = trait,
+          Repetition =
+            outer_meta$Repetition[
+              split_row
+            ],
+          OuterFold =
+            outer_meta$OuterFold[
+              split_row
+            ],
+          SplitID =
+            outer_meta$SplitID[
+              split_row
+            ],
+          Structure =
+            model_contract$Structure[
+              model_row
+            ],
+          Model =
+            model_contract$Model[
+              model_row
+            ],
+          TaskID = paste(
+            trait,
+            outer_meta$SplitID[
+              split_row
+            ],
+            model_contract$Structure[
+              model_row
+            ],
+            sep = &quot;_&quot;
+          ),
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  }
+}
+
+rownames(
+  task_table
+) &lt;- NULL
+
+stopifnot(
+  nrow(task_table) == 225L,
+  length(
+    unique(
+      task_table$TaskID
+    )
+  ) == 225L,
+  all(
+    table(
+      task_table$Trait
+    ) == 75L
+  ),
+  all(
+    table(
+      task_table$Structure
+    ) == 75L
+  )
+)
+
+task_summary &lt;- as.data.frame(
+  table(
+    task_table$Trait,
+    task_table$Structure
+  ),
+  stringsAsFactors = FALSE
+)
+
+names(
+  task_summary
+) &lt;- c(
+  &quot;Trait&quot;,
+  &quot;Structure&quot;,
+  &quot;Tasks&quot;
+)
+
+task_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Number of outer fitting tasks by trait and GBLUP structure&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Number of outer fitting tasks by trait and GBLUP structure
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:left;">
+Structure
+</th>
+<th style="text-align:right;">
+Tasks
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="fit-a-ad-and-ade-in-every-outer-split" class="section level2">
+<h2>7. Fit A, AD, and ADE in every outer split</h2>
+<p>For each task, the 39 assessment BLUPs are replaced by
+<code>NA</code> before fitting. The model therefore receives all genomic
+relationships but no held-out response information.</p>
+<p>All three structures use the same <code>sommer::mmes()</code> fitting
+controls. Numerical diagnostics are recorded for inspection but do not
+trigger split-specific model changes.</p>
+<pre class="r"><code>set.seed(
+  SEED_GLOBAL
+)
+
+run_start &lt;- proc.time()[[&quot;elapsed&quot;]]
+
+result_list &lt;- vector(
+  &quot;list&quot;,
+  nrow(task_table)
+)
+
+prediction_list &lt;- vector(
+  &quot;list&quot;,
+  nrow(task_table)
+)
+
+for (
+  i in
+    seq_len(
+      nrow(
+        task_table
+      )
+    )
+) {
+
+  task &lt;- task_table[
+    i,
+    ,
+    drop = FALSE
+  ]
+
+  trait &lt;- task$Trait
+  structure &lt;- task$Structure
+
+  split &lt;- cv$outer_splits[[
+    task$SplitID
+  ]]
+
+  analysis_index &lt;- match(
+    split$analysis_ids,
+    ids
+  )
+
+  assessment_index &lt;- match(
+    split$assessment_ids,
+    ids
+  )
+
+  stopifnot(
+    length(
+      analysis_index
+    ) == 156L,
+    length(
+      assessment_index
+    ) == 39L,
+    !anyNA(
+      analysis_index
+    ),
+    !anyNA(
+      assessment_index
+    ),
+    length(
+      intersect(
+        analysis_index,
+        assessment_index
+      )
+    ) == 0L
+  )
+
+  response_vector &lt;- blups[[
+    trait
+  ]]
+
+  id_factor &lt;- factor(
+    ids,
+    levels = ids
+  )
+
+  dat &lt;- data.frame(
+    y = response_vector,
+    id = id_factor,
+    idd = id_factor,
+    ide = id_factor
+  )
+
+  dat$y[
+    assessment_index
+  ] &lt;- NA_real_
+
+  fit_start &lt;- proc.time()[[
+    &quot;elapsed&quot;
+  ]]
+
+  if (
+    structure == &quot;A&quot;
+  ) {
+
+    fit &lt;- sommer::mmes(
+      y ~ 1,
+      random = ~
+        vsm(
+          ism(id),
+          Gu = A_matrix
+        ),
+      rcov = ~ units,
+      nIters = N_ITERS_SOMMER,
+      tolParConvLL = TOL_LLIK,
+      data = dat,
+      verbose = FALSE,
+      dateWarning = FALSE
+    )
+
+  } else if (
+    structure == &quot;AD&quot;
+  ) {
+
+    fit &lt;- sommer::mmes(
+      y ~ 1,
+      random = ~
+        vsm(
+          ism(id),
+          Gu = A_matrix
+        ) +
+        vsm(
+          ism(idd),
+          Gu = D_matrix
+        ),
+      rcov = ~ units,
+      nIters = N_ITERS_SOMMER,
+      tolParConvLL = TOL_LLIK,
+      data = dat,
+      verbose = FALSE,
+      dateWarning = FALSE
+    )
+
+  } else {
+
+    fit &lt;- sommer::mmes(
+      y ~ 1,
+      random = ~
+        vsm(
+          ism(id),
+          Gu = A_matrix
+        ) +
+        vsm(
+          ism(idd),
+          Gu = D_matrix
+        ) +
+        vsm(
+          ism(ide),
+          Gu = E_matrix
+        ),
+      rcov = ~ units,
+      nIters = N_ITERS_SOMMER,
+      tolParConvLL = TOL_LLIK,
+      data = dat,
+      verbose = FALSE,
+      dateWarning = FALSE
+    )
+  }
+
+  fit_seconds &lt;-
+    proc.time()[[
+      &quot;elapsed&quot;
+    ]] -
+    fit_start
+
+  theta &lt;- as.numeric(
+    fit$theta
+  )
+
+  llik &lt;- as.numeric(
+    fit$llik
+  )
+
+  if (
+    length(
+      llik
+    ) &gt; 1L
+  ) {
+
+    last_llik_change &lt;- tail(
+      diff(
+        llik
+      ),
+      1L
+    )
+
+  } else {
+
+    last_llik_change &lt;- NA_real_
+  }
+
+  variance_A &lt;- 0
+  variance_D &lt;- 0
+  variance_E &lt;- 0
+  variance_residual &lt;- 0
+
+  if (
+    structure == &quot;A&quot;
+  ) {
+
+    stopifnot(
+      length(
+        theta
+      ) == 2L
+    )
+
+    variance_A &lt;- theta[
+      1L
+    ]
+
+    variance_residual &lt;- theta[
+      2L
+    ]
+
+  } else if (
+    structure == &quot;AD&quot;
+  ) {
+
+    stopifnot(
+      length(
+        theta
+      ) == 3L
+    )
+
+    variance_A &lt;- theta[
+      1L
+    ]
+
+    variance_D &lt;- theta[
+      2L
+    ]
+
+    variance_residual &lt;- theta[
+      3L
+    ]
+
+  } else {
+
+    stopifnot(
+      length(
+        theta
+      ) == 4L
+    )
+
+    variance_A &lt;- theta[
+      1L
+    ]
+
+    variance_D &lt;- theta[
+      2L
+    ]
+
+    variance_E &lt;- theta[
+      3L
+    ]
+
+    variance_residual &lt;- theta[
+      4L
+    ]
+  }
+
+  any_negative &lt;- any(
+    c(
+      variance_A,
+      variance_D,
+      variance_E,
+      variance_residual
+    ) &lt; 0
+  )
+
+  pass_llik_gate &lt;-
+    is.finite(
+      last_llik_change
+    ) &amp;&amp;
+    abs(
+      last_llik_change
+    ) &lt;= TOL_LLIK
+
+  prediction_start &lt;- proc.time()[[
+    &quot;elapsed&quot;
+  ]]
+
+  additive &lt;- rep(
+    0,
+    length(
+      ids
+    )
+  )
+
+  dominance &lt;- rep(
+    0,
+    length(
+      ids
+    )
+  )
+
+  epistatic &lt;- rep(
+    0,
+    length(
+      ids
+    )
+  )
+
+  additive_effect &lt;- as.matrix(
+    fit$uList[[
+      &quot;vsm(ism(id), Gu = A_matrix)&quot;
+    ]]
+  )
+
+  additive_incidence &lt;- model.matrix(
+    ~ id - 1,
+    data = dat
+  )
+
+  additive &lt;- as.numeric(
+    additive_incidence %*%
+      additive_effect[
+        ,
+        1L,
+        drop = FALSE
+      ]
+  )
+
+  if (
+    structure %in%
+      c(
+        &quot;AD&quot;,
+        &quot;ADE&quot;
+      )
+  ) {
+
+    dominance_effect &lt;- as.matrix(
+      fit$uList[[
+        &quot;vsm(ism(idd), Gu = D_matrix)&quot;
+      ]]
+    )
+
+    dominance_incidence &lt;- model.matrix(
+      ~ idd - 1,
+      data = dat
+    )
+
+    dominance &lt;- as.numeric(
+      dominance_incidence %*%
+        dominance_effect[
+          ,
+          1L,
+          drop = FALSE
+        ]
+    )
+  }
+
+  if (
+    structure == &quot;ADE&quot;
+  ) {
+
+    epistatic_effect &lt;- as.matrix(
+      fit$uList[[
+        &quot;vsm(ism(ide), Gu = E_matrix)&quot;
+      ]]
+    )
+
+    epistatic_incidence &lt;- model.matrix(
+      ~ ide - 1,
+      data = dat
+    )
+
+    epistatic &lt;- as.numeric(
+      epistatic_incidence %*%
+        epistatic_effect[
+          ,
+          1L,
+          drop = FALSE
+        ]
+    )
+  }
+
+  genomic_component &lt;-
+    additive +
+    dominance +
+    epistatic
+
+  intercept &lt;- as.numeric(
+    fit$b
+  )[
+    1L
+  ]
+
+  predicted_value &lt;-
+    intercept +
+    genomic_component
+
+  predict_seconds &lt;-
+    proc.time()[[
+      &quot;elapsed&quot;
+    ]] -
+    prediction_start
+
+  observed_test &lt;- response_vector[
+    assessment_index
+  ]
+
+  predicted_test &lt;- predicted_value[
+    assessment_index
+  ]
+
+  stopifnot(
+    length(
+      observed_test
+    ) == 39L,
+    length(
+      predicted_test
+    ) == 39L,
+    all(
+      is.finite(
+        observed_test
+      )
+    ),
+    all(
+      is.finite(
+        predicted_test
+      )
+    )
+  )
+
+  constant_prediction &lt;-
+    length(
+      unique(
+        predicted_test
+      )
+    ) == 1L
+
+  if (
+    length(
+      unique(
+        observed_test
+      )
+    ) &gt; 1L &amp;&amp;
+    !constant_prediction
+  ) {
+
+    correlation &lt;- cor(
+      predicted_test,
+      observed_test,
+      method = &quot;pearson&quot;
+    )
+
+    spearman &lt;- cor(
+      predicted_test,
+      observed_test,
+      method = &quot;spearman&quot;
+    )
+
+  } else {
+
+    correlation &lt;- NA_real_
+    spearman &lt;- NA_real_
+  }
+
+  rmse &lt;- sqrt(
+    mean(
+      (
+        predicted_test -
+        observed_test
+      )^2
+    )
+  )
+
+  mae &lt;- mean(
+    abs(
+      predicted_test -
+      observed_test
+    )
+  )
+
+  bias &lt;- mean(
+    predicted_test -
+    observed_test
+  )
+
+  if (
+    !constant_prediction
+  ) {
+
+    slope &lt;- as.numeric(
+      coef(
+        lm(
+          observed_test ~
+            predicted_test
+        )
+      )[
+        2L
+      ]
+    )
+
+  } else {
+
+    slope &lt;- NA_real_
+  }
+
+  result_list[[
+    i
+  ]] &lt;- data.frame(
+    Dataset = &quot;real&quot;,
+    Trait = trait,
+    Repetition = task$Repetition,
+    Fold = task$OuterFold,
+    SplitID = task$SplitID,
+    TaskID = task$TaskID,
+    Model = task$Model,
+    Structure = structure,
+    N_train = length(
+      analysis_index
+    ),
+    N_test = length(
+      assessment_index
+    ),
+    Convergence = isTRUE(
+      fit$convergence
+    ),
+    Iterations = length(
+      llik
+    ),
+    Final_LLik = tail(
+      llik,
+      1L
+    ),
+    Last_LLik_change =
+      last_llik_change,
+    Pass_LLik_gate =
+      pass_llik_gate,
+    Variance_A =
+      variance_A,
+    Variance_D =
+      variance_D,
+    Variance_E =
+      variance_E,
+    Variance_Residual =
+      variance_residual,
+    Any_negative =
+      any_negative,
+    Constant_prediction =
+      constant_prediction,
+    BLUP_Correlation =
+      correlation,
+    BLUP_Spearman =
+      spearman,
+    BLUP_RMSE =
+      rmse,
+    BLUP_MAE =
+      mae,
+    BLUP_Bias =
+      bias,
+    BLUP_Slope =
+      slope,
+    Kernel_build_seconds =
+      kernel_seconds,
+    Fit_seconds =
+      fit_seconds,
+    Predict_seconds =
+      predict_seconds,
+    stringsAsFactors = FALSE
+  )
+
+  prediction_list[[
+    i
+  ]] &lt;- data.frame(
+    Dataset = &quot;real&quot;,
+    Trait = trait,
+    Repetition = task$Repetition,
+    Fold = task$OuterFold,
+    SplitID = task$SplitID,
+    TaskID = task$TaskID,
+    Model = task$Model,
+    Structure = structure,
+    ID = ids[
+      assessment_index
+    ],
+    Observed_BLUP =
+      observed_test,
+    Predicted_BLUP =
+      predicted_test,
+    Genomic_Component =
+      genomic_component[
+        assessment_index
+      ],
+    Additive_Prediction =
+      additive[
+        assessment_index
+      ],
+    Dominance_Prediction =
+      dominance[
+        assessment_index
+      ],
+    Epistatic_Prediction =
+      epistatic[
+        assessment_index
+      ],
+    stringsAsFactors = FALSE
+  )
+
+  cat(
+    sprintf(
+      &quot;[%03d/%03d] %s | conv=%s | neg=%s | LL=%s | Pearson=%s | Spearman=%s | RMSE=%.4f\n&quot;,
+      i,
+      nrow(
+        task_table
+      ),
+      task$TaskID,
+      isTRUE(
+        fit$convergence
+      ),
+      any_negative,
+      pass_llik_gate,
+      ifelse(
+        is.finite(
+          correlation
+        ),
+        sprintf(
+          &quot;%.4f&quot;,
+          correlation
+        ),
+        &quot;NA&quot;
+      ),
+      ifelse(
+        is.finite(
+          spearman
+        ),
+        sprintf(
+          &quot;%.4f&quot;,
+          spearman
+        ),
+        &quot;NA&quot;
+      ),
+      rmse
+    )
+  )
+}</code></pre>
+<pre><code>[001/225] Cer_R01_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5045 | Spearman=0.5100 | RMSE=0.1871
+[002/225] Cer_R01_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5045 | Spearman=0.5100 | RMSE=0.1871
+[003/225] Cer_R01_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5045 | Spearman=0.5100 | RMSE=0.1871
+[004/225] Cer_R01_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7019 | Spearman=0.6594 | RMSE=0.1400
+[005/225] Cer_R01_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7019 | Spearman=0.6594 | RMSE=0.1400
+[006/225] Cer_R01_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7019 | Spearman=0.6594 | RMSE=0.1400
+[007/225] Cer_R01_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5760 | Spearman=0.5850 | RMSE=0.1620
+[008/225] Cer_R01_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5760 | Spearman=0.5850 | RMSE=0.1620
+[009/225] Cer_R01_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5760 | Spearman=0.5850 | RMSE=0.1620
+[010/225] Cer_R01_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6309 | Spearman=0.5770 | RMSE=0.1649
+[011/225] Cer_R01_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6309 | Spearman=0.5770 | RMSE=0.1649
+[012/225] Cer_R01_F04_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6309 | Spearman=0.5770 | RMSE=0.1649
+[013/225] Cer_R01_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6220 | Spearman=0.6344 | RMSE=0.1699
+[014/225] Cer_R01_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6219 | Spearman=0.6344 | RMSE=0.1700
+[015/225] Cer_R01_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6219 | Spearman=0.6344 | RMSE=0.1700
+[016/225] Cer_R02_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7726 | Spearman=0.7316 | RMSE=0.1483
+[017/225] Cer_R02_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7726 | Spearman=0.7316 | RMSE=0.1483
+[018/225] Cer_R02_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7726 | Spearman=0.7316 | RMSE=0.1483
+[019/225] Cer_R02_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7201 | Spearman=0.7599 | RMSE=0.1630
+[020/225] Cer_R02_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7201 | Spearman=0.7599 | RMSE=0.1630
+[021/225] Cer_R02_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7201 | Spearman=0.7599 | RMSE=0.1630
+[022/225] Cer_R02_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3511 | Spearman=0.3440 | RMSE=0.1918
+[023/225] Cer_R02_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3511 | Spearman=0.3440 | RMSE=0.1918
+[024/225] Cer_R02_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3512 | Spearman=0.3440 | RMSE=0.1919
+[025/225] Cer_R02_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6629 | Spearman=0.6975 | RMSE=0.1478
+[026/225] Cer_R02_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6629 | Spearman=0.6975 | RMSE=0.1478
+[027/225] Cer_R02_F04_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6628 | Spearman=0.6948 | RMSE=0.1478
+[028/225] Cer_R02_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6496 | Spearman=0.6233 | RMSE=0.1564
+[029/225] Cer_R02_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6496 | Spearman=0.6233 | RMSE=0.1564
+[030/225] Cer_R02_F05_ADE | conv=TRUE | neg=FALSE | LL=FALSE | Pearson=0.6496 | Spearman=0.6233 | RMSE=0.1564
+[031/225] Cer_R03_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6184 | Spearman=0.5856 | RMSE=0.1700
+[032/225] Cer_R03_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6046 | Spearman=0.5894 | RMSE=0.1720
+[033/225] Cer_R03_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6046 | Spearman=0.5894 | RMSE=0.1720
+[034/225] Cer_R03_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6580 | Spearman=0.6562 | RMSE=0.1563
+[035/225] Cer_R03_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6580 | Spearman=0.6562 | RMSE=0.1563
+[036/225] Cer_R03_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6580 | Spearman=0.6562 | RMSE=0.1563
+[037/225] Cer_R03_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5384 | Spearman=0.5385 | RMSE=0.1726
+[038/225] Cer_R03_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5383 | Spearman=0.5385 | RMSE=0.1726
+[039/225] Cer_R03_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5383 | Spearman=0.5385 | RMSE=0.1726
+[040/225] Cer_R03_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7320 | Spearman=0.7205 | RMSE=0.1226
+[041/225] Cer_R03_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7320 | Spearman=0.7205 | RMSE=0.1226
+[042/225] Cer_R03_F04_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7320 | Spearman=0.7205 | RMSE=0.1226
+[043/225] Cer_R03_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6939 | Spearman=0.7076 | RMSE=0.1770
+[044/225] Cer_R03_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6939 | Spearman=0.7076 | RMSE=0.1770
+[045/225] Cer_R03_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6938 | Spearman=0.7076 | RMSE=0.1770
+[046/225] Cer_R04_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5301 | Spearman=0.5434 | RMSE=0.1698
+[047/225] Cer_R04_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5262 | Spearman=0.5347 | RMSE=0.1705
+[048/225] Cer_R04_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5262 | Spearman=0.5347 | RMSE=0.1705
+[049/225] Cer_R04_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7192 | Spearman=0.7101 | RMSE=0.1456
+[050/225] Cer_R04_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7192 | Spearman=0.7101 | RMSE=0.1456
+[051/225] Cer_R04_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7192 | Spearman=0.7101 | RMSE=0.1456
+[052/225] Cer_R04_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5849 | Spearman=0.6078 | RMSE=0.1780
+[053/225] Cer_R04_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5849 | Spearman=0.6078 | RMSE=0.1780
+[054/225] Cer_R04_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5849 | Spearman=0.6078 | RMSE=0.1780
+[055/225] Cer_R04_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6583 | Spearman=0.6608 | RMSE=0.1636
+[056/225] Cer_R04_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6583 | Spearman=0.6608 | RMSE=0.1636
+[057/225] Cer_R04_F04_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6583 | Spearman=0.6608 | RMSE=0.1636
+[058/225] Cer_R04_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6783 | Spearman=0.7117 | RMSE=0.1424
+[059/225] Cer_R04_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6783 | Spearman=0.7117 | RMSE=0.1424
+[060/225] Cer_R04_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6783 | Spearman=0.7117 | RMSE=0.1424
+[061/225] Cer_R05_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5621 | Spearman=0.5309 | RMSE=0.1683
+[062/225] Cer_R05_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5621 | Spearman=0.5309 | RMSE=0.1683
+[063/225] Cer_R05_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5621 | Spearman=0.5309 | RMSE=0.1683
+[064/225] Cer_R05_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7136 | Spearman=0.6830 | RMSE=0.1623
+[065/225] Cer_R05_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7136 | Spearman=0.6830 | RMSE=0.1623
+[066/225] Cer_R05_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7136 | Spearman=0.6830 | RMSE=0.1623
+[067/225] Cer_R05_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5949 | Spearman=0.6139 | RMSE=0.1604
+[068/225] Cer_R05_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5952 | Spearman=0.6139 | RMSE=0.1603
+[069/225] Cer_R05_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5952 | Spearman=0.6139 | RMSE=0.1603
+[070/225] Cer_R05_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5611 | Spearman=0.5945 | RMSE=0.1630
+[071/225] Cer_R05_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5611 | Spearman=0.5945 | RMSE=0.1630
+[072/225] Cer_R05_F04_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5611 | Spearman=0.5945 | RMSE=0.1630
+[073/225] Cer_R05_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7225 | Spearman=0.7569 | RMSE=0.1532
+[074/225] Cer_R05_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7225 | Spearman=0.7569 | RMSE=0.1532
+[075/225] Cer_R05_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.7225 | Spearman=0.7569 | RMSE=0.1532
+[076/225] BM_R01_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2142 | Spearman=0.2749 | RMSE=0.1472
+[077/225] BM_R01_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2193 | Spearman=0.2804 | RMSE=0.1470
+[078/225] BM_R01_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2194 | Spearman=0.2779 | RMSE=0.1470
+[079/225] BM_R01_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3647 | Spearman=0.3564 | RMSE=0.1361
+[080/225] BM_R01_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2709 | Spearman=0.2842 | RMSE=0.1401
+[081/225] BM_R01_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2709 | Spearman=0.2842 | RMSE=0.1401
+[082/225] BM_R01_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2208 | Spearman=0.1773 | RMSE=0.1487
+[083/225] BM_R01_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2208 | Spearman=0.1773 | RMSE=0.1487
+[084/225] BM_R01_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2208 | Spearman=0.1773 | RMSE=0.1487
+[085/225] BM_R01_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2770 | Spearman=0.3075 | RMSE=0.1343
+[086/225] BM_R01_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3042 | Spearman=0.3166 | RMSE=0.1332
+[087/225] BM_R01_F04_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2475 | Spearman=0.2990 | RMSE=0.1355
+[088/225] BM_R01_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4412 | Spearman=0.3463 | RMSE=0.1526
+[089/225] BM_R01_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4401 | Spearman=0.3592 | RMSE=0.1518
+[090/225] BM_R01_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4398 | Spearman=0.3592 | RMSE=0.1519
+[091/225] BM_R02_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2218 | Spearman=0.1876 | RMSE=0.1507
+[092/225] BM_R02_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2318 | Spearman=0.2241 | RMSE=0.1510
+[093/225] BM_R02_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2320 | Spearman=0.2237 | RMSE=0.1509
+[094/225] BM_R02_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3934 | Spearman=0.2715 | RMSE=0.1427
+[095/225] BM_R02_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4151 | Spearman=0.2726 | RMSE=0.1414
+[096/225] BM_R02_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4151 | Spearman=0.2726 | RMSE=0.1414
+[097/225] BM_R02_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1840 | Spearman=0.2232 | RMSE=0.1629
+[098/225] BM_R02_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1840 | Spearman=0.2232 | RMSE=0.1629
+[099/225] BM_R02_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1926 | Spearman=0.2004 | RMSE=0.1624
+[100/225] BM_R02_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0047 | Spearman=-0.0601 | RMSE=0.1378
+[101/225] BM_R02_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=-0.0099 | Spearman=-0.0981 | RMSE=0.1386
+[102/225] BM_R02_F04_ADE | conv=TRUE | neg=TRUE | LL=FALSE | Pearson=-0.0104 | Spearman=-0.0968 | RMSE=0.1388
+[103/225] BM_R02_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6307 | Spearman=0.5601 | RMSE=0.1371
+[104/225] BM_R02_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6678 | Spearman=0.6301 | RMSE=0.1358
+[105/225] BM_R02_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.6678 | Spearman=0.6301 | RMSE=0.1358
+[106/225] BM_R03_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2310 | Spearman=0.1830 | RMSE=0.1234
+[107/225] BM_R03_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1950 | Spearman=0.1377 | RMSE=0.1255
+[108/225] BM_R03_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1958 | Spearman=0.1374 | RMSE=0.1254
+[109/225] BM_R03_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3905 | Spearman=0.2741 | RMSE=0.1629
+[110/225] BM_R03_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3905 | Spearman=0.2741 | RMSE=0.1629
+[111/225] BM_R03_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3907 | Spearman=0.2737 | RMSE=0.1628
+[112/225] BM_R03_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3718 | Spearman=0.2802 | RMSE=0.1452
+[113/225] BM_R03_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4163 | Spearman=0.3357 | RMSE=0.1427
+[114/225] BM_R03_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4163 | Spearman=0.3357 | RMSE=0.1427
+[115/225] BM_R03_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2778 | Spearman=0.2234 | RMSE=0.1418
+[116/225] BM_R03_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2902 | Spearman=0.2629 | RMSE=0.1413
+[117/225] BM_R03_F04_ADE | conv=TRUE | neg=TRUE | LL=TRUE | Pearson=0.2908 | Spearman=0.2686 | RMSE=0.1413
+[118/225] BM_R03_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3395 | Spearman=0.3208 | RMSE=0.1417
+[119/225] BM_R03_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3445 | Spearman=0.3456 | RMSE=0.1417
+[120/225] BM_R03_F05_ADE | conv=TRUE | neg=FALSE | LL=FALSE | Pearson=0.3395 | Spearman=0.3422 | RMSE=0.1420
+[121/225] BM_R04_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4298 | Spearman=0.3215 | RMSE=0.1373
+[122/225] BM_R04_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3829 | Spearman=0.2804 | RMSE=0.1390
+[123/225] BM_R04_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3695 | Spearman=0.2484 | RMSE=0.1398
+[124/225] BM_R04_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5095 | Spearman=0.4425 | RMSE=0.1341
+[125/225] BM_R04_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.5039 | Spearman=0.4400 | RMSE=0.1337
+[126/225] BM_R04_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4407 | Spearman=0.3891 | RMSE=0.1362
+[127/225] BM_R04_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2096 | Spearman=0.1275 | RMSE=0.1593
+[128/225] BM_R04_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2096 | Spearman=0.1275 | RMSE=0.1593
+[129/225] BM_R04_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2096 | Spearman=0.1275 | RMSE=0.1593
+[130/225] BM_R04_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0699 | Spearman=0.0535 | RMSE=0.1505
+[131/225] BM_R04_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0820 | Spearman=0.0552 | RMSE=0.1511
+[132/225] BM_R04_F04_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0820 | Spearman=0.0552 | RMSE=0.1511
+[133/225] BM_R04_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4282 | Spearman=0.4131 | RMSE=0.1381
+[134/225] BM_R04_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4137 | Spearman=0.3678 | RMSE=0.1384
+[135/225] BM_R04_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4137 | Spearman=0.3678 | RMSE=0.1384
+[136/225] BM_R05_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3204 | Spearman=0.2686 | RMSE=0.1265
+[137/225] BM_R05_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3224 | Spearman=0.2719 | RMSE=0.1260
+[138/225] BM_R05_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3206 | Spearman=0.2456 | RMSE=0.1264
+[139/225] BM_R05_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1146 | Spearman=0.1263 | RMSE=0.1703
+[140/225] BM_R05_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1146 | Spearman=0.1263 | RMSE=0.1703
+[141/225] BM_R05_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1147 | Spearman=0.1263 | RMSE=0.1703
+[142/225] BM_R05_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4900 | Spearman=0.3977 | RMSE=0.1316
+[143/225] BM_R05_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4635 | Spearman=0.3835 | RMSE=0.1322
+[144/225] BM_R05_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.4635 | Spearman=0.3835 | RMSE=0.1322
+[145/225] BM_R05_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3856 | Spearman=0.3844 | RMSE=0.1566
+[146/225] BM_R05_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3649 | Spearman=0.3269 | RMSE=0.1568
+[147/225] BM_R05_F04_ADE | conv=TRUE | neg=FALSE | LL=FALSE | Pearson=0.3649 | Spearman=0.3269 | RMSE=0.1568
+[148/225] BM_R05_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1332 | Spearman=0.0572 | RMSE=0.1444
+[149/225] BM_R05_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1765 | Spearman=0.1044 | RMSE=0.1426
+[150/225] BM_R05_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1336 | Spearman=0.0593 | RMSE=0.1437
+[151/225] LP_R01_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=NA | Spearman=NA | RMSE=1.1043
+[152/225] LP_R01_F01_AD | conv=TRUE | neg=FALSE | LL=FALSE | Pearson=NA | Spearman=NA | RMSE=1.1043
+[153/225] LP_R01_F01_ADE | conv=TRUE | neg=FALSE | LL=FALSE | Pearson=NA | Spearman=NA | RMSE=1.1043
+[154/225] LP_R01_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0503 | Spearman=0.0002 | RMSE=1.1211
+[155/225] LP_R01_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0503 | Spearman=0.0002 | RMSE=1.1211
+[156/225] LP_R01_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0503 | Spearman=0.0002 | RMSE=1.1211
+[157/225] LP_R01_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2142 | Spearman=0.2173 | RMSE=1.2835
+[158/225] LP_R01_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2137 | Spearman=0.2173 | RMSE=1.2836
+[159/225] LP_R01_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2138 | Spearman=0.2173 | RMSE=1.2836
+[160/225] LP_R01_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0824 | Spearman=0.1273 | RMSE=1.5149
+[161/225] LP_R01_F04_AD | conv=TRUE | neg=FALSE | LL=FALSE | Pearson=0.0649 | Spearman=0.0854 | RMSE=1.5210
+[162/225] LP_R01_F04_ADE | conv=TRUE | neg=FALSE | LL=FALSE | Pearson=0.0653 | Spearman=0.0856 | RMSE=1.5209
+[163/225] LP_R01_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0578 | Spearman=0.0077 | RMSE=1.2379
+[164/225] LP_R01_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0578 | Spearman=0.0077 | RMSE=1.2379
+[165/225] LP_R01_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.0578 | Spearman=0.0077 | RMSE=1.2379
+[166/225] LP_R02_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2771 | Spearman=0.2370 | RMSE=1.2595
+[167/225] LP_R02_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2771 | Spearman=0.2370 | RMSE=1.2595
+[168/225] LP_R02_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2771 | Spearman=0.2370 | RMSE=1.2595
+[169/225] LP_R02_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2743 | Spearman=0.3431 | RMSE=1.0618
+[170/225] LP_R02_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2743 | Spearman=0.3431 | RMSE=1.0618
+[171/225] LP_R02_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2743 | Spearman=0.3431 | RMSE=1.0619
+[172/225] LP_R02_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1015 | Spearman=0.1109 | RMSE=1.5130
+[173/225] LP_R02_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1015 | Spearman=0.1109 | RMSE=1.5130
+[174/225] LP_R02_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1015 | Spearman=0.1109 | RMSE=1.5130
+[175/225] LP_R02_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=NA | Spearman=NA | RMSE=1.1016
+[176/225] LP_R02_F04_AD | conv=TRUE | neg=TRUE | LL=FALSE | Pearson=-0.3958 | Spearman=-0.4846 | RMSE=1.1077
+[177/225] LP_R02_F04_ADE | conv=TRUE | neg=TRUE | LL=FALSE | Pearson=-0.3958 | Spearman=-0.4846 | RMSE=1.1077
+[178/225] LP_R02_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2416 | Spearman=0.2049 | RMSE=1.2353
+[179/225] LP_R02_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2416 | Spearman=0.2049 | RMSE=1.2353
+[180/225] LP_R02_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2416 | Spearman=0.2049 | RMSE=1.2353
+[181/225] LP_R03_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1462 | Spearman=0.1647 | RMSE=0.9123
+[182/225] LP_R03_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1462 | Spearman=0.1647 | RMSE=0.9123
+[183/225] LP_R03_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1462 | Spearman=0.1647 | RMSE=0.9123
+[184/225] LP_R03_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3101 | Spearman=0.3528 | RMSE=1.2461
+[185/225] LP_R03_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3102 | Spearman=0.3528 | RMSE=1.2460
+[186/225] LP_R03_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3100 | Spearman=0.3528 | RMSE=1.2465
+[187/225] LP_R03_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1485 | Spearman=0.1025 | RMSE=1.3134
+[188/225] LP_R03_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1485 | Spearman=0.1025 | RMSE=1.3134
+[189/225] LP_R03_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1485 | Spearman=0.1025 | RMSE=1.3134
+[190/225] LP_R03_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1880 | Spearman=0.1640 | RMSE=1.3094
+[191/225] LP_R03_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1880 | Spearman=0.1640 | RMSE=1.3094
+[192/225] LP_R03_F04_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1880 | Spearman=0.1640 | RMSE=1.3094
+[193/225] LP_R03_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3105 | Spearman=0.3785 | RMSE=1.4187
+[194/225] LP_R03_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3104 | Spearman=0.3785 | RMSE=1.4187
+[195/225] LP_R03_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3106 | Spearman=0.3785 | RMSE=1.4185
+[196/225] LP_R04_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2140 | Spearman=0.2209 | RMSE=1.3681
+[197/225] LP_R04_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2140 | Spearman=0.2209 | RMSE=1.3681
+[198/225] LP_R04_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2140 | Spearman=0.2209 | RMSE=1.3681
+[199/225] LP_R04_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1044 | Spearman=0.1614 | RMSE=0.9668
+[200/225] LP_R04_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1044 | Spearman=0.1614 | RMSE=0.9668
+[201/225] LP_R04_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1044 | Spearman=0.1614 | RMSE=0.9668
+[202/225] LP_R04_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3438 | Spearman=0.3022 | RMSE=1.3917
+[203/225] LP_R04_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3437 | Spearman=0.3022 | RMSE=1.3918
+[204/225] LP_R04_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3436 | Spearman=0.3022 | RMSE=1.3918
+[205/225] LP_R04_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2814 | Spearman=0.3173 | RMSE=1.2760
+[206/225] LP_R04_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1098 | Spearman=0.1768 | RMSE=1.2909
+[207/225] LP_R04_F04_ADE | conv=TRUE | neg=TRUE | LL=TRUE | Pearson=0.0748 | Spearman=0.1477 | RMSE=1.2970
+[208/225] LP_R04_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1950 | Spearman=0.1510 | RMSE=1.1513
+[209/225] LP_R04_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1950 | Spearman=0.1510 | RMSE=1.1513
+[210/225] LP_R04_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1950 | Spearman=0.1510 | RMSE=1.1513
+[211/225] LP_R05_F01_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2465 | Spearman=0.2843 | RMSE=1.0128
+[212/225] LP_R05_F01_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2465 | Spearman=0.2843 | RMSE=1.0128
+[213/225] LP_R05_F01_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2465 | Spearman=0.2843 | RMSE=1.0128
+[214/225] LP_R05_F02_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3102 | Spearman=0.3435 | RMSE=1.4794
+[215/225] LP_R05_F02_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3103 | Spearman=0.3435 | RMSE=1.4794
+[216/225] LP_R05_F02_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.3103 | Spearman=0.3435 | RMSE=1.4793
+[217/225] LP_R05_F03_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2302 | Spearman=0.1423 | RMSE=1.0580
+[218/225] LP_R05_F03_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2302 | Spearman=0.1423 | RMSE=1.0580
+[219/225] LP_R05_F03_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2302 | Spearman=0.1423 | RMSE=1.0580
+[220/225] LP_R05_F04_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2539 | Spearman=0.3303 | RMSE=1.3660
+[221/225] LP_R05_F04_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2539 | Spearman=0.3303 | RMSE=1.3660
+[222/225] LP_R05_F04_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.2539 | Spearman=0.3303 | RMSE=1.3660
+[223/225] LP_R05_F05_A | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1854 | Spearman=0.2497 | RMSE=1.2587
+[224/225] LP_R05_F05_AD | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1853 | Spearman=0.2497 | RMSE=1.2587
+[225/225] LP_R05_F05_ADE | conv=TRUE | neg=FALSE | LL=TRUE | Pearson=0.1853 | Spearman=0.2497 | RMSE=1.2587</code></pre>
+<pre class="r"><code>results &lt;- do.call(
+  rbind,
+  result_list
+)
+
+predictions &lt;- do.call(
+  rbind,
+  prediction_list
+)
+
+rownames(
+  results
+) &lt;- NULL
+
+rownames(
+  predictions
+) &lt;- NULL
+
+stopifnot(
+  nrow(
+    results
+  ) == 225L,
+  nrow(
+    predictions
+  ) == 8775L,
+  length(
+    unique(
+      results$TaskID
+    )
+  ) == 225L,
+  length(
+    unique(
+      predictions$TaskID
+    )
+  ) == 225L,
+  all(
+    table(
+      results$Structure
+    ) == 75L
+  ),
+  all(
+    table(
+      results$Trait
+    ) == 75L
+  ),
+  all(
+    table(
+      predictions$TaskID
+    ) == 39L
+  ),
+  all(
+    results$N_train == 156L
+  ),
+  all(
+    results$N_test == 39L
+  ),
+  all(
+    is.finite(
+      predictions$Observed_BLUP
+    )
+  ),
+  all(
+    is.finite(
+      predictions$Predicted_BLUP
+    )
+  )
+)
+
+run_seconds &lt;-
+  proc.time()[[
+    &quot;elapsed&quot;
+  ]] -
+  run_start
+
+write.csv(
+  results,
+  RESULTS_CSV,
+  row.names = FALSE
+)
+
+saveRDS(
+  results,
+  RESULTS_RDS
+)
+
+write.csv(
+  predictions,
+  PREDICTIONS_CSV,
+  row.names = FALSE
+)
+
+saveRDS(
+  predictions,
+  PREDICTIONS_RDS
+)
+
+run_metadata &lt;- list(
+  dataset = &quot;real&quot;,
+  models = c(
+    &quot;GBLUP_A&quot;,
+    &quot;GBLUP_AD&quot;,
+    &quot;GBLUP_ADE&quot;
+  ),
+  structures = c(
+    &quot;A&quot;,
+    &quot;AD&quot;,
+    &quot;ADE&quot;
+  ),
+  seed_global =
+    SEED_GLOBAL,
+  sommer_version =
+    as.character(
+      packageVersion(
+        &quot;sommer&quot;
+      )
+    ),
+  nIters_sommer =
+    N_ITERS_SOMMER,
+  tolParConvLL =
+    TOL_LLIK,
+  marker_panel_n =
+    ncol(
+      geno
+    ),
+  individuals_n =
+    nrow(
+      geno
+    ),
+  traits =
+    traits,
+  outer_splits =
+    nrow(
+      outer_meta
+    ),
+  tasks =
+    nrow(
+      results
+    ),
+  prediction_rows =
+    nrow(
+      predictions
+    ),
+  kernel_build_seconds =
+    kernel_seconds,
+  total_run_seconds =
+    run_seconds,
+  timestamp =
+    as.character(
+      Sys.time()
+    )
+)
+
+saveRDS(
+  run_metadata,
+  RUN_METADATA_RDS
+)</code></pre>
+<pre class="r"><code>stopifnot(
+  file.exists(
+    RESULTS_RDS
+  ),
+  file.exists(
+    PREDICTIONS_RDS
+  ),
+  file.exists(
+    RUN_METADATA_RDS
+  )
+)
+
+results &lt;- readRDS(
+  RESULTS_RDS
+)
+
+predictions &lt;- readRDS(
+  PREDICTIONS_RDS
+)
+
+run_metadata &lt;- readRDS(
+  RUN_METADATA_RDS
+)</code></pre>
+</div>
+<div id="numerical-behavior" class="section level2">
+<h2>8. Numerical behavior</h2>
+<p>The numerical diagnostics are reported because they help interpret
+model complexity. They are not used to replace one candidate structure
+by another within a validation split.</p>
+<pre class="r"><code>numerical_summary &lt;- data.frame(
+  Structure = character(0),
+  Trait = character(0),
+  Fits = integer(0),
+  Converged = integer(0),
+  Negative_components = integer(0),
+  Pass_LLik_gate = integer(0),
+  Constant_predictions = integer(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  structure in
+    c(
+      &quot;A&quot;,
+      &quot;AD&quot;,
+      &quot;ADE&quot;
+    )
+) {
+
+  for (
+    trait in
+      traits
+  ) {
+
+    x &lt;- results[
+      results$Structure ==
+        structure &amp;
+        results$Trait ==
+        trait,
+      ,
+      drop = FALSE
+    ]
+
+    numerical_summary &lt;- rbind(
+      numerical_summary,
+      data.frame(
+        Structure =
+          structure,
+        Trait =
+          trait,
+        Fits =
+          nrow(
+            x
+          ),
+        Converged =
+          sum(
+            x$Convergence
+          ),
+        Negative_components =
+          sum(
+            x$Any_negative
+          ),
+        Pass_LLik_gate =
+          sum(
+            x$Pass_LLik_gate
+          ),
+        Constant_predictions =
+          sum(
+            x$Constant_prediction
+          ),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+write.csv(
+  numerical_summary,
+  NUMERICAL_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+numerical_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Numerical behavior of the fixed GBLUP structures&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Numerical behavior of the fixed GBLUP structures
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Structure
+</th>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+Fits
+</th>
+<th style="text-align:right;">
+Converged
+</th>
+<th style="text-align:right;">
+Negative_components
+</th>
+<th style="text-align:right;">
+Pass_LLik_gate
+</th>
+<th style="text-align:right;">
+Constant_predictions
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<p>A variance component estimated near the boundary can be numerically
+difficult for a more complex covariance structure. These diagnostics are
+therefore interpreted together with held-out predictive performance
+rather than as a criterion for changing the model assigned to a specific
+split.</p>
+</div>
+<div id="held-out-predictive-performance" class="section level2">
+<h2>9. Held-out predictive performance</h2>
+<p>Pearson and Spearman correlations and the calibration slope are
+undefined when all 39 held-out predictions from a task are constant.
+RMSE, MAE, and bias remain defined in those tasks. Each metric is
+therefore summarized from all tasks for which that specific metric is
+finite.</p>
+<pre class="r"><code>performance_summary &lt;- data.frame(
+  Structure = character(0),
+  Model = character(0),
+  Trait = character(0),
+  Splits = integer(0),
+  Correlation_N = integer(0),
+  BLUP_Correlation = numeric(0),
+  BLUP_Correlation_SD = numeric(0),
+  Spearman_N = integer(0),
+  BLUP_Spearman = numeric(0),
+  BLUP_Spearman_SD = numeric(0),
+  RMSE_N = integer(0),
+  BLUP_RMSE = numeric(0),
+  MAE_N = integer(0),
+  BLUP_MAE = numeric(0),
+  Bias_N = integer(0),
+  BLUP_Bias = numeric(0),
+  Slope_N = integer(0),
+  BLUP_Slope = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  structure in
+    c(
+      &quot;A&quot;,
+      &quot;AD&quot;,
+      &quot;ADE&quot;
+    )
+) {
+
+  for (
+    trait in
+      traits
+  ) {
+
+    x &lt;- results[
+      results$Structure ==
+        structure &amp;
+        results$Trait ==
+        trait,
+      ,
+      drop = FALSE
+    ]
+
+    model_name &lt;- unique(
+      x$Model
+    )
+
+    stopifnot(
+      length(
+        model_name
+      ) == 1L
+    )
+
+    performance_summary &lt;- rbind(
+      performance_summary,
+      data.frame(
+        Structure =
+          structure,
+        Model =
+          model_name,
+        Trait =
+          trait,
+        Splits =
+          nrow(
+            x
+          ),
+        Correlation_N =
+          sum(
+            is.finite(
+              x$BLUP_Correlation
+            )
+          ),
+        BLUP_Correlation =
+          mean(
+            x$BLUP_Correlation,
+            na.rm = TRUE
+          ),
+        BLUP_Correlation_SD =
+          sd(
+            x$BLUP_Correlation,
+            na.rm = TRUE
+          ),
+        Spearman_N =
+          sum(
+            is.finite(
+              x$BLUP_Spearman
+            )
+          ),
+        BLUP_Spearman =
+          mean(
+            x$BLUP_Spearman,
+            na.rm = TRUE
+          ),
+        BLUP_Spearman_SD =
+          sd(
+            x$BLUP_Spearman,
+            na.rm = TRUE
+          ),
+        RMSE_N =
+          sum(
+            is.finite(
+              x$BLUP_RMSE
+            )
+          ),
+        BLUP_RMSE =
+          mean(
+            x$BLUP_RMSE,
+            na.rm = TRUE
+          ),
+        MAE_N =
+          sum(
+            is.finite(
+              x$BLUP_MAE
+            )
+          ),
+        BLUP_MAE =
+          mean(
+            x$BLUP_MAE,
+            na.rm = TRUE
+          ),
+        Bias_N =
+          sum(
+            is.finite(
+              x$BLUP_Bias
+            )
+          ),
+        BLUP_Bias =
+          mean(
+            x$BLUP_Bias,
+            na.rm = TRUE
+          ),
+        Slope_N =
+          sum(
+            is.finite(
+              x$BLUP_Slope
+            )
+          ),
+        BLUP_Slope =
+          mean(
+            x$BLUP_Slope,
+            na.rm = TRUE
+          ),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+write.csv(
+  performance_summary,
+  PERFORMANCE_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+performance_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 4,
+    caption = &quot;Mean held-out performance of A, AD, and ADE across the 25 outer splits&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Mean held-out performance of A, AD, and ADE across the 25 outer splits
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Structure
+</th>
+<th style="text-align:left;">
+Model
+</th>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+Splits
+</th>
+<th style="text-align:right;">
+Correlation_N
+</th>
+<th style="text-align:right;">
+BLUP_Correlation
+</th>
+<th style="text-align:right;">
+BLUP_Correlation_SD
+</th>
+<th style="text-align:right;">
+Spearman_N
+</th>
+<th style="text-align:right;">
+BLUP_Spearman
+</th>
+<th style="text-align:right;">
+BLUP_Spearman_SD
+</th>
+<th style="text-align:right;">
+RMSE_N
+</th>
+<th style="text-align:right;">
+BLUP_RMSE
+</th>
+<th style="text-align:right;">
+MAE_N
+</th>
+<th style="text-align:right;">
+BLUP_MAE
+</th>
+<th style="text-align:right;">
+Bias_N
+</th>
+<th style="text-align:right;">
+BLUP_Bias
+</th>
+<th style="text-align:right;">
+Slope_N
+</th>
+<th style="text-align:right;">
+BLUP_Slope
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+GBLUP_A
+</td>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.6303
+</td>
+<td style="text-align:right;">
+0.0923
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.6297
+</td>
+<td style="text-align:right;">
+0.0938
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1615
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1306
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.0014
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1.0851
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+GBLUP_A
+</td>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.3062
+</td>
+<td style="text-align:right;">
+0.1481
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.2607
+</td>
+<td style="text-align:right;">
+0.1371
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1445
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1196
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.0004
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1.2169
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+GBLUP_A
+</td>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:right;">
+0.2073
+</td>
+<td style="text-align:right;">
+0.0862
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:right;">
+0.2137
+</td>
+<td style="text-align:right;">
+0.1075
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1.2385
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.9756
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.0041
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:right;">
+3.5325
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+GBLUP_AD
+</td>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.6296
+</td>
+<td style="text-align:right;">
+0.0926
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.6295
+</td>
+<td style="text-align:right;">
+0.0941
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1616
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1307
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.0014
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1.0850
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+GBLUP_AD
+</td>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.3046
+</td>
+<td style="text-align:right;">
+0.1484
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.2604
+</td>
+<td style="text-align:right;">
+0.1419
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1446
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1190
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+-0.0002
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1.1610
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+GBLUP_AD
+</td>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+0.1742
+</td>
+<td style="text-align:right;">
+0.1488
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+0.1770
+</td>
+<td style="text-align:right;">
+0.1756
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1.2396
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.9759
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.0042
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+1.9995
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+GBLUP_ADE
+</td>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.6296
+</td>
+<td style="text-align:right;">
+0.0926
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.6294
+</td>
+<td style="text-align:right;">
+0.0940
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1616
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1307
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.0014
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1.0850
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+GBLUP_ADE
+</td>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.2977
+</td>
+<td style="text-align:right;">
+0.1469
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.2526
+</td>
+<td style="text-align:right;">
+0.1415
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1448
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.1192
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.0003
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1.1444
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+GBLUP_ADE
+</td>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+0.1728
+</td>
+<td style="text-align:right;">
+0.1497
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+0.1758
+</td>
+<td style="text-align:right;">
+0.1757
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+1.2398
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.9760
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+0.0043
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:right;">
+1.9757
+</td>
+</tr>
+</tbody>
+</table>
+<p>The comparison is intentionally descriptive at this stage. A more
+complete cross-model comparison, including the regularized ANN models,
+is performed in the final comparison module.</p>
+</div>
+<div id="out-of-fold-ranking-of-the-195-individuals"
+class="section level2">
+<h2>10. Out-of-fold ranking of the 195 individuals</h2>
+<p>Each individual is assessed once in every repetition and therefore
+has five held-out predictions for each trait and GBLUP structure. These
+five out-of-fold predictions are averaged before the global ranking is
+constructed. This yields one predictive value per individual, model, and
+trait using only predictions obtained while that individual was outside
+the training set.</p>
+<p>Ranks are defined in decreasing order: rank 1 corresponds to the
+highest BLUP. The absolute rank error measures the displacement between
+the observed and predicted ordering.</p>
+<p>Selection agreement is also evaluated for the upper 20% of the
+population. With 195 individuals, the selected group contains exactly 39
+individuals. When BLUP values are tied at the selection boundary,
+<code>ID</code> is used only as a deterministic secondary ordering
+criterion so that both observed and predicted sets contain exactly 39
+individuals.</p>
+<pre class="r"><code>TOP20_N &lt;- 39L
+
+individual_ranking &lt;- data.frame(
+  Structure = character(0),
+  Model = character(0),
+  Trait = character(0),
+  ID = character(0),
+  Observed_BLUP = numeric(0),
+  Predicted_BLUP = numeric(0),
+  Prediction_SD = numeric(0),
+  N_OOF = integer(0),
+  Observed_Rank = numeric(0),
+  Predicted_Rank = numeric(0),
+  Rank_Difference = numeric(0),
+  Absolute_Rank_Error = numeric(0),
+  Observed_Top20 = logical(0),
+  Predicted_Top20 = logical(0),
+  stringsAsFactors = FALSE
+)
+
+ranking_summary &lt;- data.frame(
+  Structure = character(0),
+  Model = character(0),
+  Trait = character(0),
+  Individuals = integer(0),
+  Ranking_Spearman = numeric(0),
+  Mean_Absolute_Rank_Error = numeric(0),
+  Median_Absolute_Rank_Error = numeric(0),
+  Top20_N = integer(0),
+  Top20_Overlap_N = integer(0),
+  Top20_Overlap_Rate = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  structure in
+    c(
+      &quot;A&quot;,
+      &quot;AD&quot;,
+      &quot;ADE&quot;
+    )
+) {
+
+  for (
+    trait in
+      traits
+  ) {
+
+    x &lt;- predictions[
+      predictions$Structure ==
+        structure &amp;
+        predictions$Trait ==
+        trait,
+      ,
+      drop = FALSE
+    ]
+
+    model_name &lt;- unique(
+      x$Model
+    )
+
+    stopifnot(
+      length(
+        model_name
+      ) == 1L
+    )
+
+    ranking_group &lt;- data.frame(
+      Structure = character(0),
+      Model = character(0),
+      Trait = character(0),
+      ID = character(0),
+      Observed_BLUP = numeric(0),
+      Predicted_BLUP = numeric(0),
+      Prediction_SD = numeric(0),
+      N_OOF = integer(0),
+      stringsAsFactors = FALSE
+    )
+
+    for (
+      individual_id in
+        ids
+    ) {
+
+      xi &lt;- x[
+        x$ID ==
+          individual_id,
+        ,
+        drop = FALSE
+      ]
+
+      stopifnot(
+        nrow(
+          xi
+        ) == 5L,
+        length(
+          unique(
+            xi$Observed_BLUP
+          )
+        ) == 1L
+      )
+
+      ranking_group &lt;- rbind(
+        ranking_group,
+        data.frame(
+          Structure =
+            structure,
+          Model =
+            model_name,
+          Trait =
+            trait,
+          ID =
+            individual_id,
+          Observed_BLUP =
+            unique(
+              xi$Observed_BLUP
+            ),
+          Predicted_BLUP =
+            mean(
+              xi$Predicted_BLUP
+            ),
+          Prediction_SD =
+            sd(
+              xi$Predicted_BLUP
+            ),
+          N_OOF =
+            nrow(
+              xi
+            ),
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+
+    ranking_group$Observed_Rank &lt;- rank(
+      -ranking_group$Observed_BLUP,
+      ties.method = &quot;average&quot;
+    )
+
+    ranking_group$Predicted_Rank &lt;- rank(
+      -ranking_group$Predicted_BLUP,
+      ties.method = &quot;average&quot;
+    )
+
+    ranking_group$Rank_Difference &lt;-
+      ranking_group$Predicted_Rank -
+      ranking_group$Observed_Rank
+
+    ranking_group$Absolute_Rank_Error &lt;-
+      abs(
+        ranking_group$Rank_Difference
+      )
+
+    observed_order &lt;- order(
+      -ranking_group$Observed_BLUP,
+      ranking_group$ID
+    )
+
+    predicted_order &lt;- order(
+      -ranking_group$Predicted_BLUP,
+      ranking_group$ID
+    )
+
+    ranking_group$Observed_Top20 &lt;- FALSE
+    ranking_group$Predicted_Top20 &lt;- FALSE
+
+    ranking_group$Observed_Top20[
+      observed_order[
+        seq_len(
+          TOP20_N
+        )
+      ]
+    ] &lt;- TRUE
+
+    ranking_group$Predicted_Top20[
+      predicted_order[
+        seq_len(
+          TOP20_N
+        )
+      ]
+    ] &lt;- TRUE
+
+    top20_overlap_n &lt;- sum(
+      ranking_group$Observed_Top20 &amp;
+        ranking_group$Predicted_Top20
+    )
+
+    top20_overlap_rate &lt;-
+      top20_overlap_n /
+      TOP20_N
+
+    stopifnot(
+      nrow(
+        ranking_group
+      ) == 195L,
+      all(
+        ranking_group$N_OOF ==
+          5L
+      ),
+      sum(
+        ranking_group$Observed_Top20
+      ) == TOP20_N,
+      sum(
+        ranking_group$Predicted_Top20
+      ) == TOP20_N,
+      top20_overlap_n &gt;= 0L,
+      top20_overlap_n &lt;= TOP20_N
+    )
+
+    individual_ranking &lt;- rbind(
+      individual_ranking,
+      ranking_group
+    )
+
+    ranking_summary &lt;- rbind(
+      ranking_summary,
+      data.frame(
+        Structure =
+          structure,
+        Model =
+          model_name,
+        Trait =
+          trait,
+        Individuals =
+          nrow(
+            ranking_group
+          ),
+        Ranking_Spearman =
+          cor(
+            ranking_group$Observed_Rank,
+            ranking_group$Predicted_Rank,
+            method = &quot;spearman&quot;
+          ),
+        Mean_Absolute_Rank_Error =
+          mean(
+            ranking_group$Absolute_Rank_Error
+          ),
+        Median_Absolute_Rank_Error =
+          median(
+            ranking_group$Absolute_Rank_Error
+          ),
+        Top20_N =
+          TOP20_N,
+        Top20_Overlap_N =
+          top20_overlap_n,
+        Top20_Overlap_Rate =
+          top20_overlap_rate,
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+rownames(
+  individual_ranking
+) &lt;- NULL
+
+rownames(
+  ranking_summary
+) &lt;- NULL
+
+stopifnot(
+  nrow(
+    individual_ranking
+  ) == 1755L,
+  nrow(
+    ranking_summary
+  ) == 9L,
+  all(
+    individual_ranking$N_OOF ==
+      5L
+  ),
+  sum(
+    individual_ranking$Observed_Top20
+  ) == 351L,
+  sum(
+    individual_ranking$Predicted_Top20
+  ) == 351L,
+  all(
+    ranking_summary$Top20_N ==
+      39L
+  ),
+  all(
+    ranking_summary$Top20_Overlap_N &gt;=
+      0L
+  ),
+  all(
+    ranking_summary$Top20_Overlap_N &lt;=
+      39L
+  ),
+  all(
+    ranking_summary$Top20_Overlap_Rate &gt;=
+      0
+  ),
+  all(
+    ranking_summary$Top20_Overlap_Rate &lt;=
+      1
+  )
+)
+
+write.csv(
+  individual_ranking,
+  RANKING_CSV,
+  row.names = FALSE
+)
+
+saveRDS(
+  individual_ranking,
+  RANKING_RDS
+)
+
+write.csv(
+  ranking_summary,
+  RANKING_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+ranking_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 4,
+    caption = &quot;Agreement between observed and out-of-fold predicted rankings of the 195 individuals&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Agreement between observed and out-of-fold predicted rankings of the 195
+individuals
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Structure
+</th>
+<th style="text-align:left;">
+Model
+</th>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+Individuals
+</th>
+<th style="text-align:right;">
+Ranking_Spearman
+</th>
+<th style="text-align:right;">
+Mean_Absolute_Rank_Error
+</th>
+<th style="text-align:right;">
+Median_Absolute_Rank_Error
+</th>
+<th style="text-align:right;">
+Top20_N
+</th>
+<th style="text-align:right;">
+Top20_Overlap_N
+</th>
+<th style="text-align:right;">
+Top20_Overlap_Rate
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+GBLUP_A
+</td>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0.6425
+</td>
+<td style="text-align:right;">
+36.4000
+</td>
+<td style="text-align:right;">
+27.5
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+0.5641
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+GBLUP_A
+</td>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0.2464
+</td>
+<td style="text-align:right;">
+54.6051
+</td>
+<td style="text-align:right;">
+46.0
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+0.2821
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:left;">
+GBLUP_A
+</td>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0.1411
+</td>
+<td style="text-align:right;">
+59.0256
+</td>
+<td style="text-align:right;">
+50.0
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+0.1282
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+GBLUP_AD
+</td>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0.6412
+</td>
+<td style="text-align:right;">
+36.4410
+</td>
+<td style="text-align:right;">
+27.5
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+0.5641
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+GBLUP_AD
+</td>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0.2502
+</td>
+<td style="text-align:right;">
+54.4256
+</td>
+<td style="text-align:right;">
+42.0
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+0.2564
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+AD
+</td>
+<td style="text-align:left;">
+GBLUP_AD
+</td>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0.1325
+</td>
+<td style="text-align:right;">
+59.4667
+</td>
+<td style="text-align:right;">
+51.0
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+0.1026
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+GBLUP_ADE
+</td>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0.6413
+</td>
+<td style="text-align:right;">
+36.4410
+</td>
+<td style="text-align:right;">
+27.5
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+0.5641
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+GBLUP_ADE
+</td>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0.2420
+</td>
+<td style="text-align:right;">
+54.7795
+</td>
+<td style="text-align:right;">
+43.5
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+0.2308
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ADE
+</td>
+<td style="text-align:left;">
+GBLUP_ADE
+</td>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0.1288
+</td>
+<td style="text-align:right;">
+59.6718
+</td>
+<td style="text-align:right;">
+51.0
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+0.1026
+</td>
+</tr>
+</tbody>
+</table>
+<p>The ranking summary complements split-level Spearman correlation by
+evaluating the ordering obtained from the five out-of-fold predictions
+available for each individual. The top-20% overlap additionally measures
+how many of the 39 individuals selected from observed BLUPs are
+recovered by the out-of-fold predicted ranking.</p>
+</div>
+<div id="predictive-distributions-across-outer-splits"
+class="section level2">
+<h2>11. Predictive distributions across outer splits</h2>
+<pre class="r"><code>plot_results &lt;- results
+
+plot_results$Structure &lt;- factor(
+  plot_results$Structure,
+  levels = c(
+    &quot;A&quot;,
+    &quot;AD&quot;,
+    &quot;ADE&quot;
+  )
+)
+
+plot_results$Trait &lt;- factor(
+  plot_results$Trait,
+  levels = traits
+)
+
+correlation_plot &lt;- ggplot(
+  plot_results[
+    is.finite(
+      plot_results$BLUP_Correlation
+    ),
+    ,
+    drop = FALSE
+  ],
+  aes(
+    x = Structure,
+    y = BLUP_Correlation
+  )
+) +
+  geom_boxplot(
+    outlier.shape = NA
+  ) +
+  geom_jitter(
+    width = 0.12,
+    height = 0,
+    size = 1.6,
+    alpha = 0.65
+  ) +
+  facet_wrap(
+    ~ Trait,
+    scales = &quot;free_y&quot;
+  ) +
+  labs(
+    x = &quot;GBLUP structure&quot;,
+    y = &quot;Correlation between observed and predicted BLUPs&quot;,
+    title = &quot;Held-out BLUP correlation across outer splits&quot;
+  ) +
+  ggthemes::theme_gdocs() +
+  theme(
+    legend.position = &quot;none&quot;
+  )
+
+ggsave(
+  filename = file.path(
+    FIGURE_DIR,
+    &quot;real_gblup_correlation_by_model_trait.tiff&quot;
+  ),
+  plot = correlation_plot,
+  width = 9,
+  height = 5.5,
+  units = &quot;in&quot;,
+  dpi = 300,
+  compression = &quot;lzw&quot;
+)
+
+spearman_plot &lt;- ggplot(
+  plot_results[
+    is.finite(
+      plot_results$BLUP_Spearman
+    ),
+    ,
+    drop = FALSE
+  ],
+  aes(
+    x = Structure,
+    y = BLUP_Spearman
+  )
+) +
+  geom_boxplot(
+    outlier.shape = NA
+  ) +
+  geom_jitter(
+    width = 0.12,
+    height = 0,
+    size = 1.6,
+    alpha = 0.65
+  ) +
+  facet_wrap(
+    ~ Trait,
+    scales = &quot;free_y&quot;
+  ) +
+  labs(
+    x = &quot;GBLUP structure&quot;,
+    y = &quot;Spearman correlation between observed and predicted BLUPs&quot;,
+    title = &quot;Held-out BLUP Spearman correlation across outer splits&quot;
+  ) +
+  ggthemes::theme_gdocs() +
+  theme(
+    legend.position = &quot;none&quot;
+  )
+
+ggsave(
+  filename = file.path(
+    FIGURE_DIR,
+    &quot;real_gblup_spearman_by_model_trait.tiff&quot;
+  ),
+  plot = spearman_plot,
+  width = 9,
+  height = 5.5,
+  units = &quot;in&quot;,
+  dpi = 300,
+  compression = &quot;lzw&quot;
+)
+
+rmse_plot &lt;- ggplot(
+  plot_results,
+  aes(
+    x = Structure,
+    y = BLUP_RMSE
+  )
+) +
+  geom_boxplot(
+    outlier.shape = NA
+  ) +
+  geom_jitter(
+    width = 0.12,
+    height = 0,
+    size = 1.6,
+    alpha = 0.65
+  ) +
+  facet_wrap(
+    ~ Trait,
+    scales = &quot;free_y&quot;
+  ) +
+  labs(
+    x = &quot;GBLUP structure&quot;,
+    y = &quot;RMSE&quot;,
+    title = &quot;Held-out RMSE across outer splits&quot;
+  ) +
+  ggthemes::theme_gdocs() +
+  theme(
+    legend.position = &quot;none&quot;
+  )
+
+ggsave(
+  filename = file.path(
+    FIGURE_DIR,
+    &quot;real_gblup_rmse_by_model_trait.tiff&quot;
+  ),
+  plot = rmse_plot,
+  width = 9,
+  height = 5.5,
+  units = &quot;in&quot;,
+  dpi = 300,
+  compression = &quot;lzw&quot;
+)
+observed_predicted_plot &lt;- ggplot(
+  individual_ranking,
+  aes(
+    x = Observed_BLUP,
+    y = Predicted_BLUP
+  )
+) +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = &quot;dashed&quot;
+  ) +
+  geom_point(
+    size = 1.5,
+    alpha = 0.65
+  ) +
+  facet_grid(
+    Trait ~ Structure,
+    scales = &quot;free&quot;
+  ) +
+  labs(
+    x = &quot;Observed individual BLUP&quot;,
+    y = &quot;Mean out-of-fold predicted BLUP&quot;,
+    title = &quot;Observed and predicted individual BLUPs&quot;
+  ) +
+  ggthemes::theme_gdocs() +
+  theme(
+    legend.position = &quot;none&quot;
+  )
+
+ggsave(
+  filename = file.path(
+    FIGURE_DIR,
+    &quot;real_gblup_observed_vs_predicted_by_model_trait.tiff&quot;
+  ),
+  plot = observed_predicted_plot,
+  width = 9,
+  height = 8,
+  units = &quot;in&quot;,
+  dpi = 300,
+  compression = &quot;lzw&quot;
+)</code></pre>
+<pre class="r"><code>knitr::include_graphics(
+  file.path(
+    FIGURE_DIR,
+    &quot;real_gblup_correlation_by_model_trait.tiff&quot;
+  )
+)</code></pre>
+<p><img src="output/real/gblup/figures/real_gblup_correlation_by_model_trait.tiff" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>knitr::include_graphics(
+  file.path(
+    FIGURE_DIR,
+    &quot;real_gblup_spearman_by_model_trait.tiff&quot;
+  )
+)</code></pre>
+<p><img src="output/real/gblup/figures/real_gblup_spearman_by_model_trait.tiff" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>knitr::include_graphics(
+  file.path(
+    FIGURE_DIR,
+    &quot;real_gblup_rmse_by_model_trait.tiff&quot;
+  )
+)</code></pre>
+<p><img src="output/real/gblup/figures/real_gblup_rmse_by_model_trait.tiff" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>knitr::include_graphics(
+  file.path(
+    FIGURE_DIR,
+    &quot;real_gblup_observed_vs_predicted_by_model_trait.tiff&quot;
+  )
+)</code></pre>
+<p><img src="output/real/gblup/figures/real_gblup_observed_vs_predicted_by_model_trait.tiff" style="display: block; margin: auto;" /></p>
+</div>
+<div id="output-contract" class="section level2">
+<h2>12. Output contract</h2>
+<p>The saved result table contains one row per trait, outer split, and
+GBLUP structure. The prediction table contains one row per held-out
+individual and task.</p>
+<pre class="r"><code>output_contract &lt;- data.frame(
+  Object = c(
+    &quot;Results&quot;,
+    &quot;Predictions&quot;,
+    &quot;Individual ranking&quot;,
+    &quot;Kernel summary&quot;,
+    &quot;Numerical summary&quot;,
+    &quot;Performance summary&quot;,
+    &quot;Ranking summary&quot;,
+    &quot;Run metadata&quot;
+  ),
+  Expected_rows = c(
+    225L,
+    8775L,
+    1755L,
+    3L,
+    9L,
+    9L,
+    9L,
+    NA_integer_
+  ),
+  Path = c(
+    RESULTS_RDS,
+    PREDICTIONS_RDS,
+    RANKING_RDS,
+    KERNEL_SUMMARY_CSV,
+    NUMERICAL_SUMMARY_CSV,
+    PERFORMANCE_SUMMARY_CSV,
+    RANKING_SUMMARY_CSV,
+    RUN_METADATA_RDS
+  ),
+  stringsAsFactors = FALSE
+)
+
+output_contract |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Outputs passed to the downstream real-data comparison&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Outputs passed to the downstream real-data comparison
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Object
+</th>
+<th style="text-align:right;">
+Expected_rows
+</th>
+<th style="text-align:left;">
+Path
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Results
+</td>
+<td style="text-align:right;">
+225
+</td>
+<td style="text-align:left;">
+output/real/gblup/real_gblup_results.rds
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Predictions
+</td>
+<td style="text-align:right;">
+8775
+</td>
+<td style="text-align:left;">
+output/real/gblup/real_gblup_predictions.rds
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Individual ranking
+</td>
+<td style="text-align:right;">
+1755
+</td>
+<td style="text-align:left;">
+output/real/gblup/real_gblup_individual_ranking.rds
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Kernel summary
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+output/real/gblup/real_gblup_kernel_summary.csv
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Numerical summary
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+output/real/gblup/real_gblup_numerical_summary.csv
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Performance summary
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+output/real/gblup/real_gblup_performance_summary.csv
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ranking summary
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+output/real/gblup/real_gblup_ranking_summary.csv
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Run metadata
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+output/real/gblup/real_gblup_run_metadata.rds
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>stopifnot(
+  nrow(
+    results
+  ) == 225L,
+  nrow(
+    predictions
+  ) == 8775L,
+  all(
+    table(
+      results$Structure
+    ) == 75L
+  ),
+  all(
+    table(
+      results$Trait
+    ) == 75L
+  ),
+  all(
+    table(
+      predictions$TaskID
+    ) == 39L
+  ),
+  length(
+    unique(
+      predictions$ID
+    )
+  ) == 195L,
+  nrow(
+    individual_ranking
+  ) == 1755L,
+  nrow(
+    ranking_summary
+  ) == 9L,
+  all(
+    individual_ranking$N_OOF ==
+      5L
+  ),
+  sum(
+    individual_ranking$Observed_Top20
+  ) == 351L,
+  sum(
+    individual_ranking$Predicted_Top20
+  ) == 351L,
+  all(
+    ranking_summary$Top20_N ==
+      39L
+  ),
+  all(
+    ranking_summary$Top20_Overlap_N &gt;=
+      0L
+  ),
+  all(
+    ranking_summary$Top20_Overlap_N &lt;=
+      39L
+  ),
+  all(
+    ranking_summary$Top20_Overlap_Rate &gt;=
+      0
+  ),
+  all(
+    ranking_summary$Top20_Overlap_Rate &lt;=
+      1
+  )
+)
+
+for (
+  trait in
+    traits
+) {
+
+  for (
+    structure in
+      c(
+        &quot;A&quot;,
+        &quot;AD&quot;,
+        &quot;ADE&quot;
+      )
+  ) {
+
+    x &lt;- predictions[
+      predictions$Trait ==
+        trait &amp;
+        predictions$Structure ==
+        structure,
+      ,
+      drop = FALSE
+    ]
+
+    frequency &lt;- table(
+      x$ID
+    )
+
+    stopifnot(
+      length(
+        frequency
+      ) == 195L,
+      min(
+        frequency
+      ) == 5L,
+      max(
+        frequency
+      ) == 5L
+    )
+  }
+}</code></pre>
+<p>The three fixed GBLUP structures are now ready for comparison with
+the regularized ANN models under the same outer validation design.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26300)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices datasets  utils     methods   base     
+
+other attached packages:
+[1] ggthemes_6.0.0  ggplot2_4.0.3   sommer_4.4.4    enhancer_1.1.0 
+[5] crayon_1.5.3    MASS_7.3-66     Matrix_1.7-4    workflowr_1.7.2
+
+loaded via a namespace (and not attached):
+ [1] sass_0.4.10        renv_1.1.8         stringi_1.8.7      lattice_0.22-9    
+ [5] digest_0.6.39      magrittr_2.0.4     evaluate_1.0.5     grid_4.5.1        
+ [9] RColorBrewer_1.1-3 fastmap_1.2.0      rprojroot_2.1.1    jsonlite_2.0.0    
+[13] processx_3.8.6     whisker_0.4.1      ps_1.9.1           promises_1.5.0    
+[17] httr_1.4.7         purrr_1.2.2        scales_1.4.0       jquerylib_0.1.4   
+[21] cli_3.6.5          rlang_1.1.7        withr_3.0.2        cachem_1.1.0      
+[25] yaml_2.3.12        otel_0.2.0         tools_4.5.1        httpuv_1.6.16     
+[29] vctrs_0.7.1        R6_2.6.1           lifecycle_1.0.5    git2r_0.36.2      
+[33] stringr_1.6.0      fs_1.6.6           pkgconfig_2.0.3    callr_3.7.6       
+[37] pillar_1.11.1      bslib_0.9.0        later_1.4.4        gtable_0.3.6      
+[41] glue_1.8.0         Rcpp_1.1.2         xfun_0.54          tibble_3.3.1      
+[45] rstudioapi_0.17.1  knitr_1.50         farver_2.1.2       htmltools_0.5.9   
+[49] labeling_0.4.3     rmarkdown_2.30     compiler_4.5.1     getPass_0.2-4     
+[53] S7_0.2.2          </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUmVhbCBkYXRhOiBHQkxVUCBBLCBBRCwgYW5kIEFERSIKYXV0aG9yOgogIC0gV2V2ZXJ0b24gR29tZXMgZGEgQ29zdGEKZGF0ZTogImByIFN5cy5EYXRlKClgIgpzaXRlOiB3b3JrZmxvd3I6OndmbG93X3NpdGUKb3V0cHV0OgogIHdvcmtmbG93cjo6d2Zsb3dfaHRtbDoKICAgIHRvYzogdHJ1ZQogICAgdG9jX2RlcHRoOiAzCiAgICB0b2NfZmxvYXQ6IHRydWUKICAgIGNvZGVfZG93bmxvYWQ6IHRydWUKICAgIGNvZGVfZm9sZGluZzogc2hvdwplZGl0b3Jfb3B0aW9uczoKICBjaHVua19vdXRwdXRfdHlwZTogY29uc29sZQotLS0KCgojIEdCTFVQIG1vZGVscyBmb3IgdGhlIHJlYWwtZGF0YSBhbmFseXNpcwoKIyMgMS4gT2JqZWN0aXZlCgpUaGlzIG1vZHVsZSBmaXRzIHRocmVlIG5lc3RlZCBnZW5vbWljIGJlc3QgbGluZWFyIHVuYmlhc2VkIHByZWRpY3Rpb24gbW9kZWxzCnVuZGVyIHRoZSBjb21tb24gb3V0ZXIgdmFsaWRhdGlvbiBkZXNpZ246CgpcWwpcdGV4dHtHQkxVUC1BfTogXHF1YWQgeSA9IFxtdSArIGEgKyBcdmFyZXBzaWxvbiwKXF0KClxbClx0ZXh0e0dCTFVQLUFEfTogXHF1YWQgeSA9IFxtdSArIGEgKyBkICsgXHZhcmVwc2lsb24sClxdCgphbmQKClxbClx0ZXh0e0dCTFVQLUFERX06IFxxdWFkIHkgPSBcbXUgKyBhICsgZCArIGFhICsgXHZhcmVwc2lsb24uClxdCgpUaGUgdGhyZWUgc3RydWN0dXJlcyBhcmUgZXZhbHVhdGVkIGluZGVwZW5kZW50bHkgaW4gZXhhY3RseSB0aGUgc2FtZSBvdXRlcgpzcGxpdHMuIEluY3JlYXNpbmcgbW9kZWwgY29tcGxleGl0eSBpcyB0aGVyZWZvcmUgdHJlYXRlZCBhcyBhbiBlbXBpcmljYWwKcXVlc3Rpb246IGRvbWluYW5jZSBhbmQgZXBpc3RhdGljIGNvbXBvbmVudHMgYXJlIHJldGFpbmVkIGFzIGNhbmRpZGF0ZQpzdHJ1Y3R1cmVzLCBidXQgcHJlZGljdGl2ZSBzdXBlcmlvcml0eSBpcyBub3QgYXNzdW1lZCBmcm9tIG1vZGVsIGNvbXBsZXRlbmVzcy4KClRoZSByZXNwb25zZSBpbiBldmVyeSB0YXNrIGlzIHRoZSBpbmRpdmlkdWFsIEJMVVAgb2J0YWluZWQgaW4gdGhlIGxvbmdpdHVkaW5hbApwaGVub3R5cGUgbW9kdWxlLiBUaGUgMzkgQkxVUHMgYXNzaWduZWQgdG8gdGhlIG91dGVyIGFzc2Vzc21lbnQgc2V0IGFyZSBtYXNrZWQKYmVmb3JlIG1vZGVsIGZpdHRpbmcgYW5kIGFyZSB1c2VkIG9ubHkgZm9yIGhlbGQtb3V0IGV2YWx1YXRpb24uCgojIyAyLiBDb21wdXRhdGlvbmFsIHNldHVwCgpgYGB7ciBzZXR1cC1nYmx1cH0Kc3VwcHJlc3NQYWNrYWdlU3RhcnR1cE1lc3NhZ2VzKAogIGxpYnJhcnkoc29tbWVyKQopCgpzdXBwcmVzc1BhY2thZ2VTdGFydHVwTWVzc2FnZXMoCiAgbGlicmFyeShnZ3Bsb3QyKQopCgpzdXBwcmVzc1BhY2thZ2VTdGFydHVwTWVzc2FnZXMoCiAgbGlicmFyeShnZ3RoZW1lcykKKQoKa25pdHI6Om9wdHNfY2h1bmskc2V0KAogIGVjaG8gPSBUUlVFLAogIHdhcm5pbmcgPSBGQUxTRSwKICBtZXNzYWdlID0gRkFMU0UKKQoKUlVOX0dCTFVQIDwtIGlkZW50aWNhbCgKICBTeXMuZ2V0ZW52KCJSVU5fR0JMVVAiKSwKICAiMSIKKQoKU0VFRF9HTE9CQUwgPC0gMjAyNjExMDVMCk5fSVRFUlNfU09NTUVSIDwtIDUwTApUT0xfTExJSyA8LSAxZS00CgpDT01NT05fUEFUSCA8LQogICJvdXRwdXQvcmVhbC9hdWRpdC9wcmVwcm9jZXNzZWRfcmVhbF9jb21tb24ucmRzIgoKVkFMSURBVElPTl9QQVRIIDwtCiAgIm91dHB1dC9yZWFsL3ZhbGlkYXRpb24vcmVhbF9jdl9kZXNpZ24ucmRzIgoKT1VUUFVUX0RJUiA8LQogICJvdXRwdXQvcmVhbC9nYmx1cCIKCkZJR1VSRV9ESVIgPC0KICBmaWxlLnBhdGgoCiAgICBPVVRQVVRfRElSLAogICAgImZpZ3VyZXMiCiAgKQoKUkVTVUxUU19SRFMgPC0KICBmaWxlLnBhdGgoCiAgICBPVVRQVVRfRElSLAogICAgInJlYWxfZ2JsdXBfcmVzdWx0cy5yZHMiCiAgKQoKUkVTVUxUU19DU1YgPC0KICBmaWxlLnBhdGgoCiAgICBPVVRQVVRfRElSLAogICAgInJlYWxfZ2JsdXBfcmVzdWx0cy5jc3YiCiAgKQoKUFJFRElDVElPTlNfUkRTIDwtCiAgZmlsZS5wYXRoKAogICAgT1VUUFVUX0RJUiwKICAgICJyZWFsX2dibHVwX3ByZWRpY3Rpb25zLnJkcyIKICApCgpQUkVESUNUSU9OU19DU1YgPC0KICBmaWxlLnBhdGgoCiAgICBPVVRQVVRfRElSLAogICAgInJlYWxfZ2JsdXBfcHJlZGljdGlvbnMuY3N2IgogICkKCktFUk5FTF9TVU1NQVJZX0NTViA8LQogIGZpbGUucGF0aCgKICAgIE9VVFBVVF9ESVIsCiAgICAicmVhbF9nYmx1cF9rZXJuZWxfc3VtbWFyeS5jc3YiCiAgKQoKTlVNRVJJQ0FMX1NVTU1BUllfQ1NWIDwtCiAgZmlsZS5wYXRoKAogICAgT1VUUFVUX0RJUiwKICAgICJyZWFsX2dibHVwX251bWVyaWNhbF9zdW1tYXJ5LmNzdiIKICApCgpQRVJGT1JNQU5DRV9TVU1NQVJZX0NTViA8LQogIGZpbGUucGF0aCgKICAgIE9VVFBVVF9ESVIsCiAgICAicmVhbF9nYmx1cF9wZXJmb3JtYW5jZV9zdW1tYXJ5LmNzdiIKICApCgpSVU5fTUVUQURBVEFfUkRTIDwtCiAgZmlsZS5wYXRoKAogICAgT1VUUFVUX0RJUiwKICAgICJyZWFsX2dibHVwX3J1bl9tZXRhZGF0YS5yZHMiCiAgKQoKUkFOS0lOR19SRFMgPC0KICBmaWxlLnBhdGgoCiAgICBPVVRQVVRfRElSLAogICAgInJlYWxfZ2JsdXBfaW5kaXZpZHVhbF9yYW5raW5nLnJkcyIKICApCgpSQU5LSU5HX0NTViA8LQogIGZpbGUucGF0aCgKICAgIE9VVFBVVF9ESVIsCiAgICAicmVhbF9nYmx1cF9pbmRpdmlkdWFsX3JhbmtpbmcuY3N2IgogICkKClJBTktJTkdfU1VNTUFSWV9DU1YgPC0KICBmaWxlLnBhdGgoCiAgICBPVVRQVVRfRElSLAogICAgInJlYWxfZ2JsdXBfcmFua2luZ19zdW1tYXJ5LmNzdiIKICApCgpkaXIuY3JlYXRlKAogIE9VVFBVVF9ESVIsCiAgcmVjdXJzaXZlID0gVFJVRSwKICBzaG93V2FybmluZ3MgPSBGQUxTRQopCgpkaXIuY3JlYXRlKAogIEZJR1VSRV9ESVIsCiAgcmVjdXJzaXZlID0gVFJVRSwKICBzaG93V2FybmluZ3MgPSBGQUxTRQopCmBgYAoKVGhlIHNhbWUgbnVtZXJpY2FsIGNvbnRyb2xzIGFyZSB1c2VkIGZvciB0aGUgdGhyZWUgc3RydWN0dXJlcy4gTm8gbW9kZWwgaXMKY2hhbmdlZCBhZnRlciBpbnNwZWN0aW5nIGFuIG91dGVyIGFzc2Vzc21lbnQgc2V0LCBhbmQgbm8gc3BsaXQtc3BlY2lmaWMKaHlwZXJwYXJhbWV0ZXIgc2VhcmNoIGlzIHBlcmZvcm1lZC4KCiMjIDMuIENvbW1vbiBnZW5vbWljIG9iamVjdCBhbmQgdmFsaWRhdGlvbiBkZXNpZ24KCmBgYHtyIGxvYWQtY29tbW9uLXZhbGlkYXRpb259CnN0b3BpZm5vdCgKICBmaWxlLmV4aXN0cyhDT01NT05fUEFUSCksCiAgZmlsZS5leGlzdHMoVkFMSURBVElPTl9QQVRIKQopCgpjb21tb24gPC0gcmVhZFJEUygKICBDT01NT05fUEFUSAopCgpjdiA8LSByZWFkUkRTKAogIFZBTElEQVRJT05fUEFUSAopCgpnZW5vIDwtIGFzLm1hdHJpeCgKICBjb21tb24kZ2Vub3R5cGUKKQoKYmx1cHMgPC0gY29tbW9uJHBoZW5vdHlwZQp0cmFpdHMgPC0gY29tbW9uJHRyYWl0cwppZHMgPC0gcm93bmFtZXMoZ2VubykKCnN0b3BpZm5vdCgKICBpZGVudGljYWwoCiAgICB0cmFpdHMsCiAgICBjKAogICAgICAiQ2VyIiwKICAgICAgIkJNIiwKICAgICAgIkxQIgogICAgKQogICksCiAgbnJvdyhnZW5vKSA9PSAxOTVMLAogIG5jb2woZ2VubykgPT0gMjA4ODdMLAogIGxlbmd0aChpZHMpID09IDE5NUwsCiAgIWFueUR1cGxpY2F0ZWQoaWRzKSwKICBhbGwoCiAgICBjKAogICAgICAiUGhlbm90eXBlX0lEIiwKICAgICAgIkNlciIsCiAgICAgICJCTSIsCiAgICAgICJMUCIKICAgICkgJWluJQogICAgICBuYW1lcyhibHVwcykKICApCikKCnBoZW5vdHlwZV9pZHMgPC0gYXMuY2hhcmFjdGVyKAogIGJsdXBzJFBoZW5vdHlwZV9JRAopCgpzdG9waWZub3QoCiAgaWRlbnRpY2FsKAogICAgcGhlbm90eXBlX2lkcywKICAgIGlkcwogICkKKQoKb3V0ZXJfbWV0YSA8LSB1bmlxdWUoCiAgY3Ykb3V0ZXJfYXNzaWdubWVudHNbCiAgICAsCiAgICBjKAogICAgICAiUmVwZXRpdGlvbiIsCiAgICAgICJPdXRlckZvbGQiLAogICAgICAiU3BsaXRJRCIKICAgICkKICBdCikKCm91dGVyX21ldGEgPC0gb3V0ZXJfbWV0YVsKICBvcmRlcigKICAgIG91dGVyX21ldGEkUmVwZXRpdGlvbiwKICAgIG91dGVyX21ldGEkT3V0ZXJGb2xkCiAgKSwKICAsCiAgZHJvcCA9IEZBTFNFCl0KCnJvd25hbWVzKAogIG91dGVyX21ldGEKKSA8LSBOVUxMCgpzdG9waWZub3QoCiAgbnJvdyhvdXRlcl9tZXRhKSA9PSAyNUwsCiAgbGVuZ3RoKAogICAgdW5pcXVlKAogICAgICBvdXRlcl9tZXRhJFNwbGl0SUQKICAgICkKICApID09IDI1TAopCgppbnB1dF9zdW1tYXJ5IDwtIGRhdGEuZnJhbWUoCiAgSXRlbSA9IGMoCiAgICAiSW5kaXZpZHVhbHMiLAogICAgIk1hcmtlcnMgYWZ0ZXIgUUMiLAogICAgIlRyYWl0cyIsCiAgICAiT3V0ZXIgc3BsaXRzIiwKICAgICJPdXRlciBhbmFseXNpcyBzaXplIiwKICAgICJPdXRlciBhc3Nlc3NtZW50IHNpemUiLAogICAgIkNhbmRpZGF0ZSBHQkxVUCBzdHJ1Y3R1cmVzIgogICksCiAgVmFsdWUgPSBjKAogICAgbnJvdyhnZW5vKSwKICAgIG5jb2woZ2VubyksCiAgICBsZW5ndGgodHJhaXRzKSwKICAgIG5yb3cob3V0ZXJfbWV0YSksCiAgICAxNTZMLAogICAgMzlMLAogICAgM0wKICApLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgppbnB1dF9zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJDb21tb24gaW5wdXRzIHVzZWQgYnkgdGhlIEdCTFVQIG1vZGVscyIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiIHN0eWxlPSJ3aWR0aDoxMDAlOyInCiAgKQpgYGAKClRoZSB2YWxpZGF0aW9uIG9iamVjdCBpcyBjb25zdW1lZCB3aXRob3V0IG1vZGlmaWNhdGlvbi4gQ29uc2VxdWVudGx5LCBBLCBBRCwKYW5kIEFERSBhcmUgY29tcGFyZWQgb24gaWRlbnRpY2FsIHRyYWluaW5nIGFuZCBoZWxkLW91dCBpbmRpdmlkdWFscy4KCiMjIDQuIEdlbm9taWMgcmVsYXRpb25zaGlwIG1hdHJpY2VzCgpUaGUgdGhyZWUgY292YXJpYW5jZSBzdHJ1Y3R1cmVzIGFyZSBidWlsdCBvbmNlIGZyb20gdGhlIGZyb3plbiAyMCw4ODctbWFya2VyCm1hdHJpeCBhbmQgcmV1c2VkIHRocm91Z2hvdXQgdGhlIDIyNSBtb2RlbCBmaXRzLgoKVGhlIGFkZGl0aXZlIG1hdHJpeCByZXByZXNlbnRzIHJlYWxpemVkIGFkZGl0aXZlIHJlbGF0aW9uc2hpcHMuIFRoZSBkb21pbmFuY2UKbWF0cml4IHJlcHJlc2VudHMgcmVhbGl6ZWQgZG9taW5hbmNlIHJlbGF0aW9uc2hpcHMuIFRoZSBlcGlzdGF0aWMgbWF0cml4IGlzIHRoZQphZGRpdGl2ZS1ieS1hZGRpdGl2ZSBnZW5vbWljIHJlbGF0aW9uc2hpcCBtYXRyaXguCgpgYGB7ciBidWlsZC1rZXJuZWxzLCBldmFsPVJVTl9HQkxVUH0Ka2VybmVsX3N0YXJ0IDwtIHByb2MudGltZSgpW1siZWxhcHNlZCJdXQoKQV9tYXRyaXggPC0gc29tbWVyOjpBLm1hdCgKICBnZW5vLAogIG1pbi5NQUYgPSAwCikKCkRfbWF0cml4IDwtIHNvbW1lcjo6RC5tYXQoCiAgZ2VubywKICBuaXNoaW8gPSBUUlVFLAogIG1pbi5NQUYgPSAwCikKCkVfbWF0cml4IDwtIHNvbW1lcjo6RS5tYXQoCiAgZ2VubywKICBuaXNoaW8gPSBUUlVFLAogIHR5cGUgPSAiQSNBIiwKICBtaW4uTUFGID0gMAopCgprZXJuZWxfc2Vjb25kcyA8LQogIHByb2MudGltZSgpW1siZWxhcHNlZCJdXSAtCiAga2VybmVsX3N0YXJ0Cgpyb3duYW1lcyhBX21hdHJpeCkgPC0gaWRzCmNvbG5hbWVzKEFfbWF0cml4KSA8LSBpZHMKCnJvd25hbWVzKERfbWF0cml4KSA8LSBpZHMKY29sbmFtZXMoRF9tYXRyaXgpIDwtIGlkcwoKcm93bmFtZXMoRV9tYXRyaXgpIDwtIGlkcwpjb2xuYW1lcyhFX21hdHJpeCkgPC0gaWRzCgprZXJuZWxfc3VtbWFyeSA8LSBkYXRhLmZyYW1lKAogIEtlcm5lbCA9IGMoCiAgICAiQWRkaXRpdmUiLAogICAgIkRvbWluYW5jZSIsCiAgICAiRXBpc3RhdGljX0F4QSIKICApLAogIFJvd3MgPSBjKAogICAgbnJvdyhBX21hdHJpeCksCiAgICBucm93KERfbWF0cml4KSwKICAgIG5yb3coRV9tYXRyaXgpCiAgKSwKICBDb2x1bW5zID0gYygKICAgIG5jb2woQV9tYXRyaXgpLAogICAgbmNvbChEX21hdHJpeCksCiAgICBuY29sKEVfbWF0cml4KQogICksCiAgU3ltbWV0cmljID0gYygKICAgIGlzVFJVRSgKICAgICAgYWxsLmVxdWFsKAogICAgICAgIEFfbWF0cml4LAogICAgICAgIHQoQV9tYXRyaXgpLAogICAgICAgIHRvbGVyYW5jZSA9IDFlLTgKICAgICAgKQogICAgKSwKICAgIGlzVFJVRSgKICAgICAgYWxsLmVxdWFsKAogICAgICAgIERfbWF0cml4LAogICAgICAgIHQoRF9tYXRyaXgpLAogICAgICAgIHRvbGVyYW5jZSA9IDFlLTgKICAgICAgKQogICAgKSwKICAgIGlzVFJVRSgKICAgICAgYWxsLmVxdWFsKAogICAgICAgIEVfbWF0cml4LAogICAgICAgIHQoRV9tYXRyaXgpLAogICAgICAgIHRvbGVyYW5jZSA9IDFlLTgKICAgICAgKQogICAgKQogICksCiAgRmluaXRlID0gYygKICAgIGFsbCgKICAgICAgaXMuZmluaXRlKAogICAgICAgIEFfbWF0cml4CiAgICAgICkKICAgICksCiAgICBhbGwoCiAgICAgIGlzLmZpbml0ZSgKICAgICAgICBEX21hdHJpeAogICAgICApCiAgICApLAogICAgYWxsKAogICAgICBpcy5maW5pdGUoCiAgICAgICAgRV9tYXRyaXgKICAgICAgKQogICAgKQogICksCiAgTWVhbl9kaWFnb25hbCA9IGMoCiAgICBtZWFuKAogICAgICBkaWFnKAogICAgICAgIEFfbWF0cml4CiAgICAgICkKICAgICksCiAgICBtZWFuKAogICAgICBkaWFnKAogICAgICAgIERfbWF0cml4CiAgICAgICkKICAgICksCiAgICBtZWFuKAogICAgICBkaWFnKAogICAgICAgIEVfbWF0cml4CiAgICAgICkKICAgICkKICApLAogIEtlcm5lbF9idWlsZF9zZWNvbmRzID0gcmVwKAogICAga2VybmVsX3NlY29uZHMsCiAgICAzTAogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCnN0b3BpZm5vdCgKICBhbGwoCiAgICBrZXJuZWxfc3VtbWFyeSRSb3dzID09IDE5NUwKICApLAogIGFsbCgKICAgIGtlcm5lbF9zdW1tYXJ5JENvbHVtbnMgPT0gMTk1TAogICksCiAgYWxsKAogICAga2VybmVsX3N1bW1hcnkkU3ltbWV0cmljCiAgKSwKICBhbGwoCiAgICBrZXJuZWxfc3VtbWFyeSRGaW5pdGUKICApCikKCndyaXRlLmNzdigKICBrZXJuZWxfc3VtbWFyeSwKICBLRVJORUxfU1VNTUFSWV9DU1YsCiAgcm93Lm5hbWVzID0gRkFMU0UKKQpgYGAKCmBgYHtyIGxvYWQta2VybmVsLXN1bW1hcnksIGV2YWw9IVJVTl9HQkxVUH0Kc3RvcGlmbm90KAogIGZpbGUuZXhpc3RzKAogICAgS0VSTkVMX1NVTU1BUllfQ1NWCiAgKQopCgprZXJuZWxfc3VtbWFyeSA8LSByZWFkLmNzdigKICBLRVJORUxfU1VNTUFSWV9DU1YsCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKYGBgCgpgYGB7ciBzaG93LWtlcm5lbC1zdW1tYXJ5fQprZXJuZWxfc3VtbWFyeSB8PgogIGtuaXRyOjprYWJsZSgKICAgIGZvcm1hdCA9ICJodG1sIiwKICAgIGRpZ2l0cyA9IDYsCiAgICBjYXB0aW9uID0gIkdlbm9taWMgcmVsYXRpb25zaGlwIG1hdHJpY2VzIHVzZWQgYnkgdGhlIHRocmVlIEdCTFVQIHN0cnVjdHVyZXMiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIiBzdHlsZT0id2lkdGg6MTAwJTsiJwogICkKYGBgCgojIyA1LiBGaXhlZCBjYW5kaWRhdGUgc3RydWN0dXJlcwoKVGhlIG1vZGVsIHN0cnVjdHVyZXMgYXJlIGZpeGVkIGJlZm9yZSBhc3Nlc3NtZW50IHBlcmZvcm1hbmNlIGlzIGluc3BlY3RlZC4KCmBgYHtyIG1vZGVsLWNvbnRyYWN0fQptb2RlbF9jb250cmFjdCA8LSBkYXRhLmZyYW1lKAogIFN0cnVjdHVyZSA9IGMoCiAgICAiQSIsCiAgICAiQUQiLAogICAgIkFERSIKICApLAogIE1vZGVsID0gYygKICAgICJHQkxVUF9BIiwKICAgICJHQkxVUF9BRCIsCiAgICAiR0JMVVBfQURFIgogICksCiAgR2Vub21pY19jb21wb25lbnRzID0gYygKICAgICJBZGRpdGl2ZSIsCiAgICAiQWRkaXRpdmUgKyBkb21pbmFuY2UiLAogICAgIkFkZGl0aXZlICsgZG9taW5hbmNlICsgYWRkaXRpdmUtYnktYWRkaXRpdmUgZXBpc3Rhc2lzIgogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCm1vZGVsX2NvbnRyYWN0IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJGaXhlZCBHQkxVUCBjYW5kaWRhdGUgc3RydWN0dXJlcyIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiIHN0eWxlPSJ3aWR0aDoxMDAlOyInCiAgKQpgYGAKClRoZSBtb2RlbCBjb21wYXJpc29uIHRoZXJlZm9yZSBldmFsdWF0ZXMgd2hldGhlciBhZGRpdGlvbmFsIGdlbm9taWMgY29tcG9uZW50cwppbXByb3ZlIHByZWRpY3Rpb24uIFRoZSBtb3N0IGNvbXBsZXRlIHN0cnVjdHVyZSBpcyBub3QgYXNzdW1lZCB0byBiZSB0aGUgYmVzdApwcmVkaWN0aXZlIHN0cnVjdHVyZS4KCiMjIDYuIEV2YWx1YXRpb24gZ3JpZAoKVGhyZWUgdHJhaXRzLCAyNSBvdXRlciBzcGxpdHMsIGFuZCB0aHJlZSBmaXhlZCBHQkxVUCBzdHJ1Y3R1cmVzIHByb2R1Y2UgMjI1CmluZGVwZW5kZW50IGZpdHRpbmcgdGFza3MuCgpgYGB7ciB0YXNrLWdyaWR9CnRhc2tfdGFibGUgPC0gZGF0YS5mcmFtZSgKICBEYXRhc2V0ID0gY2hhcmFjdGVyKDApLAogIFRyYWl0ID0gY2hhcmFjdGVyKDApLAogIFJlcGV0aXRpb24gPSBpbnRlZ2VyKDApLAogIE91dGVyRm9sZCA9IGludGVnZXIoMCksCiAgU3BsaXRJRCA9IGNoYXJhY3RlcigwKSwKICBTdHJ1Y3R1cmUgPSBjaGFyYWN0ZXIoMCksCiAgTW9kZWwgPSBjaGFyYWN0ZXIoMCksCiAgVGFza0lEID0gY2hhcmFjdGVyKDApLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpmb3IgKHRyYWl0IGluIHRyYWl0cykgewoKICBmb3IgKAogICAgc3BsaXRfcm93IGluCiAgICAgIHNlcV9sZW4oCiAgICAgICAgbnJvdygKICAgICAgICAgIG91dGVyX21ldGEKICAgICAgICApCiAgICAgICkKICApIHsKCiAgICBmb3IgKAogICAgICBtb2RlbF9yb3cgaW4KICAgICAgICBzZXFfbGVuKAogICAgICAgICAgbnJvdygKICAgICAgICAgICAgbW9kZWxfY29udHJhY3QKICAgICAgICAgICkKICAgICAgICApCiAgICApIHsKCiAgICAgIHRhc2tfdGFibGUgPC0gcmJpbmQoCiAgICAgICAgdGFza190YWJsZSwKICAgICAgICBkYXRhLmZyYW1lKAogICAgICAgICAgRGF0YXNldCA9ICJyZWFsIiwKICAgICAgICAgIFRyYWl0ID0gdHJhaXQsCiAgICAgICAgICBSZXBldGl0aW9uID0KICAgICAgICAgICAgb3V0ZXJfbWV0YSRSZXBldGl0aW9uWwogICAgICAgICAgICAgIHNwbGl0X3JvdwogICAgICAgICAgICBdLAogICAgICAgICAgT3V0ZXJGb2xkID0KICAgICAgICAgICAgb3V0ZXJfbWV0YSRPdXRlckZvbGRbCiAgICAgICAgICAgICAgc3BsaXRfcm93CiAgICAgICAgICAgIF0sCiAgICAgICAgICBTcGxpdElEID0KICAgICAgICAgICAgb3V0ZXJfbWV0YSRTcGxpdElEWwogICAgICAgICAgICAgIHNwbGl0X3JvdwogICAgICAgICAgICBdLAogICAgICAgICAgU3RydWN0dXJlID0KICAgICAgICAgICAgbW9kZWxfY29udHJhY3QkU3RydWN0dXJlWwogICAgICAgICAgICAgIG1vZGVsX3JvdwogICAgICAgICAgICBdLAogICAgICAgICAgTW9kZWwgPQogICAgICAgICAgICBtb2RlbF9jb250cmFjdCRNb2RlbFsKICAgICAgICAgICAgICBtb2RlbF9yb3cKICAgICAgICAgICAgXSwKICAgICAgICAgIFRhc2tJRCA9IHBhc3RlKAogICAgICAgICAgICB0cmFpdCwKICAgICAgICAgICAgb3V0ZXJfbWV0YSRTcGxpdElEWwogICAgICAgICAgICAgIHNwbGl0X3JvdwogICAgICAgICAgICBdLAogICAgICAgICAgICBtb2RlbF9jb250cmFjdCRTdHJ1Y3R1cmVbCiAgICAgICAgICAgICAgbW9kZWxfcm93CiAgICAgICAgICAgIF0sCiAgICAgICAgICAgIHNlcCA9ICJfIgogICAgICAgICAgKSwKICAgICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICAgICAgICkKICAgICAgKQogICAgfQogIH0KfQoKcm93bmFtZXMoCiAgdGFza190YWJsZQopIDwtIE5VTEwKCnN0b3BpZm5vdCgKICBucm93KHRhc2tfdGFibGUpID09IDIyNUwsCiAgbGVuZ3RoKAogICAgdW5pcXVlKAogICAgICB0YXNrX3RhYmxlJFRhc2tJRAogICAgKQogICkgPT0gMjI1TCwKICBhbGwoCiAgICB0YWJsZSgKICAgICAgdGFza190YWJsZSRUcmFpdAogICAgKSA9PSA3NUwKICApLAogIGFsbCgKICAgIHRhYmxlKAogICAgICB0YXNrX3RhYmxlJFN0cnVjdHVyZQogICAgKSA9PSA3NUwKICApCikKCnRhc2tfc3VtbWFyeSA8LSBhcy5kYXRhLmZyYW1lKAogIHRhYmxlKAogICAgdGFza190YWJsZSRUcmFpdCwKICAgIHRhc2tfdGFibGUkU3RydWN0dXJlCiAgKSwKICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKKQoKbmFtZXMoCiAgdGFza19zdW1tYXJ5CikgPC0gYygKICAiVHJhaXQiLAogICJTdHJ1Y3R1cmUiLAogICJUYXNrcyIKKQoKdGFza19zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJOdW1iZXIgb2Ygb3V0ZXIgZml0dGluZyB0YXNrcyBieSB0cmFpdCBhbmQgR0JMVVAgc3RydWN0dXJlIiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCIgc3R5bGU9IndpZHRoOjEwMCU7IicKICApCmBgYAoKIyMgNy4gRml0IEEsIEFELCBhbmQgQURFIGluIGV2ZXJ5IG91dGVyIHNwbGl0CgpGb3IgZWFjaCB0YXNrLCB0aGUgMzkgYXNzZXNzbWVudCBCTFVQcyBhcmUgcmVwbGFjZWQgYnkgYE5BYCBiZWZvcmUgZml0dGluZy4gVGhlCm1vZGVsIHRoZXJlZm9yZSByZWNlaXZlcyBhbGwgZ2Vub21pYyByZWxhdGlvbnNoaXBzIGJ1dCBubyBoZWxkLW91dCByZXNwb25zZQppbmZvcm1hdGlvbi4KCkFsbCB0aHJlZSBzdHJ1Y3R1cmVzIHVzZSB0aGUgc2FtZSBgc29tbWVyOjptbWVzKClgIGZpdHRpbmcgY29udHJvbHMuIE51bWVyaWNhbApkaWFnbm9zdGljcyBhcmUgcmVjb3JkZWQgZm9yIGluc3BlY3Rpb24gYnV0IGRvIG5vdCB0cmlnZ2VyIHNwbGl0LXNwZWNpZmljIG1vZGVsCmNoYW5nZXMuCgpgYGB7ciBmaXQtYWxsLWdibHVwLW1vZGVscywgZXZhbD1SVU5fR0JMVVB9CnNldC5zZWVkKAogIFNFRURfR0xPQkFMCikKCnJ1bl9zdGFydCA8LSBwcm9jLnRpbWUoKVtbImVsYXBzZWQiXV0KCnJlc3VsdF9saXN0IDwtIHZlY3RvcigKICAibGlzdCIsCiAgbnJvdyh0YXNrX3RhYmxlKQopCgpwcmVkaWN0aW9uX2xpc3QgPC0gdmVjdG9yKAogICJsaXN0IiwKICBucm93KHRhc2tfdGFibGUpCikKCmZvciAoCiAgaSBpbgogICAgc2VxX2xlbigKICAgICAgbnJvdygKICAgICAgICB0YXNrX3RhYmxlCiAgICAgICkKICAgICkKKSB7CgogIHRhc2sgPC0gdGFza190YWJsZVsKICAgIGksCiAgICAsCiAgICBkcm9wID0gRkFMU0UKICBdCgogIHRyYWl0IDwtIHRhc2skVHJhaXQKICBzdHJ1Y3R1cmUgPC0gdGFzayRTdHJ1Y3R1cmUKCiAgc3BsaXQgPC0gY3Ykb3V0ZXJfc3BsaXRzW1sKICAgIHRhc2skU3BsaXRJRAogIF1dCgogIGFuYWx5c2lzX2luZGV4IDwtIG1hdGNoKAogICAgc3BsaXQkYW5hbHlzaXNfaWRzLAogICAgaWRzCiAgKQoKICBhc3Nlc3NtZW50X2luZGV4IDwtIG1hdGNoKAogICAgc3BsaXQkYXNzZXNzbWVudF9pZHMsCiAgICBpZHMKICApCgogIHN0b3BpZm5vdCgKICAgIGxlbmd0aCgKICAgICAgYW5hbHlzaXNfaW5kZXgKICAgICkgPT0gMTU2TCwKICAgIGxlbmd0aCgKICAgICAgYXNzZXNzbWVudF9pbmRleAogICAgKSA9PSAzOUwsCiAgICAhYW55TkEoCiAgICAgIGFuYWx5c2lzX2luZGV4CiAgICApLAogICAgIWFueU5BKAogICAgICBhc3Nlc3NtZW50X2luZGV4CiAgICApLAogICAgbGVuZ3RoKAogICAgICBpbnRlcnNlY3QoCiAgICAgICAgYW5hbHlzaXNfaW5kZXgsCiAgICAgICAgYXNzZXNzbWVudF9pbmRleAogICAgICApCiAgICApID09IDBMCiAgKQoKICByZXNwb25zZV92ZWN0b3IgPC0gYmx1cHNbWwogICAgdHJhaXQKICBdXQoKICBpZF9mYWN0b3IgPC0gZmFjdG9yKAogICAgaWRzLAogICAgbGV2ZWxzID0gaWRzCiAgKQoKICBkYXQgPC0gZGF0YS5mcmFtZSgKICAgIHkgPSByZXNwb25zZV92ZWN0b3IsCiAgICBpZCA9IGlkX2ZhY3RvciwKICAgIGlkZCA9IGlkX2ZhY3RvciwKICAgIGlkZSA9IGlkX2ZhY3RvcgogICkKCiAgZGF0JHlbCiAgICBhc3Nlc3NtZW50X2luZGV4CiAgXSA8LSBOQV9yZWFsXwoKICBmaXRfc3RhcnQgPC0gcHJvYy50aW1lKClbWwogICAgImVsYXBzZWQiCiAgXV0KCiAgaWYgKAogICAgc3RydWN0dXJlID09ICJBIgogICkgewoKICAgIGZpdCA8LSBzb21tZXI6Om1tZXMoCiAgICAgIHkgfiAxLAogICAgICByYW5kb20gPSB+CiAgICAgICAgdnNtKAogICAgICAgICAgaXNtKGlkKSwKICAgICAgICAgIEd1ID0gQV9tYXRyaXgKICAgICAgICApLAogICAgICByY292ID0gfiB1bml0cywKICAgICAgbkl0ZXJzID0gTl9JVEVSU19TT01NRVIsCiAgICAgIHRvbFBhckNvbnZMTCA9IFRPTF9MTElLLAogICAgICBkYXRhID0gZGF0LAogICAgICB2ZXJib3NlID0gRkFMU0UsCiAgICAgIGRhdGVXYXJuaW5nID0gRkFMU0UKICAgICkKCiAgfSBlbHNlIGlmICgKICAgIHN0cnVjdHVyZSA9PSAiQUQiCiAgKSB7CgogICAgZml0IDwtIHNvbW1lcjo6bW1lcygKICAgICAgeSB+IDEsCiAgICAgIHJhbmRvbSA9IH4KICAgICAgICB2c20oCiAgICAgICAgICBpc20oaWQpLAogICAgICAgICAgR3UgPSBBX21hdHJpeAogICAgICAgICkgKwogICAgICAgIHZzbSgKICAgICAgICAgIGlzbShpZGQpLAogICAgICAgICAgR3UgPSBEX21hdHJpeAogICAgICAgICksCiAgICAgIHJjb3YgPSB+IHVuaXRzLAogICAgICBuSXRlcnMgPSBOX0lURVJTX1NPTU1FUiwKICAgICAgdG9sUGFyQ29udkxMID0gVE9MX0xMSUssCiAgICAgIGRhdGEgPSBkYXQsCiAgICAgIHZlcmJvc2UgPSBGQUxTRSwKICAgICAgZGF0ZVdhcm5pbmcgPSBGQUxTRQogICAgKQoKICB9IGVsc2UgewoKICAgIGZpdCA8LSBzb21tZXI6Om1tZXMoCiAgICAgIHkgfiAxLAogICAgICByYW5kb20gPSB+CiAgICAgICAgdnNtKAogICAgICAgICAgaXNtKGlkKSwKICAgICAgICAgIEd1ID0gQV9tYXRyaXgKICAgICAgICApICsKICAgICAgICB2c20oCiAgICAgICAgICBpc20oaWRkKSwKICAgICAgICAgIEd1ID0gRF9tYXRyaXgKICAgICAgICApICsKICAgICAgICB2c20oCiAgICAgICAgICBpc20oaWRlKSwKICAgICAgICAgIEd1ID0gRV9tYXRyaXgKICAgICAgICApLAogICAgICByY292ID0gfiB1bml0cywKICAgICAgbkl0ZXJzID0gTl9JVEVSU19TT01NRVIsCiAgICAgIHRvbFBhckNvbnZMTCA9IFRPTF9MTElLLAogICAgICBkYXRhID0gZGF0LAogICAgICB2ZXJib3NlID0gRkFMU0UsCiAgICAgIGRhdGVXYXJuaW5nID0gRkFMU0UKICAgICkKICB9CgogIGZpdF9zZWNvbmRzIDwtCiAgICBwcm9jLnRpbWUoKVtbCiAgICAgICJlbGFwc2VkIgogICAgXV0gLQogICAgZml0X3N0YXJ0CgogIHRoZXRhIDwtIGFzLm51bWVyaWMoCiAgICBmaXQkdGhldGEKICApCgogIGxsaWsgPC0gYXMubnVtZXJpYygKICAgIGZpdCRsbGlrCiAgKQoKICBpZiAoCiAgICBsZW5ndGgoCiAgICAgIGxsaWsKICAgICkgPiAxTAogICkgewoKICAgIGxhc3RfbGxpa19jaGFuZ2UgPC0gdGFpbCgKICAgICAgZGlmZigKICAgICAgICBsbGlrCiAgICAgICksCiAgICAgIDFMCiAgICApCgogIH0gZWxzZSB7CgogICAgbGFzdF9sbGlrX2NoYW5nZSA8LSBOQV9yZWFsXwogIH0KCiAgdmFyaWFuY2VfQSA8LSAwCiAgdmFyaWFuY2VfRCA8LSAwCiAgdmFyaWFuY2VfRSA8LSAwCiAgdmFyaWFuY2VfcmVzaWR1YWwgPC0gMAoKICBpZiAoCiAgICBzdHJ1Y3R1cmUgPT0gIkEiCiAgKSB7CgogICAgc3RvcGlmbm90KAogICAgICBsZW5ndGgoCiAgICAgICAgdGhldGEKICAgICAgKSA9PSAyTAogICAgKQoKICAgIHZhcmlhbmNlX0EgPC0gdGhldGFbCiAgICAgIDFMCiAgICBdCgogICAgdmFyaWFuY2VfcmVzaWR1YWwgPC0gdGhldGFbCiAgICAgIDJMCiAgICBdCgogIH0gZWxzZSBpZiAoCiAgICBzdHJ1Y3R1cmUgPT0gIkFEIgogICkgewoKICAgIHN0b3BpZm5vdCgKICAgICAgbGVuZ3RoKAogICAgICAgIHRoZXRhCiAgICAgICkgPT0gM0wKICAgICkKCiAgICB2YXJpYW5jZV9BIDwtIHRoZXRhWwogICAgICAxTAogICAgXQoKICAgIHZhcmlhbmNlX0QgPC0gdGhldGFbCiAgICAgIDJMCiAgICBdCgogICAgdmFyaWFuY2VfcmVzaWR1YWwgPC0gdGhldGFbCiAgICAgIDNMCiAgICBdCgogIH0gZWxzZSB7CgogICAgc3RvcGlmbm90KAogICAgICBsZW5ndGgoCiAgICAgICAgdGhldGEKICAgICAgKSA9PSA0TAogICAgKQoKICAgIHZhcmlhbmNlX0EgPC0gdGhldGFbCiAgICAgIDFMCiAgICBdCgogICAgdmFyaWFuY2VfRCA8LSB0aGV0YVsKICAgICAgMkwKICAgIF0KCiAgICB2YXJpYW5jZV9FIDwtIHRoZXRhWwogICAgICAzTAogICAgXQoKICAgIHZhcmlhbmNlX3Jlc2lkdWFsIDwtIHRoZXRhWwogICAgICA0TAogICAgXQogIH0KCiAgYW55X25lZ2F0aXZlIDwtIGFueSgKICAgIGMoCiAgICAgIHZhcmlhbmNlX0EsCiAgICAgIHZhcmlhbmNlX0QsCiAgICAgIHZhcmlhbmNlX0UsCiAgICAgIHZhcmlhbmNlX3Jlc2lkdWFsCiAgICApIDwgMAogICkKCiAgcGFzc19sbGlrX2dhdGUgPC0KICAgIGlzLmZpbml0ZSgKICAgICAgbGFzdF9sbGlrX2NoYW5nZQogICAgKSAmJgogICAgYWJzKAogICAgICBsYXN0X2xsaWtfY2hhbmdlCiAgICApIDw9IFRPTF9MTElLCgogIHByZWRpY3Rpb25fc3RhcnQgPC0gcHJvYy50aW1lKClbWwogICAgImVsYXBzZWQiCiAgXV0KCiAgYWRkaXRpdmUgPC0gcmVwKAogICAgMCwKICAgIGxlbmd0aCgKICAgICAgaWRzCiAgICApCiAgKQoKICBkb21pbmFuY2UgPC0gcmVwKAogICAgMCwKICAgIGxlbmd0aCgKICAgICAgaWRzCiAgICApCiAgKQoKICBlcGlzdGF0aWMgPC0gcmVwKAogICAgMCwKICAgIGxlbmd0aCgKICAgICAgaWRzCiAgICApCiAgKQoKICBhZGRpdGl2ZV9lZmZlY3QgPC0gYXMubWF0cml4KAogICAgZml0JHVMaXN0W1sKICAgICAgInZzbShpc20oaWQpLCBHdSA9IEFfbWF0cml4KSIKICAgIF1dCiAgKQoKICBhZGRpdGl2ZV9pbmNpZGVuY2UgPC0gbW9kZWwubWF0cml4KAogICAgfiBpZCAtIDEsCiAgICBkYXRhID0gZGF0CiAgKQoKICBhZGRpdGl2ZSA8LSBhcy5udW1lcmljKAogICAgYWRkaXRpdmVfaW5jaWRlbmNlICUqJQogICAgICBhZGRpdGl2ZV9lZmZlY3RbCiAgICAgICAgLAogICAgICAgIDFMLAogICAgICAgIGRyb3AgPSBGQUxTRQogICAgICBdCiAgKQoKICBpZiAoCiAgICBzdHJ1Y3R1cmUgJWluJQogICAgICBjKAogICAgICAgICJBRCIsCiAgICAgICAgIkFERSIKICAgICAgKQogICkgewoKICAgIGRvbWluYW5jZV9lZmZlY3QgPC0gYXMubWF0cml4KAogICAgICBmaXQkdUxpc3RbWwogICAgICAgICJ2c20oaXNtKGlkZCksIEd1ID0gRF9tYXRyaXgpIgogICAgICBdXQogICAgKQoKICAgIGRvbWluYW5jZV9pbmNpZGVuY2UgPC0gbW9kZWwubWF0cml4KAogICAgICB+IGlkZCAtIDEsCiAgICAgIGRhdGEgPSBkYXQKICAgICkKCiAgICBkb21pbmFuY2UgPC0gYXMubnVtZXJpYygKICAgICAgZG9taW5hbmNlX2luY2lkZW5jZSAlKiUKICAgICAgICBkb21pbmFuY2VfZWZmZWN0WwogICAgICAgICAgLAogICAgICAgICAgMUwsCiAgICAgICAgICBkcm9wID0gRkFMU0UKICAgICAgICBdCiAgICApCiAgfQoKICBpZiAoCiAgICBzdHJ1Y3R1cmUgPT0gIkFERSIKICApIHsKCiAgICBlcGlzdGF0aWNfZWZmZWN0IDwtIGFzLm1hdHJpeCgKICAgICAgZml0JHVMaXN0W1sKICAgICAgICAidnNtKGlzbShpZGUpLCBHdSA9IEVfbWF0cml4KSIKICAgICAgXV0KICAgICkKCiAgICBlcGlzdGF0aWNfaW5jaWRlbmNlIDwtIG1vZGVsLm1hdHJpeCgKICAgICAgfiBpZGUgLSAxLAogICAgICBkYXRhID0gZGF0CiAgICApCgogICAgZXBpc3RhdGljIDwtIGFzLm51bWVyaWMoCiAgICAgIGVwaXN0YXRpY19pbmNpZGVuY2UgJSolCiAgICAgICAgZXBpc3RhdGljX2VmZmVjdFsKICAgICAgICAgICwKICAgICAgICAgIDFMLAogICAgICAgICAgZHJvcCA9IEZBTFNFCiAgICAgICAgXQogICAgKQogIH0KCiAgZ2Vub21pY19jb21wb25lbnQgPC0KICAgIGFkZGl0aXZlICsKICAgIGRvbWluYW5jZSArCiAgICBlcGlzdGF0aWMKCiAgaW50ZXJjZXB0IDwtIGFzLm51bWVyaWMoCiAgICBmaXQkYgogIClbCiAgICAxTAogIF0KCiAgcHJlZGljdGVkX3ZhbHVlIDwtCiAgICBpbnRlcmNlcHQgKwogICAgZ2Vub21pY19jb21wb25lbnQKCiAgcHJlZGljdF9zZWNvbmRzIDwtCiAgICBwcm9jLnRpbWUoKVtbCiAgICAgICJlbGFwc2VkIgogICAgXV0gLQogICAgcHJlZGljdGlvbl9zdGFydAoKICBvYnNlcnZlZF90ZXN0IDwtIHJlc3BvbnNlX3ZlY3RvclsKICAgIGFzc2Vzc21lbnRfaW5kZXgKICBdCgogIHByZWRpY3RlZF90ZXN0IDwtIHByZWRpY3RlZF92YWx1ZVsKICAgIGFzc2Vzc21lbnRfaW5kZXgKICBdCgogIHN0b3BpZm5vdCgKICAgIGxlbmd0aCgKICAgICAgb2JzZXJ2ZWRfdGVzdAogICAgKSA9PSAzOUwsCiAgICBsZW5ndGgoCiAgICAgIHByZWRpY3RlZF90ZXN0CiAgICApID09IDM5TCwKICAgIGFsbCgKICAgICAgaXMuZmluaXRlKAogICAgICAgIG9ic2VydmVkX3Rlc3QKICAgICAgKQogICAgKSwKICAgIGFsbCgKICAgICAgaXMuZmluaXRlKAogICAgICAgIHByZWRpY3RlZF90ZXN0CiAgICAgICkKICAgICkKICApCgogIGNvbnN0YW50X3ByZWRpY3Rpb24gPC0KICAgIGxlbmd0aCgKICAgICAgdW5pcXVlKAogICAgICAgIHByZWRpY3RlZF90ZXN0CiAgICAgICkKICAgICkgPT0gMUwKCiAgaWYgKAogICAgbGVuZ3RoKAogICAgICB1bmlxdWUoCiAgICAgICAgb2JzZXJ2ZWRfdGVzdAogICAgICApCiAgICApID4gMUwgJiYKICAgICFjb25zdGFudF9wcmVkaWN0aW9uCiAgKSB7CgogICAgY29ycmVsYXRpb24gPC0gY29yKAogICAgICBwcmVkaWN0ZWRfdGVzdCwKICAgICAgb2JzZXJ2ZWRfdGVzdCwKICAgICAgbWV0aG9kID0gInBlYXJzb24iCiAgICApCgogICAgc3BlYXJtYW4gPC0gY29yKAogICAgICBwcmVkaWN0ZWRfdGVzdCwKICAgICAgb2JzZXJ2ZWRfdGVzdCwKICAgICAgbWV0aG9kID0gInNwZWFybWFuIgogICAgKQoKICB9IGVsc2UgewoKICAgIGNvcnJlbGF0aW9uIDwtIE5BX3JlYWxfCiAgICBzcGVhcm1hbiA8LSBOQV9yZWFsXwogIH0KCiAgcm1zZSA8LSBzcXJ0KAogICAgbWVhbigKICAgICAgKAogICAgICAgIHByZWRpY3RlZF90ZXN0IC0KICAgICAgICBvYnNlcnZlZF90ZXN0CiAgICAgICleMgogICAgKQogICkKCiAgbWFlIDwtIG1lYW4oCiAgICBhYnMoCiAgICAgIHByZWRpY3RlZF90ZXN0IC0KICAgICAgb2JzZXJ2ZWRfdGVzdAogICAgKQogICkKCiAgYmlhcyA8LSBtZWFuKAogICAgcHJlZGljdGVkX3Rlc3QgLQogICAgb2JzZXJ2ZWRfdGVzdAogICkKCiAgaWYgKAogICAgIWNvbnN0YW50X3ByZWRpY3Rpb24KICApIHsKCiAgICBzbG9wZSA8LSBhcy5udW1lcmljKAogICAgICBjb2VmKAogICAgICAgIGxtKAogICAgICAgICAgb2JzZXJ2ZWRfdGVzdCB+CiAgICAgICAgICAgIHByZWRpY3RlZF90ZXN0CiAgICAgICAgKQogICAgICApWwogICAgICAgIDJMCiAgICAgIF0KICAgICkKCiAgfSBlbHNlIHsKCiAgICBzbG9wZSA8LSBOQV9yZWFsXwogIH0KCiAgcmVzdWx0X2xpc3RbWwogICAgaQogIF1dIDwtIGRhdGEuZnJhbWUoCiAgICBEYXRhc2V0ID0gInJlYWwiLAogICAgVHJhaXQgPSB0cmFpdCwKICAgIFJlcGV0aXRpb24gPSB0YXNrJFJlcGV0aXRpb24sCiAgICBGb2xkID0gdGFzayRPdXRlckZvbGQsCiAgICBTcGxpdElEID0gdGFzayRTcGxpdElELAogICAgVGFza0lEID0gdGFzayRUYXNrSUQsCiAgICBNb2RlbCA9IHRhc2skTW9kZWwsCiAgICBTdHJ1Y3R1cmUgPSBzdHJ1Y3R1cmUsCiAgICBOX3RyYWluID0gbGVuZ3RoKAogICAgICBhbmFseXNpc19pbmRleAogICAgKSwKICAgIE5fdGVzdCA9IGxlbmd0aCgKICAgICAgYXNzZXNzbWVudF9pbmRleAogICAgKSwKICAgIENvbnZlcmdlbmNlID0gaXNUUlVFKAogICAgICBmaXQkY29udmVyZ2VuY2UKICAgICksCiAgICBJdGVyYXRpb25zID0gbGVuZ3RoKAogICAgICBsbGlrCiAgICApLAogICAgRmluYWxfTExpayA9IHRhaWwoCiAgICAgIGxsaWssCiAgICAgIDFMCiAgICApLAogICAgTGFzdF9MTGlrX2NoYW5nZSA9CiAgICAgIGxhc3RfbGxpa19jaGFuZ2UsCiAgICBQYXNzX0xMaWtfZ2F0ZSA9CiAgICAgIHBhc3NfbGxpa19nYXRlLAogICAgVmFyaWFuY2VfQSA9CiAgICAgIHZhcmlhbmNlX0EsCiAgICBWYXJpYW5jZV9EID0KICAgICAgdmFyaWFuY2VfRCwKICAgIFZhcmlhbmNlX0UgPQogICAgICB2YXJpYW5jZV9FLAogICAgVmFyaWFuY2VfUmVzaWR1YWwgPQogICAgICB2YXJpYW5jZV9yZXNpZHVhbCwKICAgIEFueV9uZWdhdGl2ZSA9CiAgICAgIGFueV9uZWdhdGl2ZSwKICAgIENvbnN0YW50X3ByZWRpY3Rpb24gPQogICAgICBjb25zdGFudF9wcmVkaWN0aW9uLAogICAgQkxVUF9Db3JyZWxhdGlvbiA9CiAgICAgIGNvcnJlbGF0aW9uLAogICAgQkxVUF9TcGVhcm1hbiA9CiAgICAgIHNwZWFybWFuLAogICAgQkxVUF9STVNFID0KICAgICAgcm1zZSwKICAgIEJMVVBfTUFFID0KICAgICAgbWFlLAogICAgQkxVUF9CaWFzID0KICAgICAgYmlhcywKICAgIEJMVVBfU2xvcGUgPQogICAgICBzbG9wZSwKICAgIEtlcm5lbF9idWlsZF9zZWNvbmRzID0KICAgICAga2VybmVsX3NlY29uZHMsCiAgICBGaXRfc2Vjb25kcyA9CiAgICAgIGZpdF9zZWNvbmRzLAogICAgUHJlZGljdF9zZWNvbmRzID0KICAgICAgcHJlZGljdF9zZWNvbmRzLAogICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgKQoKICBwcmVkaWN0aW9uX2xpc3RbWwogICAgaQogIF1dIDwtIGRhdGEuZnJhbWUoCiAgICBEYXRhc2V0ID0gInJlYWwiLAogICAgVHJhaXQgPSB0cmFpdCwKICAgIFJlcGV0aXRpb24gPSB0YXNrJFJlcGV0aXRpb24sCiAgICBGb2xkID0gdGFzayRPdXRlckZvbGQsCiAgICBTcGxpdElEID0gdGFzayRTcGxpdElELAogICAgVGFza0lEID0gdGFzayRUYXNrSUQsCiAgICBNb2RlbCA9IHRhc2skTW9kZWwsCiAgICBTdHJ1Y3R1cmUgPSBzdHJ1Y3R1cmUsCiAgICBJRCA9IGlkc1sKICAgICAgYXNzZXNzbWVudF9pbmRleAogICAgXSwKICAgIE9ic2VydmVkX0JMVVAgPQogICAgICBvYnNlcnZlZF90ZXN0LAogICAgUHJlZGljdGVkX0JMVVAgPQogICAgICBwcmVkaWN0ZWRfdGVzdCwKICAgIEdlbm9taWNfQ29tcG9uZW50ID0KICAgICAgZ2Vub21pY19jb21wb25lbnRbCiAgICAgICAgYXNzZXNzbWVudF9pbmRleAogICAgICBdLAogICAgQWRkaXRpdmVfUHJlZGljdGlvbiA9CiAgICAgIGFkZGl0aXZlWwogICAgICAgIGFzc2Vzc21lbnRfaW5kZXgKICAgICAgXSwKICAgIERvbWluYW5jZV9QcmVkaWN0aW9uID0KICAgICAgZG9taW5hbmNlWwogICAgICAgIGFzc2Vzc21lbnRfaW5kZXgKICAgICAgXSwKICAgIEVwaXN0YXRpY19QcmVkaWN0aW9uID0KICAgICAgZXBpc3RhdGljWwogICAgICAgIGFzc2Vzc21lbnRfaW5kZXgKICAgICAgXSwKICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICkKCiAgY2F0KAogICAgc3ByaW50ZigKICAgICAgIlslMDNkLyUwM2RdICVzIHwgY29udj0lcyB8IG5lZz0lcyB8IExMPSVzIHwgUGVhcnNvbj0lcyB8IFNwZWFybWFuPSVzIHwgUk1TRT0lLjRmXG4iLAogICAgICBpLAogICAgICBucm93KAogICAgICAgIHRhc2tfdGFibGUKICAgICAgKSwKICAgICAgdGFzayRUYXNrSUQsCiAgICAgIGlzVFJVRSgKICAgICAgICBmaXQkY29udmVyZ2VuY2UKICAgICAgKSwKICAgICAgYW55X25lZ2F0aXZlLAogICAgICBwYXNzX2xsaWtfZ2F0ZSwKICAgICAgaWZlbHNlKAogICAgICAgIGlzLmZpbml0ZSgKICAgICAgICAgIGNvcnJlbGF0aW9uCiAgICAgICAgKSwKICAgICAgICBzcHJpbnRmKAogICAgICAgICAgIiUuNGYiLAogICAgICAgICAgY29ycmVsYXRpb24KICAgICAgICApLAogICAgICAgICJOQSIKICAgICAgKSwKICAgICAgaWZlbHNlKAogICAgICAgIGlzLmZpbml0ZSgKICAgICAgICAgIHNwZWFybWFuCiAgICAgICAgKSwKICAgICAgICBzcHJpbnRmKAogICAgICAgICAgIiUuNGYiLAogICAgICAgICAgc3BlYXJtYW4KICAgICAgICApLAogICAgICAgICJOQSIKICAgICAgKSwKICAgICAgcm1zZQogICAgKQogICkKfQoKcmVzdWx0cyA8LSBkby5jYWxsKAogIHJiaW5kLAogIHJlc3VsdF9saXN0CikKCnByZWRpY3Rpb25zIDwtIGRvLmNhbGwoCiAgcmJpbmQsCiAgcHJlZGljdGlvbl9saXN0CikKCnJvd25hbWVzKAogIHJlc3VsdHMKKSA8LSBOVUxMCgpyb3duYW1lcygKICBwcmVkaWN0aW9ucwopIDwtIE5VTEwKCnN0b3BpZm5vdCgKICBucm93KAogICAgcmVzdWx0cwogICkgPT0gMjI1TCwKICBucm93KAogICAgcHJlZGljdGlvbnMKICApID09IDg3NzVMLAogIGxlbmd0aCgKICAgIHVuaXF1ZSgKICAgICAgcmVzdWx0cyRUYXNrSUQKICAgICkKICApID09IDIyNUwsCiAgbGVuZ3RoKAogICAgdW5pcXVlKAogICAgICBwcmVkaWN0aW9ucyRUYXNrSUQKICAgICkKICApID09IDIyNUwsCiAgYWxsKAogICAgdGFibGUoCiAgICAgIHJlc3VsdHMkU3RydWN0dXJlCiAgICApID09IDc1TAogICksCiAgYWxsKAogICAgdGFibGUoCiAgICAgIHJlc3VsdHMkVHJhaXQKICAgICkgPT0gNzVMCiAgKSwKICBhbGwoCiAgICB0YWJsZSgKICAgICAgcHJlZGljdGlvbnMkVGFza0lECiAgICApID09IDM5TAogICksCiAgYWxsKAogICAgcmVzdWx0cyROX3RyYWluID09IDE1NkwKICApLAogIGFsbCgKICAgIHJlc3VsdHMkTl90ZXN0ID09IDM5TAogICksCiAgYWxsKAogICAgaXMuZmluaXRlKAogICAgICBwcmVkaWN0aW9ucyRPYnNlcnZlZF9CTFVQCiAgICApCiAgKSwKICBhbGwoCiAgICBpcy5maW5pdGUoCiAgICAgIHByZWRpY3Rpb25zJFByZWRpY3RlZF9CTFVQCiAgICApCiAgKQopCgpydW5fc2Vjb25kcyA8LQogIHByb2MudGltZSgpW1sKICAgICJlbGFwc2VkIgogIF1dIC0KICBydW5fc3RhcnQKCndyaXRlLmNzdigKICByZXN1bHRzLAogIFJFU1VMVFNfQ1NWLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKCnNhdmVSRFMoCiAgcmVzdWx0cywKICBSRVNVTFRTX1JEUwopCgp3cml0ZS5jc3YoCiAgcHJlZGljdGlvbnMsCiAgUFJFRElDVElPTlNfQ1NWLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKCnNhdmVSRFMoCiAgcHJlZGljdGlvbnMsCiAgUFJFRElDVElPTlNfUkRTCikKCnJ1bl9tZXRhZGF0YSA8LSBsaXN0KAogIGRhdGFzZXQgPSAicmVhbCIsCiAgbW9kZWxzID0gYygKICAgICJHQkxVUF9BIiwKICAgICJHQkxVUF9BRCIsCiAgICAiR0JMVVBfQURFIgogICksCiAgc3RydWN0dXJlcyA9IGMoCiAgICAiQSIsCiAgICAiQUQiLAogICAgIkFERSIKICApLAogIHNlZWRfZ2xvYmFsID0KICAgIFNFRURfR0xPQkFMLAogIHNvbW1lcl92ZXJzaW9uID0KICAgIGFzLmNoYXJhY3RlcigKICAgICAgcGFja2FnZVZlcnNpb24oCiAgICAgICAgInNvbW1lciIKICAgICAgKQogICAgKSwKICBuSXRlcnNfc29tbWVyID0KICAgIE5fSVRFUlNfU09NTUVSLAogIHRvbFBhckNvbnZMTCA9CiAgICBUT0xfTExJSywKICBtYXJrZXJfcGFuZWxfbiA9CiAgICBuY29sKAogICAgICBnZW5vCiAgICApLAogIGluZGl2aWR1YWxzX24gPQogICAgbnJvdygKICAgICAgZ2VubwogICAgKSwKICB0cmFpdHMgPQogICAgdHJhaXRzLAogIG91dGVyX3NwbGl0cyA9CiAgICBucm93KAogICAgICBvdXRlcl9tZXRhCiAgICApLAogIHRhc2tzID0KICAgIG5yb3coCiAgICAgIHJlc3VsdHMKICAgICksCiAgcHJlZGljdGlvbl9yb3dzID0KICAgIG5yb3coCiAgICAgIHByZWRpY3Rpb25zCiAgICApLAogIGtlcm5lbF9idWlsZF9zZWNvbmRzID0KICAgIGtlcm5lbF9zZWNvbmRzLAogIHRvdGFsX3J1bl9zZWNvbmRzID0KICAgIHJ1bl9zZWNvbmRzLAogIHRpbWVzdGFtcCA9CiAgICBhcy5jaGFyYWN0ZXIoCiAgICAgIFN5cy50aW1lKCkKICAgICkKKQoKc2F2ZVJEUygKICBydW5fbWV0YWRhdGEsCiAgUlVOX01FVEFEQVRBX1JEUwopCmBgYAoKYGBge3IgbG9hZC1tb2RlbC1yZXN1bHRzLCBldmFsPSFSVU5fR0JMVVB9CnN0b3BpZm5vdCgKICBmaWxlLmV4aXN0cygKICAgIFJFU1VMVFNfUkRTCiAgKSwKICBmaWxlLmV4aXN0cygKICAgIFBSRURJQ1RJT05TX1JEUwogICksCiAgZmlsZS5leGlzdHMoCiAgICBSVU5fTUVUQURBVEFfUkRTCiAgKQopCgpyZXN1bHRzIDwtIHJlYWRSRFMoCiAgUkVTVUxUU19SRFMKKQoKcHJlZGljdGlvbnMgPC0gcmVhZFJEUygKICBQUkVESUNUSU9OU19SRFMKKQoKcnVuX21ldGFkYXRhIDwtIHJlYWRSRFMoCiAgUlVOX01FVEFEQVRBX1JEUwopCmBgYAoKIyMgOC4gTnVtZXJpY2FsIGJlaGF2aW9yCgpUaGUgbnVtZXJpY2FsIGRpYWdub3N0aWNzIGFyZSByZXBvcnRlZCBiZWNhdXNlIHRoZXkgaGVscCBpbnRlcnByZXQgbW9kZWwKY29tcGxleGl0eS4gVGhleSBhcmUgbm90IHVzZWQgdG8gcmVwbGFjZSBvbmUgY2FuZGlkYXRlIHN0cnVjdHVyZSBieSBhbm90aGVyCndpdGhpbiBhIHZhbGlkYXRpb24gc3BsaXQuCgpgYGB7ciBudW1lcmljYWwtc3VtbWFyeX0KbnVtZXJpY2FsX3N1bW1hcnkgPC0gZGF0YS5mcmFtZSgKICBTdHJ1Y3R1cmUgPSBjaGFyYWN0ZXIoMCksCiAgVHJhaXQgPSBjaGFyYWN0ZXIoMCksCiAgRml0cyA9IGludGVnZXIoMCksCiAgQ29udmVyZ2VkID0gaW50ZWdlcigwKSwKICBOZWdhdGl2ZV9jb21wb25lbnRzID0gaW50ZWdlcigwKSwKICBQYXNzX0xMaWtfZ2F0ZSA9IGludGVnZXIoMCksCiAgQ29uc3RhbnRfcHJlZGljdGlvbnMgPSBpbnRlZ2VyKDApLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpmb3IgKAogIHN0cnVjdHVyZSBpbgogICAgYygKICAgICAgIkEiLAogICAgICAiQUQiLAogICAgICAiQURFIgogICAgKQopIHsKCiAgZm9yICgKICAgIHRyYWl0IGluCiAgICAgIHRyYWl0cwogICkgewoKICAgIHggPC0gcmVzdWx0c1sKICAgICAgcmVzdWx0cyRTdHJ1Y3R1cmUgPT0KICAgICAgICBzdHJ1Y3R1cmUgJgogICAgICAgIHJlc3VsdHMkVHJhaXQgPT0KICAgICAgICB0cmFpdCwKICAgICAgLAogICAgICBkcm9wID0gRkFMU0UKICAgIF0KCiAgICBudW1lcmljYWxfc3VtbWFyeSA8LSByYmluZCgKICAgICAgbnVtZXJpY2FsX3N1bW1hcnksCiAgICAgIGRhdGEuZnJhbWUoCiAgICAgICAgU3RydWN0dXJlID0KICAgICAgICAgIHN0cnVjdHVyZSwKICAgICAgICBUcmFpdCA9CiAgICAgICAgICB0cmFpdCwKICAgICAgICBGaXRzID0KICAgICAgICAgIG5yb3coCiAgICAgICAgICAgIHgKICAgICAgICAgICksCiAgICAgICAgQ29udmVyZ2VkID0KICAgICAgICAgIHN1bSgKICAgICAgICAgICAgeCRDb252ZXJnZW5jZQogICAgICAgICAgKSwKICAgICAgICBOZWdhdGl2ZV9jb21wb25lbnRzID0KICAgICAgICAgIHN1bSgKICAgICAgICAgICAgeCRBbnlfbmVnYXRpdmUKICAgICAgICAgICksCiAgICAgICAgUGFzc19MTGlrX2dhdGUgPQogICAgICAgICAgc3VtKAogICAgICAgICAgICB4JFBhc3NfTExpa19nYXRlCiAgICAgICAgICApLAogICAgICAgIENvbnN0YW50X3ByZWRpY3Rpb25zID0KICAgICAgICAgIHN1bSgKICAgICAgICAgICAgeCRDb25zdGFudF9wcmVkaWN0aW9uCiAgICAgICAgICApLAogICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICAgICApCiAgICApCiAgfQp9Cgp3cml0ZS5jc3YoCiAgbnVtZXJpY2FsX3N1bW1hcnksCiAgTlVNRVJJQ0FMX1NVTU1BUllfQ1NWLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKCm51bWVyaWNhbF9zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJOdW1lcmljYWwgYmVoYXZpb3Igb2YgdGhlIGZpeGVkIEdCTFVQIHN0cnVjdHVyZXMiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIiBzdHlsZT0id2lkdGg6MTAwJTsiJwogICkKYGBgCgpBIHZhcmlhbmNlIGNvbXBvbmVudCBlc3RpbWF0ZWQgbmVhciB0aGUgYm91bmRhcnkgY2FuIGJlIG51bWVyaWNhbGx5IGRpZmZpY3VsdApmb3IgYSBtb3JlIGNvbXBsZXggY292YXJpYW5jZSBzdHJ1Y3R1cmUuIFRoZXNlIGRpYWdub3N0aWNzIGFyZSB0aGVyZWZvcmUKaW50ZXJwcmV0ZWQgdG9nZXRoZXIgd2l0aCBoZWxkLW91dCBwcmVkaWN0aXZlIHBlcmZvcm1hbmNlIHJhdGhlciB0aGFuIGFzIGEKY3JpdGVyaW9uIGZvciBjaGFuZ2luZyB0aGUgbW9kZWwgYXNzaWduZWQgdG8gYSBzcGVjaWZpYyBzcGxpdC4KCiMjIDkuIEhlbGQtb3V0IHByZWRpY3RpdmUgcGVyZm9ybWFuY2UKClBlYXJzb24gYW5kIFNwZWFybWFuIGNvcnJlbGF0aW9ucyBhbmQgdGhlIGNhbGlicmF0aW9uIHNsb3BlIGFyZSB1bmRlZmluZWQKd2hlbiBhbGwgMzkgaGVsZC1vdXQgcHJlZGljdGlvbnMgZnJvbSBhIHRhc2sgYXJlIGNvbnN0YW50LiBSTVNFLCBNQUUsIGFuZCBiaWFzCnJlbWFpbiBkZWZpbmVkIGluIHRob3NlIHRhc2tzLiBFYWNoIG1ldHJpYyBpcyB0aGVyZWZvcmUgc3VtbWFyaXplZCBmcm9tIGFsbAp0YXNrcyBmb3Igd2hpY2ggdGhhdCBzcGVjaWZpYyBtZXRyaWMgaXMgZmluaXRlLgoKYGBge3IgcGVyZm9ybWFuY2Utc3VtbWFyeX0KcGVyZm9ybWFuY2Vfc3VtbWFyeSA8LSBkYXRhLmZyYW1lKAogIFN0cnVjdHVyZSA9IGNoYXJhY3RlcigwKSwKICBNb2RlbCA9IGNoYXJhY3RlcigwKSwKICBUcmFpdCA9IGNoYXJhY3RlcigwKSwKICBTcGxpdHMgPSBpbnRlZ2VyKDApLAogIENvcnJlbGF0aW9uX04gPSBpbnRlZ2VyKDApLAogIEJMVVBfQ29ycmVsYXRpb24gPSBudW1lcmljKDApLAogIEJMVVBfQ29ycmVsYXRpb25fU0QgPSBudW1lcmljKDApLAogIFNwZWFybWFuX04gPSBpbnRlZ2VyKDApLAogIEJMVVBfU3BlYXJtYW4gPSBudW1lcmljKDApLAogIEJMVVBfU3BlYXJtYW5fU0QgPSBudW1lcmljKDApLAogIFJNU0VfTiA9IGludGVnZXIoMCksCiAgQkxVUF9STVNFID0gbnVtZXJpYygwKSwKICBNQUVfTiA9IGludGVnZXIoMCksCiAgQkxVUF9NQUUgPSBudW1lcmljKDApLAogIEJpYXNfTiA9IGludGVnZXIoMCksCiAgQkxVUF9CaWFzID0gbnVtZXJpYygwKSwKICBTbG9wZV9OID0gaW50ZWdlcigwKSwKICBCTFVQX1Nsb3BlID0gbnVtZXJpYygwKSwKICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKKQoKZm9yICgKICBzdHJ1Y3R1cmUgaW4KICAgIGMoCiAgICAgICJBIiwKICAgICAgIkFEIiwKICAgICAgIkFERSIKICAgICkKKSB7CgogIGZvciAoCiAgICB0cmFpdCBpbgogICAgICB0cmFpdHMKICApIHsKCiAgICB4IDwtIHJlc3VsdHNbCiAgICAgIHJlc3VsdHMkU3RydWN0dXJlID09CiAgICAgICAgc3RydWN0dXJlICYKICAgICAgICByZXN1bHRzJFRyYWl0ID09CiAgICAgICAgdHJhaXQsCiAgICAgICwKICAgICAgZHJvcCA9IEZBTFNFCiAgICBdCgogICAgbW9kZWxfbmFtZSA8LSB1bmlxdWUoCiAgICAgIHgkTW9kZWwKICAgICkKCiAgICBzdG9waWZub3QoCiAgICAgIGxlbmd0aCgKICAgICAgICBtb2RlbF9uYW1lCiAgICAgICkgPT0gMUwKICAgICkKCiAgICBwZXJmb3JtYW5jZV9zdW1tYXJ5IDwtIHJiaW5kKAogICAgICBwZXJmb3JtYW5jZV9zdW1tYXJ5LAogICAgICBkYXRhLmZyYW1lKAogICAgICAgIFN0cnVjdHVyZSA9CiAgICAgICAgICBzdHJ1Y3R1cmUsCiAgICAgICAgTW9kZWwgPQogICAgICAgICAgbW9kZWxfbmFtZSwKICAgICAgICBUcmFpdCA9CiAgICAgICAgICB0cmFpdCwKICAgICAgICBTcGxpdHMgPQogICAgICAgICAgbnJvdygKICAgICAgICAgICAgeAogICAgICAgICAgKSwKICAgICAgICBDb3JyZWxhdGlvbl9OID0KICAgICAgICAgIHN1bSgKICAgICAgICAgICAgaXMuZmluaXRlKAogICAgICAgICAgICAgIHgkQkxVUF9Db3JyZWxhdGlvbgogICAgICAgICAgICApCiAgICAgICAgICApLAogICAgICAgIEJMVVBfQ29ycmVsYXRpb24gPQogICAgICAgICAgbWVhbigKICAgICAgICAgICAgeCRCTFVQX0NvcnJlbGF0aW9uLAogICAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICAgICksCiAgICAgICAgQkxVUF9Db3JyZWxhdGlvbl9TRCA9CiAgICAgICAgICBzZCgKICAgICAgICAgICAgeCRCTFVQX0NvcnJlbGF0aW9uLAogICAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICAgICksCiAgICAgICAgU3BlYXJtYW5fTiA9CiAgICAgICAgICBzdW0oCiAgICAgICAgICAgIGlzLmZpbml0ZSgKICAgICAgICAgICAgICB4JEJMVVBfU3BlYXJtYW4KICAgICAgICAgICAgKQogICAgICAgICAgKSwKICAgICAgICBCTFVQX1NwZWFybWFuID0KICAgICAgICAgIG1lYW4oCiAgICAgICAgICAgIHgkQkxVUF9TcGVhcm1hbiwKICAgICAgICAgICAgbmEucm0gPSBUUlVFCiAgICAgICAgICApLAogICAgICAgIEJMVVBfU3BlYXJtYW5fU0QgPQogICAgICAgICAgc2QoCiAgICAgICAgICAgIHgkQkxVUF9TcGVhcm1hbiwKICAgICAgICAgICAgbmEucm0gPSBUUlVFCiAgICAgICAgICApLAogICAgICAgIFJNU0VfTiA9CiAgICAgICAgICBzdW0oCiAgICAgICAgICAgIGlzLmZpbml0ZSgKICAgICAgICAgICAgICB4JEJMVVBfUk1TRQogICAgICAgICAgICApCiAgICAgICAgICApLAogICAgICAgIEJMVVBfUk1TRSA9CiAgICAgICAgICBtZWFuKAogICAgICAgICAgICB4JEJMVVBfUk1TRSwKICAgICAgICAgICAgbmEucm0gPSBUUlVFCiAgICAgICAgICApLAogICAgICAgIE1BRV9OID0KICAgICAgICAgIHN1bSgKICAgICAgICAgICAgaXMuZmluaXRlKAogICAgICAgICAgICAgIHgkQkxVUF9NQUUKICAgICAgICAgICAgKQogICAgICAgICAgKSwKICAgICAgICBCTFVQX01BRSA9CiAgICAgICAgICBtZWFuKAogICAgICAgICAgICB4JEJMVVBfTUFFLAogICAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICAgICksCiAgICAgICAgQmlhc19OID0KICAgICAgICAgIHN1bSgKICAgICAgICAgICAgaXMuZmluaXRlKAogICAgICAgICAgICAgIHgkQkxVUF9CaWFzCiAgICAgICAgICAgICkKICAgICAgICAgICksCiAgICAgICAgQkxVUF9CaWFzID0KICAgICAgICAgIG1lYW4oCiAgICAgICAgICAgIHgkQkxVUF9CaWFzLAogICAgICAgICAgICBuYS5ybSA9IFRSVUUKICAgICAgICAgICksCiAgICAgICAgU2xvcGVfTiA9CiAgICAgICAgICBzdW0oCiAgICAgICAgICAgIGlzLmZpbml0ZSgKICAgICAgICAgICAgICB4JEJMVVBfU2xvcGUKICAgICAgICAgICAgKQogICAgICAgICAgKSwKICAgICAgICBCTFVQX1Nsb3BlID0KICAgICAgICAgIG1lYW4oCiAgICAgICAgICAgIHgkQkxVUF9TbG9wZSwKICAgICAgICAgICAgbmEucm0gPSBUUlVFCiAgICAgICAgICApLAogICAgICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQogICAgICApCiAgICApCiAgfQp9Cgp3cml0ZS5jc3YoCiAgcGVyZm9ybWFuY2Vfc3VtbWFyeSwKICBQRVJGT1JNQU5DRV9TVU1NQVJZX0NTViwKICByb3cubmFtZXMgPSBGQUxTRQopCgpwZXJmb3JtYW5jZV9zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgZGlnaXRzID0gNCwKICAgIGNhcHRpb24gPSAiTWVhbiBoZWxkLW91dCBwZXJmb3JtYW5jZSBvZiBBLCBBRCwgYW5kIEFERSBhY3Jvc3MgdGhlIDI1IG91dGVyIHNwbGl0cyIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiIHN0eWxlPSJ3aWR0aDoxMDAlOyInCiAgKQpgYGAKClRoZSBjb21wYXJpc29uIGlzIGludGVudGlvbmFsbHkgZGVzY3JpcHRpdmUgYXQgdGhpcyBzdGFnZS4gQSBtb3JlIGNvbXBsZXRlCmNyb3NzLW1vZGVsIGNvbXBhcmlzb24sIGluY2x1ZGluZyB0aGUgcmVndWxhcml6ZWQgQU5OIG1vZGVscywgaXMgcGVyZm9ybWVkIGluCnRoZSBmaW5hbCBjb21wYXJpc29uIG1vZHVsZS4KCiMjIDEwLiBPdXQtb2YtZm9sZCByYW5raW5nIG9mIHRoZSAxOTUgaW5kaXZpZHVhbHMKCkVhY2ggaW5kaXZpZHVhbCBpcyBhc3Nlc3NlZCBvbmNlIGluIGV2ZXJ5IHJlcGV0aXRpb24gYW5kIHRoZXJlZm9yZSBoYXMgZml2ZQpoZWxkLW91dCBwcmVkaWN0aW9ucyBmb3IgZWFjaCB0cmFpdCBhbmQgR0JMVVAgc3RydWN0dXJlLiBUaGVzZSBmaXZlIG91dC1vZi1mb2xkCnByZWRpY3Rpb25zIGFyZSBhdmVyYWdlZCBiZWZvcmUgdGhlIGdsb2JhbCByYW5raW5nIGlzIGNvbnN0cnVjdGVkLiBUaGlzIHlpZWxkcwpvbmUgcHJlZGljdGl2ZSB2YWx1ZSBwZXIgaW5kaXZpZHVhbCwgbW9kZWwsIGFuZCB0cmFpdCB1c2luZyBvbmx5IHByZWRpY3Rpb25zCm9idGFpbmVkIHdoaWxlIHRoYXQgaW5kaXZpZHVhbCB3YXMgb3V0c2lkZSB0aGUgdHJhaW5pbmcgc2V0LgoKUmFua3MgYXJlIGRlZmluZWQgaW4gZGVjcmVhc2luZyBvcmRlcjogcmFuayAxIGNvcnJlc3BvbmRzIHRvIHRoZSBoaWdoZXN0IEJMVVAuClRoZSBhYnNvbHV0ZSByYW5rIGVycm9yIG1lYXN1cmVzIHRoZSBkaXNwbGFjZW1lbnQgYmV0d2VlbiB0aGUgb2JzZXJ2ZWQgYW5kCnByZWRpY3RlZCBvcmRlcmluZy4KClNlbGVjdGlvbiBhZ3JlZW1lbnQgaXMgYWxzbyBldmFsdWF0ZWQgZm9yIHRoZSB1cHBlciAyMCUgb2YgdGhlIHBvcHVsYXRpb24uCldpdGggMTk1IGluZGl2aWR1YWxzLCB0aGUgc2VsZWN0ZWQgZ3JvdXAgY29udGFpbnMgZXhhY3RseSAzOSBpbmRpdmlkdWFscy4KV2hlbiBCTFVQIHZhbHVlcyBhcmUgdGllZCBhdCB0aGUgc2VsZWN0aW9uIGJvdW5kYXJ5LCBgSURgIGlzIHVzZWQgb25seSBhcyBhCmRldGVybWluaXN0aWMgc2Vjb25kYXJ5IG9yZGVyaW5nIGNyaXRlcmlvbiBzbyB0aGF0IGJvdGggb2JzZXJ2ZWQgYW5kIHByZWRpY3RlZApzZXRzIGNvbnRhaW4gZXhhY3RseSAzOSBpbmRpdmlkdWFscy4KCmBgYHtyIGluZGl2aWR1YWwtcmFua2luZ30KVE9QMjBfTiA8LSAzOUwKCmluZGl2aWR1YWxfcmFua2luZyA8LSBkYXRhLmZyYW1lKAogIFN0cnVjdHVyZSA9IGNoYXJhY3RlcigwKSwKICBNb2RlbCA9IGNoYXJhY3RlcigwKSwKICBUcmFpdCA9IGNoYXJhY3RlcigwKSwKICBJRCA9IGNoYXJhY3RlcigwKSwKICBPYnNlcnZlZF9CTFVQID0gbnVtZXJpYygwKSwKICBQcmVkaWN0ZWRfQkxVUCA9IG51bWVyaWMoMCksCiAgUHJlZGljdGlvbl9TRCA9IG51bWVyaWMoMCksCiAgTl9PT0YgPSBpbnRlZ2VyKDApLAogIE9ic2VydmVkX1JhbmsgPSBudW1lcmljKDApLAogIFByZWRpY3RlZF9SYW5rID0gbnVtZXJpYygwKSwKICBSYW5rX0RpZmZlcmVuY2UgPSBudW1lcmljKDApLAogIEFic29sdXRlX1JhbmtfRXJyb3IgPSBudW1lcmljKDApLAogIE9ic2VydmVkX1RvcDIwID0gbG9naWNhbCgwKSwKICBQcmVkaWN0ZWRfVG9wMjAgPSBsb2dpY2FsKDApLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpyYW5raW5nX3N1bW1hcnkgPC0gZGF0YS5mcmFtZSgKICBTdHJ1Y3R1cmUgPSBjaGFyYWN0ZXIoMCksCiAgTW9kZWwgPSBjaGFyYWN0ZXIoMCksCiAgVHJhaXQgPSBjaGFyYWN0ZXIoMCksCiAgSW5kaXZpZHVhbHMgPSBpbnRlZ2VyKDApLAogIFJhbmtpbmdfU3BlYXJtYW4gPSBudW1lcmljKDApLAogIE1lYW5fQWJzb2x1dGVfUmFua19FcnJvciA9IG51bWVyaWMoMCksCiAgTWVkaWFuX0Fic29sdXRlX1JhbmtfRXJyb3IgPSBudW1lcmljKDApLAogIFRvcDIwX04gPSBpbnRlZ2VyKDApLAogIFRvcDIwX092ZXJsYXBfTiA9IGludGVnZXIoMCksCiAgVG9wMjBfT3ZlcmxhcF9SYXRlID0gbnVtZXJpYygwKSwKICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKKQoKZm9yICgKICBzdHJ1Y3R1cmUgaW4KICAgIGMoCiAgICAgICJBIiwKICAgICAgIkFEIiwKICAgICAgIkFERSIKICAgICkKKSB7CgogIGZvciAoCiAgICB0cmFpdCBpbgogICAgICB0cmFpdHMKICApIHsKCiAgICB4IDwtIHByZWRpY3Rpb25zWwogICAgICBwcmVkaWN0aW9ucyRTdHJ1Y3R1cmUgPT0KICAgICAgICBzdHJ1Y3R1cmUgJgogICAgICAgIHByZWRpY3Rpb25zJFRyYWl0ID09CiAgICAgICAgdHJhaXQsCiAgICAgICwKICAgICAgZHJvcCA9IEZBTFNFCiAgICBdCgogICAgbW9kZWxfbmFtZSA8LSB1bmlxdWUoCiAgICAgIHgkTW9kZWwKICAgICkKCiAgICBzdG9waWZub3QoCiAgICAgIGxlbmd0aCgKICAgICAgICBtb2RlbF9uYW1lCiAgICAgICkgPT0gMUwKICAgICkKCiAgICByYW5raW5nX2dyb3VwIDwtIGRhdGEuZnJhbWUoCiAgICAgIFN0cnVjdHVyZSA9IGNoYXJhY3RlcigwKSwKICAgICAgTW9kZWwgPSBjaGFyYWN0ZXIoMCksCiAgICAgIFRyYWl0ID0gY2hhcmFjdGVyKDApLAogICAgICBJRCA9IGNoYXJhY3RlcigwKSwKICAgICAgT2JzZXJ2ZWRfQkxVUCA9IG51bWVyaWMoMCksCiAgICAgIFByZWRpY3RlZF9CTFVQID0gbnVtZXJpYygwKSwKICAgICAgUHJlZGljdGlvbl9TRCA9IG51bWVyaWMoMCksCiAgICAgIE5fT09GID0gaW50ZWdlcigwKSwKICAgICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgICApCgogICAgZm9yICgKICAgICAgaW5kaXZpZHVhbF9pZCBpbgogICAgICAgIGlkcwogICAgKSB7CgogICAgICB4aSA8LSB4WwogICAgICAgIHgkSUQgPT0KICAgICAgICAgIGluZGl2aWR1YWxfaWQsCiAgICAgICAgLAogICAgICAgIGRyb3AgPSBGQUxTRQogICAgICBdCgogICAgICBzdG9waWZub3QoCiAgICAgICAgbnJvdygKICAgICAgICAgIHhpCiAgICAgICAgKSA9PSA1TCwKICAgICAgICBsZW5ndGgoCiAgICAgICAgICB1bmlxdWUoCiAgICAgICAgICAgIHhpJE9ic2VydmVkX0JMVVAKICAgICAgICAgICkKICAgICAgICApID09IDFMCiAgICAgICkKCiAgICAgIHJhbmtpbmdfZ3JvdXAgPC0gcmJpbmQoCiAgICAgICAgcmFua2luZ19ncm91cCwKICAgICAgICBkYXRhLmZyYW1lKAogICAgICAgICAgU3RydWN0dXJlID0KICAgICAgICAgICAgc3RydWN0dXJlLAogICAgICAgICAgTW9kZWwgPQogICAgICAgICAgICBtb2RlbF9uYW1lLAogICAgICAgICAgVHJhaXQgPQogICAgICAgICAgICB0cmFpdCwKICAgICAgICAgIElEID0KICAgICAgICAgICAgaW5kaXZpZHVhbF9pZCwKICAgICAgICAgIE9ic2VydmVkX0JMVVAgPQogICAgICAgICAgICB1bmlxdWUoCiAgICAgICAgICAgICAgeGkkT2JzZXJ2ZWRfQkxVUAogICAgICAgICAgICApLAogICAgICAgICAgUHJlZGljdGVkX0JMVVAgPQogICAgICAgICAgICBtZWFuKAogICAgICAgICAgICAgIHhpJFByZWRpY3RlZF9CTFVQCiAgICAgICAgICAgICksCiAgICAgICAgICBQcmVkaWN0aW9uX1NEID0KICAgICAgICAgICAgc2QoCiAgICAgICAgICAgICAgeGkkUHJlZGljdGVkX0JMVVAKICAgICAgICAgICAgKSwKICAgICAgICAgIE5fT09GID0KICAgICAgICAgICAgbnJvdygKICAgICAgICAgICAgICB4aQogICAgICAgICAgICApLAogICAgICAgICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgICAgICAgKQogICAgICApCiAgICB9CgogICAgcmFua2luZ19ncm91cCRPYnNlcnZlZF9SYW5rIDwtIHJhbmsoCiAgICAgIC1yYW5raW5nX2dyb3VwJE9ic2VydmVkX0JMVVAsCiAgICAgIHRpZXMubWV0aG9kID0gImF2ZXJhZ2UiCiAgICApCgogICAgcmFua2luZ19ncm91cCRQcmVkaWN0ZWRfUmFuayA8LSByYW5rKAogICAgICAtcmFua2luZ19ncm91cCRQcmVkaWN0ZWRfQkxVUCwKICAgICAgdGllcy5tZXRob2QgPSAiYXZlcmFnZSIKICAgICkKCiAgICByYW5raW5nX2dyb3VwJFJhbmtfRGlmZmVyZW5jZSA8LQogICAgICByYW5raW5nX2dyb3VwJFByZWRpY3RlZF9SYW5rIC0KICAgICAgcmFua2luZ19ncm91cCRPYnNlcnZlZF9SYW5rCgogICAgcmFua2luZ19ncm91cCRBYnNvbHV0ZV9SYW5rX0Vycm9yIDwtCiAgICAgIGFicygKICAgICAgICByYW5raW5nX2dyb3VwJFJhbmtfRGlmZmVyZW5jZQogICAgICApCgogICAgb2JzZXJ2ZWRfb3JkZXIgPC0gb3JkZXIoCiAgICAgIC1yYW5raW5nX2dyb3VwJE9ic2VydmVkX0JMVVAsCiAgICAgIHJhbmtpbmdfZ3JvdXAkSUQKICAgICkKCiAgICBwcmVkaWN0ZWRfb3JkZXIgPC0gb3JkZXIoCiAgICAgIC1yYW5raW5nX2dyb3VwJFByZWRpY3RlZF9CTFVQLAogICAgICByYW5raW5nX2dyb3VwJElECiAgICApCgogICAgcmFua2luZ19ncm91cCRPYnNlcnZlZF9Ub3AyMCA8LSBGQUxTRQogICAgcmFua2luZ19ncm91cCRQcmVkaWN0ZWRfVG9wMjAgPC0gRkFMU0UKCiAgICByYW5raW5nX2dyb3VwJE9ic2VydmVkX1RvcDIwWwogICAgICBvYnNlcnZlZF9vcmRlclsKICAgICAgICBzZXFfbGVuKAogICAgICAgICAgVE9QMjBfTgogICAgICAgICkKICAgICAgXQogICAgXSA8LSBUUlVFCgogICAgcmFua2luZ19ncm91cCRQcmVkaWN0ZWRfVG9wMjBbCiAgICAgIHByZWRpY3RlZF9vcmRlclsKICAgICAgICBzZXFfbGVuKAogICAgICAgICAgVE9QMjBfTgogICAgICAgICkKICAgICAgXQogICAgXSA8LSBUUlVFCgogICAgdG9wMjBfb3ZlcmxhcF9uIDwtIHN1bSgKICAgICAgcmFua2luZ19ncm91cCRPYnNlcnZlZF9Ub3AyMCAmCiAgICAgICAgcmFua2luZ19ncm91cCRQcmVkaWN0ZWRfVG9wMjAKICAgICkKCiAgICB0b3AyMF9vdmVybGFwX3JhdGUgPC0KICAgICAgdG9wMjBfb3ZlcmxhcF9uIC8KICAgICAgVE9QMjBfTgoKICAgIHN0b3BpZm5vdCgKICAgICAgbnJvdygKICAgICAgICByYW5raW5nX2dyb3VwCiAgICAgICkgPT0gMTk1TCwKICAgICAgYWxsKAogICAgICAgIHJhbmtpbmdfZ3JvdXAkTl9PT0YgPT0KICAgICAgICAgIDVMCiAgICAgICksCiAgICAgIHN1bSgKICAgICAgICByYW5raW5nX2dyb3VwJE9ic2VydmVkX1RvcDIwCiAgICAgICkgPT0gVE9QMjBfTiwKICAgICAgc3VtKAogICAgICAgIHJhbmtpbmdfZ3JvdXAkUHJlZGljdGVkX1RvcDIwCiAgICAgICkgPT0gVE9QMjBfTiwKICAgICAgdG9wMjBfb3ZlcmxhcF9uID49IDBMLAogICAgICB0b3AyMF9vdmVybGFwX24gPD0gVE9QMjBfTgogICAgKQoKICAgIGluZGl2aWR1YWxfcmFua2luZyA8LSByYmluZCgKICAgICAgaW5kaXZpZHVhbF9yYW5raW5nLAogICAgICByYW5raW5nX2dyb3VwCiAgICApCgogICAgcmFua2luZ19zdW1tYXJ5IDwtIHJiaW5kKAogICAgICByYW5raW5nX3N1bW1hcnksCiAgICAgIGRhdGEuZnJhbWUoCiAgICAgICAgU3RydWN0dXJlID0KICAgICAgICAgIHN0cnVjdHVyZSwKICAgICAgICBNb2RlbCA9CiAgICAgICAgICBtb2RlbF9uYW1lLAogICAgICAgIFRyYWl0ID0KICAgICAgICAgIHRyYWl0LAogICAgICAgIEluZGl2aWR1YWxzID0KICAgICAgICAgIG5yb3coCiAgICAgICAgICAgIHJhbmtpbmdfZ3JvdXAKICAgICAgICAgICksCiAgICAgICAgUmFua2luZ19TcGVhcm1hbiA9CiAgICAgICAgICBjb3IoCiAgICAgICAgICAgIHJhbmtpbmdfZ3JvdXAkT2JzZXJ2ZWRfUmFuaywKICAgICAgICAgICAgcmFua2luZ19ncm91cCRQcmVkaWN0ZWRfUmFuaywKICAgICAgICAgICAgbWV0aG9kID0gInNwZWFybWFuIgogICAgICAgICAgKSwKICAgICAgICBNZWFuX0Fic29sdXRlX1JhbmtfRXJyb3IgPQogICAgICAgICAgbWVhbigKICAgICAgICAgICAgcmFua2luZ19ncm91cCRBYnNvbHV0ZV9SYW5rX0Vycm9yCiAgICAgICAgICApLAogICAgICAgIE1lZGlhbl9BYnNvbHV0ZV9SYW5rX0Vycm9yID0KICAgICAgICAgIG1lZGlhbigKICAgICAgICAgICAgcmFua2luZ19ncm91cCRBYnNvbHV0ZV9SYW5rX0Vycm9yCiAgICAgICAgICApLAogICAgICAgIFRvcDIwX04gPQogICAgICAgICAgVE9QMjBfTiwKICAgICAgICBUb3AyMF9PdmVybGFwX04gPQogICAgICAgICAgdG9wMjBfb3ZlcmxhcF9uLAogICAgICAgIFRvcDIwX092ZXJsYXBfUmF0ZSA9CiAgICAgICAgICB0b3AyMF9vdmVybGFwX3JhdGUsCiAgICAgICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgICAgICkKICAgICkKICB9Cn0KCnJvd25hbWVzKAogIGluZGl2aWR1YWxfcmFua2luZwopIDwtIE5VTEwKCnJvd25hbWVzKAogIHJhbmtpbmdfc3VtbWFyeQopIDwtIE5VTEwKCnN0b3BpZm5vdCgKICBucm93KAogICAgaW5kaXZpZHVhbF9yYW5raW5nCiAgKSA9PSAxNzU1TCwKICBucm93KAogICAgcmFua2luZ19zdW1tYXJ5CiAgKSA9PSA5TCwKICBhbGwoCiAgICBpbmRpdmlkdWFsX3JhbmtpbmckTl9PT0YgPT0KICAgICAgNUwKICApLAogIHN1bSgKICAgIGluZGl2aWR1YWxfcmFua2luZyRPYnNlcnZlZF9Ub3AyMAogICkgPT0gMzUxTCwKICBzdW0oCiAgICBpbmRpdmlkdWFsX3JhbmtpbmckUHJlZGljdGVkX1RvcDIwCiAgKSA9PSAzNTFMLAogIGFsbCgKICAgIHJhbmtpbmdfc3VtbWFyeSRUb3AyMF9OID09CiAgICAgIDM5TAogICksCiAgYWxsKAogICAgcmFua2luZ19zdW1tYXJ5JFRvcDIwX092ZXJsYXBfTiA+PQogICAgICAwTAogICksCiAgYWxsKAogICAgcmFua2luZ19zdW1tYXJ5JFRvcDIwX092ZXJsYXBfTiA8PQogICAgICAzOUwKICApLAogIGFsbCgKICAgIHJhbmtpbmdfc3VtbWFyeSRUb3AyMF9PdmVybGFwX1JhdGUgPj0KICAgICAgMAogICksCiAgYWxsKAogICAgcmFua2luZ19zdW1tYXJ5JFRvcDIwX092ZXJsYXBfUmF0ZSA8PQogICAgICAxCiAgKQopCgp3cml0ZS5jc3YoCiAgaW5kaXZpZHVhbF9yYW5raW5nLAogIFJBTktJTkdfQ1NWLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKCnNhdmVSRFMoCiAgaW5kaXZpZHVhbF9yYW5raW5nLAogIFJBTktJTkdfUkRTCikKCndyaXRlLmNzdigKICByYW5raW5nX3N1bW1hcnksCiAgUkFOS0lOR19TVU1NQVJZX0NTViwKICByb3cubmFtZXMgPSBGQUxTRQopCgpyYW5raW5nX3N1bW1hcnkgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBkaWdpdHMgPSA0LAogICAgY2FwdGlvbiA9ICJBZ3JlZW1lbnQgYmV0d2VlbiBvYnNlcnZlZCBhbmQgb3V0LW9mLWZvbGQgcHJlZGljdGVkIHJhbmtpbmdzIG9mIHRoZSAxOTUgaW5kaXZpZHVhbHMiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIiBzdHlsZT0id2lkdGg6MTAwJTsiJwogICkKYGBgCgpUaGUgcmFua2luZyBzdW1tYXJ5IGNvbXBsZW1lbnRzIHNwbGl0LWxldmVsIFNwZWFybWFuIGNvcnJlbGF0aW9uIGJ5IGV2YWx1YXRpbmcKdGhlIG9yZGVyaW5nIG9idGFpbmVkIGZyb20gdGhlIGZpdmUgb3V0LW9mLWZvbGQgcHJlZGljdGlvbnMgYXZhaWxhYmxlIGZvciBlYWNoCmluZGl2aWR1YWwuIFRoZSB0b3AtMjAlIG92ZXJsYXAgYWRkaXRpb25hbGx5IG1lYXN1cmVzIGhvdyBtYW55IG9mIHRoZSAzOQppbmRpdmlkdWFscyBzZWxlY3RlZCBmcm9tIG9ic2VydmVkIEJMVVBzIGFyZSByZWNvdmVyZWQgYnkgdGhlIG91dC1vZi1mb2xkCnByZWRpY3RlZCByYW5raW5nLgoKIyMgMTEuIFByZWRpY3RpdmUgZGlzdHJpYnV0aW9ucyBhY3Jvc3Mgb3V0ZXIgc3BsaXRzCgpgYGB7ciBwZXJmb3JtYW5jZS1maWd1cmVzLCBldmFsPVJVTl9HQkxVUH0KcGxvdF9yZXN1bHRzIDwtIHJlc3VsdHMKCnBsb3RfcmVzdWx0cyRTdHJ1Y3R1cmUgPC0gZmFjdG9yKAogIHBsb3RfcmVzdWx0cyRTdHJ1Y3R1cmUsCiAgbGV2ZWxzID0gYygKICAgICJBIiwKICAgICJBRCIsCiAgICAiQURFIgogICkKKQoKcGxvdF9yZXN1bHRzJFRyYWl0IDwtIGZhY3RvcigKICBwbG90X3Jlc3VsdHMkVHJhaXQsCiAgbGV2ZWxzID0gdHJhaXRzCikKCmNvcnJlbGF0aW9uX3Bsb3QgPC0gZ2dwbG90KAogIHBsb3RfcmVzdWx0c1sKICAgIGlzLmZpbml0ZSgKICAgICAgcGxvdF9yZXN1bHRzJEJMVVBfQ29ycmVsYXRpb24KICAgICksCiAgICAsCiAgICBkcm9wID0gRkFMU0UKICBdLAogIGFlcygKICAgIHggPSBTdHJ1Y3R1cmUsCiAgICB5ID0gQkxVUF9Db3JyZWxhdGlvbgogICkKKSArCiAgZ2VvbV9ib3hwbG90KAogICAgb3V0bGllci5zaGFwZSA9IE5BCiAgKSArCiAgZ2VvbV9qaXR0ZXIoCiAgICB3aWR0aCA9IDAuMTIsCiAgICBoZWlnaHQgPSAwLAogICAgc2l6ZSA9IDEuNiwKICAgIGFscGhhID0gMC42NQogICkgKwogIGZhY2V0X3dyYXAoCiAgICB+IFRyYWl0LAogICAgc2NhbGVzID0gImZyZWVfeSIKICApICsKICBsYWJzKAogICAgeCA9ICJHQkxVUCBzdHJ1Y3R1cmUiLAogICAgeSA9ICJDb3JyZWxhdGlvbiBiZXR3ZWVuIG9ic2VydmVkIGFuZCBwcmVkaWN0ZWQgQkxVUHMiLAogICAgdGl0bGUgPSAiSGVsZC1vdXQgQkxVUCBjb3JyZWxhdGlvbiBhY3Jvc3Mgb3V0ZXIgc3BsaXRzIgogICkgKwogIGdndGhlbWVzOjp0aGVtZV9nZG9jcygpICsKICB0aGVtZSgKICAgIGxlZ2VuZC5wb3NpdGlvbiA9ICJub25lIgogICkKCmdnc2F2ZSgKICBmaWxlbmFtZSA9IGZpbGUucGF0aCgKICAgIEZJR1VSRV9ESVIsCiAgICAicmVhbF9nYmx1cF9jb3JyZWxhdGlvbl9ieV9tb2RlbF90cmFpdC50aWZmIgogICksCiAgcGxvdCA9IGNvcnJlbGF0aW9uX3Bsb3QsCiAgd2lkdGggPSA5LAogIGhlaWdodCA9IDUuNSwKICB1bml0cyA9ICJpbiIsCiAgZHBpID0gMzAwLAogIGNvbXByZXNzaW9uID0gImx6dyIKKQoKc3BlYXJtYW5fcGxvdCA8LSBnZ3Bsb3QoCiAgcGxvdF9yZXN1bHRzWwogICAgaXMuZmluaXRlKAogICAgICBwbG90X3Jlc3VsdHMkQkxVUF9TcGVhcm1hbgogICAgKSwKICAgICwKICAgIGRyb3AgPSBGQUxTRQogIF0sCiAgYWVzKAogICAgeCA9IFN0cnVjdHVyZSwKICAgIHkgPSBCTFVQX1NwZWFybWFuCiAgKQopICsKICBnZW9tX2JveHBsb3QoCiAgICBvdXRsaWVyLnNoYXBlID0gTkEKICApICsKICBnZW9tX2ppdHRlcigKICAgIHdpZHRoID0gMC4xMiwKICAgIGhlaWdodCA9IDAsCiAgICBzaXplID0gMS42LAogICAgYWxwaGEgPSAwLjY1CiAgKSArCiAgZmFjZXRfd3JhcCgKICAgIH4gVHJhaXQsCiAgICBzY2FsZXMgPSAiZnJlZV95IgogICkgKwogIGxhYnMoCiAgICB4ID0gIkdCTFVQIHN0cnVjdHVyZSIsCiAgICB5ID0gIlNwZWFybWFuIGNvcnJlbGF0aW9uIGJldHdlZW4gb2JzZXJ2ZWQgYW5kIHByZWRpY3RlZCBCTFVQcyIsCiAgICB0aXRsZSA9ICJIZWxkLW91dCBCTFVQIFNwZWFybWFuIGNvcnJlbGF0aW9uIGFjcm9zcyBvdXRlciBzcGxpdHMiCiAgKSArCiAgZ2d0aGVtZXM6OnRoZW1lX2dkb2NzKCkgKwogIHRoZW1lKAogICAgbGVnZW5kLnBvc2l0aW9uID0gIm5vbmUiCiAgKQoKZ2dzYXZlKAogIGZpbGVuYW1lID0gZmlsZS5wYXRoKAogICAgRklHVVJFX0RJUiwKICAgICJyZWFsX2dibHVwX3NwZWFybWFuX2J5X21vZGVsX3RyYWl0LnRpZmYiCiAgKSwKICBwbG90ID0gc3BlYXJtYW5fcGxvdCwKICB3aWR0aCA9IDksCiAgaGVpZ2h0ID0gNS41LAogIHVuaXRzID0gImluIiwKICBkcGkgPSAzMDAsCiAgY29tcHJlc3Npb24gPSAibHp3IgopCgpybXNlX3Bsb3QgPC0gZ2dwbG90KAogIHBsb3RfcmVzdWx0cywKICBhZXMoCiAgICB4ID0gU3RydWN0dXJlLAogICAgeSA9IEJMVVBfUk1TRQogICkKKSArCiAgZ2VvbV9ib3hwbG90KAogICAgb3V0bGllci5zaGFwZSA9IE5BCiAgKSArCiAgZ2VvbV9qaXR0ZXIoCiAgICB3aWR0aCA9IDAuMTIsCiAgICBoZWlnaHQgPSAwLAogICAgc2l6ZSA9IDEuNiwKICAgIGFscGhhID0gMC42NQogICkgKwogIGZhY2V0X3dyYXAoCiAgICB+IFRyYWl0LAogICAgc2NhbGVzID0gImZyZWVfeSIKICApICsKICBsYWJzKAogICAgeCA9ICJHQkxVUCBzdHJ1Y3R1cmUiLAogICAgeSA9ICJSTVNFIiwKICAgIHRpdGxlID0gIkhlbGQtb3V0IFJNU0UgYWNyb3NzIG91dGVyIHNwbGl0cyIKICApICsKICBnZ3RoZW1lczo6dGhlbWVfZ2RvY3MoKSArCiAgdGhlbWUoCiAgICBsZWdlbmQucG9zaXRpb24gPSAibm9uZSIKICApCgpnZ3NhdmUoCiAgZmlsZW5hbWUgPSBmaWxlLnBhdGgoCiAgICBGSUdVUkVfRElSLAogICAgInJlYWxfZ2JsdXBfcm1zZV9ieV9tb2RlbF90cmFpdC50aWZmIgogICksCiAgcGxvdCA9IHJtc2VfcGxvdCwKICB3aWR0aCA9IDksCiAgaGVpZ2h0ID0gNS41LAogIHVuaXRzID0gImluIiwKICBkcGkgPSAzMDAsCiAgY29tcHJlc3Npb24gPSAibHp3IgopCm9ic2VydmVkX3ByZWRpY3RlZF9wbG90IDwtIGdncGxvdCgKICBpbmRpdmlkdWFsX3JhbmtpbmcsCiAgYWVzKAogICAgeCA9IE9ic2VydmVkX0JMVVAsCiAgICB5ID0gUHJlZGljdGVkX0JMVVAKICApCikgKwogIGdlb21fYWJsaW5lKAogICAgc2xvcGUgPSAxLAogICAgaW50ZXJjZXB0ID0gMCwKICAgIGxpbmV0eXBlID0gImRhc2hlZCIKICApICsKICBnZW9tX3BvaW50KAogICAgc2l6ZSA9IDEuNSwKICAgIGFscGhhID0gMC42NQogICkgKwogIGZhY2V0X2dyaWQoCiAgICBUcmFpdCB+IFN0cnVjdHVyZSwKICAgIHNjYWxlcyA9ICJmcmVlIgogICkgKwogIGxhYnMoCiAgICB4ID0gIk9ic2VydmVkIGluZGl2aWR1YWwgQkxVUCIsCiAgICB5ID0gIk1lYW4gb3V0LW9mLWZvbGQgcHJlZGljdGVkIEJMVVAiLAogICAgdGl0bGUgPSAiT2JzZXJ2ZWQgYW5kIHByZWRpY3RlZCBpbmRpdmlkdWFsIEJMVVBzIgogICkgKwogIGdndGhlbWVzOjp0aGVtZV9nZG9jcygpICsKICB0aGVtZSgKICAgIGxlZ2VuZC5wb3NpdGlvbiA9ICJub25lIgogICkKCmdnc2F2ZSgKICBmaWxlbmFtZSA9IGZpbGUucGF0aCgKICAgIEZJR1VSRV9ESVIsCiAgICAicmVhbF9nYmx1cF9vYnNlcnZlZF92c19wcmVkaWN0ZWRfYnlfbW9kZWxfdHJhaXQudGlmZiIKICApLAogIHBsb3QgPSBvYnNlcnZlZF9wcmVkaWN0ZWRfcGxvdCwKICB3aWR0aCA9IDksCiAgaGVpZ2h0ID0gOCwKICB1bml0cyA9ICJpbiIsCiAgZHBpID0gMzAwLAogIGNvbXByZXNzaW9uID0gImx6dyIKKQoKYGBgCgpgYGB7ciBzaG93LWNvcnJlbGF0aW9uLWZpZ3VyZX0Ka25pdHI6OmluY2x1ZGVfZ3JhcGhpY3MoCiAgZmlsZS5wYXRoKAogICAgRklHVVJFX0RJUiwKICAgICJyZWFsX2dibHVwX2NvcnJlbGF0aW9uX2J5X21vZGVsX3RyYWl0LnRpZmYiCiAgKQopCmBgYAoKYGBge3Igc2hvdy1zcGVhcm1hbi1maWd1cmV9CmtuaXRyOjppbmNsdWRlX2dyYXBoaWNzKAogIGZpbGUucGF0aCgKICAgIEZJR1VSRV9ESVIsCiAgICAicmVhbF9nYmx1cF9zcGVhcm1hbl9ieV9tb2RlbF90cmFpdC50aWZmIgogICkKKQpgYGAKCmBgYHtyIHNob3ctcm1zZS1maWd1cmV9CmtuaXRyOjppbmNsdWRlX2dyYXBoaWNzKAogIGZpbGUucGF0aCgKICAgIEZJR1VSRV9ESVIsCiAgICAicmVhbF9nYmx1cF9ybXNlX2J5X21vZGVsX3RyYWl0LnRpZmYiCiAgKQopCmBgYAoKYGBge3Igc2hvdy1vYnNlcnZlZC1wcmVkaWN0ZWQtZmlndXJlfQprbml0cjo6aW5jbHVkZV9ncmFwaGljcygKICBmaWxlLnBhdGgoCiAgICBGSUdVUkVfRElSLAogICAgInJlYWxfZ2JsdXBfb2JzZXJ2ZWRfdnNfcHJlZGljdGVkX2J5X21vZGVsX3RyYWl0LnRpZmYiCiAgKQopCmBgYAoKIyMgMTIuIE91dHB1dCBjb250cmFjdAoKVGhlIHNhdmVkIHJlc3VsdCB0YWJsZSBjb250YWlucyBvbmUgcm93IHBlciB0cmFpdCwgb3V0ZXIgc3BsaXQsIGFuZCBHQkxVUApzdHJ1Y3R1cmUuIFRoZSBwcmVkaWN0aW9uIHRhYmxlIGNvbnRhaW5zIG9uZSByb3cgcGVyIGhlbGQtb3V0IGluZGl2aWR1YWwgYW5kCnRhc2suCgpgYGB7ciBvdXRwdXQtY29udHJhY3R9Cm91dHB1dF9jb250cmFjdCA8LSBkYXRhLmZyYW1lKAogIE9iamVjdCA9IGMoCiAgICAiUmVzdWx0cyIsCiAgICAiUHJlZGljdGlvbnMiLAogICAgIkluZGl2aWR1YWwgcmFua2luZyIsCiAgICAiS2VybmVsIHN1bW1hcnkiLAogICAgIk51bWVyaWNhbCBzdW1tYXJ5IiwKICAgICJQZXJmb3JtYW5jZSBzdW1tYXJ5IiwKICAgICJSYW5raW5nIHN1bW1hcnkiLAogICAgIlJ1biBtZXRhZGF0YSIKICApLAogIEV4cGVjdGVkX3Jvd3MgPSBjKAogICAgMjI1TCwKICAgIDg3NzVMLAogICAgMTc1NUwsCiAgICAzTCwKICAgIDlMLAogICAgOUwsCiAgICA5TCwKICAgIE5BX2ludGVnZXJfCiAgKSwKICBQYXRoID0gYygKICAgIFJFU1VMVFNfUkRTLAogICAgUFJFRElDVElPTlNfUkRTLAogICAgUkFOS0lOR19SRFMsCiAgICBLRVJORUxfU1VNTUFSWV9DU1YsCiAgICBOVU1FUklDQUxfU1VNTUFSWV9DU1YsCiAgICBQRVJGT1JNQU5DRV9TVU1NQVJZX0NTViwKICAgIFJBTktJTkdfU1VNTUFSWV9DU1YsCiAgICBSVU5fTUVUQURBVEFfUkRTCiAgKSwKICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKKQoKb3V0cHV0X2NvbnRyYWN0IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJPdXRwdXRzIHBhc3NlZCB0byB0aGUgZG93bnN0cmVhbSByZWFsLWRhdGEgY29tcGFyaXNvbiIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiIHN0eWxlPSJ3aWR0aDoxMDAlOyInCiAgKQpgYGAKCmBgYHtyIGZpbmFsLWludGVncml0eS1jaGVja30Kc3RvcGlmbm90KAogIG5yb3coCiAgICByZXN1bHRzCiAgKSA9PSAyMjVMLAogIG5yb3coCiAgICBwcmVkaWN0aW9ucwogICkgPT0gODc3NUwsCiAgYWxsKAogICAgdGFibGUoCiAgICAgIHJlc3VsdHMkU3RydWN0dXJlCiAgICApID09IDc1TAogICksCiAgYWxsKAogICAgdGFibGUoCiAgICAgIHJlc3VsdHMkVHJhaXQKICAgICkgPT0gNzVMCiAgKSwKICBhbGwoCiAgICB0YWJsZSgKICAgICAgcHJlZGljdGlvbnMkVGFza0lECiAgICApID09IDM5TAogICksCiAgbGVuZ3RoKAogICAgdW5pcXVlKAogICAgICBwcmVkaWN0aW9ucyRJRAogICAgKQogICkgPT0gMTk1TCwKICBucm93KAogICAgaW5kaXZpZHVhbF9yYW5raW5nCiAgKSA9PSAxNzU1TCwKICBucm93KAogICAgcmFua2luZ19zdW1tYXJ5CiAgKSA9PSA5TCwKICBhbGwoCiAgICBpbmRpdmlkdWFsX3JhbmtpbmckTl9PT0YgPT0KICAgICAgNUwKICApLAogIHN1bSgKICAgIGluZGl2aWR1YWxfcmFua2luZyRPYnNlcnZlZF9Ub3AyMAogICkgPT0gMzUxTCwKICBzdW0oCiAgICBpbmRpdmlkdWFsX3JhbmtpbmckUHJlZGljdGVkX1RvcDIwCiAgKSA9PSAzNTFMLAogIGFsbCgKICAgIHJhbmtpbmdfc3VtbWFyeSRUb3AyMF9OID09CiAgICAgIDM5TAogICksCiAgYWxsKAogICAgcmFua2luZ19zdW1tYXJ5JFRvcDIwX092ZXJsYXBfTiA+PQogICAgICAwTAogICksCiAgYWxsKAogICAgcmFua2luZ19zdW1tYXJ5JFRvcDIwX092ZXJsYXBfTiA8PQogICAgICAzOUwKICApLAogIGFsbCgKICAgIHJhbmtpbmdfc3VtbWFyeSRUb3AyMF9PdmVybGFwX1JhdGUgPj0KICAgICAgMAogICksCiAgYWxsKAogICAgcmFua2luZ19zdW1tYXJ5JFRvcDIwX092ZXJsYXBfUmF0ZSA8PQogICAgICAxCiAgKQopCgpmb3IgKAogIHRyYWl0IGluCiAgICB0cmFpdHMKKSB7CgogIGZvciAoCiAgICBzdHJ1Y3R1cmUgaW4KICAgICAgYygKICAgICAgICAiQSIsCiAgICAgICAgIkFEIiwKICAgICAgICAiQURFIgogICAgICApCiAgKSB7CgogICAgeCA8LSBwcmVkaWN0aW9uc1sKICAgICAgcHJlZGljdGlvbnMkVHJhaXQgPT0KICAgICAgICB0cmFpdCAmCiAgICAgICAgcHJlZGljdGlvbnMkU3RydWN0dXJlID09CiAgICAgICAgc3RydWN0dXJlLAogICAgICAsCiAgICAgIGRyb3AgPSBGQUxTRQogICAgXQoKICAgIGZyZXF1ZW5jeSA8LSB0YWJsZSgKICAgICAgeCRJRAogICAgKQoKICAgIHN0b3BpZm5vdCgKICAgICAgbGVuZ3RoKAogICAgICAgIGZyZXF1ZW5jeQogICAgICApID09IDE5NUwsCiAgICAgIG1pbigKICAgICAgICBmcmVxdWVuY3kKICAgICAgKSA9PSA1TCwKICAgICAgbWF4KAogICAgICAgIGZyZXF1ZW5jeQogICAgICApID09IDVMCiAgICApCiAgfQp9CmBgYAoKVGhlIHRocmVlIGZpeGVkIEdCTFVQIHN0cnVjdHVyZXMgYXJlIG5vdyByZWFkeSBmb3IgY29tcGFyaXNvbiB3aXRoIHRoZQpyZWd1bGFyaXplZCBBTk4gbW9kZWxzIHVuZGVyIHRoZSBzYW1lIG91dGVyIHZhbGlkYXRpb24gZGVzaWduLgo=</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("real_data_gblup.Rmd");
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,3498 @@
+---
+title: "Real data: GBLUP and regularized ANN comparison"
+author:
+  - Weverton Gomes da Costa
+date: "`r Sys.Date()`"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_download: true
+    code_folding: show
+editor_options:
+  chunk_output_type: console
+---
+
+## 1. Purpose
+
+This module closes the real-data genomic-prediction workflow by comparing the
+three GBLUP structures and the four artificial neural-network variants on the
+same repeated outer validation design.
+
+The seven models are:
+
+- `GBLUP_A`: additive genomic relationship;
+- `GBLUP_AD`: additive and dominance genomic relationships;
+- `GBLUP_ADE`: additive, dominance, and additive-by-additive epistatic genomic
+  relationships;
+- `ANN_0`: unregularized neural network;
+- `ANN_L1`: L1-regularized neural network;
+- `ANN_L2`: L2-regularized neural network;
+- `ANN_L1_L2`: neural network with simultaneous L1 and L2 regularization.
+
+No model is refitted in this module. The BLUPs obtained in the longitudinal
+phenotype module are the targets, and every genomic model produces GEBVs for
+the same individuals under the common validation design. Raw phenotypic
+observations are not compared in this module.
+
+The primary split-level metrics are Pearson correlation, Spearman correlation,
+RMSE, and MAE between BLUP and GEBV. For the global ranking, the five
+predictions available for each individual, trait, and model are averaged to
+obtain its GEBV. Ranking agreement, absolute rank error, recovery of the
+BLUP top 20% by the GEBV ranking, and pairwise weighted kappa among ordered
+GEBV-ranking quintiles are then compared across the seven models.
+
+Because repeated cross-validation splits overlap in their analysis and
+assessment samples, split-level contrasts are descriptive matched comparisons,
+not tests that treat the 25 outer splits as statistically independent
+replicates.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
+
+options(
+  stringsAsFactors = FALSE
+)
+
+COMPARISON_DIR <-
+  "output/real/comparison"
+
+FIGURE_DIR <-
+  file.path(
+    COMPARISON_DIR,
+    "figures"
+  )
+
+dir.create(
+  COMPARISON_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+dir.create(
+  FIGURE_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+```
+
+## 2. Inputs and common evaluation design
+
+### 2.1 Saved outputs from both model branches
+
+```{r packages-and-inputs}
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+
+GBLUP_RESULTS_RDS <-
+  "output/real/gblup/real_gblup_results.rds"
+
+GBLUP_PREDICTIONS_RDS <-
+  "output/real/gblup/real_gblup_predictions.rds"
+
+GBLUP_RANKING_RDS <-
+  "output/real/gblup/real_gblup_individual_ranking.rds"
+
+ANN_RESULTS_RDS <-
+  "output/real/ann/final/real_ann_results.rds"
+
+ANN_PREDICTIONS_RDS <-
+  "output/real/ann/final/real_ann_predictions.rds"
+
+ANN_RANKING_RDS <-
+  "output/real/ann/final/real_ann_individual_ranking.rds"
+
+stopifnot(
+  file.exists(
+    GBLUP_RESULTS_RDS
+  ),
+  file.exists(
+    GBLUP_PREDICTIONS_RDS
+  ),
+  file.exists(
+    GBLUP_RANKING_RDS
+  ),
+  file.exists(
+    ANN_RESULTS_RDS
+  ),
+  file.exists(
+    ANN_PREDICTIONS_RDS
+  ),
+  file.exists(
+    ANN_RANKING_RDS
+  )
+)
+
+gblup_results <- readRDS(
+  GBLUP_RESULTS_RDS
+)
+
+gblup_predictions <- readRDS(
+  GBLUP_PREDICTIONS_RDS
+)
+
+gblup_ranking <- readRDS(
+  GBLUP_RANKING_RDS
+)
+
+ann_results <- readRDS(
+  ANN_RESULTS_RDS
+)
+
+ann_predictions <- readRDS(
+  ANN_PREDICTIONS_RDS
+)
+
+ann_ranking <- readRDS(
+  ANN_RANKING_RDS
+)
+```
+
+```{r normalize-stored-output-names, include=FALSE}
+names(
+  gblup_results
+)[
+  names(
+    gblup_results
+  ) == "BLUP_Correlation"
+] <- "Pearson"
+
+names(
+  gblup_results
+)[
+  names(
+    gblup_results
+  ) == "BLUP_Spearman"
+] <- "Spearman"
+
+names(
+  gblup_results
+)[
+  names(
+    gblup_results
+  ) == "BLUP_RMSE"
+] <- "RMSE"
+
+names(
+  gblup_results
+)[
+  names(
+    gblup_results
+  ) == "BLUP_MAE"
+] <- "MAE"
+
+names(
+  gblup_results
+)[
+  names(
+    gblup_results
+  ) == "BLUP_Bias"
+] <- "Bias"
+
+names(
+  gblup_results
+)[
+  names(
+    gblup_results
+  ) == "BLUP_Slope"
+] <- "Slope"
+
+names(
+  ann_results
+)[
+  names(
+    ann_results
+  ) == "BLUP_Correlation"
+] <- "Pearson"
+
+names(
+  ann_results
+)[
+  names(
+    ann_results
+  ) == "BLUP_Spearman"
+] <- "Spearman"
+
+names(
+  ann_results
+)[
+  names(
+    ann_results
+  ) == "BLUP_RMSE"
+] <- "RMSE"
+
+names(
+  ann_results
+)[
+  names(
+    ann_results
+  ) == "BLUP_MAE"
+] <- "MAE"
+
+names(
+  ann_results
+)[
+  names(
+    ann_results
+  ) == "BLUP_Bias"
+] <- "Bias"
+
+names(
+  ann_results
+)[
+  names(
+    ann_results
+  ) == "BLUP_Slope"
+] <- "Slope"
+
+names(
+  gblup_predictions
+)[
+  names(
+    gblup_predictions
+  ) == "Observed_BLUP"
+] <- "BLUP"
+
+names(
+  gblup_predictions
+)[
+  names(
+    gblup_predictions
+  ) == "Predicted_BLUP"
+] <- "GEBV"
+
+names(
+  ann_predictions
+)[
+  names(
+    ann_predictions
+  ) == "Observed_BLUP"
+] <- "BLUP"
+
+names(
+  ann_predictions
+)[
+  names(
+    ann_predictions
+  ) == "Predicted_BLUP"
+] <- "GEBV"
+
+names(
+  gblup_ranking
+)[
+  names(
+    gblup_ranking
+  ) == "Observed_BLUP"
+] <- "BLUP"
+
+names(
+  gblup_ranking
+)[
+  names(
+    gblup_ranking
+  ) == "Predicted_BLUP"
+] <- "GEBV"
+
+names(
+  gblup_ranking
+)[
+  names(
+    gblup_ranking
+  ) == "Prediction_SD"
+] <- "GEBV_SD"
+
+names(
+  gblup_ranking
+)[
+  names(
+    gblup_ranking
+  ) == "Observed_Rank"
+] <- "BLUP_Rank"
+
+names(
+  gblup_ranking
+)[
+  names(
+    gblup_ranking
+  ) == "Predicted_Rank"
+] <- "GEBV_Rank"
+
+names(
+  gblup_ranking
+)[
+  names(
+    gblup_ranking
+  ) == "Observed_Top20"
+] <- "BLUP_Top20"
+
+names(
+  gblup_ranking
+)[
+  names(
+    gblup_ranking
+  ) == "Predicted_Top20"
+] <- "GEBV_Top20"
+
+names(
+  ann_ranking
+)[
+  names(
+    ann_ranking
+  ) == "Observed_BLUP"
+] <- "BLUP"
+
+names(
+  ann_ranking
+)[
+  names(
+    ann_ranking
+  ) == "Predicted_BLUP"
+] <- "GEBV"
+
+names(
+  ann_ranking
+)[
+  names(
+    ann_ranking
+  ) == "Prediction_SD"
+] <- "GEBV_SD"
+
+names(
+  ann_ranking
+)[
+  names(
+    ann_ranking
+  ) == "Observed_Rank"
+] <- "BLUP_Rank"
+
+names(
+  ann_ranking
+)[
+  names(
+    ann_ranking
+  ) == "Predicted_Rank"
+] <- "GEBV_Rank"
+
+names(
+  ann_ranking
+)[
+  names(
+    ann_ranking
+  ) == "Observed_Top20"
+] <- "BLUP_Top20"
+
+names(
+  ann_ranking
+)[
+  names(
+    ann_ranking
+  ) == "Predicted_Top20"
+] <- "GEBV_Top20"
+```
+
+```{r model-contract}
+traits <- c(
+  "Cer",
+  "BM",
+  "LP"
+)
+
+gblup_models <- c(
+  "GBLUP_A",
+  "GBLUP_AD",
+  "GBLUP_ADE"
+)
+
+ann_models <- c(
+  "ANN_0",
+  "ANN_L1",
+  "ANN_L2",
+  "ANN_L1_L2"
+)
+
+model_order <- c(
+  gblup_models,
+  ann_models
+)
+
+model_labels <- c(
+  "GBLUP-A",
+  "GBLUP-AD",
+  "GBLUP-ADE",
+  "ANN-0",
+  "ANN-L1",
+  "ANN-L2",
+  "ANN-L1+L2"
+)
+
+stopifnot(
+  nrow(
+    gblup_results
+  ) == 225L,
+  nrow(
+    gblup_predictions
+  ) == 8775L,
+  nrow(
+    ann_results
+  ) == 300L,
+  nrow(
+    ann_predictions
+  ) == 11700L,
+  setequal(
+    unique(
+      gblup_results$Model
+    ),
+    gblup_models
+  ),
+  setequal(
+    unique(
+      ann_results$Model
+    ),
+    ann_models
+  )
+)
+
+input_summary <- data.frame(
+  Branch = c(
+    "GBLUP",
+    "ANN"
+  ),
+  Models = c(
+    length(
+      gblup_models
+    ),
+    length(
+      ann_models
+    )
+  ),
+  Model_trait_split_results = c(
+    nrow(
+      gblup_results
+    ),
+    nrow(
+      ann_results
+    )
+  ),
+  GEBV_records = c(
+    nrow(
+      gblup_predictions
+    ),
+    nrow(
+      ann_predictions
+    )
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Stored model outputs entering the real-data comparison",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+The GBLUP branch contributes 225 model-by-trait-by-split results and 8,775
+GEBV records. The ANN branch contributes 300 model-by-trait-by-split results
+and 11,700 GEBV records. The final comparison therefore contains 525
+model-by-trait-by-split results across seven models.
+
+### 2.2 Matched BLUPs across models
+
+Each model must be evaluated for the same 39 individuals in every trait,
+repetition, and outer fold. The BLUP associated with each individual must also
+be identical across the seven genomic models.
+
+GBLUP-A is used only to verify this alignment and has no preferential status in
+the subsequent model comparison.
+
+```{r matched-assessment-contract}
+comparison_keys <- c(
+  "Trait",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "ID"
+)
+
+blup_check <- gblup_predictions[
+  gblup_predictions$Model ==
+    "GBLUP_A",
+  c(
+    comparison_keys,
+    "BLUP"
+  ),
+  drop = FALSE
+]
+
+stopifnot(
+  nrow(
+    blup_check
+  ) == 2925L,
+  !anyDuplicated(
+    blup_check[
+      ,
+      comparison_keys
+    ]
+  )
+)
+
+target_match <- data.frame(
+  Model = character(0),
+  Matched_records = integer(0),
+  Maximum_BLUP_difference = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  model_name in
+    model_order
+) {
+
+  if (
+    model_name %in%
+      gblup_models
+  ) {
+
+    model_predictions <- gblup_predictions[
+      gblup_predictions$Model ==
+        model_name,
+      c(
+        comparison_keys,
+        "BLUP"
+      ),
+      drop = FALSE
+    ]
+
+  } else {
+
+    model_predictions <- ann_predictions[
+      ann_predictions$Model ==
+        model_name,
+      c(
+        comparison_keys,
+        "BLUP"
+      ),
+      drop = FALSE
+    ]
+  }
+
+  stopifnot(
+    nrow(
+      model_predictions
+    ) == 2925L,
+    !anyDuplicated(
+      model_predictions[
+        ,
+        comparison_keys
+      ]
+    )
+  )
+
+  matched <- merge(
+    blup_check,
+    model_predictions,
+    by =
+      comparison_keys,
+    suffixes = c(
+      "_Check",
+      "_Model"
+    ),
+    all = FALSE,
+    sort = FALSE
+  )
+
+  stopifnot(
+    nrow(
+      matched
+    ) == 2925L
+  )
+
+  maximum_difference <- max(
+    abs(
+      matched$BLUP_Check -
+        matched$BLUP_Model
+    )
+  )
+
+  target_match <- rbind(
+    target_match,
+    data.frame(
+      Model =
+        model_name,
+      Matched_records =
+        nrow(
+          matched
+        ),
+      Maximum_BLUP_difference =
+        maximum_difference,
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+stopifnot(
+  all(
+    target_match$Matched_records ==
+      2925L
+  ),
+  all(
+    target_match$Maximum_BLUP_difference ==
+      0
+  )
+)
+
+target_match$Model <- factor(
+  target_match$Model,
+  levels =
+    model_order,
+  labels =
+    model_labels
+)
+
+target_match |>
+  knitr::kable(
+    format = "html",
+    digits = 12,
+    caption = "BLUP alignment across the seven genomic models",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+The BLUPs are identical for the same individuals across all seven models, so
+the GEBVs are evaluated against exactly the same targets.
+
+## 3. Evaluation metrics
+
+Four split-level metrics compare GEBV with BLUP.
+
+- **Pearson correlation** measures linear association between GEBV and BLUP.
+- **Spearman correlation** measures within-split ranking agreement between GEBV
+  and BLUP.
+- **RMSE** measures the difference between GEBV and BLUP on the BLUP scale and
+  gives more weight to larger errors.
+- **MAE** measures the absolute difference between GEBV and BLUP on the BLUP
+  scale.
+
+Bias and calibration slope remain available in the stored model outputs as
+secondary diagnostics, but the cross-model comparison focuses on the four
+prespecified primary metrics.
+
+For the global ranking, the five predictions available for each
+individual are averaged to obtain its GEBV. The global analysis compares
+Spearman rank agreement, absolute rank error, and the overlap between the BLUP
+top 20% and the GEBV top 20%, each containing exactly 39 individuals.
+
+Agreement among the GEBV rankings produced by different genomic models is also
+quantified with pairwise linearly weighted Cohen's kappa after the 195 ranked
+individuals are divided into five ordered quintiles of exactly 39 individuals.
+Quintile 1 contains ranks 1--39 and represents the highest GEBVs, whereas
+quintile 5 contains ranks 157--195. Linear weights preserve the ordinal
+structure by penalizing disagreement progressively as two methods place an
+individual farther apart across ranking quintiles.
+
+## 4. BLUP-GEBV performance across outer splits
+
+### 4.1 Combined result object
+
+```{r combined-results}
+analysis_columns <- c(
+  "Dataset",
+  "Trait",
+  "Repetition",
+  "Fold",
+  "SplitID",
+  "Model",
+  "Pearson",
+  "Spearman",
+  "RMSE",
+  "MAE",
+  "Bias",
+  "Slope"
+)
+
+all_results <- rbind(
+  gblup_results[
+    ,
+    analysis_columns
+  ],
+  ann_results[
+    ,
+    analysis_columns
+  ]
+)
+
+rownames(
+  all_results
+) <- NULL
+
+stopifnot(
+  nrow(
+    all_results
+  ) == 525L,
+  all(
+    table(
+      all_results$Model
+    ) == 75L
+  ),
+  all(
+    table(
+      all_results$Trait
+    ) == 175L
+  ),
+  all(
+    is.finite(
+      all_results$RMSE
+    )
+  ),
+  all(
+    is.finite(
+      all_results$MAE
+    )
+  )
+)
+
+model_split_structure <- data.frame(
+  Model = character(0),
+  Traits = integer(0),
+  Outer_splits_per_trait = integer(0),
+  Model_trait_split_results = integer(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  model_name in
+    model_order
+) {
+
+  x <- all_results[
+    all_results$Model ==
+      model_name,
+    ,
+    drop = FALSE
+  ]
+
+  split_counts <- table(
+    x$Trait
+  )
+
+  model_split_structure <- rbind(
+    model_split_structure,
+    data.frame(
+      Model =
+        model_name,
+      Traits =
+        length(
+          unique(
+            x$Trait
+          )
+        ),
+      Outer_splits_per_trait =
+        min(
+          split_counts
+        ),
+      Model_trait_split_results =
+        nrow(
+          x
+        ),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+stopifnot(
+  all(
+    model_split_structure$Traits ==
+      3L
+  ),
+  all(
+    model_split_structure$Outer_splits_per_trait ==
+      25L
+  ),
+  all(
+    model_split_structure$Model_trait_split_results ==
+      75L
+  )
+)
+
+model_split_structure$Model <- factor(
+  model_split_structure$Model,
+  levels =
+    model_order,
+  labels =
+    model_labels
+)
+
+model_split_structure |>
+  knitr::kable(
+    format = "html",
+    caption = "Common outer-split evaluation structure by model",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+### 4.2 Mean performance by trait and model
+
+```{r performance-summary}
+performance_summary <- data.frame(
+  Model = character(0),
+  Trait = character(0),
+  Splits = integer(0),
+  Pearson_N = integer(0),
+  Pearson = numeric(0),
+  Pearson_SD = numeric(0),
+  Spearman_N = integer(0),
+  Spearman = numeric(0),
+  Spearman_SD = numeric(0),
+  RMSE_N = integer(0),
+  RMSE = numeric(0),
+  RMSE_SD = numeric(0),
+  MAE_N = integer(0),
+  MAE = numeric(0),
+  MAE_SD = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  model_name in
+    model_order
+) {
+
+  for (
+    trait in
+      traits
+  ) {
+
+    x <- all_results[
+      all_results$Model ==
+        model_name &
+        all_results$Trait ==
+        trait,
+      ,
+      drop = FALSE
+    ]
+
+    stopifnot(
+      nrow(
+        x
+      ) == 25L
+    )
+
+    performance_summary <- rbind(
+      performance_summary,
+      data.frame(
+        Model =
+          model_name,
+        Trait =
+          trait,
+        Splits =
+          nrow(
+            x
+          ),
+        Pearson_N =
+          sum(
+            is.finite(
+              x$Pearson
+            )
+          ),
+        Pearson =
+          mean(
+            x$Pearson,
+            na.rm = TRUE
+          ),
+        Pearson_SD =
+          sd(
+            x$Pearson,
+            na.rm = TRUE
+          ),
+        Spearman_N =
+          sum(
+            is.finite(
+              x$Spearman
+            )
+          ),
+        Spearman =
+          mean(
+            x$Spearman,
+            na.rm = TRUE
+          ),
+        Spearman_SD =
+          sd(
+            x$Spearman,
+            na.rm = TRUE
+          ),
+        RMSE_N =
+          sum(
+            is.finite(
+              x$RMSE
+            )
+          ),
+        RMSE =
+          mean(
+            x$RMSE,
+            na.rm = TRUE
+          ),
+        RMSE_SD =
+          sd(
+            x$RMSE,
+            na.rm = TRUE
+          ),
+        MAE_N =
+          sum(
+            is.finite(
+              x$MAE
+            )
+          ),
+        MAE =
+          mean(
+            x$MAE,
+            na.rm = TRUE
+          ),
+        MAE_SD =
+          sd(
+            x$MAE,
+            na.rm = TRUE
+          ),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+performance_summary$Trait <- factor(
+  performance_summary$Trait,
+  levels =
+    traits
+)
+
+performance_summary$Model <- factor(
+  performance_summary$Model,
+  levels =
+    model_order
+)
+
+performance_summary <- performance_summary[
+  order(
+    performance_summary$Trait,
+    performance_summary$Model
+  ),
+  ,
+  drop = FALSE
+]
+
+performance_summary$Trait <- as.character(
+  performance_summary$Trait
+)
+
+performance_summary$Model <- as.character(
+  performance_summary$Model
+)
+
+PERFORMANCE_SUMMARY_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_performance_summary.csv"
+)
+
+write.csv(
+  performance_summary,
+  PERFORMANCE_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+performance_display <- performance_summary[
+  ,
+  c(
+    "Model",
+    "Trait",
+    "Pearson_N",
+    "Pearson",
+    "Spearman_N",
+    "Spearman",
+    "RMSE",
+    "MAE"
+  )
+]
+
+performance_display$Model <- factor(
+  performance_display$Model,
+  levels =
+    model_order,
+  labels =
+    model_labels
+)
+
+performance_display |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Mean BLUP-GEBV performance across the 25 outer splits",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+Pearson and Spearman are summarized from all outer splits where the respective
+correlation is defined. RMSE and MAE remain defined for every model-trait-split
+combination.
+
+### 4.3 Common finite splits for direct correlation comparison
+
+When a model produces a constant prediction in an outer split, Pearson and
+Spearman are undefined for that split. The descriptive model summaries above
+retain every finite value available for each model. A direct cross-model
+comparison, however, should use the same outer splits for all seven models.
+
+For each trait and correlation metric, the following block therefore identifies
+the intersection of outer splits where that metric is finite for all seven
+models. Mean Pearson and Spearman values used to identify the best correlation
+model are calculated only on these common finite splits. No split is removed
+from RMSE or MAE comparisons because those metrics are defined in all 25 outer
+splits.
+
+```{r common-finite-correlation-splits}
+common_correlation_summary <- data.frame(
+  Model = character(0),
+  Trait = character(0),
+  Pearson_Common_N = integer(0),
+  Pearson_Common = numeric(0),
+  Spearman_Common_N = integer(0),
+  Spearman_Common = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  trait in
+    traits
+) {
+
+  trait_results <- all_results[
+    all_results$Trait ==
+      trait,
+    ,
+    drop = FALSE
+  ]
+
+  split_ids <- sort(
+    unique(
+      trait_results$SplitID
+    )
+  )
+
+  pearson_common_splits <- character(0)
+  spearman_common_splits <- character(0)
+
+  for (
+    split_id in
+      split_ids
+  ) {
+
+    split_data <- trait_results[
+      trait_results$SplitID ==
+        split_id,
+      ,
+      drop = FALSE
+    ]
+
+    stopifnot(
+      nrow(
+        split_data
+      ) == 7L,
+      setequal(
+        split_data$Model,
+        model_order
+      )
+    )
+
+    if (
+      all(
+        is.finite(
+          split_data$Pearson
+        )
+      )
+    ) {
+      pearson_common_splits <- c(
+        pearson_common_splits,
+        split_id
+      )
+    }
+
+    if (
+      all(
+        is.finite(
+          split_data$Spearman
+        )
+      )
+    ) {
+      spearman_common_splits <- c(
+        spearman_common_splits,
+        split_id
+      )
+    }
+  }
+
+  stopifnot(
+    length(
+      pearson_common_splits
+    ) >= 1L,
+    length(
+      spearman_common_splits
+    ) >= 1L
+  )
+
+  for (
+    model_name in
+      model_order
+  ) {
+
+    pearson_values <- trait_results$Pearson[
+      trait_results$Model ==
+        model_name &
+        trait_results$SplitID %in%
+          pearson_common_splits
+    ]
+
+    spearman_values <- trait_results$Spearman[
+      trait_results$Model ==
+        model_name &
+        trait_results$SplitID %in%
+          spearman_common_splits
+    ]
+
+    stopifnot(
+      length(
+        pearson_values
+      ) ==
+        length(
+          pearson_common_splits
+        ),
+      length(
+        spearman_values
+      ) ==
+        length(
+          spearman_common_splits
+        ),
+      all(
+        is.finite(
+          pearson_values
+        )
+      ),
+      all(
+        is.finite(
+          spearman_values
+        )
+      )
+    )
+
+    common_correlation_summary <- rbind(
+      common_correlation_summary,
+      data.frame(
+        Model =
+          model_name,
+        Trait =
+          trait,
+        Pearson_Common_N =
+          length(
+            pearson_common_splits
+          ),
+        Pearson_Common =
+          mean(
+            pearson_values
+          ),
+        Spearman_Common_N =
+          length(
+            spearman_common_splits
+          ),
+        Spearman_Common =
+          mean(
+            spearman_values
+          ),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+COMMON_CORRELATION_SUMMARY_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_common_split_correlation_summary.csv"
+)
+
+write.csv(
+  common_correlation_summary,
+  COMMON_CORRELATION_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+common_correlation_display <- common_correlation_summary
+common_correlation_display$Model <- factor(
+  common_correlation_display$Model,
+  levels =
+    model_order,
+  labels =
+    model_labels
+)
+
+common_correlation_display |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Pearson and Spearman means on outer splits common and finite across all seven models",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+### 4.4 Predictive winners by trait
+
+The next table identifies the highest mean correlation and lowest mean
+BLUP-GEBV error separately. It is a descriptive summary rather than a rule for
+collapsing the seven models into a single winner.
+
+```{r predictive-winners}
+predictive_winners <- data.frame(
+  Trait = character(0),
+  Pearson_Common_N = integer(0),
+  Best_Pearson_Model = character(0),
+  Best_Pearson = numeric(0),
+  Spearman_Common_N = integer(0),
+  Best_Spearman_Model = character(0),
+  Best_Spearman = numeric(0),
+  Best_RMSE_Model = character(0),
+  Best_RMSE = numeric(0),
+  Best_MAE_Model = character(0),
+  Best_MAE = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  trait in
+    traits
+) {
+
+  x <- performance_summary[
+    performance_summary$Trait ==
+      trait,
+    ,
+    drop = FALSE
+  ]
+
+  correlation_x <- common_correlation_summary[
+    common_correlation_summary$Trait ==
+      trait,
+    ,
+    drop = FALSE
+  ]
+
+  stopifnot(
+    nrow(
+      x
+    ) == 7L,
+    nrow(
+      correlation_x
+    ) == 7L,
+    length(
+      unique(
+        correlation_x$Pearson_Common_N
+      )
+    ) == 1L,
+    length(
+      unique(
+        correlation_x$Spearman_Common_N
+      )
+    ) == 1L
+  )
+
+  pearson_index <- which.max(
+    correlation_x$Pearson_Common
+  )
+
+  spearman_index <- which.max(
+    correlation_x$Spearman_Common
+  )
+
+  rmse_index <- which.min(
+    x$RMSE
+  )
+
+  mae_index <- which.min(
+    x$MAE
+  )
+
+  predictive_winners <- rbind(
+    predictive_winners,
+    data.frame(
+      Trait =
+        trait,
+      Pearson_Common_N =
+        unique(
+          correlation_x$Pearson_Common_N
+        ),
+      Best_Pearson_Model =
+        correlation_x$Model[
+          pearson_index
+        ],
+      Best_Pearson =
+        correlation_x$Pearson_Common[
+          pearson_index
+        ],
+      Spearman_Common_N =
+        unique(
+          correlation_x$Spearman_Common_N
+        ),
+      Best_Spearman_Model =
+        correlation_x$Model[
+          spearman_index
+        ],
+      Best_Spearman =
+        correlation_x$Spearman_Common[
+          spearman_index
+        ],
+      Best_RMSE_Model =
+        x$Model[
+          rmse_index
+        ],
+      Best_RMSE =
+        x$RMSE[
+          rmse_index
+        ],
+      Best_MAE_Model =
+        x$Model[
+          mae_index
+        ],
+      Best_MAE =
+        x$MAE[
+          mae_index
+        ],
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+PREDICTIVE_WINNERS_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_predictive_winners.csv"
+)
+
+write.csv(
+  predictive_winners,
+  PREDICTIVE_WINNERS_CSV,
+  row.names = FALSE
+)
+
+predictive_winners |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Best predictive metric by trait; correlations use common finite outer splits across all seven models",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+### 4.5 Distribution of split-level performance
+
+```{r prepare-performance-plots, include=FALSE}
+plot_results <- all_results
+
+plot_results$Model <- factor(
+  plot_results$Model,
+  levels =
+    model_order,
+  labels =
+    model_labels
+)
+
+plot_results$Trait <- factor(
+  plot_results$Trait,
+  levels =
+    traits
+)
+```
+
+```{r pearson-comparison, fig.cap="Pearson correlation between BLUP and GEBV across the 25 outer splits for the seven genomic-prediction models. White diamonds indicate model means."}
+p_pearson <- ggplot(
+  plot_results,
+  aes(
+    x = Model,
+    y = Pearson,
+    fill = Model
+  )
+) +
+  geom_boxplot(
+    width = 0.58,
+    outlier.shape = NA,
+    alpha = 0.70,
+    na.rm = TRUE
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = 20261105L + 701L
+    ),
+    alpha = 0.30,
+    size = 1.2,
+    na.rm = TRUE
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 3.0,
+    fill = "white",
+    na.rm = TRUE
+  ) +
+  facet_wrap(
+    ~ Trait,
+    nrow = 1,
+    scales = "free_y"
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = NULL,
+    y = "Pearson correlation",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
+    )
+  )
+
+print(
+  p_pearson
+)
+
+ggsave(
+  file.path(
+    FIGURE_DIR,
+    "real_comparison_pearson_by_model_trait.tiff"
+  ),
+  plot =
+    p_pearson,
+  device =
+    "tiff",
+  width =
+    12,
+  height =
+    5.8,
+  units =
+    "in",
+  dpi =
+    300,
+  compression =
+    "lzw"
+)
+```
+
+```{r spearman-comparison, fig.width=10.5, fig.height=5.8, fig.cap="Spearman correlation between BLUP and GEBV for the seven genomic models. For each trait, the heatmap uses the outer splits in which Spearman is finite for all seven models."}
+spearman_heatmap <- common_correlation_summary
+
+spearman_heatmap$Model <- factor(
+  spearman_heatmap$Model,
+  levels =
+    rev(
+      model_order
+    ),
+  labels =
+    rev(
+      model_labels
+    )
+)
+
+spearman_heatmap$Trait <- factor(
+  spearman_heatmap$Trait,
+  levels =
+    traits
+)
+
+spearman_midpoint <- mean(
+  range(
+    spearman_heatmap$Spearman_Common,
+    finite = TRUE
+  )
+)
+
+spearman_heatmap$Text_color <- ifelse(
+  spearman_heatmap$Spearman_Common >=
+    spearman_midpoint,
+  "white",
+  "black"
+)
+
+p_spearman <- ggplot(
+  spearman_heatmap,
+  aes(
+    x = Trait,
+    y = Model,
+    fill = Spearman_Common
+  )
+) +
+  geom_tile(
+    color = "white",
+    linewidth = 0.8
+  ) +
+  geom_text(
+    aes(
+      label = sprintf(
+        "%.3f",
+        Spearman_Common
+      ),
+      color = Text_color
+    ),
+    size = 4.2,
+    fontface = "bold"
+  ) +
+  scale_color_identity() +
+  scale_fill_gradient(
+    name = "Spearman",
+    low = "#F7FBFF",
+    high = "#08519C"
+  ) +
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal(
+    base_size = 12
+  ) +
+  theme(
+    axis.text.x = element_text(
+      face = "bold"
+    ),
+    axis.text.y = element_text(
+      face = "bold"
+    ),
+    panel.grid = element_blank(),
+    plot.background = element_rect(
+      fill = "white",
+      color = NA
+    ),
+    panel.background = element_rect(
+      fill = "white",
+      color = NA
+    ),
+    legend.position = "right"
+  )
+
+print(
+  p_spearman
+)
+
+ggsave(
+  file.path(
+    FIGURE_DIR,
+    "real_comparison_spearman_heatmap.tiff"
+  ),
+  plot =
+    p_spearman,
+  device =
+    "tiff",
+  width =
+    10.5,
+  height =
+    5.8,
+  units =
+    "in",
+  dpi =
+    300,
+  compression =
+    "lzw"
+)
+```
+
+```{r rmse-comparison, fig.cap="RMSE between BLUP and GEBV across the 25 outer splits for the seven genomic-prediction models. Lower values indicate smaller BLUP-GEBV error; white diamonds indicate model means."}
+p_rmse <- ggplot(
+  plot_results,
+  aes(
+    x = Model,
+    y = RMSE,
+    fill = Model
+  )
+) +
+  geom_boxplot(
+    width = 0.58,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = 20261105L + 703L
+    ),
+    alpha = 0.30,
+    size = 1.2
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 3.0,
+    fill = "white"
+  ) +
+  facet_wrap(
+    ~ Trait,
+    nrow = 1,
+    scales = "free_y"
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = NULL,
+    y = "RMSE",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
+    )
+  )
+
+print(
+  p_rmse
+)
+
+ggsave(
+  file.path(
+    FIGURE_DIR,
+    "real_comparison_rmse_by_model_trait.tiff"
+  ),
+  plot =
+    p_rmse,
+  device =
+    "tiff",
+  width =
+    12,
+  height =
+    5.8,
+  units =
+    "in",
+  dpi =
+    300,
+  compression =
+    "lzw"
+)
+```
+
+```{r mae-comparison, fig.cap="MAE between BLUP and GEBV across the 25 outer splits for the seven genomic-prediction models. Lower values indicate smaller BLUP-GEBV error; white diamonds indicate model means."}
+p_mae <- ggplot(
+  plot_results,
+  aes(
+    x = Model,
+    y = MAE,
+    fill = Model
+  )
+) +
+  geom_boxplot(
+    width = 0.58,
+    outlier.shape = NA,
+    alpha = 0.70
+  ) +
+  geom_point(
+    position = position_jitter(
+      width = 0.10,
+      height = 0,
+      seed = 20261105L + 704L
+    ),
+    alpha = 0.30,
+    size = 1.2
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 23,
+    size = 3.0,
+    fill = "white"
+  ) +
+  facet_wrap(
+    ~ Trait,
+    nrow = 1,
+    scales = "free_y"
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = NULL,
+    y = "MAE",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
+    )
+  )
+
+print(
+  p_mae
+)
+
+ggsave(
+  file.path(
+    FIGURE_DIR,
+    "real_comparison_mae_by_model_trait.tiff"
+  ),
+  plot =
+    p_mae,
+  device =
+    "tiff",
+  width =
+    12,
+  height =
+    5.8,
+  units =
+    "in",
+  dpi =
+    300,
+  compression =
+    "lzw"
+)
+```
+
+## 5. Matched ANN-versus-GBLUP outer-split contrasts
+
+The seven models share the same outer splits, so every ANN variant can be
+contrasted directly with every GBLUP structure within the same trait and split.
+
+For Pearson and Spearman, positive values below indicate stronger BLUP-GEBV
+association for the ANN. For RMSE and MAE, the contrast is defined as
+`GBLUP - ANN`, so positive values indicate smaller BLUP-GEBV error for the ANN.
+Correlation contrasts use only splits where both models have a finite value for
+that metric.
+
+```{r matched-family-contrasts}
+split_keys <- c(
+  "Repetition",
+  "Fold",
+  "SplitID"
+)
+
+paired_summary <- data.frame(
+  Trait = character(0),
+  GBLUP = character(0),
+  ANN = character(0),
+  Pearson_N = integer(0),
+  Mean_Pearson_Advantage = numeric(0),
+  Spearman_N = integer(0),
+  Mean_Spearman_Advantage = numeric(0),
+  RMSE_N = integer(0),
+  Mean_RMSE_Advantage = numeric(0),
+  MAE_N = integer(0),
+  Mean_MAE_Advantage = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  trait in
+    traits
+) {
+
+  for (
+    gblup_model in
+      gblup_models
+  ) {
+
+    for (
+      ann_model in
+        ann_models
+    ) {
+
+      g <- all_results[
+        all_results$Trait ==
+          trait &
+          all_results$Model ==
+          gblup_model,
+        c(
+          split_keys,
+          "Pearson",
+          "Spearman",
+          "RMSE",
+          "MAE"
+        ),
+        drop = FALSE
+      ]
+
+      a <- all_results[
+        all_results$Trait ==
+          trait &
+          all_results$Model ==
+          ann_model,
+        c(
+          split_keys,
+          "Pearson",
+          "Spearman",
+          "RMSE",
+          "MAE"
+        ),
+        drop = FALSE
+      ]
+
+      matched <- merge(
+        a,
+        g,
+        by =
+          split_keys,
+        suffixes = c(
+          "_ANN",
+          "_GBLUP"
+        ),
+        all = FALSE,
+        sort = FALSE
+      )
+
+      stopifnot(
+        nrow(
+          matched
+        ) == 25L
+      )
+
+      pearson_finite <-
+        is.finite(
+          matched$Pearson_ANN
+        ) &
+        is.finite(
+          matched$Pearson_GBLUP
+        )
+
+      spearman_finite <-
+        is.finite(
+          matched$Spearman_ANN
+        ) &
+        is.finite(
+          matched$Spearman_GBLUP
+        )
+
+      rmse_finite <-
+        is.finite(
+          matched$RMSE_ANN
+        ) &
+        is.finite(
+          matched$RMSE_GBLUP
+        )
+
+      mae_finite <-
+        is.finite(
+          matched$MAE_ANN
+        ) &
+        is.finite(
+          matched$MAE_GBLUP
+        )
+
+      paired_summary <- rbind(
+        paired_summary,
+        data.frame(
+          Trait =
+            trait,
+          GBLUP =
+            gblup_model,
+          ANN =
+            ann_model,
+          Pearson_N =
+            sum(
+              pearson_finite
+            ),
+          Mean_Pearson_Advantage =
+            mean(
+              matched$Pearson_ANN[
+                pearson_finite
+              ] -
+              matched$Pearson_GBLUP[
+                pearson_finite
+              ]
+            ),
+          Spearman_N =
+            sum(
+              spearman_finite
+            ),
+          Mean_Spearman_Advantage =
+            mean(
+              matched$Spearman_ANN[
+                spearman_finite
+              ] -
+              matched$Spearman_GBLUP[
+                spearman_finite
+              ]
+            ),
+          RMSE_N =
+            sum(
+              rmse_finite
+            ),
+          Mean_RMSE_Advantage =
+            mean(
+              matched$RMSE_GBLUP[
+                rmse_finite
+              ] -
+              matched$RMSE_ANN[
+                rmse_finite
+              ]
+            ),
+          MAE_N =
+            sum(
+              mae_finite
+            ),
+          Mean_MAE_Advantage =
+            mean(
+              matched$MAE_GBLUP[
+                mae_finite
+              ] -
+              matched$MAE_ANN[
+                mae_finite
+              ]
+            ),
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  }
+}
+
+stopifnot(
+  nrow(
+    paired_summary
+  ) == 36L
+)
+
+PAIRED_SUMMARY_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_ann_vs_gblup_matched_summary.csv"
+)
+
+write.csv(
+  paired_summary,
+  PAIRED_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+paired_summary |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Matched ANN-versus-GBLUP mean performance advantage; positive values favor ANN",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+These paired contrasts summarize the direction and magnitude of differences
+within the common outer validation design. They are not interpreted as
+independent-replicate significance tests.
+
+## 6. Global ranking
+
+### 6.1 Combined individual ranking object
+
+```{r combined-ranking}
+ranking_columns <- c(
+  "Model",
+  "Trait",
+  "ID",
+  "BLUP",
+  "GEBV",
+  "GEBV_SD",
+  "BLUP_Rank",
+  "GEBV_Rank",
+  "Rank_Difference",
+  "Absolute_Rank_Error",
+  "BLUP_Top20",
+  "GEBV_Top20"
+)
+
+all_ranking <- rbind(
+  gblup_ranking[
+    ,
+    ranking_columns
+  ],
+  ann_ranking[
+    ,
+    ranking_columns
+  ]
+)
+
+rownames(
+  all_ranking
+) <- NULL
+
+stopifnot(
+  nrow(
+    all_ranking
+  ) == 4095L,
+  all(
+    table(
+      all_ranking$Model
+    ) == 585L
+  ),
+  all(
+    table(
+      all_ranking$Trait
+    ) == 1365L
+  )
+)
+```
+
+For each trait and model, the five predictions available for an
+individual are averaged to obtain its GEBV before the global ranking is
+calculated.
+
+### 6.2 Ranking summary
+
+```{r ranking-summary}
+ranking_summary <- data.frame(
+  Model = character(0),
+  Trait = character(0),
+  Individuals = integer(0),
+  Ranking_Spearman = numeric(0),
+  Mean_Absolute_Rank_Error = numeric(0),
+  Median_Absolute_Rank_Error = numeric(0),
+  Top20_N = integer(0),
+  Top20_Overlap_N = integer(0),
+  Top20_Overlap_Rate = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  model_name in
+    model_order
+) {
+
+  for (
+    trait in
+      traits
+  ) {
+
+    x <- all_ranking[
+      all_ranking$Model ==
+        model_name &
+        all_ranking$Trait ==
+        trait,
+      ,
+      drop = FALSE
+    ]
+
+    stopifnot(
+      nrow(
+        x
+      ) == 195L,
+      sum(
+        x$BLUP_Top20
+      ) == 39L,
+      sum(
+        x$GEBV_Top20
+      ) == 39L
+    )
+
+    overlap_n <- sum(
+      x$BLUP_Top20 &
+        x$GEBV_Top20
+    )
+
+    ranking_summary <- rbind(
+      ranking_summary,
+      data.frame(
+        Model =
+          model_name,
+        Trait =
+          trait,
+        Individuals =
+          nrow(
+            x
+          ),
+        Ranking_Spearman =
+          cor(
+            x$BLUP_Rank,
+            x$GEBV_Rank,
+            method = "spearman"
+          ),
+        Mean_Absolute_Rank_Error =
+          mean(
+            x$Absolute_Rank_Error
+          ),
+        Median_Absolute_Rank_Error =
+          median(
+            x$Absolute_Rank_Error
+          ),
+        Top20_N =
+          39L,
+        Top20_Overlap_N =
+          overlap_n,
+        Top20_Overlap_Rate =
+          overlap_n /
+          39L,
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+ranking_summary$Trait <- factor(
+  ranking_summary$Trait,
+  levels =
+    traits
+)
+
+ranking_summary$Model <- factor(
+  ranking_summary$Model,
+  levels =
+    model_order
+)
+
+ranking_summary <- ranking_summary[
+  order(
+    ranking_summary$Trait,
+    ranking_summary$Model
+  ),
+  ,
+  drop = FALSE
+]
+
+ranking_summary$Trait <- as.character(
+  ranking_summary$Trait
+)
+
+ranking_summary$Model <- as.character(
+  ranking_summary$Model
+)
+
+RANKING_SUMMARY_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_ranking_summary.csv"
+)
+
+write.csv(
+  ranking_summary,
+  RANKING_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+ranking_display <- ranking_summary
+ranking_display$Model <- factor(
+  ranking_display$Model,
+  levels =
+    model_order,
+  labels =
+    model_labels
+)
+
+ranking_display |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Global BLUP-GEBV ranking and top-20% selection",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+Split-level Spearman and global ranking Spearman answer different questions.
+Split-level Spearman evaluates BLUP-GEBV ranking agreement among the 39
+assessment individuals in one outer split. Global ranking Spearman evaluates
+BLUP-GEBV ranking agreement among all 195 individuals after the GEBV of each
+individual is obtained from its five predictions.
+
+### 6.3 Ranking winners by trait
+
+```{r ranking-winners}
+ranking_winners <- data.frame(
+  Trait = character(0),
+  Best_Ranking_Spearman_Model = character(0),
+  Best_Ranking_Spearman = numeric(0),
+  Best_Mean_Rank_Error_Model = character(0),
+  Best_Mean_Rank_Error = numeric(0),
+  Best_Top20_Model = character(0),
+  Best_Top20_Overlap_N = integer(0),
+  Best_Top20_Overlap_Rate = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  trait in
+    traits
+) {
+
+  x <- ranking_summary[
+    ranking_summary$Trait ==
+      trait,
+    ,
+    drop = FALSE
+  ]
+
+  ranking_index <- which.max(
+    x$Ranking_Spearman
+  )
+
+  rank_error_index <- which.min(
+    x$Mean_Absolute_Rank_Error
+  )
+
+  top20_index <- which.max(
+    x$Top20_Overlap_Rate
+  )
+
+  ranking_winners <- rbind(
+    ranking_winners,
+    data.frame(
+      Trait =
+        trait,
+      Best_Ranking_Spearman_Model =
+        x$Model[
+          ranking_index
+        ],
+      Best_Ranking_Spearman =
+        x$Ranking_Spearman[
+          ranking_index
+        ],
+      Best_Mean_Rank_Error_Model =
+        x$Model[
+          rank_error_index
+        ],
+      Best_Mean_Rank_Error =
+        x$Mean_Absolute_Rank_Error[
+          rank_error_index
+        ],
+      Best_Top20_Model =
+        x$Model[
+          top20_index
+        ],
+      Best_Top20_Overlap_N =
+        x$Top20_Overlap_N[
+          top20_index
+        ],
+      Best_Top20_Overlap_Rate =
+        x$Top20_Overlap_Rate[
+          top20_index
+        ],
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+RANKING_WINNERS_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_ranking_winners.csv"
+)
+
+write.csv(
+  ranking_winners,
+  RANKING_WINNERS_CSV,
+  row.names = FALSE
+)
+
+ranking_winners |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Best global ranking and top-20% selection metric for each trait",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+### 6.4 Ranking comparison figures
+
+```{r ranking-spearman-figure, fig.width=10.5, fig.height=5.8, fig.cap="Global Spearman correlation between the BLUP ranking and the GEBV ranking for the seven genomic models."}
+ranking_plot <- ranking_summary
+
+ranking_plot$Model <- factor(
+  ranking_plot$Model,
+  levels =
+    rev(
+      model_order
+    ),
+  labels =
+    rev(
+      model_labels
+    )
+)
+
+ranking_plot$Trait <- factor(
+  ranking_plot$Trait,
+  levels =
+    traits
+)
+
+ranking_spearman_midpoint <- mean(
+  range(
+    ranking_plot$Ranking_Spearman,
+    finite = TRUE
+  )
+)
+
+ranking_plot$Text_color <- ifelse(
+  ranking_plot$Ranking_Spearman >=
+    ranking_spearman_midpoint,
+  "white",
+  "black"
+)
+
+p_ranking_spearman <- ggplot(
+  ranking_plot,
+  aes(
+    x = Trait,
+    y = Model,
+    fill = Ranking_Spearman
+  )
+) +
+  geom_tile(
+    color = "white",
+    linewidth = 0.8
+  ) +
+  geom_text(
+    aes(
+      label = sprintf(
+        "%.3f",
+        Ranking_Spearman
+      ),
+      color = Text_color
+    ),
+    size = 4.2,
+    fontface = "bold"
+  ) +
+  scale_color_identity() +
+  scale_fill_gradient(
+    name = "Spearman",
+    low = "#F7FBFF",
+    high = "#08519C"
+  ) +
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal(
+    base_size = 12
+  ) +
+  theme(
+    axis.text.x = element_text(
+      face = "bold"
+    ),
+    axis.text.y = element_text(
+      face = "bold"
+    ),
+    panel.grid = element_blank(),
+    plot.background = element_rect(
+      fill = "white",
+      color = NA
+    ),
+    panel.background = element_rect(
+      fill = "white",
+      color = NA
+    ),
+    legend.position = "right"
+  )
+
+print(
+  p_ranking_spearman
+)
+
+ggsave(
+  file.path(
+    FIGURE_DIR,
+    "real_comparison_global_ranking_spearman_heatmap.tiff"
+  ),
+  plot =
+    p_ranking_spearman,
+  device =
+    "tiff",
+  width =
+    10.5,
+  height =
+    5.8,
+  units =
+    "in",
+  dpi =
+    300,
+  compression =
+    "lzw"
+)
+```
+
+```{r top20-figure, fig.cap="BLUP top-20% individuals recovered by the GEBV ranking for each genomic model. Each top-20% set contains exactly 39 individuals."}
+top20_plot <- ranking_summary
+
+top20_plot$Model <- factor(
+  top20_plot$Model,
+  levels =
+    model_order,
+  labels =
+    model_labels
+)
+
+top20_plot$Trait <- factor(
+  top20_plot$Trait,
+  levels =
+    traits
+)
+
+p_top20 <- ggplot(
+  top20_plot,
+  aes(
+    x = Model,
+    y = Top20_Overlap_N,
+    fill = Model
+  )
+) +
+  geom_col(
+    width = 0.72
+  ) +
+  facet_wrap(
+    ~ Trait,
+    nrow = 1
+  ) +
+  scale_fill_gdocs() +
+  scale_y_continuous(
+    limits = c(
+      0,
+      39
+    ),
+    breaks = seq(
+      0,
+      39,
+      by = 5
+    )
+  ) +
+  labs(
+    x = NULL,
+    y = "BLUP top-20% individuals recovered",
+    fill = NULL
+  ) +
+  theme_gdocs() +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 35,
+      hjust = 1
+    )
+  )
+
+print(
+  p_top20
+)
+
+ggsave(
+  file.path(
+    FIGURE_DIR,
+    "real_comparison_top20_overlap.tiff"
+  ),
+  plot =
+    p_top20,
+  device =
+    "tiff",
+  width =
+    12,
+  height =
+    5.8,
+  units =
+    "in",
+  dpi =
+    300,
+  compression =
+    "lzw"
+)
+```
+
+### 6.5 Pairwise agreement among GEBV-ranking quintiles
+
+Spearman correlation compares the ordering of BLUPs and GEBVs within each
+model. A separate question is whether different genomic models assign the same
+individuals to similar **selection strata** based on their GEBV rankings.
+
+For each trait and model, the 195 individuals are ordered from the highest to
+the lowest GEBV and divided into five ordered groups of exactly 39 individuals:
+
+- quintile 1: ranks 1--39;
+- quintile 2: ranks 40--78;
+- quintile 3: ranks 79--117;
+- quintile 4: ranks 118--156;
+- quintile 5: ranks 157--195.
+
+Pairwise agreement among these ordered GEBV-ranking quintiles is quantified
+with **linearly weighted Cohen's kappa**. All 21 unordered pairs formed by the
+seven genomic methods are evaluated individually within each trait. No method
+family is pooled, averaged, or otherwise aggregated for this comparison.
+Identical quintile assignments receive full weight, whereas disagreement
+receives progressively smaller weight as the distance between quintiles
+increases. This provides a chance-corrected measure of agreement in selection
+strata rather than a second measure of exact rank-position displacement.
+
+```{r pairwise-quintile-weighted-kappa}
+all_ranking$GEBV_Quintile <- (
+  (
+    all_ranking$GEBV_Rank -
+      1L
+  ) %/%
+    39L
+) +
+  1L
+
+stopifnot(
+  all(
+    all_ranking$GEBV_Quintile %in%
+      seq_len(
+        5L
+      )
+  )
+)
+
+for (
+  trait in
+    traits
+) {
+
+  for (
+    model_name in
+      model_order
+  ) {
+
+    quintile_counts <- table(
+      all_ranking$GEBV_Quintile[
+        all_ranking$Trait ==
+          trait &
+          all_ranking$Model ==
+          model_name
+      ]
+    )
+
+    stopifnot(
+      length(
+        quintile_counts
+      ) == 5L,
+      all(
+        quintile_counts ==
+          39L
+      )
+    )
+  }
+}
+
+quintile_levels <- seq_len(
+  5L
+)
+
+quintile_weights <- matrix(
+  0,
+  nrow = 5L,
+  ncol = 5L
+)
+
+for (
+  row_index in
+    quintile_levels
+) {
+
+  for (
+    column_index in
+      quintile_levels
+  ) {
+
+    quintile_weights[
+      row_index,
+      column_index
+    ] <-
+      1 -
+      abs(
+        row_index -
+          column_index
+      ) /
+      4
+  }
+}
+
+kappa_summary <- data.frame(
+  Trait = character(0),
+  Model_1 = character(0),
+  Model_2 = character(0),
+  Weighted_Kappa = numeric(0),
+  Exact_Quintile_Agreement_Rate = numeric(0),
+  Mean_Absolute_Quintile_Difference = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  trait in
+    traits
+) {
+
+  for (
+    model_1_index in
+      seq_len(
+        length(
+          model_order
+        ) -
+          1L
+      )
+  ) {
+
+    for (
+      model_2_index in
+        seq(
+          from =
+            model_1_index +
+              1L,
+          to =
+            length(
+              model_order
+            )
+        )
+    ) {
+
+      model_1 <- model_order[
+        model_1_index
+      ]
+
+      model_2 <- model_order[
+        model_2_index
+      ]
+
+      x <- all_ranking[
+        all_ranking$Trait ==
+          trait &
+          all_ranking$Model ==
+          model_1,
+        c(
+          "ID",
+          "GEBV_Quintile"
+        ),
+        drop = FALSE
+      ]
+
+      y <- all_ranking[
+        all_ranking$Trait ==
+          trait &
+          all_ranking$Model ==
+          model_2,
+        c(
+          "ID",
+          "GEBV_Quintile"
+        ),
+        drop = FALSE
+      ]
+
+      x <- x[
+        order(
+          x$ID
+        ),
+        ,
+        drop = FALSE
+      ]
+
+      y <- y[
+        order(
+          y$ID
+        ),
+        ,
+        drop = FALSE
+      ]
+
+      stopifnot(
+        identical(
+          x$ID,
+          y$ID
+        ),
+        nrow(
+          x
+        ) == 195L,
+        nrow(
+          y
+        ) == 195L
+      )
+
+      agreement_table <- table(
+        factor(
+          x$GEBV_Quintile,
+          levels =
+            quintile_levels
+        ),
+        factor(
+          y$GEBV_Quintile,
+          levels =
+            quintile_levels
+        )
+      )
+
+      stopifnot(
+        all(
+          rowSums(
+            agreement_table
+          ) ==
+            39L
+        ),
+        all(
+          colSums(
+            agreement_table
+          ) ==
+            39L
+        )
+      )
+
+      observed_proportion <-
+        agreement_table /
+        sum(
+          agreement_table
+        )
+
+      row_marginal <- rowSums(
+        observed_proportion
+      )
+
+      column_marginal <- colSums(
+        observed_proportion
+      )
+
+      expected_proportion <- outer(
+        row_marginal,
+        column_marginal
+      )
+
+      observed_weighted_agreement <- sum(
+        quintile_weights *
+          observed_proportion
+      )
+
+      expected_weighted_agreement <- sum(
+        quintile_weights *
+          expected_proportion
+      )
+
+      weighted_kappa <-
+        (
+          observed_weighted_agreement -
+            expected_weighted_agreement
+        ) /
+        (
+          1 -
+            expected_weighted_agreement
+        )
+
+      exact_quintile_agreement_rate <- mean(
+        x$GEBV_Quintile ==
+          y$GEBV_Quintile
+      )
+
+      mean_absolute_quintile_difference <- mean(
+        abs(
+          x$GEBV_Quintile -
+            y$GEBV_Quintile
+        )
+      )
+
+      kappa_summary <- rbind(
+        kappa_summary,
+        data.frame(
+          Trait =
+            trait,
+          Model_1 =
+            model_1,
+          Model_2 =
+            model_2,
+          Weighted_Kappa =
+            weighted_kappa,
+          Exact_Quintile_Agreement_Rate =
+            exact_quintile_agreement_rate,
+          Mean_Absolute_Quintile_Difference =
+            mean_absolute_quintile_difference,
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  }
+}
+
+stopifnot(
+  nrow(
+    kappa_summary
+  ) == 63L,
+  all(
+    is.finite(
+      kappa_summary$Weighted_Kappa
+    )
+  ),
+  all(
+    kappa_summary$Weighted_Kappa >=
+      -1
+  ),
+  all(
+    kappa_summary$Weighted_Kappa <=
+      1
+  ),
+  all(
+    kappa_summary$Exact_Quintile_Agreement_Rate >=
+      0
+  ),
+  all(
+    kappa_summary$Exact_Quintile_Agreement_Rate <=
+      1
+  ),
+  all(
+    kappa_summary$Mean_Absolute_Quintile_Difference >=
+      0
+  ),
+  all(
+    kappa_summary$Mean_Absolute_Quintile_Difference <=
+      4
+  )
+)
+
+KAPPA_SUMMARY_CSV <- file.path(
+  COMPARISON_DIR,
+  "real_model_pairwise_quintile_weighted_kappa.csv"
+)
+
+write.csv(
+  kappa_summary,
+  KAPPA_SUMMARY_CSV,
+  row.names = FALSE
+)
+
+kappa_summary |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Linearly weighted Cohen's kappa for each pair of genomic methods based on GEBV-ranking quintiles",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+```{r pairwise-quintile-weighted-kappa-heatmap, fig.width=13, fig.height=8.5, fig.cap="Linearly weighted Cohen's kappa for every pair of the seven genomic methods based on GEBV-ranking quintiles. Each panel is a complete 7 by 7 pairwise matrix for one trait; no aggregation by model family is applied. Larger values indicate stronger agreement in selection strata."}
+kappa_heatmap <- data.frame(
+  Trait = character(0),
+  Model_1 = character(0),
+  Model_2 = character(0),
+  Weighted_Kappa = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  trait in
+    traits
+) {
+
+  for (
+    model_1 in
+      model_order
+  ) {
+
+    for (
+      model_2 in
+        model_order
+    ) {
+
+      if (
+        model_1 ==
+          model_2
+      ) {
+
+        kappa_value <- 1
+
+      } else {
+
+        pair_row <- kappa_summary[
+          kappa_summary$Trait ==
+            trait &
+            (
+              (
+                kappa_summary$Model_1 ==
+                  model_1 &
+                kappa_summary$Model_2 ==
+                  model_2
+              ) |
+              (
+                kappa_summary$Model_1 ==
+                  model_2 &
+                kappa_summary$Model_2 ==
+                  model_1
+              )
+            ),
+          ,
+          drop = FALSE
+        ]
+
+        stopifnot(
+          nrow(
+            pair_row
+          ) == 1L
+        )
+
+        kappa_value <- pair_row$Weighted_Kappa
+      }
+
+      kappa_heatmap <- rbind(
+        kappa_heatmap,
+        data.frame(
+          Trait =
+            trait,
+          Model_1 =
+            model_1,
+          Model_2 =
+            model_2,
+          Weighted_Kappa =
+            kappa_value,
+          stringsAsFactors = FALSE
+        )
+      )
+    }
+  }
+}
+
+kappa_heatmap$Model_1 <- factor(
+  kappa_heatmap$Model_1,
+  levels =
+    model_order,
+  labels =
+    model_labels
+)
+
+kappa_heatmap$Model_2 <- factor(
+  kappa_heatmap$Model_2,
+  levels =
+    rev(
+      model_order
+    ),
+  labels =
+    rev(
+      model_labels
+    )
+)
+
+kappa_heatmap$Trait <- factor(
+  kappa_heatmap$Trait,
+  levels =
+    traits
+)
+
+kappa_heatmap$Text_color <- ifelse(
+  abs(
+    kappa_heatmap$Weighted_Kappa
+  ) >=
+    0.55,
+  "white",
+  "black"
+)
+
+p_kappa <- ggplot(
+  kappa_heatmap,
+  aes(
+    x = Model_1,
+    y = Model_2,
+    fill = Weighted_Kappa
+  )
+) +
+  geom_tile(
+    color = "white",
+    linewidth = 0.7
+  ) +
+  geom_text(
+    aes(
+      label = sprintf(
+        "%.2f",
+        Weighted_Kappa
+      ),
+      color = Text_color
+    ),
+    size = 3.2,
+    fontface = "bold"
+  ) +
+  scale_color_identity() +
+  scale_fill_gradient2(
+    name = "Weighted kappa",
+    low = "#B2182B",
+    mid = "#F7F7F7",
+    high = "#2166AC",
+    midpoint = 0,
+    limits = c(
+      -1,
+      1
+    )
+  ) +
+  facet_wrap(
+    ~ Trait,
+    nrow = 1
+  ) +
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal(
+    base_size = 11
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      face = "bold"
+    ),
+    axis.text.y = element_text(
+      face = "bold"
+    ),
+    panel.grid = element_blank(),
+    plot.background = element_rect(
+      fill = "white",
+      color = NA
+    ),
+    panel.background = element_rect(
+      fill = "white",
+      color = NA
+    ),
+    legend.position = "bottom"
+  )
+
+print(
+  p_kappa
+)
+
+ggsave(
+  file.path(
+    FIGURE_DIR,
+    "real_comparison_pairwise_quintile_weighted_kappa_heatmap.tiff"
+  ),
+  plot =
+    p_kappa,
+  device =
+    "tiff",
+  width =
+    13,
+  height =
+    8.5,
+  units =
+    "in",
+  dpi =
+    300,
+  compression =
+    "lzw"
+)
+```
+
+## 7. BLUP versus GEBV
+
+The following figures compare the BLUP with the GEBV for each individual and
+model. The GEBV is the mean of the five predictions available for that
+individual and is the same value used in the global ranking.
+
+```{r blup-vs-gebv, fig.width=12, fig.height=8.5, out.width="100%"}
+for (
+  trait in
+    traits
+) {
+
+  trait_data <- all_ranking[
+    all_ranking$Trait ==
+      trait,
+    ,
+    drop = FALSE
+  ]
+
+  trait_data$Model <- factor(
+    trait_data$Model,
+    levels =
+      model_order,
+    labels =
+      model_labels
+  )
+
+  axis_limits <- range(
+    c(
+      trait_data$BLUP,
+      trait_data$GEBV
+    ),
+    finite = TRUE
+  )
+
+  axis_padding <- diff(
+    axis_limits
+  ) *
+    0.04
+
+  axis_limits <- c(
+    axis_limits[
+      1L
+    ] -
+      axis_padding,
+    axis_limits[
+      2L
+    ] +
+      axis_padding
+  )
+
+  p_blup_gebv <- ggplot(
+    trait_data,
+    aes(
+      x = BLUP,
+      y = GEBV,
+      color = Model
+    )
+  ) +
+    geom_abline(
+      intercept = 0,
+      slope = 1,
+      linetype = 2
+    ) +
+    geom_point(
+      alpha = 0.62,
+      size = 1.35
+    ) +
+    facet_wrap(
+      ~ Model,
+      ncol = 4
+    ) +
+    coord_equal(
+      xlim =
+        axis_limits,
+      ylim =
+        axis_limits
+    ) +
+    scale_color_gdocs() +
+    labs(
+      x = "BLUP",
+      y = "GEBV",
+      color = NULL,
+      title = paste(
+        "BLUP versus GEBV:",
+        trait
+      )
+    ) +
+    theme_gdocs() +
+    theme(
+      legend.position = "none"
+    )
+
+  print(
+    p_blup_gebv
+  )
+
+  ggsave(
+    file.path(
+      FIGURE_DIR,
+      paste0(
+        "real_comparison_blup_vs_gebv_",
+        trait,
+        ".tiff"
+      )
+    ),
+    plot =
+      p_blup_gebv,
+    device =
+      "tiff",
+    width =
+      12,
+    height =
+      8.5,
+    units =
+      "in",
+    dpi =
+      300,
+    compression =
+      "lzw"
+  )
+}
+```
+
+## 8. Integrated interpretation
+
+The split-level metrics and the global ranking metrics are interpreted
+together. A model can have smaller BLUP-GEBV error while another produces a
+better global ordering of individuals; these are distinct properties and are
+not collapsed into a single composite score.
+
+```{r interpretation-objects, include=FALSE}
+cer_predictive <- predictive_winners[
+  predictive_winners$Trait ==
+    "Cer",
+  ,
+  drop = FALSE
+]
+
+bm_predictive <- predictive_winners[
+  predictive_winners$Trait ==
+    "BM",
+  ,
+  drop = FALSE
+]
+
+lp_predictive <- predictive_winners[
+  predictive_winners$Trait ==
+    "LP",
+  ,
+  drop = FALSE
+]
+
+cer_ranking <- ranking_winners[
+  ranking_winners$Trait ==
+    "Cer",
+  ,
+  drop = FALSE
+]
+
+bm_ranking <- ranking_winners[
+  ranking_winners$Trait ==
+    "BM",
+  ,
+  drop = FALSE
+]
+
+lp_ranking <- ranking_winners[
+  ranking_winners$Trait ==
+    "LP",
+  ,
+  drop = FALSE
+]
+
+cer_kappa <- kappa_summary[
+  kappa_summary$Trait ==
+    "Cer",
+  ,
+  drop = FALSE
+]
+
+bm_kappa <- kappa_summary[
+  kappa_summary$Trait ==
+    "BM",
+  ,
+  drop = FALSE
+]
+
+lp_kappa <- kappa_summary[
+  kappa_summary$Trait ==
+    "LP",
+  ,
+  drop = FALSE
+]
+
+cer_kappa_max <- cer_kappa[
+  which.max(
+    cer_kappa$Weighted_Kappa
+  ),
+  ,
+  drop = FALSE
+]
+
+cer_kappa_min <- cer_kappa[
+  which.min(
+    cer_kappa$Weighted_Kappa
+  ),
+  ,
+  drop = FALSE
+]
+
+bm_kappa_max <- bm_kappa[
+  which.max(
+    bm_kappa$Weighted_Kappa
+  ),
+  ,
+  drop = FALSE
+]
+
+bm_kappa_min <- bm_kappa[
+  which.min(
+    bm_kappa$Weighted_Kappa
+  ),
+  ,
+  drop = FALSE
+]
+
+lp_kappa_max <- lp_kappa[
+  which.max(
+    lp_kappa$Weighted_Kappa
+  ),
+  ,
+  drop = FALSE
+]
+
+lp_kappa_min <- lp_kappa[
+  which.min(
+    lp_kappa$Weighted_Kappa
+  ),
+  ,
+  drop = FALSE
+]
+```
+
+### 8.1 Cer
+
+For Cer, the highest mean split-level Pearson correlation is obtained by
+**`r cer_predictive$Best_Pearson_Model`**
+(`r sprintf("%.4f", cer_predictive$Best_Pearson)`), while the lowest mean RMSE
+is obtained by **`r cer_predictive$Best_RMSE_Model`**
+(`r sprintf("%.4f", cer_predictive$Best_RMSE)`). At the individual level, the
+highest global ranking Spearman is obtained by
+**`r cer_ranking$Best_Ranking_Spearman_Model`**
+(`r sprintf("%.4f", cer_ranking$Best_Ranking_Spearman)`), and the largest
+BLUP top-20% recovery is `r cer_ranking$Best_Top20_Overlap_N` of 39
+individuals. For the GEBV-ranking quintiles, the highest pairwise weighted
+kappa is observed for **`r cer_kappa_max$Model_1` versus
+`r cer_kappa_max$Model_2`**
+(`r sprintf("%.4f", cer_kappa_max$Weighted_Kappa)`), whereas the lowest is
+observed for **`r cer_kappa_min$Model_1` versus
+`r cer_kappa_min$Model_2`**
+(`r sprintf("%.4f", cer_kappa_min$Weighted_Kappa)`).
+
+### 8.2 BM
+
+For BM, the highest mean split-level Pearson correlation is obtained by
+**`r bm_predictive$Best_Pearson_Model`**
+(`r sprintf("%.4f", bm_predictive$Best_Pearson)`), while the lowest mean RMSE
+is obtained by **`r bm_predictive$Best_RMSE_Model`**
+(`r sprintf("%.4f", bm_predictive$Best_RMSE)`). The global ordering can differ
+from the split-level result: the highest ranking Spearman is obtained by
+**`r bm_ranking$Best_Ranking_Spearman_Model`**
+(`r sprintf("%.4f", bm_ranking$Best_Ranking_Spearman)`), and the largest
+top-20% recovery is `r bm_ranking$Best_Top20_Overlap_N` of 39 individuals.
+For the GEBV-ranking quintiles, the highest pairwise weighted kappa is observed
+for **`r bm_kappa_max$Model_1` versus `r bm_kappa_max$Model_2`**
+(`r sprintf("%.4f", bm_kappa_max$Weighted_Kappa)`), whereas the lowest is
+observed for **`r bm_kappa_min$Model_1` versus `r bm_kappa_min$Model_2`**
+(`r sprintf("%.4f", bm_kappa_min$Weighted_Kappa)`).
+
+### 8.3 LP
+
+For LP, the highest mean split-level Pearson correlation is obtained by
+**`r lp_predictive$Best_Pearson_Model`**
+(`r sprintf("%.4f", lp_predictive$Best_Pearson)`), while the lowest mean RMSE
+is obtained by **`r lp_predictive$Best_RMSE_Model`**
+(`r sprintf("%.4f", lp_predictive$Best_RMSE)`). Global ranking is evaluated
+separately: the highest ranking Spearman is obtained by
+**`r lp_ranking$Best_Ranking_Spearman_Model`**
+(`r sprintf("%.4f", lp_ranking$Best_Ranking_Spearman)`), and the largest
+top-20% recovery is `r lp_ranking$Best_Top20_Overlap_N` of 39 individuals.
+For the GEBV-ranking quintiles, the highest pairwise weighted kappa is observed
+for **`r lp_kappa_max$Model_1` versus `r lp_kappa_max$Model_2`**
+(`r sprintf("%.4f", lp_kappa_max$Weighted_Kappa)`), whereas the lowest is
+observed for **`r lp_kappa_min$Model_1` versus `r lp_kappa_min$Model_2`**
+(`r sprintf("%.4f", lp_kappa_min$Weighted_Kappa)`).
+
+### 8.4 Overall reading
+
+The comparison does not impose a universal winner. Predictive association,
+BLUP-GEBV error, global ranking, recovery of superior individuals, and
+pairwise agreement among GEBV-ranking quintiles are reported separately because
+they represent different objectives in genomic prediction and selection.
+
+For weighted kappa, interpretation is strictly **method by method**. Each cell
+of the complete pairwise matrix represents one specific pair among GBLUP-A,
+GBLUP-AD, GBLUP-ADE, ANN-0, ANN-L1, ANN-L2, and ANN-L1+L2. No average or
+pooled contrast is calculated for a GBLUP family, an ANN family, or for a
+GBLUP-versus-ANN grouping. The 21 method pairs are evaluated independently
+within each trait.
+
+All seven methods are evaluated under one common rule: identical outer splits,
+identical BLUPs, no model-specific post-processing of individual folds, and
+global ranking from the GEBV obtained for each individual from its five
+predictions.
+
+## 9. Comparison output contract
+
+```{r comparison-output-contract}
+output_contract <- data.frame(
+  Output = c(
+    "Performance summary",
+    "Common-split correlation summary",
+    "Predictive winners",
+    "Matched ANN-versus-GBLUP summary",
+    "Ranking summary",
+    "Ranking winners",
+    "Pairwise quintile-weighted-kappa summary",
+    "Pearson figure",
+    "Spearman heatmap",
+    "RMSE figure",
+    "MAE figure",
+    "Global ranking Spearman heatmap",
+    "Pairwise quintile-weighted-kappa heatmap",
+    "Top-20% figure",
+    "Cer BLUP-versus-GEBV figure",
+    "BM BLUP-versus-GEBV figure",
+    "LP BLUP-versus-GEBV figure"
+  ),
+  Path = c(
+    PERFORMANCE_SUMMARY_CSV,
+    COMMON_CORRELATION_SUMMARY_CSV,
+    PREDICTIVE_WINNERS_CSV,
+    PAIRED_SUMMARY_CSV,
+    RANKING_SUMMARY_CSV,
+    RANKING_WINNERS_CSV,
+    KAPPA_SUMMARY_CSV,
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_pearson_by_model_trait.tiff"
+    ),
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_spearman_heatmap.tiff"
+    ),
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_rmse_by_model_trait.tiff"
+    ),
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_mae_by_model_trait.tiff"
+    ),
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_global_ranking_spearman_heatmap.tiff"
+    ),
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_pairwise_quintile_weighted_kappa_heatmap.tiff"
+    ),
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_top20_overlap.tiff"
+    ),
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_blup_vs_gebv_Cer.tiff"
+    ),
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_blup_vs_gebv_BM.tiff"
+    ),
+    file.path(
+      FIGURE_DIR,
+      "real_comparison_blup_vs_gebv_LP.tiff"
+    )
+  ),
+  stringsAsFactors = FALSE
+)
+
+output_contract$Exists <- file.exists(
+  output_contract$Path
+)
+
+stopifnot(
+  all(
+    output_contract$Exists
+  )
+)
+
+output_contract |>
+  knitr::kable(
+    format = "html",
+    caption = "Deterministic outputs from the real-data model comparison",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+## 10. Navigation
+
+[GBLUP A/AD/ADE](real_data_gblup.html) |
+[Regularized ANN](real_data_ann.html) |
+[Validation design](real_data_validation.html) |
+[Home](index.html)

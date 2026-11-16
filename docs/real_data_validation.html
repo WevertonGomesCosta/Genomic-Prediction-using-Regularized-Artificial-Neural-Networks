@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Weverton Gomes da Costa" />
+
+<meta name="date" content="2026-11-13" />
+
+<title>Real data: nested validation design</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Regularized ANN Genomic Prediction</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Simulated data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="simulated_data_audit.html">Data audit</a>
+    </li>
+    <li>
+      <a href="simulated_data_validation.html">Validation design</a>
+    </li>
+    <li>
+      <a href="simulated_data_gblup.html">GBLUP-ADE</a>
+    </li>
+    <li>
+      <a href="simulated_data_ann.html">ANN</a>
+    </li>
+    <li>
+      <a href="simulated_data_comparison.html">Model comparison</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+<li role="separator" class="divider"></li>
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Real data: nested validation design</h1>
+<h4 class="author">Weverton Gomes da Costa</h4>
+<h4 class="date">2026-11-13</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-11-13
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/</code>
+<span class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20260821code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20260821)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20260821code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20260821)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef58ccc859fc9251e9c0ed73b8659731a4e558eb8targetblankf58ccc8a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f58ccc859fc9251e9c0ed73b8659731a4e558eb8" target="_blank">f58ccc8</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef58ccc859fc9251e9c0ed73b8659731a4e558eb8targetblankf58ccc8a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f58ccc859fc9251e9c0ed73b8659731a4e558eb8" target="_blank">f58ccc8</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .github/
+    Ignored:    .local/
+    Ignored:    data/dados_reais/geno_real.rds
+    Ignored:    renv/library/
+    Ignored:    renv/staging/
+
+Untracked files:
+    Untracked:  analysis/real_data_comparison.Rmd
+    Untracked:  output/real/comparison/
+
+Unstaged changes:
+    Modified:   analysis/real_data_validation.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/real_data_validation.Rmd</code>)
+and HTML (<code>docs/real_data_validation.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/66d3372b14c9447722c7b43881302b8fb49708a0/analysis/real_data_validation.Rmd" target="_blank">66d3372</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Add nested validation design for real data
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/66d3372b14c9447722c7b43881302b8fb49708a0/docs/real_data_validation.html" target="_blank">66d3372</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Add nested validation design for real data
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/a6a1d2fb02223cda24638c2def431b6d5c810aa5/analysis/real_data_validation.Rmd" target="_blank">a6a1d2f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Remove obsolete real-data workflow and diagnostics
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/a6a1d2fb02223cda24638c2def431b6d5c810aa5/docs/real_data_validation.html" target="_blank">a6a1d2f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Remove obsolete real-data workflow and diagnostics
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/cdbac19b5f4e1fb6f56821183659b525a9fc57a9/docs/real_data_validation.html" target="_blank">cdbac19</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-09
+</td>
+<td>
+Build real-data workflowr pages
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/4fa5d7caefab014a232aacf96ca974999589066c/analysis/real_data_validation.Rmd" target="_blank">4fa5d7c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-05
+</td>
+<td>
+Add audited real-data workflow through GBLUP-ADE
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<style>
+table {
+  width: 100% !important;
+}
+table th,
+table td {
+  white-space: normal !important;
+  vertical-align: middle !important;
+}
+</style>
+<div id="purpose" class="section level2">
+<h2>1. Purpose</h2>
+<p>This module defines the nested cross-validation design used by every
+genomic-prediction method fitted to the real <em>Coffea arabica</em>
+population. The partitions are created before model fitting and are
+reused unchanged by GBLUP-A, GBLUP-AD, GBLUP-ADE, and all ANN
+variants.</p>
+<p>The validation design has four fixed features:</p>
+<ul>
+<li><strong>Repeated outer cross-validation:</strong> 5 repetitions of 5
+outer folds provide 25 held-out evaluations.</li>
+<li><strong>Nested inner cross-validation:</strong> each outer analysis
+set is divided into 4 inner folds for ANN model selection.</li>
+<li><strong>Common partitions:</strong> the same outer and inner
+assignments are reused for <code>Cer</code>, <code>BM</code>,
+<code>LP</code>, GBLUP-A, GBLUP-AD, GBLUP-ADE, and all ANN
+configurations.</li>
+<li><strong>Information separation:</strong> BLUP values, genomic marker
+values, and model identity do not participate in fold generation.</li>
+</ul>
+<p>Throughout this module, <strong>analysis set</strong> denotes
+individuals available for model development at the current validation
+level, whereas <strong>assessment set</strong> denotes individuals held
+out for evaluation at that level.</p>
+</div>
+<div id="package-and-fixed-validation-settings" class="section level2">
+<h2>2. Package and fixed validation settings</h2>
+<p><code>knitr</code> is used to present validation settings and
+partition summaries as reader-facing tables.</p>
+<pre class="r"><code>library(knitr)</code></pre>
+<p>The partitioning procedure is controlled by four fixed values.</p>
+<pre class="r"><code>SEED_GLOBAL &lt;- 20261105L
+N_OUTER_REPEATS &lt;- 5L
+N_OUTER_FOLDS &lt;- 5L
+N_INNER_FOLDS &lt;- 4L
+
+validation_parameters &lt;- data.frame(
+  Parameter = c(
+    &quot;Global seed&quot;,
+    &quot;Outer repetitions&quot;,
+    &quot;Outer folds per repetition&quot;,
+    &quot;Inner folds per outer split&quot;
+  ),
+  Value = c(
+    SEED_GLOBAL,
+    N_OUTER_REPEATS,
+    N_OUTER_FOLDS,
+    N_INNER_FOLDS
+  ),
+  Role = c(
+    &quot;reproducible partition generation&quot;,
+    &quot;repeat held-out evaluation&quot;,
+    &quot;define outer assessment sets&quot;,
+    &quot;compare ANN candidates inside each outer analysis set&quot;
+  ),
+  stringsAsFactors = FALSE
+)
+
+validation_parameters |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Fixed nested cross-validation settings&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Fixed nested cross-validation settings
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Parameter
+</th>
+<th style="text-align:right;">
+Value
+</th>
+<th style="text-align:left;">
+Role
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Global seed
+</td>
+<td style="text-align:right;">
+20261105
+</td>
+<td style="text-align:left;">
+reproducible partition generation
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer repetitions
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+repeat held-out evaluation
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer folds per repetition
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+define outer assessment sets
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inner folds per outer split
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+compare ANN candidates inside each outer analysis set
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="population-entering-validation" class="section level2">
+<h2>3. Population entering validation</h2>
+<p>The validation module reads only the common object prepared in the
+preceding data-preparation stage. The 195 aligned individuals and the
+common genomic matrix are therefore fixed before partition
+generation.</p>
+<pre class="r"><code>common &lt;- readRDS(
+  &quot;output/real/audit/preprocessed_real_common.rds&quot;
+)
+
+ids &lt;- rownames(
+  common$genotype
+)
+
+input_summary &lt;- data.frame(
+  Quantity = c(
+    &quot;Individuals&quot;,
+    &quot;Prediction traits&quot;,
+    &quot;Markers after common QC&quot;
+  ),
+  Value = c(
+    length(ids),
+    paste(common$traits, collapse = &quot;, &quot;),
+    ncol(common$genotype)
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Real-data population entering validation&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Real-data population entering validation
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Quantity
+</th>
+<th style="text-align:left;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Individuals
+</td>
+<td style="text-align:left;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prediction traits
+</td>
+<td style="text-align:left;">
+Cer, BM, LP
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Markers after common QC
+</td>
+<td style="text-align:left;">
+20887
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>stopifnot(
+  length(ids) == 195L,
+  length(unique(ids)) == 195L,
+  nrow(common$phenotype) == 195L,
+  identical(
+    ids,
+    common$phenotype$Phenotype_ID
+  ),
+  identical(
+    common$traits,
+    c(&quot;Cer&quot;, &quot;BM&quot;, &quot;LP&quot;)
+  ),
+  ncol(common$genotype) == 20887L
+)</code></pre>
+<p>Only the individual identifiers and deterministic seeds are used to
+create the folds. Phenotypic targets and genomic marker values remain
+outside partition generation.</p>
+</div>
+<div id="repeated-outer-cross-validation" class="section level2">
+<h2>4. Repeated outer cross-validation</h2>
+<p>In each repetition, the 195 individuals are randomly shuffled and
+divided into five folds of equal size. Because 195 is exactly divisible
+by five, every outer assessment fold contains 39 individuals and the
+remaining 156 individuals form the corresponding outer analysis set.</p>
+<div id="outer-fold-assignments" class="section level3">
+<h3>4.1 Outer fold assignments</h3>
+<pre class="r"><code>outer_assignment_list &lt;- vector(
+  &quot;list&quot;,
+  N_OUTER_REPEATS
+)
+
+outer_splits &lt;- list()
+
+for (rep_id in seq_len(N_OUTER_REPEATS)) {
+
+  set.seed(
+    SEED_GLOBAL + rep_id
+  )
+
+  shuffled_ids &lt;- sample(
+    ids,
+    size = length(ids),
+    replace = FALSE
+  )
+
+  assigned_folds &lt;- rep(
+    seq_len(N_OUTER_FOLDS),
+    each = length(ids) / N_OUTER_FOLDS
+  )
+
+  assignment &lt;- data.frame(
+    Repetition = rep_id,
+    ID = shuffled_ids,
+    OuterFold = assigned_folds,
+    stringsAsFactors = FALSE
+  )
+
+  assignment &lt;- assignment[
+    order(assignment$ID),
+    ,
+    drop = FALSE
+  ]
+
+  rownames(
+    assignment
+  ) &lt;- NULL
+
+  assignment$SplitID &lt;- sprintf(
+    &quot;R%02d_F%02d&quot;,
+    assignment$Repetition,
+    assignment$OuterFold
+  )
+
+  outer_assignment_list[[rep_id]] &lt;- assignment
+
+  for (outer_fold in seq_len(N_OUTER_FOLDS)) {
+
+    split_id &lt;- sprintf(
+      &quot;R%02d_F%02d&quot;,
+      rep_id,
+      outer_fold
+    )
+
+    assessment_ids &lt;- assignment$ID[
+      assignment$OuterFold == outer_fold
+    ]
+
+    analysis_ids &lt;- ids[
+      !ids %in% assessment_ids
+    ]
+
+    outer_splits[[split_id]] &lt;- list(
+      split_id = split_id,
+      repetition = rep_id,
+      outer_fold = outer_fold,
+      analysis_ids = analysis_ids,
+      assessment_ids = assessment_ids
+    )
+  }
+}
+
+outer_assignments &lt;- do.call(
+  rbind,
+  outer_assignment_list
+)
+
+rownames(
+  outer_assignments
+) &lt;- NULL</code></pre>
+</div>
+<div id="outer-split-checks" class="section level3">
+<h3>4.2 Outer split checks</h3>
+<pre class="r"><code>outer_split_ids &lt;- names(
+  outer_splits
+)
+
+outer_sizes_list &lt;- vector(
+  &quot;list&quot;,
+  length(outer_split_ids)
+)
+
+for (i in seq_along(outer_split_ids)) {
+
+  split_id &lt;- outer_split_ids[i]
+  current_split &lt;- outer_splits[[split_id]]
+
+  outer_sizes_list[[i]] &lt;- data.frame(
+    SplitID = split_id,
+    Analysis_N = length(
+      current_split$analysis_ids
+    ),
+    Assessment_N = length(
+      current_split$assessment_ids
+    ),
+    Overlap_N = length(
+      intersect(
+        current_split$analysis_ids,
+        current_split$assessment_ids
+      )
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+outer_sizes &lt;- do.call(
+  rbind,
+  outer_sizes_list
+)
+
+rownames(
+  outer_sizes
+) &lt;- NULL
+
+outer_coverage &lt;- TRUE
+
+for (rep_id in seq_len(N_OUTER_REPEATS)) {
+
+  assessed &lt;- character(0)
+
+  for (outer_fold in seq_len(N_OUTER_FOLDS)) {
+
+    split_id &lt;- sprintf(
+      &quot;R%02d_F%02d&quot;,
+      rep_id,
+      outer_fold
+    )
+
+    assessed &lt;- c(
+      assessed,
+      outer_splits[[split_id]]$assessment_ids
+    )
+  }
+
+  if (
+    length(assessed) != 195L ||
+    !identical(
+      sort(assessed),
+      sort(ids)
+    ) ||
+    any(table(assessed) != 1L)
+  ) {
+    outer_coverage &lt;- FALSE
+  }
+}
+
+outer_contract &lt;- data.frame(
+  Check = c(
+    &quot;25 outer splits&quot;,
+    &quot;156 analysis individuals per split&quot;,
+    &quot;39 assessment individuals per split&quot;,
+    &quot;No analysis-assessment overlap&quot;,
+    &quot;Every individual assessed exactly once per repetition&quot;
+  ),
+  Passed = c(
+    length(outer_splits) == 25L,
+    all(outer_sizes$Analysis_N == 156L),
+    all(outer_sizes$Assessment_N == 39L),
+    all(outer_sizes$Overlap_N == 0L),
+    outer_coverage
+  ),
+  stringsAsFactors = FALSE
+)
+
+outer_contract |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Outer validation design checks&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Outer validation design checks
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Check
+</th>
+<th style="text-align:left;">
+Passed
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+25 outer splits
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+156 analysis individuals per split
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+39 assessment individuals per split
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No analysis-assessment overlap
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Every individual assessed exactly once per repetition
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>stopifnot(
+  all(outer_contract$Passed)
+)</code></pre>
+<p>Across the complete outer design, every individual is assessed once
+in each repetition and five times in total.</p>
+</div>
+</div>
+<div id="nested-inner-cross-validation" class="section level2">
+<h2>5. Nested inner cross-validation</h2>
+<p>Each outer analysis set contains 156 individuals. Within each outer
+split, these individuals are randomly shuffled and divided into four
+equal inner folds.</p>
+<p>Each inner assessment set therefore contains 39 individuals, while
+the remaining 117 individuals form the corresponding inner analysis set.
+The outer assessment individuals do not participate in inner partition
+generation.</p>
+<div id="inner-fold-assignments" class="section level3">
+<h3>5.1 Inner fold assignments</h3>
+<pre class="r"><code>inner_assignments_list &lt;- vector(
+  &quot;list&quot;,
+  length(outer_splits)
+)
+
+names(
+  inner_assignments_list
+) &lt;- names(
+  outer_splits
+)
+
+inner_splits &lt;- vector(
+  &quot;list&quot;,
+  length(outer_splits)
+)
+
+names(
+  inner_splits
+) &lt;- names(
+  outer_splits
+)
+
+for (split_id in names(outer_splits)) {
+
+  outer_split &lt;- outer_splits[[split_id]]
+
+  rep_id &lt;- outer_split$repetition
+  outer_fold &lt;- outer_split$outer_fold
+
+  outer_analysis_ids &lt;- outer_split$analysis_ids
+
+  set.seed(
+    SEED_GLOBAL +
+      100000L +
+      rep_id * 100L +
+      outer_fold
+  )
+
+  shuffled_inner_ids &lt;- sample(
+    outer_analysis_ids,
+    size = length(outer_analysis_ids),
+    replace = FALSE
+  )
+
+  assigned_inner_folds &lt;- rep(
+    seq_len(N_INNER_FOLDS),
+    each = length(outer_analysis_ids) / N_INNER_FOLDS
+  )
+
+  inner_assignment &lt;- data.frame(
+    SplitID = split_id,
+    Repetition = rep_id,
+    OuterFold = outer_fold,
+    ID = shuffled_inner_ids,
+    InnerFold = assigned_inner_folds,
+    stringsAsFactors = FALSE
+  )
+
+  inner_assignment &lt;- inner_assignment[
+    order(inner_assignment$ID),
+    ,
+    drop = FALSE
+  ]
+
+  rownames(
+    inner_assignment
+  ) &lt;- NULL
+
+  inner_assignments_list[[split_id]] &lt;- inner_assignment
+
+  current_inner_splits &lt;- vector(
+    &quot;list&quot;,
+    N_INNER_FOLDS
+  )
+
+  names(
+    current_inner_splits
+  ) &lt;- paste0(
+    &quot;I&quot;,
+    seq_len(N_INNER_FOLDS)
+  )
+
+  for (inner_fold in seq_len(N_INNER_FOLDS)) {
+
+    assessment_ids &lt;- inner_assignment$ID[
+      inner_assignment$InnerFold == inner_fold
+    ]
+
+    analysis_ids &lt;- outer_analysis_ids[
+      !outer_analysis_ids %in% assessment_ids
+    ]
+
+    current_inner_splits[[paste0(&quot;I&quot;, inner_fold)]] &lt;- list(
+      split_id = split_id,
+      inner_fold = inner_fold,
+      analysis_ids = analysis_ids,
+      assessment_ids = assessment_ids
+    )
+  }
+
+  inner_splits[[split_id]] &lt;- current_inner_splits
+}
+
+inner_assignments &lt;- do.call(
+  rbind,
+  inner_assignments_list
+)
+
+rownames(
+  inner_assignments
+) &lt;- NULL</code></pre>
+</div>
+<div id="inner-split-checks" class="section level3">
+<h3>5.2 Inner split checks</h3>
+<pre class="r"><code>inner_sizes_list &lt;- vector(
+  &quot;list&quot;,
+  length(outer_splits) * N_INNER_FOLDS
+)
+
+inner_row &lt;- 1L
+outer_leakage &lt;- FALSE
+inner_coverage &lt;- TRUE
+
+for (split_id in names(inner_splits)) {
+
+  outer_analysis &lt;- outer_splits[[split_id]]$analysis_ids
+  outer_assessment &lt;- outer_splits[[split_id]]$assessment_ids
+  inner_assessed &lt;- character(0)
+
+  for (inner_name in names(inner_splits[[split_id]])) {
+
+    current_inner &lt;- inner_splits[[split_id]][[inner_name]]
+
+    inner_sizes_list[[inner_row]] &lt;- data.frame(
+      SplitID = split_id,
+      InnerFold = current_inner$inner_fold,
+      Analysis_N = length(
+        current_inner$analysis_ids
+      ),
+      Assessment_N = length(
+        current_inner$assessment_ids
+      ),
+      Overlap_N = length(
+        intersect(
+          current_inner$analysis_ids,
+          current_inner$assessment_ids
+        )
+      ),
+      stringsAsFactors = FALSE
+    )
+
+    inner_assessed &lt;- c(
+      inner_assessed,
+      current_inner$assessment_ids
+    )
+
+    inner_ids &lt;- c(
+      current_inner$analysis_ids,
+      current_inner$assessment_ids
+    )
+
+    if (
+      length(
+        intersect(
+          outer_assessment,
+          inner_ids
+        )
+      ) &gt; 0L
+    ) {
+      outer_leakage &lt;- TRUE
+    }
+
+    inner_row &lt;- inner_row + 1L
+  }
+
+  if (
+    length(inner_assessed) != 156L ||
+    !identical(
+      sort(inner_assessed),
+      sort(outer_analysis)
+    ) ||
+    any(table(inner_assessed) != 1L)
+  ) {
+    inner_coverage &lt;- FALSE
+  }
+}
+
+inner_sizes &lt;- do.call(
+  rbind,
+  inner_sizes_list
+)
+
+rownames(
+  inner_sizes
+) &lt;- NULL
+
+inner_contract &lt;- data.frame(
+  Check = c(
+    &quot;100 inner splits&quot;,
+    &quot;117 inner-analysis individuals per split&quot;,
+    &quot;39 inner-assessment individuals per split&quot;,
+    &quot;No inner analysis-assessment overlap&quot;,
+    &quot;Every outer-analysis individual assessed once across the four inner folds&quot;,
+    &quot;No outer-assessment individual enters inner validation&quot;
+  ),
+  Passed = c(
+    nrow(inner_sizes) == 100L,
+    all(inner_sizes$Analysis_N == 117L),
+    all(inner_sizes$Assessment_N == 39L),
+    all(inner_sizes$Overlap_N == 0L),
+    inner_coverage,
+    !outer_leakage
+  ),
+  stringsAsFactors = FALSE
+)
+
+inner_contract |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Nested inner-validation design checks&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Nested inner-validation design checks
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Check
+</th>
+<th style="text-align:left;">
+Passed
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+100 inner splits
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+117 inner-analysis individuals per split
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+39 inner-assessment individuals per split
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No inner analysis-assessment overlap
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Every outer-analysis individual assessed once across the four inner
+folds
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No outer-assessment individual enters inner validation
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>stopifnot(
+  all(inner_contract$Passed)
+)</code></pre>
+<p>The inner assessment sets are used only for model selection within
+the corresponding outer analysis sample. The outer assessment set
+remains untouched until final prediction for that split.</p>
+</div>
+</div>
+<div id="information-used-to-create-partitions" class="section level2">
+<h2>6. Information used to create partitions</h2>
+<p>The fold-generation variables are separated explicitly from the
+information used later for genomic prediction.</p>
+<pre class="r"><code>partition_information &lt;- data.frame(
+  Information = c(
+    &quot;Individual ID&quot;,
+    &quot;Deterministic seed&quot;,
+    &quot;Cer BLUP&quot;,
+    &quot;BM BLUP&quot;,
+    &quot;LP BLUP&quot;,
+    &quot;Genomic marker values&quot;,
+    &quot;Prediction model&quot;
+  ),
+  Partition_role = c(
+    &quot;Used&quot;,
+    &quot;Used&quot;,
+    &quot;Not used&quot;,
+    &quot;Not used&quot;,
+    &quot;Not used&quot;,
+    &quot;Not used&quot;,
+    &quot;Not used&quot;
+  ),
+  stringsAsFactors = FALSE
+)
+
+partition_information |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Information used and excluded during partition generation&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Information used and excluded during partition generation
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Information
+</th>
+<th style="text-align:left;">
+Partition_role
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Individual ID
+</td>
+<td style="text-align:left;">
+Used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Deterministic seed
+</td>
+<td style="text-align:left;">
+Used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cer BLUP
+</td>
+<td style="text-align:left;">
+Not used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM BLUP
+</td>
+<td style="text-align:left;">
+Not used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP BLUP
+</td>
+<td style="text-align:left;">
+Not used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Genomic marker values
+</td>
+<td style="text-align:left;">
+Not used
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prediction model
+</td>
+<td style="text-align:left;">
+Not used
+</td>
+</tr>
+</tbody>
+</table>
+<p>The same stored partitions are therefore valid for all three
+prediction traits and all prediction methods.</p>
+</div>
+<div id="validation-design-summary" class="section level2">
+<h2>7. Validation design summary</h2>
+<pre class="r"><code>design_summary &lt;- data.frame(
+  Item = c(
+    &quot;Individuals&quot;,
+    &quot;Outer repetitions&quot;,
+    &quot;Outer folds per repetition&quot;,
+    &quot;Total outer splits&quot;,
+    &quot;Outer analysis N&quot;,
+    &quot;Outer assessment N&quot;,
+    &quot;Inner folds per outer split&quot;,
+    &quot;Total inner splits&quot;,
+    &quot;Inner analysis N&quot;,
+    &quot;Inner assessment N&quot;
+  ),
+  Value = c(
+    length(ids),
+    N_OUTER_REPEATS,
+    N_OUTER_FOLDS,
+    length(outer_splits),
+    unique(outer_sizes$Analysis_N),
+    unique(outer_sizes$Assessment_N),
+    N_INNER_FOLDS,
+    nrow(inner_sizes),
+    unique(inner_sizes$Analysis_N),
+    unique(inner_sizes$Assessment_N)
+  ),
+  stringsAsFactors = FALSE
+)
+
+design_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Common real-data validation design&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Common real-data validation design
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Item
+</th>
+<th style="text-align:right;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Individuals
+</td>
+<td style="text-align:right;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer repetitions
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer folds per repetition
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Total outer splits
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer analysis N
+</td>
+<td style="text-align:right;">
+156
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Outer assessment N
+</td>
+<td style="text-align:right;">
+39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inner folds per outer split
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Total inner splits
+</td>
+<td style="text-align:right;">
+100
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inner analysis N
+</td>
+<td style="text-align:right;">
+117
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inner assessment N
+</td>
+<td style="text-align:right;">
+39
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="common-validation-object" class="section level2">
+<h2>8. Common validation object</h2>
+<p>The stored validation object contains the assignment tables and
+explicit ID vectors required by the subsequent model-fitting
+modules.</p>
+<pre class="r"><code>cv_design &lt;- list(
+  dataset = &quot;real&quot;,
+  seed_global = SEED_GLOBAL,
+  n_outer_repeats = N_OUTER_REPEATS,
+  n_outer_folds = N_OUTER_FOLDS,
+  n_inner_folds = N_INNER_FOLDS,
+  ids = ids,
+  outer_assignments = outer_assignments,
+  outer_splits = outer_splits,
+  inner_assignments = inner_assignments,
+  inner_splits = inner_splits,
+  checks = list(
+    outer_contract = outer_contract,
+    inner_contract = inner_contract,
+    outer_coverage = outer_coverage,
+    inner_coverage = inner_coverage,
+    outer_leakage = outer_leakage
+  )
+)</code></pre>
+</div>
+<div id="validation-input-for-genomic-prediction"
+class="section level2">
+<h2>9. Validation input for genomic prediction</h2>
+<p>The primary model comparison uses the same 25 outer assessment sets
+for GBLUP-A, GBLUP-AD, GBLUP-ADE, and every ANN configuration. ANN model
+selection is restricted to the 100 inner splits nested within the
+corresponding outer analysis sets.</p>
+<p>No phenotypic or genomic values are used to create the validation
+partitions.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26300)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices datasets  utils     methods   base     
+
+other attached packages:
+[1] knitr_1.50      workflowr_1.7.2
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.7.1       httr_1.4.7        cli_3.6.5         rlang_1.1.7      
+ [5] xfun_0.54         stringi_1.8.7     otel_0.2.0        processx_3.8.6   
+ [9] renv_1.1.8        promises_1.5.0    jsonlite_2.0.0    glue_1.8.0       
+[13] rprojroot_2.1.1   git2r_0.36.2      htmltools_0.5.9   httpuv_1.6.16    
+[17] ps_1.9.1          sass_0.4.10       rmarkdown_2.30    jquerylib_0.1.4  
+[21] tibble_3.3.1      evaluate_1.0.5    fastmap_1.2.0     yaml_2.3.12      
+[25] lifecycle_1.0.5   whisker_0.4.1     stringr_1.6.0     compiler_4.5.1   
+[29] fs_1.6.6          pkgconfig_2.0.3   Rcpp_1.1.2        rstudioapi_0.17.1
+[33] later_1.4.4       digest_0.6.39     R6_2.6.1          pillar_1.11.1    
+[37] callr_3.7.6       magrittr_2.0.4    bslib_0.9.0       tools_4.5.1      
+[41] cachem_1.1.0      getPass_0.2-4    </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlJlYWwgZGF0YTogbmVzdGVkIHZhbGlkYXRpb24gZGVzaWduIg0KYXV0aG9yOg0KICAtIFdldmVydG9uIEdvbWVzIGRhIENvc3RhDQpkYXRlOiAiYHIgU3lzLkRhdGUoKWAiDQpzaXRlOiB3b3JrZmxvd3I6OndmbG93X3NpdGUNCm91dHB1dDoNCiAgd29ya2Zsb3dyOjp3Zmxvd19odG1sOg0KICAgIHRvYzogdHJ1ZQ0KICAgIHRvY19kZXB0aDogMw0KICAgIHRvY19mbG9hdDogdHJ1ZQ0KICAgIGNvZGVfZG93bmxvYWQ6IHRydWUNCiAgICBjb2RlX2ZvbGRpbmc6IHNob3cNCmVkaXRvcl9vcHRpb25zOg0KICBjaHVua19vdXRwdXRfdHlwZTogY29uc29sZQ0KLS0tDQoNCjxzdHlsZT4NCnRhYmxlIHsNCiAgd2lkdGg6IDEwMCUgIWltcG9ydGFudDsNCn0NCnRhYmxlIHRoLA0KdGFibGUgdGQgew0KICB3aGl0ZS1zcGFjZTogbm9ybWFsICFpbXBvcnRhbnQ7DQogIHZlcnRpY2FsLWFsaWduOiBtaWRkbGUgIWltcG9ydGFudDsNCn0NCjwvc3R5bGU+DQoNCiMjIDEuIFB1cnBvc2UNCg0KVGhpcyBtb2R1bGUgZGVmaW5lcyB0aGUgbmVzdGVkIGNyb3NzLXZhbGlkYXRpb24gZGVzaWduIHVzZWQgYnkgZXZlcnkNCmdlbm9taWMtcHJlZGljdGlvbiBtZXRob2QgZml0dGVkIHRvIHRoZSByZWFsICpDb2ZmZWEgYXJhYmljYSogcG9wdWxhdGlvbi4gVGhlDQpwYXJ0aXRpb25zIGFyZSBjcmVhdGVkIGJlZm9yZSBtb2RlbCBmaXR0aW5nIGFuZCBhcmUgcmV1c2VkIHVuY2hhbmdlZCBieQ0KR0JMVVAtQSwgR0JMVVAtQUQsIEdCTFVQLUFERSwgYW5kIGFsbCBBTk4gdmFyaWFudHMuDQoNClRoZSB2YWxpZGF0aW9uIGRlc2lnbiBoYXMgZm91ciBmaXhlZCBmZWF0dXJlczoNCg0KLSAqKlJlcGVhdGVkIG91dGVyIGNyb3NzLXZhbGlkYXRpb246KiogNSByZXBldGl0aW9ucyBvZiA1IG91dGVyIGZvbGRzIHByb3ZpZGUNCiAgMjUgaGVsZC1vdXQgZXZhbHVhdGlvbnMuDQotICoqTmVzdGVkIGlubmVyIGNyb3NzLXZhbGlkYXRpb246KiogZWFjaCBvdXRlciBhbmFseXNpcyBzZXQgaXMgZGl2aWRlZCBpbnRvIDQNCiAgaW5uZXIgZm9sZHMgZm9yIEFOTiBtb2RlbCBzZWxlY3Rpb24uDQotICoqQ29tbW9uIHBhcnRpdGlvbnM6KiogdGhlIHNhbWUgb3V0ZXIgYW5kIGlubmVyIGFzc2lnbm1lbnRzIGFyZSByZXVzZWQgZm9yDQogIGBDZXJgLCBgQk1gLCBgTFBgLCBHQkxVUC1BLCBHQkxVUC1BRCwgR0JMVVAtQURFLCBhbmQgYWxsIEFOTiBjb25maWd1cmF0aW9ucy4NCi0gKipJbmZvcm1hdGlvbiBzZXBhcmF0aW9uOioqIEJMVVAgdmFsdWVzLCBnZW5vbWljIG1hcmtlciB2YWx1ZXMsIGFuZCBtb2RlbA0KICBpZGVudGl0eSBkbyBub3QgcGFydGljaXBhdGUgaW4gZm9sZCBnZW5lcmF0aW9uLg0KDQpUaHJvdWdob3V0IHRoaXMgbW9kdWxlLCAqKmFuYWx5c2lzIHNldCoqIGRlbm90ZXMgaW5kaXZpZHVhbHMgYXZhaWxhYmxlIGZvciBtb2RlbA0KZGV2ZWxvcG1lbnQgYXQgdGhlIGN1cnJlbnQgdmFsaWRhdGlvbiBsZXZlbCwgd2hlcmVhcyAqKmFzc2Vzc21lbnQgc2V0KiogZGVub3Rlcw0KaW5kaXZpZHVhbHMgaGVsZCBvdXQgZm9yIGV2YWx1YXRpb24gYXQgdGhhdCBsZXZlbC4NCg0KYGBge3Igc2V0dXAsIGluY2x1ZGU9RkFMU0V9DQprbml0cjo6b3B0c19jaHVuayRzZXQoDQogIGVjaG8gPSBUUlVFLA0KICB3YXJuaW5nID0gRkFMU0UsDQogIG1lc3NhZ2UgPSBGQUxTRSwNCiAgY2FjaGUgPSBGQUxTRSwNCiAgZmlnLmFsaWduID0gImNlbnRlciIsDQogIG91dC53aWR0aCA9ICIxMDAlIg0KKQ0KDQpvcHRpb25zKHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRSkNCg0KZGlyLmNyZWF0ZSgNCiAgIm91dHB1dC9yZWFsL3ZhbGlkYXRpb24iLA0KICBzaG93V2FybmluZ3MgPSBGQUxTRSwNCiAgcmVjdXJzaXZlID0gVFJVRQ0KKQ0KYGBgDQoNCiMjIDIuIFBhY2thZ2UgYW5kIGZpeGVkIHZhbGlkYXRpb24gc2V0dGluZ3MNCg0KYGtuaXRyYCBpcyB1c2VkIHRvIHByZXNlbnQgdmFsaWRhdGlvbiBzZXR0aW5ncyBhbmQgcGFydGl0aW9uIHN1bW1hcmllcyBhcw0KcmVhZGVyLWZhY2luZyB0YWJsZXMuDQoNCmBgYHtyIHBhY2thZ2VzLCB3YXJuaW5nPUZBTFNFLCBtZXNzYWdlPUZBTFNFfQ0KbGlicmFyeShrbml0cikNCmBgYA0KDQpUaGUgcGFydGl0aW9uaW5nIHByb2NlZHVyZSBpcyBjb250cm9sbGVkIGJ5IGZvdXIgZml4ZWQgdmFsdWVzLg0KDQpgYGB7ciB2YWxpZGF0aW9uLXBhcmFtZXRlcnN9DQpTRUVEX0dMT0JBTCA8LSAyMDI2MTEwNUwNCk5fT1VURVJfUkVQRUFUUyA8LSA1TA0KTl9PVVRFUl9GT0xEUyA8LSA1TA0KTl9JTk5FUl9GT0xEUyA8LSA0TA0KDQp2YWxpZGF0aW9uX3BhcmFtZXRlcnMgPC0gZGF0YS5mcmFtZSgNCiAgUGFyYW1ldGVyID0gYygNCiAgICAiR2xvYmFsIHNlZWQiLA0KICAgICJPdXRlciByZXBldGl0aW9ucyIsDQogICAgIk91dGVyIGZvbGRzIHBlciByZXBldGl0aW9uIiwNCiAgICAiSW5uZXIgZm9sZHMgcGVyIG91dGVyIHNwbGl0Ig0KICApLA0KICBWYWx1ZSA9IGMoDQogICAgU0VFRF9HTE9CQUwsDQogICAgTl9PVVRFUl9SRVBFQVRTLA0KICAgIE5fT1VURVJfRk9MRFMsDQogICAgTl9JTk5FUl9GT0xEUw0KICApLA0KICBSb2xlID0gYygNCiAgICAicmVwcm9kdWNpYmxlIHBhcnRpdGlvbiBnZW5lcmF0aW9uIiwNCiAgICAicmVwZWF0IGhlbGQtb3V0IGV2YWx1YXRpb24iLA0KICAgICJkZWZpbmUgb3V0ZXIgYXNzZXNzbWVudCBzZXRzIiwNCiAgICAiY29tcGFyZSBBTk4gY2FuZGlkYXRlcyBpbnNpZGUgZWFjaCBvdXRlciBhbmFseXNpcyBzZXQiDQogICksDQogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQ0KKQ0KDQp2YWxpZGF0aW9uX3BhcmFtZXRlcnMgfD4NCiAga25pdHI6OmthYmxlKA0KICAgIGZvcm1hdCA9ICJodG1sIiwNCiAgICBjYXB0aW9uID0gIkZpeGVkIG5lc3RlZCBjcm9zcy12YWxpZGF0aW9uIHNldHRpbmdzIiwNCiAgICByb3cubmFtZXMgPSBGQUxTRSwNCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIiBzdHlsZT0id2lkdGg6MTAwJTsiJw0KICApDQpgYGANCg0KIyMgMy4gUG9wdWxhdGlvbiBlbnRlcmluZyB2YWxpZGF0aW9uDQoNClRoZSB2YWxpZGF0aW9uIG1vZHVsZSByZWFkcyBvbmx5IHRoZSBjb21tb24gb2JqZWN0IHByZXBhcmVkIGluIHRoZSBwcmVjZWRpbmcNCmRhdGEtcHJlcGFyYXRpb24gc3RhZ2UuIFRoZSAxOTUgYWxpZ25lZCBpbmRpdmlkdWFscyBhbmQgdGhlIGNvbW1vbiBnZW5vbWljDQptYXRyaXggYXJlIHRoZXJlZm9yZSBmaXhlZCBiZWZvcmUgcGFydGl0aW9uIGdlbmVyYXRpb24uDQoNCmBgYHtyIHZhbGlkYXRpb24taW5wdXR9DQpjb21tb24gPC0gcmVhZFJEUygNCiAgIm91dHB1dC9yZWFsL2F1ZGl0L3ByZXByb2Nlc3NlZF9yZWFsX2NvbW1vbi5yZHMiDQopDQoNCmlkcyA8LSByb3duYW1lcygNCiAgY29tbW9uJGdlbm90eXBlDQopDQoNCmlucHV0X3N1bW1hcnkgPC0gZGF0YS5mcmFtZSgNCiAgUXVhbnRpdHkgPSBjKA0KICAgICJJbmRpdmlkdWFscyIsDQogICAgIlByZWRpY3Rpb24gdHJhaXRzIiwNCiAgICAiTWFya2VycyBhZnRlciBjb21tb24gUUMiDQogICksDQogIFZhbHVlID0gYygNCiAgICBsZW5ndGgoaWRzKSwNCiAgICBwYXN0ZShjb21tb24kdHJhaXRzLCBjb2xsYXBzZSA9ICIsICIpLA0KICAgIG5jb2woY29tbW9uJGdlbm90eXBlKQ0KICApLA0KICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UNCikNCg0KaW5wdXRfc3VtbWFyeSB8Pg0KICBrbml0cjo6a2FibGUoDQogICAgZm9ybWF0ID0gImh0bWwiLA0KICAgIGNhcHRpb24gPSAiUmVhbC1kYXRhIHBvcHVsYXRpb24gZW50ZXJpbmcgdmFsaWRhdGlvbiIsDQogICAgcm93Lm5hbWVzID0gRkFMU0UsDQogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCIgc3R5bGU9IndpZHRoOjEwMCU7IicNCiAgKQ0KDQpzdG9waWZub3QoDQogIGxlbmd0aChpZHMpID09IDE5NUwsDQogIGxlbmd0aCh1bmlxdWUoaWRzKSkgPT0gMTk1TCwNCiAgbnJvdyhjb21tb24kcGhlbm90eXBlKSA9PSAxOTVMLA0KICBpZGVudGljYWwoDQogICAgaWRzLA0KICAgIGNvbW1vbiRwaGVub3R5cGUkUGhlbm90eXBlX0lEDQogICksDQogIGlkZW50aWNhbCgNCiAgICBjb21tb24kdHJhaXRzLA0KICAgIGMoIkNlciIsICJCTSIsICJMUCIpDQogICksDQogIG5jb2woY29tbW9uJGdlbm90eXBlKSA9PSAyMDg4N0wNCikNCmBgYA0KDQpPbmx5IHRoZSBpbmRpdmlkdWFsIGlkZW50aWZpZXJzIGFuZCBkZXRlcm1pbmlzdGljIHNlZWRzIGFyZSB1c2VkIHRvIGNyZWF0ZSB0aGUNCmZvbGRzLiBQaGVub3R5cGljIHRhcmdldHMgYW5kIGdlbm9taWMgbWFya2VyIHZhbHVlcyByZW1haW4gb3V0c2lkZSBwYXJ0aXRpb24NCmdlbmVyYXRpb24uDQoNCiMjIDQuIFJlcGVhdGVkIG91dGVyIGNyb3NzLXZhbGlkYXRpb24NCg0KSW4gZWFjaCByZXBldGl0aW9uLCB0aGUgMTk1IGluZGl2aWR1YWxzIGFyZSByYW5kb21seSBzaHVmZmxlZCBhbmQgZGl2aWRlZCBpbnRvDQpmaXZlIGZvbGRzIG9mIGVxdWFsIHNpemUuIEJlY2F1c2UgMTk1IGlzIGV4YWN0bHkgZGl2aXNpYmxlIGJ5IGZpdmUsIGV2ZXJ5IG91dGVyDQphc3Nlc3NtZW50IGZvbGQgY29udGFpbnMgMzkgaW5kaXZpZHVhbHMgYW5kIHRoZSByZW1haW5pbmcgMTU2IGluZGl2aWR1YWxzIGZvcm0NCnRoZSBjb3JyZXNwb25kaW5nIG91dGVyIGFuYWx5c2lzIHNldC4NCg0KIyMjIDQuMSBPdXRlciBmb2xkIGFzc2lnbm1lbnRzDQoNCmBgYHtyIG91dGVyLWZvbGRzfQ0Kb3V0ZXJfYXNzaWdubWVudF9saXN0IDwtIHZlY3RvcigNCiAgImxpc3QiLA0KICBOX09VVEVSX1JFUEVBVFMNCikNCg0Kb3V0ZXJfc3BsaXRzIDwtIGxpc3QoKQ0KDQpmb3IgKHJlcF9pZCBpbiBzZXFfbGVuKE5fT1VURVJfUkVQRUFUUykpIHsNCg0KICBzZXQuc2VlZCgNCiAgICBTRUVEX0dMT0JBTCArIHJlcF9pZA0KICApDQoNCiAgc2h1ZmZsZWRfaWRzIDwtIHNhbXBsZSgNCiAgICBpZHMsDQogICAgc2l6ZSA9IGxlbmd0aChpZHMpLA0KICAgIHJlcGxhY2UgPSBGQUxTRQ0KICApDQoNCiAgYXNzaWduZWRfZm9sZHMgPC0gcmVwKA0KICAgIHNlcV9sZW4oTl9PVVRFUl9GT0xEUyksDQogICAgZWFjaCA9IGxlbmd0aChpZHMpIC8gTl9PVVRFUl9GT0xEUw0KICApDQoNCiAgYXNzaWdubWVudCA8LSBkYXRhLmZyYW1lKA0KICAgIFJlcGV0aXRpb24gPSByZXBfaWQsDQogICAgSUQgPSBzaHVmZmxlZF9pZHMsDQogICAgT3V0ZXJGb2xkID0gYXNzaWduZWRfZm9sZHMsDQogICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFDQogICkNCg0KICBhc3NpZ25tZW50IDwtIGFzc2lnbm1lbnRbDQogICAgb3JkZXIoYXNzaWdubWVudCRJRCksDQogICAgLA0KICAgIGRyb3AgPSBGQUxTRQ0KICBdDQoNCiAgcm93bmFtZXMoDQogICAgYXNzaWdubWVudA0KICApIDwtIE5VTEwNCg0KICBhc3NpZ25tZW50JFNwbGl0SUQgPC0gc3ByaW50ZigNCiAgICAiUiUwMmRfRiUwMmQiLA0KICAgIGFzc2lnbm1lbnQkUmVwZXRpdGlvbiwNCiAgICBhc3NpZ25tZW50JE91dGVyRm9sZA0KICApDQoNCiAgb3V0ZXJfYXNzaWdubWVudF9saXN0W1tyZXBfaWRdXSA8LSBhc3NpZ25tZW50DQoNCiAgZm9yIChvdXRlcl9mb2xkIGluIHNlcV9sZW4oTl9PVVRFUl9GT0xEUykpIHsNCg0KICAgIHNwbGl0X2lkIDwtIHNwcmludGYoDQogICAgICAiUiUwMmRfRiUwMmQiLA0KICAgICAgcmVwX2lkLA0KICAgICAgb3V0ZXJfZm9sZA0KICAgICkNCg0KICAgIGFzc2Vzc21lbnRfaWRzIDwtIGFzc2lnbm1lbnQkSURbDQogICAgICBhc3NpZ25tZW50JE91dGVyRm9sZCA9PSBvdXRlcl9mb2xkDQogICAgXQ0KDQogICAgYW5hbHlzaXNfaWRzIDwtIGlkc1sNCiAgICAgICFpZHMgJWluJSBhc3Nlc3NtZW50X2lkcw0KICAgIF0NCg0KICAgIG91dGVyX3NwbGl0c1tbc3BsaXRfaWRdXSA8LSBsaXN0KA0KICAgICAgc3BsaXRfaWQgPSBzcGxpdF9pZCwNCiAgICAgIHJlcGV0aXRpb24gPSByZXBfaWQsDQogICAgICBvdXRlcl9mb2xkID0gb3V0ZXJfZm9sZCwNCiAgICAgIGFuYWx5c2lzX2lkcyA9IGFuYWx5c2lzX2lkcywNCiAgICAgIGFzc2Vzc21lbnRfaWRzID0gYXNzZXNzbWVudF9pZHMNCiAgICApDQogIH0NCn0NCg0Kb3V0ZXJfYXNzaWdubWVudHMgPC0gZG8uY2FsbCgNCiAgcmJpbmQsDQogIG91dGVyX2Fzc2lnbm1lbnRfbGlzdA0KKQ0KDQpyb3duYW1lcygNCiAgb3V0ZXJfYXNzaWdubWVudHMNCikgPC0gTlVMTA0KYGBgDQoNCiMjIyA0LjIgT3V0ZXIgc3BsaXQgY2hlY2tzDQoNCmBgYHtyIG91dGVyLWNoZWNrc30NCm91dGVyX3NwbGl0X2lkcyA8LSBuYW1lcygNCiAgb3V0ZXJfc3BsaXRzDQopDQoNCm91dGVyX3NpemVzX2xpc3QgPC0gdmVjdG9yKA0KICAibGlzdCIsDQogIGxlbmd0aChvdXRlcl9zcGxpdF9pZHMpDQopDQoNCmZvciAoaSBpbiBzZXFfYWxvbmcob3V0ZXJfc3BsaXRfaWRzKSkgew0KDQogIHNwbGl0X2lkIDwtIG91dGVyX3NwbGl0X2lkc1tpXQ0KICBjdXJyZW50X3NwbGl0IDwtIG91dGVyX3NwbGl0c1tbc3BsaXRfaWRdXQ0KDQogIG91dGVyX3NpemVzX2xpc3RbW2ldXSA8LSBkYXRhLmZyYW1lKA0KICAgIFNwbGl0SUQgPSBzcGxpdF9pZCwNCiAgICBBbmFseXNpc19OID0gbGVuZ3RoKA0KICAgICAgY3VycmVudF9zcGxpdCRhbmFseXNpc19pZHMNCiAgICApLA0KICAgIEFzc2Vzc21lbnRfTiA9IGxlbmd0aCgNCiAgICAgIGN1cnJlbnRfc3BsaXQkYXNzZXNzbWVudF9pZHMNCiAgICApLA0KICAgIE92ZXJsYXBfTiA9IGxlbmd0aCgNCiAgICAgIGludGVyc2VjdCgNCiAgICAgICAgY3VycmVudF9zcGxpdCRhbmFseXNpc19pZHMsDQogICAgICAgIGN1cnJlbnRfc3BsaXQkYXNzZXNzbWVudF9pZHMNCiAgICAgICkNCiAgICApLA0KICAgIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQ0KICApDQp9DQoNCm91dGVyX3NpemVzIDwtIGRvLmNhbGwoDQogIHJiaW5kLA0KICBvdXRlcl9zaXplc19saXN0DQopDQoNCnJvd25hbWVzKA0KICBvdXRlcl9zaXplcw0KKSA8LSBOVUxMDQoNCm91dGVyX2NvdmVyYWdlIDwtIFRSVUUNCg0KZm9yIChyZXBfaWQgaW4gc2VxX2xlbihOX09VVEVSX1JFUEVBVFMpKSB7DQoNCiAgYXNzZXNzZWQgPC0gY2hhcmFjdGVyKDApDQoNCiAgZm9yIChvdXRlcl9mb2xkIGluIHNlcV9sZW4oTl9PVVRFUl9GT0xEUykpIHsNCg0KICAgIHNwbGl0X2lkIDwtIHNwcmludGYoDQogICAgICAiUiUwMmRfRiUwMmQiLA0KICAgICAgcmVwX2lkLA0KICAgICAgb3V0ZXJfZm9sZA0KICAgICkNCg0KICAgIGFzc2Vzc2VkIDwtIGMoDQogICAgICBhc3Nlc3NlZCwNCiAgICAgIG91dGVyX3NwbGl0c1tbc3BsaXRfaWRdXSRhc3Nlc3NtZW50X2lkcw0KICAgICkNCiAgfQ0KDQogIGlmICgNCiAgICBsZW5ndGgoYXNzZXNzZWQpICE9IDE5NUwgfHwNCiAgICAhaWRlbnRpY2FsKA0KICAgICAgc29ydChhc3Nlc3NlZCksDQogICAgICBzb3J0KGlkcykNCiAgICApIHx8DQogICAgYW55KHRhYmxlKGFzc2Vzc2VkKSAhPSAxTCkNCiAgKSB7DQogICAgb3V0ZXJfY292ZXJhZ2UgPC0gRkFMU0UNCiAgfQ0KfQ0KDQpvdXRlcl9jb250cmFjdCA8LSBkYXRhLmZyYW1lKA0KICBDaGVjayA9IGMoDQogICAgIjI1IG91dGVyIHNwbGl0cyIsDQogICAgIjE1NiBhbmFseXNpcyBpbmRpdmlkdWFscyBwZXIgc3BsaXQiLA0KICAgICIzOSBhc3Nlc3NtZW50IGluZGl2aWR1YWxzIHBlciBzcGxpdCIsDQogICAgIk5vIGFuYWx5c2lzLWFzc2Vzc21lbnQgb3ZlcmxhcCIsDQogICAgIkV2ZXJ5IGluZGl2aWR1YWwgYXNzZXNzZWQgZXhhY3RseSBvbmNlIHBlciByZXBldGl0aW9uIg0KICApLA0KICBQYXNzZWQgPSBjKA0KICAgIGxlbmd0aChvdXRlcl9zcGxpdHMpID09IDI1TCwNCiAgICBhbGwob3V0ZXJfc2l6ZXMkQW5hbHlzaXNfTiA9PSAxNTZMKSwNCiAgICBhbGwob3V0ZXJfc2l6ZXMkQXNzZXNzbWVudF9OID09IDM5TCksDQogICAgYWxsKG91dGVyX3NpemVzJE92ZXJsYXBfTiA9PSAwTCksDQogICAgb3V0ZXJfY292ZXJhZ2UNCiAgKSwNCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFDQopDQoNCm91dGVyX2NvbnRyYWN0IHw+DQogIGtuaXRyOjprYWJsZSgNCiAgICBmb3JtYXQgPSAiaHRtbCIsDQogICAgY2FwdGlvbiA9ICJPdXRlciB2YWxpZGF0aW9uIGRlc2lnbiBjaGVja3MiLA0KICAgIHJvdy5uYW1lcyA9IEZBTFNFLA0KICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiIHN0eWxlPSJ3aWR0aDoxMDAlOyInDQogICkNCg0Kc3RvcGlmbm90KA0KICBhbGwob3V0ZXJfY29udHJhY3QkUGFzc2VkKQ0KKQ0KYGBgDQoNCkFjcm9zcyB0aGUgY29tcGxldGUgb3V0ZXIgZGVzaWduLCBldmVyeSBpbmRpdmlkdWFsIGlzIGFzc2Vzc2VkIG9uY2UgaW4gZWFjaA0KcmVwZXRpdGlvbiBhbmQgZml2ZSB0aW1lcyBpbiB0b3RhbC4NCg0KIyMgNS4gTmVzdGVkIGlubmVyIGNyb3NzLXZhbGlkYXRpb24NCg0KRWFjaCBvdXRlciBhbmFseXNpcyBzZXQgY29udGFpbnMgMTU2IGluZGl2aWR1YWxzLiBXaXRoaW4gZWFjaCBvdXRlciBzcGxpdCwNCnRoZXNlIGluZGl2aWR1YWxzIGFyZSByYW5kb21seSBzaHVmZmxlZCBhbmQgZGl2aWRlZCBpbnRvIGZvdXIgZXF1YWwgaW5uZXIgZm9sZHMuDQoNCkVhY2ggaW5uZXIgYXNzZXNzbWVudCBzZXQgdGhlcmVmb3JlIGNvbnRhaW5zIDM5IGluZGl2aWR1YWxzLCB3aGlsZSB0aGUNCnJlbWFpbmluZyAxMTcgaW5kaXZpZHVhbHMgZm9ybSB0aGUgY29ycmVzcG9uZGluZyBpbm5lciBhbmFseXNpcyBzZXQuIFRoZSBvdXRlcg0KYXNzZXNzbWVudCBpbmRpdmlkdWFscyBkbyBub3QgcGFydGljaXBhdGUgaW4gaW5uZXIgcGFydGl0aW9uIGdlbmVyYXRpb24uDQoNCiMjIyA1LjEgSW5uZXIgZm9sZCBhc3NpZ25tZW50cw0KDQpgYGB7ciBpbm5lci1mb2xkc30NCmlubmVyX2Fzc2lnbm1lbnRzX2xpc3QgPC0gdmVjdG9yKA0KICAibGlzdCIsDQogIGxlbmd0aChvdXRlcl9zcGxpdHMpDQopDQoNCm5hbWVzKA0KICBpbm5lcl9hc3NpZ25tZW50c19saXN0DQopIDwtIG5hbWVzKA0KICBvdXRlcl9zcGxpdHMNCikNCg0KaW5uZXJfc3BsaXRzIDwtIHZlY3RvcigNCiAgImxpc3QiLA0KICBsZW5ndGgob3V0ZXJfc3BsaXRzKQ0KKQ0KDQpuYW1lcygNCiAgaW5uZXJfc3BsaXRzDQopIDwtIG5hbWVzKA0KICBvdXRlcl9zcGxpdHMNCikNCg0KZm9yIChzcGxpdF9pZCBpbiBuYW1lcyhvdXRlcl9zcGxpdHMpKSB7DQoNCiAgb3V0ZXJfc3BsaXQgPC0gb3V0ZXJfc3BsaXRzW1tzcGxpdF9pZF1dDQoNCiAgcmVwX2lkIDwtIG91dGVyX3NwbGl0JHJlcGV0aXRpb24NCiAgb3V0ZXJfZm9sZCA8LSBvdXRlcl9zcGxpdCRvdXRlcl9mb2xkDQoNCiAgb3V0ZXJfYW5hbHlzaXNfaWRzIDwtIG91dGVyX3NwbGl0JGFuYWx5c2lzX2lkcw0KDQogIHNldC5zZWVkKA0KICAgIFNFRURfR0xPQkFMICsNCiAgICAgIDEwMDAwMEwgKw0KICAgICAgcmVwX2lkICogMTAwTCArDQogICAgICBvdXRlcl9mb2xkDQogICkNCg0KICBzaHVmZmxlZF9pbm5lcl9pZHMgPC0gc2FtcGxlKA0KICAgIG91dGVyX2FuYWx5c2lzX2lkcywNCiAgICBzaXplID0gbGVuZ3RoKG91dGVyX2FuYWx5c2lzX2lkcyksDQogICAgcmVwbGFjZSA9IEZBTFNFDQogICkNCg0KICBhc3NpZ25lZF9pbm5lcl9mb2xkcyA8LSByZXAoDQogICAgc2VxX2xlbihOX0lOTkVSX0ZPTERTKSwNCiAgICBlYWNoID0gbGVuZ3RoKG91dGVyX2FuYWx5c2lzX2lkcykgLyBOX0lOTkVSX0ZPTERTDQogICkNCg0KICBpbm5lcl9hc3NpZ25tZW50IDwtIGRhdGEuZnJhbWUoDQogICAgU3BsaXRJRCA9IHNwbGl0X2lkLA0KICAgIFJlcGV0aXRpb24gPSByZXBfaWQsDQogICAgT3V0ZXJGb2xkID0gb3V0ZXJfZm9sZCwNCiAgICBJRCA9IHNodWZmbGVkX2lubmVyX2lkcywNCiAgICBJbm5lckZvbGQgPSBhc3NpZ25lZF9pbm5lcl9mb2xkcywNCiAgICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UNCiAgKQ0KDQogIGlubmVyX2Fzc2lnbm1lbnQgPC0gaW5uZXJfYXNzaWdubWVudFsNCiAgICBvcmRlcihpbm5lcl9hc3NpZ25tZW50JElEKSwNCiAgICAsDQogICAgZHJvcCA9IEZBTFNFDQogIF0NCg0KICByb3duYW1lcygNCiAgICBpbm5lcl9hc3NpZ25tZW50DQogICkgPC0gTlVMTA0KDQogIGlubmVyX2Fzc2lnbm1lbnRzX2xpc3RbW3NwbGl0X2lkXV0gPC0gaW5uZXJfYXNzaWdubWVudA0KDQogIGN1cnJlbnRfaW5uZXJfc3BsaXRzIDwtIHZlY3RvcigNCiAgICAibGlzdCIsDQogICAgTl9JTk5FUl9GT0xEUw0KICApDQoNCiAgbmFtZXMoDQogICAgY3VycmVudF9pbm5lcl9zcGxpdHMNCiAgKSA8LSBwYXN0ZTAoDQogICAgIkkiLA0KICAgIHNlcV9sZW4oTl9JTk5FUl9GT0xEUykNCiAgKQ0KDQogIGZvciAoaW5uZXJfZm9sZCBpbiBzZXFfbGVuKE5fSU5ORVJfRk9MRFMpKSB7DQoNCiAgICBhc3Nlc3NtZW50X2lkcyA8LSBpbm5lcl9hc3NpZ25tZW50JElEWw0KICAgICAgaW5uZXJfYXNzaWdubWVudCRJbm5lckZvbGQgPT0gaW5uZXJfZm9sZA0KICAgIF0NCg0KICAgIGFuYWx5c2lzX2lkcyA8LSBvdXRlcl9hbmFseXNpc19pZHNbDQogICAgICAhb3V0ZXJfYW5hbHlzaXNfaWRzICVpbiUgYXNzZXNzbWVudF9pZHMNCiAgICBdDQoNCiAgICBjdXJyZW50X2lubmVyX3NwbGl0c1tbcGFzdGUwKCJJIiwgaW5uZXJfZm9sZCldXSA8LSBsaXN0KA0KICAgICAgc3BsaXRfaWQgPSBzcGxpdF9pZCwNCiAgICAgIGlubmVyX2ZvbGQgPSBpbm5lcl9mb2xkLA0KICAgICAgYW5hbHlzaXNfaWRzID0gYW5hbHlzaXNfaWRzLA0KICAgICAgYXNzZXNzbWVudF9pZHMgPSBhc3Nlc3NtZW50X2lkcw0KICAgICkNCiAgfQ0KDQogIGlubmVyX3NwbGl0c1tbc3BsaXRfaWRdXSA8LSBjdXJyZW50X2lubmVyX3NwbGl0cw0KfQ0KDQppbm5lcl9hc3NpZ25tZW50cyA8LSBkby5jYWxsKA0KICByYmluZCwNCiAgaW5uZXJfYXNzaWdubWVudHNfbGlzdA0KKQ0KDQpyb3duYW1lcygNCiAgaW5uZXJfYXNzaWdubWVudHMNCikgPC0gTlVMTA0KYGBgDQoNCiMjIyA1LjIgSW5uZXIgc3BsaXQgY2hlY2tzDQoNCmBgYHtyIGlubmVyLWNoZWNrc30NCmlubmVyX3NpemVzX2xpc3QgPC0gdmVjdG9yKA0KICAibGlzdCIsDQogIGxlbmd0aChvdXRlcl9zcGxpdHMpICogTl9JTk5FUl9GT0xEUw0KKQ0KDQppbm5lcl9yb3cgPC0gMUwNCm91dGVyX2xlYWthZ2UgPC0gRkFMU0UNCmlubmVyX2NvdmVyYWdlIDwtIFRSVUUNCg0KZm9yIChzcGxpdF9pZCBpbiBuYW1lcyhpbm5lcl9zcGxpdHMpKSB7DQoNCiAgb3V0ZXJfYW5hbHlzaXMgPC0gb3V0ZXJfc3BsaXRzW1tzcGxpdF9pZF1dJGFuYWx5c2lzX2lkcw0KICBvdXRlcl9hc3Nlc3NtZW50IDwtIG91dGVyX3NwbGl0c1tbc3BsaXRfaWRdXSRhc3Nlc3NtZW50X2lkcw0KICBpbm5lcl9hc3Nlc3NlZCA8LSBjaGFyYWN0ZXIoMCkNCg0KICBmb3IgKGlubmVyX25hbWUgaW4gbmFtZXMoaW5uZXJfc3BsaXRzW1tzcGxpdF9pZF1dKSkgew0KDQogICAgY3VycmVudF9pbm5lciA8LSBpbm5lcl9zcGxpdHNbW3NwbGl0X2lkXV1bW2lubmVyX25hbWVdXQ0KDQogICAgaW5uZXJfc2l6ZXNfbGlzdFtbaW5uZXJfcm93XV0gPC0gZGF0YS5mcmFtZSgNCiAgICAgIFNwbGl0SUQgPSBzcGxpdF9pZCwNCiAgICAgIElubmVyRm9sZCA9IGN1cnJlbnRfaW5uZXIkaW5uZXJfZm9sZCwNCiAgICAgIEFuYWx5c2lzX04gPSBsZW5ndGgoDQogICAgICAgIGN1cnJlbnRfaW5uZXIkYW5hbHlzaXNfaWRzDQogICAgICApLA0KICAgICAgQXNzZXNzbWVudF9OID0gbGVuZ3RoKA0KICAgICAgICBjdXJyZW50X2lubmVyJGFzc2Vzc21lbnRfaWRzDQogICAgICApLA0KICAgICAgT3ZlcmxhcF9OID0gbGVuZ3RoKA0KICAgICAgICBpbnRlcnNlY3QoDQogICAgICAgICAgY3VycmVudF9pbm5lciRhbmFseXNpc19pZHMsDQogICAgICAgICAgY3VycmVudF9pbm5lciRhc3Nlc3NtZW50X2lkcw0KICAgICAgICApDQogICAgICApLA0KICAgICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFDQogICAgKQ0KDQogICAgaW5uZXJfYXNzZXNzZWQgPC0gYygNCiAgICAgIGlubmVyX2Fzc2Vzc2VkLA0KICAgICAgY3VycmVudF9pbm5lciRhc3Nlc3NtZW50X2lkcw0KICAgICkNCg0KICAgIGlubmVyX2lkcyA8LSBjKA0KICAgICAgY3VycmVudF9pbm5lciRhbmFseXNpc19pZHMsDQogICAgICBjdXJyZW50X2lubmVyJGFzc2Vzc21lbnRfaWRzDQogICAgKQ0KDQogICAgaWYgKA0KICAgICAgbGVuZ3RoKA0KICAgICAgICBpbnRlcnNlY3QoDQogICAgICAgICAgb3V0ZXJfYXNzZXNzbWVudCwNCiAgICAgICAgICBpbm5lcl9pZHMNCiAgICAgICAgKQ0KICAgICAgKSA+IDBMDQogICAgKSB7DQogICAgICBvdXRlcl9sZWFrYWdlIDwtIFRSVUUNCiAgICB9DQoNCiAgICBpbm5lcl9yb3cgPC0gaW5uZXJfcm93ICsgMUwNCiAgfQ0KDQogIGlmICgNCiAgICBsZW5ndGgoaW5uZXJfYXNzZXNzZWQpICE9IDE1NkwgfHwNCiAgICAhaWRlbnRpY2FsKA0KICAgICAgc29ydChpbm5lcl9hc3Nlc3NlZCksDQogICAgICBzb3J0KG91dGVyX2FuYWx5c2lzKQ0KICAgICkgfHwNCiAgICBhbnkodGFibGUoaW5uZXJfYXNzZXNzZWQpICE9IDFMKQ0KICApIHsNCiAgICBpbm5lcl9jb3ZlcmFnZSA8LSBGQUxTRQ0KICB9DQp9DQoNCmlubmVyX3NpemVzIDwtIGRvLmNhbGwoDQogIHJiaW5kLA0KICBpbm5lcl9zaXplc19saXN0DQopDQoNCnJvd25hbWVzKA0KICBpbm5lcl9zaXplcw0KKSA8LSBOVUxMDQoNCmlubmVyX2NvbnRyYWN0IDwtIGRhdGEuZnJhbWUoDQogIENoZWNrID0gYygNCiAgICAiMTAwIGlubmVyIHNwbGl0cyIsDQogICAgIjExNyBpbm5lci1hbmFseXNpcyBpbmRpdmlkdWFscyBwZXIgc3BsaXQiLA0KICAgICIzOSBpbm5lci1hc3Nlc3NtZW50IGluZGl2aWR1YWxzIHBlciBzcGxpdCIsDQogICAgIk5vIGlubmVyIGFuYWx5c2lzLWFzc2Vzc21lbnQgb3ZlcmxhcCIsDQogICAgIkV2ZXJ5IG91dGVyLWFuYWx5c2lzIGluZGl2aWR1YWwgYXNzZXNzZWQgb25jZSBhY3Jvc3MgdGhlIGZvdXIgaW5uZXIgZm9sZHMiLA0KICAgICJObyBvdXRlci1hc3Nlc3NtZW50IGluZGl2aWR1YWwgZW50ZXJzIGlubmVyIHZhbGlkYXRpb24iDQogICksDQogIFBhc3NlZCA9IGMoDQogICAgbnJvdyhpbm5lcl9zaXplcykgPT0gMTAwTCwNCiAgICBhbGwoaW5uZXJfc2l6ZXMkQW5hbHlzaXNfTiA9PSAxMTdMKSwNCiAgICBhbGwoaW5uZXJfc2l6ZXMkQXNzZXNzbWVudF9OID09IDM5TCksDQogICAgYWxsKGlubmVyX3NpemVzJE92ZXJsYXBfTiA9PSAwTCksDQogICAgaW5uZXJfY292ZXJhZ2UsDQogICAgIW91dGVyX2xlYWthZ2UNCiAgKSwNCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFDQopDQoNCmlubmVyX2NvbnRyYWN0IHw+DQogIGtuaXRyOjprYWJsZSgNCiAgICBmb3JtYXQgPSAiaHRtbCIsDQogICAgY2FwdGlvbiA9ICJOZXN0ZWQgaW5uZXItdmFsaWRhdGlvbiBkZXNpZ24gY2hlY2tzIiwNCiAgICByb3cubmFtZXMgPSBGQUxTRSwNCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIiBzdHlsZT0id2lkdGg6MTAwJTsiJw0KICApDQoNCnN0b3BpZm5vdCgNCiAgYWxsKGlubmVyX2NvbnRyYWN0JFBhc3NlZCkNCikNCmBgYA0KDQpUaGUgaW5uZXIgYXNzZXNzbWVudCBzZXRzIGFyZSB1c2VkIG9ubHkgZm9yIG1vZGVsIHNlbGVjdGlvbiB3aXRoaW4gdGhlDQpjb3JyZXNwb25kaW5nIG91dGVyIGFuYWx5c2lzIHNhbXBsZS4gVGhlIG91dGVyIGFzc2Vzc21lbnQgc2V0IHJlbWFpbnMgdW50b3VjaGVkDQp1bnRpbCBmaW5hbCBwcmVkaWN0aW9uIGZvciB0aGF0IHNwbGl0Lg0KDQojIyA2LiBJbmZvcm1hdGlvbiB1c2VkIHRvIGNyZWF0ZSBwYXJ0aXRpb25zDQoNClRoZSBmb2xkLWdlbmVyYXRpb24gdmFyaWFibGVzIGFyZSBzZXBhcmF0ZWQgZXhwbGljaXRseSBmcm9tIHRoZSBpbmZvcm1hdGlvbg0KdXNlZCBsYXRlciBmb3IgZ2Vub21pYyBwcmVkaWN0aW9uLg0KDQpgYGB7ciBwYXJ0aXRpb24taW5mb3JtYXRpb259DQpwYXJ0aXRpb25faW5mb3JtYXRpb24gPC0gZGF0YS5mcmFtZSgNCiAgSW5mb3JtYXRpb24gPSBjKA0KICAgICJJbmRpdmlkdWFsIElEIiwNCiAgICAiRGV0ZXJtaW5pc3RpYyBzZWVkIiwNCiAgICAiQ2VyIEJMVVAiLA0KICAgICJCTSBCTFVQIiwNCiAgICAiTFAgQkxVUCIsDQogICAgIkdlbm9taWMgbWFya2VyIHZhbHVlcyIsDQogICAgIlByZWRpY3Rpb24gbW9kZWwiDQogICksDQogIFBhcnRpdGlvbl9yb2xlID0gYygNCiAgICAiVXNlZCIsDQogICAgIlVzZWQiLA0KICAgICJOb3QgdXNlZCIsDQogICAgIk5vdCB1c2VkIiwNCiAgICAiTm90IHVzZWQiLA0KICAgICJOb3QgdXNlZCIsDQogICAgIk5vdCB1c2VkIg0KICApLA0KICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UNCikNCg0KcGFydGl0aW9uX2luZm9ybWF0aW9uIHw+DQogIGtuaXRyOjprYWJsZSgNCiAgICBmb3JtYXQgPSAiaHRtbCIsDQogICAgY2FwdGlvbiA9ICJJbmZvcm1hdGlvbiB1c2VkIGFuZCBleGNsdWRlZCBkdXJpbmcgcGFydGl0aW9uIGdlbmVyYXRpb24iLA0KICAgIHJvdy5uYW1lcyA9IEZBTFNFLA0KICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiIHN0eWxlPSJ3aWR0aDoxMDAlOyInDQogICkNCmBgYA0KDQpUaGUgc2FtZSBzdG9yZWQgcGFydGl0aW9ucyBhcmUgdGhlcmVmb3JlIHZhbGlkIGZvciBhbGwgdGhyZWUgcHJlZGljdGlvbiB0cmFpdHMNCmFuZCBhbGwgcHJlZGljdGlvbiBtZXRob2RzLg0KDQojIyA3LiBWYWxpZGF0aW9uIGRlc2lnbiBzdW1tYXJ5DQoNCmBgYHtyIHZhbGlkYXRpb24tc3VtbWFyeX0NCmRlc2lnbl9zdW1tYXJ5IDwtIGRhdGEuZnJhbWUoDQogIEl0ZW0gPSBjKA0KICAgICJJbmRpdmlkdWFscyIsDQogICAgIk91dGVyIHJlcGV0aXRpb25zIiwNCiAgICAiT3V0ZXIgZm9sZHMgcGVyIHJlcGV0aXRpb24iLA0KICAgICJUb3RhbCBvdXRlciBzcGxpdHMiLA0KICAgICJPdXRlciBhbmFseXNpcyBOIiwNCiAgICAiT3V0ZXIgYXNzZXNzbWVudCBOIiwNCiAgICAiSW5uZXIgZm9sZHMgcGVyIG91dGVyIHNwbGl0IiwNCiAgICAiVG90YWwgaW5uZXIgc3BsaXRzIiwNCiAgICAiSW5uZXIgYW5hbHlzaXMgTiIsDQogICAgIklubmVyIGFzc2Vzc21lbnQgTiINCiAgKSwNCiAgVmFsdWUgPSBjKA0KICAgIGxlbmd0aChpZHMpLA0KICAgIE5fT1VURVJfUkVQRUFUUywNCiAgICBOX09VVEVSX0ZPTERTLA0KICAgIGxlbmd0aChvdXRlcl9zcGxpdHMpLA0KICAgIHVuaXF1ZShvdXRlcl9zaXplcyRBbmFseXNpc19OKSwNCiAgICB1bmlxdWUob3V0ZXJfc2l6ZXMkQXNzZXNzbWVudF9OKSwNCiAgICBOX0lOTkVSX0ZPTERTLA0KICAgIG5yb3coaW5uZXJfc2l6ZXMpLA0KICAgIHVuaXF1ZShpbm5lcl9zaXplcyRBbmFseXNpc19OKSwNCiAgICB1bmlxdWUoaW5uZXJfc2l6ZXMkQXNzZXNzbWVudF9OKQ0KICApLA0KICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UNCikNCg0KZGVzaWduX3N1bW1hcnkgfD4NCiAga25pdHI6OmthYmxlKA0KICAgIGZvcm1hdCA9ICJodG1sIiwNCiAgICBjYXB0aW9uID0gIkNvbW1vbiByZWFsLWRhdGEgdmFsaWRhdGlvbiBkZXNpZ24iLA0KICAgIHJvdy5uYW1lcyA9IEZBTFNFLA0KICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiIHN0eWxlPSJ3aWR0aDoxMDAlOyInDQogICkNCmBgYA0KDQojIyA4LiBDb21tb24gdmFsaWRhdGlvbiBvYmplY3QNCg0KVGhlIHN0b3JlZCB2YWxpZGF0aW9uIG9iamVjdCBjb250YWlucyB0aGUgYXNzaWdubWVudCB0YWJsZXMgYW5kIGV4cGxpY2l0IElEDQp2ZWN0b3JzIHJlcXVpcmVkIGJ5IHRoZSBzdWJzZXF1ZW50IG1vZGVsLWZpdHRpbmcgbW9kdWxlcy4NCg0KYGBge3IgYnVpbGQtdmFsaWRhdGlvbi1vYmplY3R9DQpjdl9kZXNpZ24gPC0gbGlzdCgNCiAgZGF0YXNldCA9ICJyZWFsIiwNCiAgc2VlZF9nbG9iYWwgPSBTRUVEX0dMT0JBTCwNCiAgbl9vdXRlcl9yZXBlYXRzID0gTl9PVVRFUl9SRVBFQVRTLA0KICBuX291dGVyX2ZvbGRzID0gTl9PVVRFUl9GT0xEUywNCiAgbl9pbm5lcl9mb2xkcyA9IE5fSU5ORVJfRk9MRFMsDQogIGlkcyA9IGlkcywNCiAgb3V0ZXJfYXNzaWdubWVudHMgPSBvdXRlcl9hc3NpZ25tZW50cywNCiAgb3V0ZXJfc3BsaXRzID0gb3V0ZXJfc3BsaXRzLA0KICBpbm5lcl9hc3NpZ25tZW50cyA9IGlubmVyX2Fzc2lnbm1lbnRzLA0KICBpbm5lcl9zcGxpdHMgPSBpbm5lcl9zcGxpdHMsDQogIGNoZWNrcyA9IGxpc3QoDQogICAgb3V0ZXJfY29udHJhY3QgPSBvdXRlcl9jb250cmFjdCwNCiAgICBpbm5lcl9jb250cmFjdCA9IGlubmVyX2NvbnRyYWN0LA0KICAgIG91dGVyX2NvdmVyYWdlID0gb3V0ZXJfY292ZXJhZ2UsDQogICAgaW5uZXJfY292ZXJhZ2UgPSBpbm5lcl9jb3ZlcmFnZSwNCiAgICBvdXRlcl9sZWFrYWdlID0gb3V0ZXJfbGVha2FnZQ0KICApDQopDQpgYGANCg0KYGBge3Igc2F2ZS12YWxpZGF0aW9uLW91dHB1dHMsIGluY2x1ZGU9RkFMU0V9DQpzYXZlUkRTKA0KICBjdl9kZXNpZ24sDQogICJvdXRwdXQvcmVhbC92YWxpZGF0aW9uL3JlYWxfY3ZfZGVzaWduLnJkcyIsDQogIGNvbXByZXNzID0gImd6aXAiDQopDQoNCndyaXRlLmNzdigNCiAgb3V0ZXJfYXNzaWdubWVudHMsDQogICJvdXRwdXQvcmVhbC92YWxpZGF0aW9uL3JlYWxfb3V0ZXJfYXNzaWdubWVudHMuY3N2IiwNCiAgcm93Lm5hbWVzID0gRkFMU0UNCikNCg0Kd3JpdGUuY3N2KA0KICBpbm5lcl9hc3NpZ25tZW50cywNCiAgIm91dHB1dC9yZWFsL3ZhbGlkYXRpb24vcmVhbF9pbm5lcl9hc3NpZ25tZW50cy5jc3YiLA0KICByb3cubmFtZXMgPSBGQUxTRQ0KKQ0KDQp3cml0ZS5jc3YoDQogIGRlc2lnbl9zdW1tYXJ5LA0KICAib3V0cHV0L3JlYWwvdmFsaWRhdGlvbi9yZWFsX3ZhbGlkYXRpb25fc3VtbWFyeS5jc3YiLA0KICByb3cubmFtZXMgPSBGQUxTRQ0KKQ0KYGBgDQoNCiMjIDkuIFZhbGlkYXRpb24gaW5wdXQgZm9yIGdlbm9taWMgcHJlZGljdGlvbg0KDQpUaGUgcHJpbWFyeSBtb2RlbCBjb21wYXJpc29uIHVzZXMgdGhlIHNhbWUgMjUgb3V0ZXIgYXNzZXNzbWVudCBzZXRzIGZvcg0KR0JMVVAtQSwgR0JMVVAtQUQsIEdCTFVQLUFERSwgYW5kIGV2ZXJ5IEFOTiBjb25maWd1cmF0aW9uLiBBTk4gbW9kZWwNCnNlbGVjdGlvbiBpcyByZXN0cmljdGVkIHRvIHRoZSAxMDAgaW5uZXIgc3BsaXRzIG5lc3RlZCB3aXRoaW4gdGhlIGNvcnJlc3BvbmRpbmcNCm91dGVyIGFuYWx5c2lzIHNldHMuDQoNCk5vIHBoZW5vdHlwaWMgb3IgZ2Vub21pYyB2YWx1ZXMgYXJlIHVzZWQgdG8gY3JlYXRlIHRoZSB2YWxpZGF0aW9uIHBhcnRpdGlvbnMuDQo=</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("real_data_validation.Rmd");
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

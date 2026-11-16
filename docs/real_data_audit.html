@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Weverton Gomes da Costa" />
+
+<meta name="date" content="2026-11-12" />
+
+<title>Real genomic data: structure and preparation</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+<style type="text/css">
+#rmd-source-code {
+  display: none;
+}
+</style>
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Regularized ANN Genomic Prediction</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Simulated data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="simulated_data_audit.html">Data audit</a>
+    </li>
+    <li>
+      <a href="simulated_data_validation.html">Validation design</a>
+    </li>
+    <li>
+      <a href="simulated_data_gblup.html">GBLUP-ADE</a>
+    </li>
+    <li>
+      <a href="simulated_data_ann.html">ANN</a>
+    </li>
+    <li>
+      <a href="simulated_data_comparison.html">Model comparison</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+<li role="separator" class="divider"></li>
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Real genomic data: structure and
+preparation</h1>
+<h4 class="author">Weverton Gomes da Costa</h4>
+<h4 class="date">2026-11-12</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2026-11-12
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/</code>
+<span class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.2). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20260821code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20260821)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20260821code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20260821)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree2d6683a7448a50ea61141f7a51a30ea8dfa4a16dtargetblank2d6683aa">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/2d6683a7448a50ea61141f7a51a30ea8dfa4a16d" target="_blank">2d6683a</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree2d6683a7448a50ea61141f7a51a30ea8dfa4a16dtargetblank2d6683aa"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/2d6683a7448a50ea61141f7a51a30ea8dfa4a16d" target="_blank">2d6683a</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    .github/
+    Ignored:    .local/
+    Ignored:    data/dados_reais/geno_real.rds
+    Ignored:    renv/library/
+    Ignored:    renv/staging/
+
+Untracked files:
+    Untracked:  analysis/real_data_audit.Rmd
+    Untracked:  create_real_data_audit.py
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/real_data_audit.Rmd</code>) and
+HTML (<code>docs/real_data_audit.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/a6a1d2fb02223cda24638c2def431b6d5c810aa5/analysis/real_data_audit.Rmd" target="_blank">a6a1d2f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Remove obsolete real-data workflow and diagnostics
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/a6a1d2fb02223cda24638c2def431b6d5c810aa5/docs/real_data_audit.html" target="_blank">a6a1d2f</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-12
+</td>
+<td>
+Remove obsolete real-data workflow and diagnostics
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/cdbac19b5f4e1fb6f56821183659b525a9fc57a9/docs/real_data_audit.html" target="_blank">cdbac19</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-09
+</td>
+<td>
+Build real-data workflowr pages
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/4fa5d7caefab014a232aacf96ca974999589066c/analysis/real_data_audit.Rmd" target="_blank">4fa5d7c</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-05
+</td>
+<td>
+Add audited real-data workflow through GBLUP-ADE
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<style>
+table {
+  width: 100% !important;
+}
+table th,
+table td {
+  white-space: normal !important;
+  vertical-align: middle !important;
+}
+</style>
+<div id="purpose" class="section level2">
+<h2>1. Purpose</h2>
+<p>This module prepares the real <em>Coffea arabica</em> genomic data
+used throughout the prediction workflow. The population contains 195
+individuals derived from crosses involving the Catuaí group and Timor
+Hybrid germplasm. Genotyping was performed by Capture-Seq, producing the
+SNP panel used as the genomic input.</p>
+<p>The module has four goals:</p>
+<ul>
+<li>describe the genomic and phenotypic inputs used for prediction;</li>
+<li>align the 195 genomic profiles with their corresponding individual
+BLUPs;</li>
+<li>apply the same marker quality-control criteria to every prediction
+method;</li>
+<li>save one common object for validation, GBLUP-ADE, ANN, and model
+comparison.</li>
+</ul>
+<p>No genomic prediction model is fitted here. All downstream methods
+receive the same individuals, phenotypic targets, and retained marker
+panel.</p>
+</div>
+<div id="packages-and-fixed-settings" class="section level2">
+<h2>2. Packages and fixed settings</h2>
+<p>Three packages support the reader-facing analysis:</p>
+<ul>
+<li><strong><code>knitr</code></strong> formats data summaries as HTML
+tables;</li>
+<li><strong><code>ggplot2</code></strong> constructs the marker-quality
+figure;</li>
+<li><strong><code>ggthemes</code></strong> provides
+<code>theme_gdocs()</code> and matching color scales.</li>
+</ul>
+<pre class="r"><code>library(knitr)
+library(ggplot2)
+library(ggthemes)</code></pre>
+<p>The marker-quality criteria are fixed before preprocessing:</p>
+<pre class="r"><code>CALL_RATE_MIN &lt;- 0.90
+MAF_MIN &lt;- 0.05</code></pre>
+</div>
+<div id="genomic-and-phenotypic-inputs" class="section level2">
+<h2>3. Genomic and phenotypic inputs</h2>
+<p>The genomic input contains individuals in rows and SNPs in columns.
+The phenotypic input contains the individual BLUPs obtained from the
+longitudinal mixed-model analysis for cercosporiosis (<code>Cer</code>),
+leaf-miner incidence (<code>BM</code>), and the production-related trait
+(<code>LP</code>).</p>
+<pre class="r"><code>geno_raw &lt;- readRDS(
+  &quot;data/dados_reais/geno_real.rds&quot;
+)
+
+blups &lt;- readRDS(
+  &quot;output/real/phenotype/real_phenotype_blups.rds&quot;
+)
+
+G_raw &lt;- as.matrix(geno_raw)
+
+input_summary &lt;- data.frame(
+  Input = c(
+    &quot;Capture-Seq genotype panel&quot;,
+    &quot;Individual BLUPs&quot;
+  ),
+  Individuals = c(
+    nrow(G_raw),
+    nrow(blups)
+  ),
+  Variables = c(
+    ncol(G_raw),
+    3L
+  ),
+  Description = c(
+    &quot;Raw SNP markers&quot;,
+    &quot;Cer, BM, and LP&quot;
+  ),
+  stringsAsFactors = FALSE
+)
+
+input_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Real-data inputs used in the genomic-prediction workflow&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Real-data inputs used in the genomic-prediction workflow
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Input
+</th>
+<th style="text-align:right;">
+Individuals
+</th>
+<th style="text-align:right;">
+Variables
+</th>
+<th style="text-align:left;">
+Description
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Capture-Seq genotype panel
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+21620
+</td>
+<td style="text-align:left;">
+Raw SNP markers
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Individual BLUPs
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Cer, BM, and LP
+</td>
+</tr>
+</tbody>
+</table>
+<p>Capture-Seq produced 21,620 SNPs for the 195 genotyped individuals.
+The phenotype module supplies one BLUP for each of these individuals and
+each of the three prediction traits.</p>
+</div>
+<div id="individual-identification-and-alignment"
+class="section level2">
+<h2>4. Individual identification and alignment</h2>
+<p>The genomic rows use labels of the form <code>PROG 1_1</code>, where
+the first number identifies the progeny and the second identifies the
+plant within that progeny. The phenotype object stores these two
+components separately as <code>Progenie</code> and
+<code>Planta</code>.</p>
+<p>A genomic identifier is therefore constructed directly from those
+fields and used to match each BLUP with its genomic profile.</p>
+<pre class="r"><code>blups$Genotype_ID &lt;- paste0(
+  &quot;PROG &quot;,
+  blups$Progenie,
+  &quot;_&quot;,
+  blups$Planta
+)
+
+genotype_match &lt;- match(
+  blups$Genotype_ID,
+  rownames(G_raw)
+)
+
+alignment_summary &lt;- data.frame(
+  Check = c(
+    &quot;Phenotypic individuals&quot;,
+    &quot;Genotypic individuals&quot;,
+    &quot;Unique phenotypic genomic IDs&quot;,
+    &quot;Unique genomic row IDs&quot;,
+    &quot;Phenotypes without genotype&quot;,
+    &quot;Genotypes without phenotype&quot;,
+    &quot;One-to-one matches&quot;
+  ),
+  Value = c(
+    nrow(blups),
+    nrow(G_raw),
+    length(unique(blups$Genotype_ID)),
+    length(unique(rownames(G_raw))),
+    sum(!blups$Genotype_ID %in% rownames(G_raw)),
+    sum(!rownames(G_raw) %in% blups$Genotype_ID),
+    sum(!is.na(genotype_match))
+  ),
+  stringsAsFactors = FALSE
+)
+
+alignment_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Individual alignment between phenotype and genotype data&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Individual alignment between phenotype and genotype data
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Check
+</th>
+<th style="text-align:right;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Phenotypic individuals
+</td>
+<td style="text-align:right;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Genotypic individuals
+</td>
+<td style="text-align:right;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Unique phenotypic genomic IDs
+</td>
+<td style="text-align:right;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Unique genomic row IDs
+</td>
+<td style="text-align:right;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Phenotypes without genotype
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Genotypes without phenotype
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+One-to-one matches
+</td>
+<td style="text-align:right;">
+195
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>stopifnot(
+  nrow(blups) == 195L,
+  nrow(G_raw) == 195L,
+  length(unique(blups$Genotype_ID)) == 195L,
+  length(unique(rownames(G_raw))) == 195L,
+  !anyNA(genotype_match),
+  length(unique(genotype_match)) == 195L,
+  setequal(blups$Genotype_ID, rownames(G_raw))
+)
+
+G &lt;- G_raw[
+  genotype_match,
+  ,
+  drop = FALSE
+]
+
+stopifnot(
+  identical(
+    rownames(G),
+    blups$Genotype_ID
+  )
+)
+
+individuals &lt;- data.frame(
+  Phenotype_ID = blups$Phenotype_ID,
+  Genotype_ID = blups$Genotype_ID,
+  ID_Planta = blups$ID_Planta,
+  Progenie = blups$Progenie,
+  Planta = blups$Planta,
+  Populacao = blups$Populacao,
+  stringsAsFactors = FALSE
+)
+
+rownames(G) &lt;- individuals$Phenotype_ID</code></pre>
+<p>The common genomic matrix is now ordered exactly as the phenotype
+table. The stable <code>Phenotype_ID</code> is used as the row name
+passed to all downstream modules.</p>
+</div>
+<div id="population-and-trait-structure" class="section level2">
+<h2>5. Population and trait structure</h2>
+<p>The 195 individuals belong to 13 progenies, with 15 plants in each
+progeny.</p>
+<pre class="r"><code>family &lt;- paste0(
+  &quot;PROG &quot;,
+  individuals$Progenie
+)
+
+family_size &lt;- sort(
+  table(family)
+)
+
+family_table &lt;- data.frame(
+  Progeny = names(family_size),
+  Individuals = as.integer(family_size),
+  stringsAsFactors = FALSE
+)
+
+family_table |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Number of genotyped individuals per progeny&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Number of genotyped individuals per progeny
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Progeny
+</th>
+<th style="text-align:right;">
+Individuals
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+PROG 1
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 10
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 11
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 12
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 13
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 2
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 3
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 4
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 5
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 6
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 7
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 8
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PROG 9
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>stopifnot(
+  length(family_size) == 13L,
+  all(family_size == 15L)
+)</code></pre>
+<p>The three BLUP traits are summarized on the same 195-individual
+set.</p>
+<pre class="r"><code>traits &lt;- c(
+  &quot;Cer&quot;,
+  &quot;BM&quot;,
+  &quot;LP&quot;
+)
+
+trait_summary &lt;- data.frame(
+  Trait = character(0),
+  N = integer(0),
+  Missing = integer(0),
+  Mean = numeric(0),
+  SD = numeric(0),
+  Min = numeric(0),
+  Median = numeric(0),
+  Max = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (trait in traits) {
+  x &lt;- blups[[trait]]
+
+  trait_summary &lt;- rbind(
+    trait_summary,
+    data.frame(
+      Trait = trait,
+      N = sum(!is.na(x)),
+      Missing = sum(is.na(x)),
+      Mean = mean(x, na.rm = TRUE),
+      SD = sd(x, na.rm = TRUE),
+      Min = min(x, na.rm = TRUE),
+      Median = median(x, na.rm = TRUE),
+      Max = max(x, na.rm = TRUE),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+trait_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 4,
+    caption = &quot;Summary of individual BLUPs used as prediction targets&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Summary of individual BLUPs used as prediction targets
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Trait
+</th>
+<th style="text-align:right;">
+N
+</th>
+<th style="text-align:right;">
+Missing
+</th>
+<th style="text-align:right;">
+Mean
+</th>
+<th style="text-align:right;">
+SD
+</th>
+<th style="text-align:right;">
+Min
+</th>
+<th style="text-align:right;">
+Median
+</th>
+<th style="text-align:right;">
+Max
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Cer
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+2.4880
+</td>
+<td style="text-align:right;">
+0.2080
+</td>
+<td style="text-align:right;">
+1.9774
+</td>
+<td style="text-align:right;">
+2.4839
+</td>
+<td style="text-align:right;">
+2.9494
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BM
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+2.0256
+</td>
+<td style="text-align:right;">
+0.1511
+</td>
+<td style="text-align:right;">
+1.6521
+</td>
+<td style="text-align:right;">
+2.0536
+</td>
+<td style="text-align:right;">
+2.3399
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LP
+</td>
+<td style="text-align:right;">
+195
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+5.1364
+</td>
+<td style="text-align:right;">
+1.2574
+</td>
+<td style="text-align:right;">
+2.1860
+</td>
+<td style="text-align:right;">
+5.0030
+</td>
+<td style="text-align:right;">
+9.0859
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>stopifnot(
+  all(traits %in% names(blups)),
+  all(trait_summary$N == 195L),
+  all(trait_summary$Missing == 0L)
+)</code></pre>
+</div>
+<div id="genotype-coding-and-completeness" class="section level2">
+<h2>6. Genotype coding and completeness</h2>
+<p>The SNP matrix uses the discrete coding <code>-1</code>,
+<code>0</code>, and <code>1</code>. For allele-frequency calculations,
+these values are converted to dosages <code>0</code>, <code>1</code>,
+and <code>2</code> by adding one. The original <code>-1/0/1</code>
+coding is retained in the matrix used by the prediction models.</p>
+<pre class="r"><code>observed_codes &lt;- sort(
+  unique(
+    as.numeric(G)
+  )
+)
+
+genotype_summary &lt;- data.frame(
+  Statistic = c(
+    &quot;Individuals&quot;,
+    &quot;Raw SNPs&quot;,
+    &quot;Observed genotype codes&quot;,
+    &quot;Missing genotype cells&quot;,
+    &quot;Duplicated individual IDs&quot;,
+    &quot;Duplicated marker IDs&quot;
+  ),
+  Value = c(
+    as.character(nrow(G)),
+    as.character(ncol(G)),
+    paste(observed_codes, collapse = &quot;, &quot;),
+    as.character(sum(is.na(G))),
+    as.character(sum(duplicated(rownames(G)))),
+    as.character(sum(duplicated(colnames(G))))
+  ),
+  stringsAsFactors = FALSE
+)
+
+genotype_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Structure of the Capture-Seq genotype matrix&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Structure of the Capture-Seq genotype matrix
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Statistic
+</th>
+<th style="text-align:left;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Individuals
+</td>
+<td style="text-align:left;">
+195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Raw SNPs
+</td>
+<td style="text-align:left;">
+21620
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Observed genotype codes
+</td>
+<td style="text-align:left;">
+-1, 0, 1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Missing genotype cells
+</td>
+<td style="text-align:left;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Duplicated individual IDs
+</td>
+<td style="text-align:left;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Duplicated marker IDs
+</td>
+<td style="text-align:left;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>stopifnot(
+  identical(
+    observed_codes,
+    c(-1, 0, 1)
+  ),
+  !anyDuplicated(rownames(G)),
+  !anyDuplicated(colnames(G))
+)</code></pre>
+</div>
+<div id="marker-quality-control" class="section level2">
+<h2>7. Marker quality control</h2>
+<p>Three criteria are applied to every SNP before model fitting:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Call rate:</strong> at least 90% of individuals must have a
+genotype call.</li>
+<li><strong>Minor allele frequency:</strong> MAF must be at least
+0.05.</li>
+<li><strong>Observed heterozygosity:</strong> loci with 100%
+heterozygous individuals are removed because they provide no segregation
+among individuals.</li>
+</ol>
+<p>The same retained marker panel is used by all genomic-prediction
+methods.</p>
+<pre class="r"><code>call_rate &lt;- colMeans(
+  !is.na(G)
+)
+
+dosage &lt;- G + 1
+
+allele_frequency &lt;- colMeans(
+  dosage,
+  na.rm = TRUE
+) / 2
+
+maf &lt;- pmin(
+  allele_frequency,
+  1 - allele_frequency
+)
+
+observed_heterozygosity &lt;- colMeans(
+  G == 0,
+  na.rm = TRUE
+)
+
+marker_variance &lt;- apply(
+  G,
+  2,
+  var,
+  na.rm = TRUE
+)
+
+pass_call_rate &lt;- call_rate &gt;= CALL_RATE_MIN
+pass_maf &lt;- maf &gt;= MAF_MIN
+pass_heterozygosity &lt;- observed_heterozygosity &lt; 1
+
+keep_marker &lt;- (
+  pass_call_rate &amp;
+  pass_maf &amp;
+  pass_heterozygosity
+)
+
+marker_qc &lt;- data.frame(
+  Marker = colnames(G),
+  Call_Rate = call_rate,
+  Allele_Frequency = allele_frequency,
+  MAF = maf,
+  Observed_Heterozygosity = observed_heterozygosity,
+  Variance = marker_variance,
+  Pass_Call_Rate = pass_call_rate,
+  Pass_MAF = pass_maf,
+  Pass_Heterozygosity = pass_heterozygosity,
+  Keep = keep_marker,
+  stringsAsFactors = FALSE
+)
+
+qc_summary &lt;- data.frame(
+  Criterion = c(
+    &quot;Raw SNPs&quot;,
+    &quot;Call rate &lt; 0.90&quot;,
+    &quot;MAF &lt; 0.05&quot;,
+    &quot;100% observed heterozygosity&quot;,
+    &quot;Total SNPs removed&quot;,
+    &quot;SNPs retained&quot;
+  ),
+  Markers = c(
+    ncol(G),
+    sum(!pass_call_rate),
+    sum(!pass_maf),
+    sum(!pass_heterozygosity),
+    sum(!keep_marker),
+    sum(keep_marker)
+  ),
+  stringsAsFactors = FALSE
+)
+
+qc_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Marker quality-control summary&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Marker quality-control summary
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Criterion
+</th>
+<th style="text-align:right;">
+Markers
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Raw SNPs
+</td>
+<td style="text-align:right;">
+21620
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Call rate &lt; 0.90
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MAF &lt; 0.05
+</td>
+<td style="text-align:right;">
+611
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+100% observed heterozygosity
+</td>
+<td style="text-align:right;">
+122
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Total SNPs removed
+</td>
+<td style="text-align:right;">
+733
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SNPs retained
+</td>
+<td style="text-align:right;">
+20887
+</td>
+</tr>
+</tbody>
+</table>
+<p>The retained panel contains 20,887 SNPs from the 21,620 raw
+Capture-Seq markers.</p>
+<div id="minor-allele-frequency" class="section level3">
+<h3>7.1 Minor allele frequency</h3>
+<p>The MAF distribution summarizes allele-frequency balance across the
+raw marker panel. The vertical line indicates the minimum MAF retained
+for prediction.</p>
+<pre class="r"><code>maf_plot_data &lt;- data.frame(
+  MAF = maf,
+  stringsAsFactors = FALSE
+)
+
+p_maf &lt;- ggplot(
+  maf_plot_data,
+  aes(
+    x = MAF
+  )
+) +
+  geom_density(
+    alpha = 0.28,
+    linewidth = 0.9
+  ) +
+  geom_vline(
+    xintercept = MAF_MIN,
+    linetype = &quot;dashed&quot;,
+    linewidth = 0.7
+  ) +
+  labs(
+    x = &quot;Minor allele frequency&quot;,
+    y = &quot;Density&quot;
+  ) +
+  theme_gdocs()
+
+print(p_maf)</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/real_data_audit.Rmd/maf-distribution-1.png" alt="Minor allele frequency distribution across the raw Capture-Seq SNP panel. The dashed line indicates the MAF threshold used for marker retention." width="100%" />
+<p class="caption">
+Minor allele frequency distribution across the raw Capture-Seq SNP
+panel. The dashed line indicates the MAF threshold used for marker
+retention.
+</p>
+</div>
+</div>
+</div>
+<div id="common-marker-panel" class="section level2">
+<h2>8. Common marker panel</h2>
+<p>The quality-control rules are applied once to create the marker
+matrix shared by all downstream prediction methods.</p>
+<pre class="r"><code>G_qc &lt;- G[
+  ,
+  keep_marker,
+  drop = FALSE
+]
+
+retained_call_rate &lt;- call_rate[
+  keep_marker
+]
+
+retained_maf &lt;- maf[
+  keep_marker
+]
+
+retained_heterozygosity &lt;- observed_heterozygosity[
+  keep_marker
+]
+
+retained_variance &lt;- marker_variance[
+  keep_marker
+]
+
+marker_contract &lt;- data.frame(
+  Property = c(
+    &quot;Individuals&quot;,
+    &quot;Retained SNPs&quot;,
+    &quot;Minimum call rate&quot;,
+    &quot;Minimum MAF&quot;,
+    &quot;Maximum observed heterozygosity&quot;,
+    &quot;Minimum marker variance&quot;
+  ),
+  Value = c(
+    nrow(G_qc),
+    ncol(G_qc),
+    min(retained_call_rate),
+    min(retained_maf),
+    max(retained_heterozygosity),
+    min(retained_variance)
+  ),
+  stringsAsFactors = FALSE
+)
+
+marker_contract |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 4,
+    caption = &quot;Common genomic marker panel after quality control&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot; style=&quot;width:100%;&quot;&#39;
+  )</code></pre>
+<table class="table table-striped table-hover table-bordered" style="width:100%;">
+<caption>
+Common genomic marker panel after quality control
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Property
+</th>
+<th style="text-align:right;">
+Value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Individuals
+</td>
+<td style="text-align:right;">
+195.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Retained SNPs
+</td>
+<td style="text-align:right;">
+20887.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Minimum call rate
+</td>
+<td style="text-align:right;">
+1.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Minimum MAF
+</td>
+<td style="text-align:right;">
+0.0513
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Maximum observed heterozygosity
+</td>
+<td style="text-align:right;">
+0.9949
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Minimum marker variance
+</td>
+<td style="text-align:right;">
+0.0051
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>stopifnot(
+  nrow(G_qc) == 195L,
+  all(retained_call_rate &gt;= CALL_RATE_MIN),
+  all(retained_maf &gt;= MAF_MIN),
+  all(retained_heterozygosity &lt; 1),
+  all(retained_variance &gt; 0),
+  !anyDuplicated(colnames(G_qc))
+)</code></pre>
+<p>The final genomic matrix therefore contains 195 individuals and
+20,887 SNPs. The <code>-1/0/1</code> genotype coding and the SNP column
+order are preserved.</p>
+</div>
+<div id="shared-object-for-genomic-prediction" class="section level2">
+<h2>9. Shared object for genomic prediction</h2>
+<p>The common object keeps the aligned individuals, the three prediction
+targets, the retained genotype matrix, progeny membership, marker-level
+quality statistics, and the fixed preprocessing settings.</p>
+<pre class="r"><code>phenotype_targets &lt;- blups[
+  ,
+  c(
+    &quot;Phenotype_ID&quot;,
+    &quot;Cer&quot;,
+    &quot;BM&quot;,
+    &quot;LP&quot;
+  )
+]
+
+real_common &lt;- list(
+  genotype = G_qc,
+  phenotype = phenotype_targets,
+  individuals = individuals,
+  traits = traits,
+  family = setNames(
+    family,
+    individuals$Phenotype_ID
+  ),
+  marker_qc = marker_qc,
+  metadata = list(
+    dataset = &quot;real&quot;,
+    species = &quot;Coffea arabica&quot;,
+    genotyping_method = &quot;Capture-Seq&quot;,
+    individuals = nrow(G_qc),
+    raw_markers = ncol(G),
+    retained_markers = ncol(G_qc),
+    genotype_coding = c(-1, 0, 1),
+    dosage_conversion = &quot;G + 1&quot;,
+    call_rate_threshold = CALL_RATE_MIN,
+    maf_threshold = MAF_MIN,
+    heterozygosity_rule = &quot;observed heterozygosity &lt; 1&quot;,
+    progenies = length(unique(family))
+  )
+)</code></pre>
+</div>
+<div id="prepared-input-for-the-next-modules" class="section level2">
+<h2>10. Prepared input for the next modules</h2>
+<p>The real-data workflow proceeds with one common dataset:</p>
+<ul>
+<li>195 individuals from 13 progenies;</li>
+<li>individual BLUPs for <code>Cer</code>, <code>BM</code>, and
+<code>LP</code>;</li>
+<li>20,887 SNPs after marker quality control;</li>
+<li>genotype coding <code>-1/0/1</code>;</li>
+<li>identical individuals, marker panel, and prediction targets for
+every downstream method.</li>
+</ul>
+<p>The next module defines the common validation design before GBLUP-ADE
+and ANN are fitted.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.5.1 (2025-06-13 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26300)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] LC_COLLATE=Portuguese_Brazil.utf8  LC_CTYPE=Portuguese_Brazil.utf8   
+[3] LC_MONETARY=Portuguese_Brazil.utf8 LC_NUMERIC=C                      
+[5] LC_TIME=Portuguese_Brazil.utf8    
+
+time zone: America/Sao_Paulo
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices datasets  utils     methods   base     
+
+other attached packages:
+[1] ggthemes_6.0.0  ggplot2_4.0.3   knitr_1.50      workflowr_1.7.2
+
+loaded via a namespace (and not attached):
+ [1] gtable_0.3.6       jsonlite_2.0.0     compiler_4.5.1     renv_1.1.8        
+ [5] promises_1.5.0     Rcpp_1.1.2         stringr_1.6.0      git2r_0.36.2      
+ [9] callr_3.7.6        later_1.4.4        jquerylib_0.1.4    scales_1.4.0      
+[13] yaml_2.3.12        fastmap_1.2.0      R6_2.6.1           labeling_0.4.3    
+[17] tibble_3.3.1       rprojroot_2.1.1    RColorBrewer_1.1-3 bslib_0.9.0       
+[21] pillar_1.11.1      rlang_1.1.7        cachem_1.1.0       stringi_1.8.7     
+[25] httpuv_1.6.16      xfun_0.54          S7_0.2.2           getPass_0.2-4     
+[29] fs_1.6.6           sass_0.4.10        otel_0.2.0         cli_3.6.5         
+[33] withr_3.0.2        magrittr_2.0.4     ps_1.9.1           grid_4.5.1        
+[37] digest_0.6.39      processx_3.8.6     rstudioapi_0.17.1  lifecycle_1.0.5   
+[41] vctrs_0.7.1        evaluate_1.0.5     glue_1.8.0         farver_2.1.2      
+[45] whisker_0.4.1      purrr_1.2.2        rmarkdown_2.30     httr_1.4.7        
+[49] tools_4.5.1        pkgconfig_2.0.3    htmltools_0.5.9   </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUmVhbCBnZW5vbWljIGRhdGE6IHN0cnVjdHVyZSBhbmQgcHJlcGFyYXRpb24iCmF1dGhvcjoKICAtIFdldmVydG9uIEdvbWVzIGRhIENvc3RhCmRhdGU6ICJgciBTeXMuRGF0ZSgpYCIKc2l0ZTogd29ya2Zsb3dyOjp3Zmxvd19zaXRlCm91dHB1dDoKICB3b3JrZmxvd3I6OndmbG93X2h0bWw6CiAgICB0b2M6IHRydWUKICAgIHRvY19kZXB0aDogMwogICAgdG9jX2Zsb2F0OiB0cnVlCiAgICBjb2RlX2Rvd25sb2FkOiB0cnVlCiAgICBjb2RlX2ZvbGRpbmc6IHNob3cKZWRpdG9yX29wdGlvbnM6CiAgY2h1bmtfb3V0cHV0X3R5cGU6IGNvbnNvbGUKLS0tCgo8c3R5bGU+CnRhYmxlIHsKICB3aWR0aDogMTAwJSAhaW1wb3J0YW50Owp9CnRhYmxlIHRoLAp0YWJsZSB0ZCB7CiAgd2hpdGUtc3BhY2U6IG5vcm1hbCAhaW1wb3J0YW50OwogIHZlcnRpY2FsLWFsaWduOiBtaWRkbGUgIWltcG9ydGFudDsKfQo8L3N0eWxlPgoKIyMgMS4gUHVycG9zZQoKVGhpcyBtb2R1bGUgcHJlcGFyZXMgdGhlIHJlYWwgKkNvZmZlYSBhcmFiaWNhKiBnZW5vbWljIGRhdGEgdXNlZCB0aHJvdWdob3V0IHRoZQpwcmVkaWN0aW9uIHdvcmtmbG93LiBUaGUgcG9wdWxhdGlvbiBjb250YWlucyAxOTUgaW5kaXZpZHVhbHMgZGVyaXZlZCBmcm9tCmNyb3NzZXMgaW52b2x2aW5nIHRoZSBDYXR1YcOtIGdyb3VwIGFuZCBUaW1vciBIeWJyaWQgZ2VybXBsYXNtLiBHZW5vdHlwaW5nIHdhcwpwZXJmb3JtZWQgYnkgQ2FwdHVyZS1TZXEsIHByb2R1Y2luZyB0aGUgU05QIHBhbmVsIHVzZWQgYXMgdGhlIGdlbm9taWMgaW5wdXQuCgpUaGUgbW9kdWxlIGhhcyBmb3VyIGdvYWxzOgoKLSBkZXNjcmliZSB0aGUgZ2Vub21pYyBhbmQgcGhlbm90eXBpYyBpbnB1dHMgdXNlZCBmb3IgcHJlZGljdGlvbjsKLSBhbGlnbiB0aGUgMTk1IGdlbm9taWMgcHJvZmlsZXMgd2l0aCB0aGVpciBjb3JyZXNwb25kaW5nIGluZGl2aWR1YWwgQkxVUHM7Ci0gYXBwbHkgdGhlIHNhbWUgbWFya2VyIHF1YWxpdHktY29udHJvbCBjcml0ZXJpYSB0byBldmVyeSBwcmVkaWN0aW9uIG1ldGhvZDsKLSBzYXZlIG9uZSBjb21tb24gb2JqZWN0IGZvciB2YWxpZGF0aW9uLCBHQkxVUC1BREUsIEFOTiwgYW5kIG1vZGVsIGNvbXBhcmlzb24uCgpObyBnZW5vbWljIHByZWRpY3Rpb24gbW9kZWwgaXMgZml0dGVkIGhlcmUuIEFsbCBkb3duc3RyZWFtIG1ldGhvZHMgcmVjZWl2ZSB0aGUKc2FtZSBpbmRpdmlkdWFscywgcGhlbm90eXBpYyB0YXJnZXRzLCBhbmQgcmV0YWluZWQgbWFya2VyIHBhbmVsLgoKYGBge3Igc2V0dXAsIGluY2x1ZGU9RkFMU0V9CmtuaXRyOjpvcHRzX2NodW5rJHNldCgKICBlY2hvID0gVFJVRSwKICB3YXJuaW5nID0gRkFMU0UsCiAgbWVzc2FnZSA9IEZBTFNFLAogIGNhY2hlID0gRkFMU0UsCiAgZmlnLmFsaWduID0gImNlbnRlciIsCiAgb3V0LndpZHRoID0gIjEwMCUiCikKCm9wdGlvbnMoc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFKQoKZGlyLmNyZWF0ZSgKICAib3V0cHV0L3JlYWwvYXVkaXQvZmlndXJlcyIsCiAgc2hvd1dhcm5pbmdzID0gRkFMU0UsCiAgcmVjdXJzaXZlID0gVFJVRQopCmBgYAoKIyMgMi4gUGFja2FnZXMgYW5kIGZpeGVkIHNldHRpbmdzCgpUaHJlZSBwYWNrYWdlcyBzdXBwb3J0IHRoZSByZWFkZXItZmFjaW5nIGFuYWx5c2lzOgoKLSAqKmBrbml0cmAqKiBmb3JtYXRzIGRhdGEgc3VtbWFyaWVzIGFzIEhUTUwgdGFibGVzOwotICoqYGdncGxvdDJgKiogY29uc3RydWN0cyB0aGUgbWFya2VyLXF1YWxpdHkgZmlndXJlOwotICoqYGdndGhlbWVzYCoqIHByb3ZpZGVzIGB0aGVtZV9nZG9jcygpYCBhbmQgbWF0Y2hpbmcgY29sb3Igc2NhbGVzLgoKYGBge3IgcGFja2FnZXMsIHdhcm5pbmc9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CmxpYnJhcnkoa25pdHIpCmxpYnJhcnkoZ2dwbG90MikKbGlicmFyeShnZ3RoZW1lcykKYGBgCgpUaGUgbWFya2VyLXF1YWxpdHkgY3JpdGVyaWEgYXJlIGZpeGVkIGJlZm9yZSBwcmVwcm9jZXNzaW5nOgoKYGBge3IgcXVhbGl0eS1jb250cm9sLXNldHRpbmdzfQpDQUxMX1JBVEVfTUlOIDwtIDAuOTAKTUFGX01JTiA8LSAwLjA1CmBgYAoKIyMgMy4gR2Vub21pYyBhbmQgcGhlbm90eXBpYyBpbnB1dHMKClRoZSBnZW5vbWljIGlucHV0IGNvbnRhaW5zIGluZGl2aWR1YWxzIGluIHJvd3MgYW5kIFNOUHMgaW4gY29sdW1ucy4gVGhlCnBoZW5vdHlwaWMgaW5wdXQgY29udGFpbnMgdGhlIGluZGl2aWR1YWwgQkxVUHMgb2J0YWluZWQgZnJvbSB0aGUgbG9uZ2l0dWRpbmFsCm1peGVkLW1vZGVsIGFuYWx5c2lzIGZvciBjZXJjb3Nwb3Jpb3NpcyAoYENlcmApLCBsZWFmLW1pbmVyIGluY2lkZW5jZSAoYEJNYCksCmFuZCB0aGUgcHJvZHVjdGlvbi1yZWxhdGVkIHRyYWl0IChgTFBgKS4KCmBgYHtyIHJlYWQtaW5wdXRzfQpnZW5vX3JhdyA8LSByZWFkUkRTKAogICJkYXRhL2RhZG9zX3JlYWlzL2dlbm9fcmVhbC5yZHMiCikKCmJsdXBzIDwtIHJlYWRSRFMoCiAgIm91dHB1dC9yZWFsL3BoZW5vdHlwZS9yZWFsX3BoZW5vdHlwZV9ibHVwcy5yZHMiCikKCkdfcmF3IDwtIGFzLm1hdHJpeChnZW5vX3JhdykKCmlucHV0X3N1bW1hcnkgPC0gZGF0YS5mcmFtZSgKICBJbnB1dCA9IGMoCiAgICAiQ2FwdHVyZS1TZXEgZ2Vub3R5cGUgcGFuZWwiLAogICAgIkluZGl2aWR1YWwgQkxVUHMiCiAgKSwKICBJbmRpdmlkdWFscyA9IGMoCiAgICBucm93KEdfcmF3KSwKICAgIG5yb3coYmx1cHMpCiAgKSwKICBWYXJpYWJsZXMgPSBjKAogICAgbmNvbChHX3JhdyksCiAgICAzTAogICksCiAgRGVzY3JpcHRpb24gPSBjKAogICAgIlJhdyBTTlAgbWFya2VycyIsCiAgICAiQ2VyLCBCTSwgYW5kIExQIgogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCmlucHV0X3N1bW1hcnkgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBjYXB0aW9uID0gIlJlYWwtZGF0YSBpbnB1dHMgdXNlZCBpbiB0aGUgZ2Vub21pYy1wcmVkaWN0aW9uIHdvcmtmbG93IiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCIgc3R5bGU9IndpZHRoOjEwMCU7IicKICApCmBgYAoKQ2FwdHVyZS1TZXEgcHJvZHVjZWQgYHIgZm9ybWF0KG5jb2woR19yYXcpLCBiaWcubWFyayA9ICIsIilgIFNOUHMgZm9yIHRoZQpgciBucm93KEdfcmF3KWAgZ2Vub3R5cGVkIGluZGl2aWR1YWxzLiBUaGUgcGhlbm90eXBlIG1vZHVsZSBzdXBwbGllcyBvbmUgQkxVUApmb3IgZWFjaCBvZiB0aGVzZSBpbmRpdmlkdWFscyBhbmQgZWFjaCBvZiB0aGUgdGhyZWUgcHJlZGljdGlvbiB0cmFpdHMuCgojIyA0LiBJbmRpdmlkdWFsIGlkZW50aWZpY2F0aW9uIGFuZCBhbGlnbm1lbnQKClRoZSBnZW5vbWljIHJvd3MgdXNlIGxhYmVscyBvZiB0aGUgZm9ybSBgUFJPRyAxXzFgLCB3aGVyZSB0aGUgZmlyc3QgbnVtYmVyCmlkZW50aWZpZXMgdGhlIHByb2dlbnkgYW5kIHRoZSBzZWNvbmQgaWRlbnRpZmllcyB0aGUgcGxhbnQgd2l0aGluIHRoYXQgcHJvZ2VueS4KVGhlIHBoZW5vdHlwZSBvYmplY3Qgc3RvcmVzIHRoZXNlIHR3byBjb21wb25lbnRzIHNlcGFyYXRlbHkgYXMgYFByb2dlbmllYCBhbmQKYFBsYW50YWAuCgpBIGdlbm9taWMgaWRlbnRpZmllciBpcyB0aGVyZWZvcmUgY29uc3RydWN0ZWQgZGlyZWN0bHkgZnJvbSB0aG9zZSBmaWVsZHMgYW5kCnVzZWQgdG8gbWF0Y2ggZWFjaCBCTFVQIHdpdGggaXRzIGdlbm9taWMgcHJvZmlsZS4KCmBgYHtyIGluZGl2aWR1YWwtYWxpZ25tZW50fQpibHVwcyRHZW5vdHlwZV9JRCA8LSBwYXN0ZTAoCiAgIlBST0cgIiwKICBibHVwcyRQcm9nZW5pZSwKICAiXyIsCiAgYmx1cHMkUGxhbnRhCikKCmdlbm90eXBlX21hdGNoIDwtIG1hdGNoKAogIGJsdXBzJEdlbm90eXBlX0lELAogIHJvd25hbWVzKEdfcmF3KQopCgphbGlnbm1lbnRfc3VtbWFyeSA8LSBkYXRhLmZyYW1lKAogIENoZWNrID0gYygKICAgICJQaGVub3R5cGljIGluZGl2aWR1YWxzIiwKICAgICJHZW5vdHlwaWMgaW5kaXZpZHVhbHMiLAogICAgIlVuaXF1ZSBwaGVub3R5cGljIGdlbm9taWMgSURzIiwKICAgICJVbmlxdWUgZ2Vub21pYyByb3cgSURzIiwKICAgICJQaGVub3R5cGVzIHdpdGhvdXQgZ2Vub3R5cGUiLAogICAgIkdlbm90eXBlcyB3aXRob3V0IHBoZW5vdHlwZSIsCiAgICAiT25lLXRvLW9uZSBtYXRjaGVzIgogICksCiAgVmFsdWUgPSBjKAogICAgbnJvdyhibHVwcyksCiAgICBucm93KEdfcmF3KSwKICAgIGxlbmd0aCh1bmlxdWUoYmx1cHMkR2Vub3R5cGVfSUQpKSwKICAgIGxlbmd0aCh1bmlxdWUocm93bmFtZXMoR19yYXcpKSksCiAgICBzdW0oIWJsdXBzJEdlbm90eXBlX0lEICVpbiUgcm93bmFtZXMoR19yYXcpKSwKICAgIHN1bSghcm93bmFtZXMoR19yYXcpICVpbiUgYmx1cHMkR2Vub3R5cGVfSUQpLAogICAgc3VtKCFpcy5uYShnZW5vdHlwZV9tYXRjaCkpCiAgKSwKICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKKQoKYWxpZ25tZW50X3N1bW1hcnkgfD4KICBrbml0cjo6a2FibGUoCiAgICBmb3JtYXQgPSAiaHRtbCIsCiAgICBjYXB0aW9uID0gIkluZGl2aWR1YWwgYWxpZ25tZW50IGJldHdlZW4gcGhlbm90eXBlIGFuZCBnZW5vdHlwZSBkYXRhIiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCIgc3R5bGU9IndpZHRoOjEwMCU7IicKICApCgpzdG9waWZub3QoCiAgbnJvdyhibHVwcykgPT0gMTk1TCwKICBucm93KEdfcmF3KSA9PSAxOTVMLAogIGxlbmd0aCh1bmlxdWUoYmx1cHMkR2Vub3R5cGVfSUQpKSA9PSAxOTVMLAogIGxlbmd0aCh1bmlxdWUocm93bmFtZXMoR19yYXcpKSkgPT0gMTk1TCwKICAhYW55TkEoZ2Vub3R5cGVfbWF0Y2gpLAogIGxlbmd0aCh1bmlxdWUoZ2Vub3R5cGVfbWF0Y2gpKSA9PSAxOTVMLAogIHNldGVxdWFsKGJsdXBzJEdlbm90eXBlX0lELCByb3duYW1lcyhHX3JhdykpCikKCkcgPC0gR19yYXdbCiAgZ2Vub3R5cGVfbWF0Y2gsCiAgLAogIGRyb3AgPSBGQUxTRQpdCgpzdG9waWZub3QoCiAgaWRlbnRpY2FsKAogICAgcm93bmFtZXMoRyksCiAgICBibHVwcyRHZW5vdHlwZV9JRAogICkKKQoKaW5kaXZpZHVhbHMgPC0gZGF0YS5mcmFtZSgKICBQaGVub3R5cGVfSUQgPSBibHVwcyRQaGVub3R5cGVfSUQsCiAgR2Vub3R5cGVfSUQgPSBibHVwcyRHZW5vdHlwZV9JRCwKICBJRF9QbGFudGEgPSBibHVwcyRJRF9QbGFudGEsCiAgUHJvZ2VuaWUgPSBibHVwcyRQcm9nZW5pZSwKICBQbGFudGEgPSBibHVwcyRQbGFudGEsCiAgUG9wdWxhY2FvID0gYmx1cHMkUG9wdWxhY2FvLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpyb3duYW1lcyhHKSA8LSBpbmRpdmlkdWFscyRQaGVub3R5cGVfSUQKYGBgCgpUaGUgY29tbW9uIGdlbm9taWMgbWF0cml4IGlzIG5vdyBvcmRlcmVkIGV4YWN0bHkgYXMgdGhlIHBoZW5vdHlwZSB0YWJsZS4gVGhlCnN0YWJsZSBgUGhlbm90eXBlX0lEYCBpcyB1c2VkIGFzIHRoZSByb3cgbmFtZSBwYXNzZWQgdG8gYWxsIGRvd25zdHJlYW0gbW9kdWxlcy4KCiMjIDUuIFBvcHVsYXRpb24gYW5kIHRyYWl0IHN0cnVjdHVyZQoKVGhlIDE5NSBpbmRpdmlkdWFscyBiZWxvbmcgdG8gMTMgcHJvZ2VuaWVzLCB3aXRoIDE1IHBsYW50cyBpbiBlYWNoIHByb2dlbnkuCgpgYGB7ciBwb3B1bGF0aW9uLXN0cnVjdHVyZX0KZmFtaWx5IDwtIHBhc3RlMCgKICAiUFJPRyAiLAogIGluZGl2aWR1YWxzJFByb2dlbmllCikKCmZhbWlseV9zaXplIDwtIHNvcnQoCiAgdGFibGUoZmFtaWx5KQopCgpmYW1pbHlfdGFibGUgPC0gZGF0YS5mcmFtZSgKICBQcm9nZW55ID0gbmFtZXMoZmFtaWx5X3NpemUpLAogIEluZGl2aWR1YWxzID0gYXMuaW50ZWdlcihmYW1pbHlfc2l6ZSksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCmZhbWlseV90YWJsZSB8PgogIGtuaXRyOjprYWJsZSgKICAgIGZvcm1hdCA9ICJodG1sIiwKICAgIGNhcHRpb24gPSAiTnVtYmVyIG9mIGdlbm90eXBlZCBpbmRpdmlkdWFscyBwZXIgcHJvZ2VueSIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiIHN0eWxlPSJ3aWR0aDoxMDAlOyInCiAgKQoKc3RvcGlmbm90KAogIGxlbmd0aChmYW1pbHlfc2l6ZSkgPT0gMTNMLAogIGFsbChmYW1pbHlfc2l6ZSA9PSAxNUwpCikKYGBgCgpUaGUgdGhyZWUgQkxVUCB0cmFpdHMgYXJlIHN1bW1hcml6ZWQgb24gdGhlIHNhbWUgMTk1LWluZGl2aWR1YWwgc2V0LgoKYGBge3IgdHJhaXQtc3VtbWFyeX0KdHJhaXRzIDwtIGMoCiAgIkNlciIsCiAgIkJNIiwKICAiTFAiCikKCnRyYWl0X3N1bW1hcnkgPC0gZGF0YS5mcmFtZSgKICBUcmFpdCA9IGNoYXJhY3RlcigwKSwKICBOID0gaW50ZWdlcigwKSwKICBNaXNzaW5nID0gaW50ZWdlcigwKSwKICBNZWFuID0gbnVtZXJpYygwKSwKICBTRCA9IG51bWVyaWMoMCksCiAgTWluID0gbnVtZXJpYygwKSwKICBNZWRpYW4gPSBudW1lcmljKDApLAogIE1heCA9IG51bWVyaWMoMCksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCmZvciAodHJhaXQgaW4gdHJhaXRzKSB7CiAgeCA8LSBibHVwc1tbdHJhaXRdXQoKICB0cmFpdF9zdW1tYXJ5IDwtIHJiaW5kKAogICAgdHJhaXRfc3VtbWFyeSwKICAgIGRhdGEuZnJhbWUoCiAgICAgIFRyYWl0ID0gdHJhaXQsCiAgICAgIE4gPSBzdW0oIWlzLm5hKHgpKSwKICAgICAgTWlzc2luZyA9IHN1bShpcy5uYSh4KSksCiAgICAgIE1lYW4gPSBtZWFuKHgsIG5hLnJtID0gVFJVRSksCiAgICAgIFNEID0gc2QoeCwgbmEucm0gPSBUUlVFKSwKICAgICAgTWluID0gbWluKHgsIG5hLnJtID0gVFJVRSksCiAgICAgIE1lZGlhbiA9IG1lZGlhbih4LCBuYS5ybSA9IFRSVUUpLAogICAgICBNYXggPSBtYXgoeCwgbmEucm0gPSBUUlVFKSwKICAgICAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCiAgICApCiAgKQp9Cgp0cmFpdF9zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgZGlnaXRzID0gNCwKICAgIGNhcHRpb24gPSAiU3VtbWFyeSBvZiBpbmRpdmlkdWFsIEJMVVBzIHVzZWQgYXMgcHJlZGljdGlvbiB0YXJnZXRzIiwKICAgIHJvdy5uYW1lcyA9IEZBTFNFLAogICAgdGFibGUuYXR0ciA9ICdjbGFzcz0idGFibGUgdGFibGUtc3RyaXBlZCB0YWJsZS1ob3ZlciB0YWJsZS1ib3JkZXJlZCIgc3R5bGU9IndpZHRoOjEwMCU7IicKICApCgpzdG9waWZub3QoCiAgYWxsKHRyYWl0cyAlaW4lIG5hbWVzKGJsdXBzKSksCiAgYWxsKHRyYWl0X3N1bW1hcnkkTiA9PSAxOTVMKSwKICBhbGwodHJhaXRfc3VtbWFyeSRNaXNzaW5nID09IDBMKQopCmBgYAoKIyMgNi4gR2Vub3R5cGUgY29kaW5nIGFuZCBjb21wbGV0ZW5lc3MKClRoZSBTTlAgbWF0cml4IHVzZXMgdGhlIGRpc2NyZXRlIGNvZGluZyBgLTFgLCBgMGAsIGFuZCBgMWAuIEZvciBhbGxlbGUtZnJlcXVlbmN5CmNhbGN1bGF0aW9ucywgdGhlc2UgdmFsdWVzIGFyZSBjb252ZXJ0ZWQgdG8gZG9zYWdlcyBgMGAsIGAxYCwgYW5kIGAyYCBieSBhZGRpbmcKb25lLiBUaGUgb3JpZ2luYWwgYC0xLzAvMWAgY29kaW5nIGlzIHJldGFpbmVkIGluIHRoZSBtYXRyaXggdXNlZCBieSB0aGUKcHJlZGljdGlvbiBtb2RlbHMuCgpgYGB7ciBnZW5vdHlwZS1jb2Rpbmd9Cm9ic2VydmVkX2NvZGVzIDwtIHNvcnQoCiAgdW5pcXVlKAogICAgYXMubnVtZXJpYyhHKQogICkKKQoKZ2Vub3R5cGVfc3VtbWFyeSA8LSBkYXRhLmZyYW1lKAogIFN0YXRpc3RpYyA9IGMoCiAgICAiSW5kaXZpZHVhbHMiLAogICAgIlJhdyBTTlBzIiwKICAgICJPYnNlcnZlZCBnZW5vdHlwZSBjb2RlcyIsCiAgICAiTWlzc2luZyBnZW5vdHlwZSBjZWxscyIsCiAgICAiRHVwbGljYXRlZCBpbmRpdmlkdWFsIElEcyIsCiAgICAiRHVwbGljYXRlZCBtYXJrZXIgSURzIgogICksCiAgVmFsdWUgPSBjKAogICAgYXMuY2hhcmFjdGVyKG5yb3coRykpLAogICAgYXMuY2hhcmFjdGVyKG5jb2woRykpLAogICAgcGFzdGUob2JzZXJ2ZWRfY29kZXMsIGNvbGxhcHNlID0gIiwgIiksCiAgICBhcy5jaGFyYWN0ZXIoc3VtKGlzLm5hKEcpKSksCiAgICBhcy5jaGFyYWN0ZXIoc3VtKGR1cGxpY2F0ZWQocm93bmFtZXMoRykpKSksCiAgICBhcy5jaGFyYWN0ZXIoc3VtKGR1cGxpY2F0ZWQoY29sbmFtZXMoRykpKSkKICApLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpnZW5vdHlwZV9zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJTdHJ1Y3R1cmUgb2YgdGhlIENhcHR1cmUtU2VxIGdlbm90eXBlIG1hdHJpeCIsCiAgICByb3cubmFtZXMgPSBGQUxTRSwKICAgIHRhYmxlLmF0dHIgPSAnY2xhc3M9InRhYmxlIHRhYmxlLXN0cmlwZWQgdGFibGUtaG92ZXIgdGFibGUtYm9yZGVyZWQiIHN0eWxlPSJ3aWR0aDoxMDAlOyInCiAgKQoKc3RvcGlmbm90KAogIGlkZW50aWNhbCgKICAgIG9ic2VydmVkX2NvZGVzLAogICAgYygtMSwgMCwgMSkKICApLAogICFhbnlEdXBsaWNhdGVkKHJvd25hbWVzKEcpKSwKICAhYW55RHVwbGljYXRlZChjb2xuYW1lcyhHKSkKKQpgYGAKCiMjIDcuIE1hcmtlciBxdWFsaXR5IGNvbnRyb2wKClRocmVlIGNyaXRlcmlhIGFyZSBhcHBsaWVkIHRvIGV2ZXJ5IFNOUCBiZWZvcmUgbW9kZWwgZml0dGluZzoKCjEuICoqQ2FsbCByYXRlOioqIGF0IGxlYXN0IDkwJSBvZiBpbmRpdmlkdWFscyBtdXN0IGhhdmUgYSBnZW5vdHlwZSBjYWxsLgoyLiAqKk1pbm9yIGFsbGVsZSBmcmVxdWVuY3k6KiogTUFGIG11c3QgYmUgYXQgbGVhc3QgMC4wNS4KMy4gKipPYnNlcnZlZCBoZXRlcm96eWdvc2l0eToqKiBsb2NpIHdpdGggMTAwJSBoZXRlcm96eWdvdXMgaW5kaXZpZHVhbHMgYXJlCiAgIHJlbW92ZWQgYmVjYXVzZSB0aGV5IHByb3ZpZGUgbm8gc2VncmVnYXRpb24gYW1vbmcgaW5kaXZpZHVhbHMuCgpUaGUgc2FtZSByZXRhaW5lZCBtYXJrZXIgcGFuZWwgaXMgdXNlZCBieSBhbGwgZ2Vub21pYy1wcmVkaWN0aW9uIG1ldGhvZHMuCgpgYGB7ciBtYXJrZXItcXVhbGl0eS1jb250cm9sfQpjYWxsX3JhdGUgPC0gY29sTWVhbnMoCiAgIWlzLm5hKEcpCikKCmRvc2FnZSA8LSBHICsgMQoKYWxsZWxlX2ZyZXF1ZW5jeSA8LSBjb2xNZWFucygKICBkb3NhZ2UsCiAgbmEucm0gPSBUUlVFCikgLyAyCgptYWYgPC0gcG1pbigKICBhbGxlbGVfZnJlcXVlbmN5LAogIDEgLSBhbGxlbGVfZnJlcXVlbmN5CikKCm9ic2VydmVkX2hldGVyb3p5Z29zaXR5IDwtIGNvbE1lYW5zKAogIEcgPT0gMCwKICBuYS5ybSA9IFRSVUUKKQoKbWFya2VyX3ZhcmlhbmNlIDwtIGFwcGx5KAogIEcsCiAgMiwKICB2YXIsCiAgbmEucm0gPSBUUlVFCikKCnBhc3NfY2FsbF9yYXRlIDwtIGNhbGxfcmF0ZSA+PSBDQUxMX1JBVEVfTUlOCnBhc3NfbWFmIDwtIG1hZiA+PSBNQUZfTUlOCnBhc3NfaGV0ZXJvenlnb3NpdHkgPC0gb2JzZXJ2ZWRfaGV0ZXJvenlnb3NpdHkgPCAxCgprZWVwX21hcmtlciA8LSAoCiAgcGFzc19jYWxsX3JhdGUgJgogIHBhc3NfbWFmICYKICBwYXNzX2hldGVyb3p5Z29zaXR5CikKCm1hcmtlcl9xYyA8LSBkYXRhLmZyYW1lKAogIE1hcmtlciA9IGNvbG5hbWVzKEcpLAogIENhbGxfUmF0ZSA9IGNhbGxfcmF0ZSwKICBBbGxlbGVfRnJlcXVlbmN5ID0gYWxsZWxlX2ZyZXF1ZW5jeSwKICBNQUYgPSBtYWYsCiAgT2JzZXJ2ZWRfSGV0ZXJvenlnb3NpdHkgPSBvYnNlcnZlZF9oZXRlcm96eWdvc2l0eSwKICBWYXJpYW5jZSA9IG1hcmtlcl92YXJpYW5jZSwKICBQYXNzX0NhbGxfUmF0ZSA9IHBhc3NfY2FsbF9yYXRlLAogIFBhc3NfTUFGID0gcGFzc19tYWYsCiAgUGFzc19IZXRlcm96eWdvc2l0eSA9IHBhc3NfaGV0ZXJvenlnb3NpdHksCiAgS2VlcCA9IGtlZXBfbWFya2VyLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpxY19zdW1tYXJ5IDwtIGRhdGEuZnJhbWUoCiAgQ3JpdGVyaW9uID0gYygKICAgICJSYXcgU05QcyIsCiAgICAiQ2FsbCByYXRlIDwgMC45MCIsCiAgICAiTUFGIDwgMC4wNSIsCiAgICAiMTAwJSBvYnNlcnZlZCBoZXRlcm96eWdvc2l0eSIsCiAgICAiVG90YWwgU05QcyByZW1vdmVkIiwKICAgICJTTlBzIHJldGFpbmVkIgogICksCiAgTWFya2VycyA9IGMoCiAgICBuY29sKEcpLAogICAgc3VtKCFwYXNzX2NhbGxfcmF0ZSksCiAgICBzdW0oIXBhc3NfbWFmKSwKICAgIHN1bSghcGFzc19oZXRlcm96eWdvc2l0eSksCiAgICBzdW0oIWtlZXBfbWFya2VyKSwKICAgIHN1bShrZWVwX21hcmtlcikKICApLAogIHN0cmluZ3NBc0ZhY3RvcnMgPSBGQUxTRQopCgpxY19zdW1tYXJ5IHw+CiAga25pdHI6OmthYmxlKAogICAgZm9ybWF0ID0gImh0bWwiLAogICAgY2FwdGlvbiA9ICJNYXJrZXIgcXVhbGl0eS1jb250cm9sIHN1bW1hcnkiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIiBzdHlsZT0id2lkdGg6MTAwJTsiJwogICkKYGBgCgpUaGUgcmV0YWluZWQgcGFuZWwgY29udGFpbnMgYHIgZm9ybWF0KHN1bShrZWVwX21hcmtlciksIGJpZy5tYXJrID0gIiwiKWAgU05Qcwpmcm9tIHRoZSBgciBmb3JtYXQobmNvbChHKSwgYmlnLm1hcmsgPSAiLCIpYCByYXcgQ2FwdHVyZS1TZXEgbWFya2Vycy4KCiMjIyA3LjEgTWlub3IgYWxsZWxlIGZyZXF1ZW5jeQoKVGhlIE1BRiBkaXN0cmlidXRpb24gc3VtbWFyaXplcyBhbGxlbGUtZnJlcXVlbmN5IGJhbGFuY2UgYWNyb3NzIHRoZSByYXcgbWFya2VyCnBhbmVsLiBUaGUgdmVydGljYWwgbGluZSBpbmRpY2F0ZXMgdGhlIG1pbmltdW0gTUFGIHJldGFpbmVkIGZvciBwcmVkaWN0aW9uLgoKYGBge3IgbWFmLWRpc3RyaWJ1dGlvbiwgZmlnLmNhcD0iTWlub3IgYWxsZWxlIGZyZXF1ZW5jeSBkaXN0cmlidXRpb24gYWNyb3NzIHRoZSByYXcgQ2FwdHVyZS1TZXEgU05QIHBhbmVsLiBUaGUgZGFzaGVkIGxpbmUgaW5kaWNhdGVzIHRoZSBNQUYgdGhyZXNob2xkIHVzZWQgZm9yIG1hcmtlciByZXRlbnRpb24uIn0KbWFmX3Bsb3RfZGF0YSA8LSBkYXRhLmZyYW1lKAogIE1BRiA9IG1hZiwKICBzdHJpbmdzQXNGYWN0b3JzID0gRkFMU0UKKQoKcF9tYWYgPC0gZ2dwbG90KAogIG1hZl9wbG90X2RhdGEsCiAgYWVzKAogICAgeCA9IE1BRgogICkKKSArCiAgZ2VvbV9kZW5zaXR5KAogICAgYWxwaGEgPSAwLjI4LAogICAgbGluZXdpZHRoID0gMC45CiAgKSArCiAgZ2VvbV92bGluZSgKICAgIHhpbnRlcmNlcHQgPSBNQUZfTUlOLAogICAgbGluZXR5cGUgPSAiZGFzaGVkIiwKICAgIGxpbmV3aWR0aCA9IDAuNwogICkgKwogIGxhYnMoCiAgICB4ID0gIk1pbm9yIGFsbGVsZSBmcmVxdWVuY3kiLAogICAgeSA9ICJEZW5zaXR5IgogICkgKwogIHRoZW1lX2dkb2NzKCkKCnByaW50KHBfbWFmKQpgYGAKCmBgYHtyIHNhdmUtbWFmLXRpZmYsIGluY2x1ZGU9RkFMU0V9Cmdnc2F2ZSgKICAib3V0cHV0L3JlYWwvYXVkaXQvZmlndXJlcy9tYXJrZXJfbWFmX2Rpc3RyaWJ1dGlvbi50aWZmIiwKICBwbG90ID0gcF9tYWYsCiAgZGV2aWNlID0gInRpZmYiLAogIHdpZHRoID0gOCwKICBoZWlnaHQgPSA1LAogIHVuaXRzID0gImluIiwKICBkcGkgPSAzMDAsCiAgY29tcHJlc3Npb24gPSAibHp3IgopCmBgYAoKIyMgOC4gQ29tbW9uIG1hcmtlciBwYW5lbAoKVGhlIHF1YWxpdHktY29udHJvbCBydWxlcyBhcmUgYXBwbGllZCBvbmNlIHRvIGNyZWF0ZSB0aGUgbWFya2VyIG1hdHJpeCBzaGFyZWQgYnkKYWxsIGRvd25zdHJlYW0gcHJlZGljdGlvbiBtZXRob2RzLgoKYGBge3IgY29tbW9uLW1hcmtlci1wYW5lbH0KR19xYyA8LSBHWwogICwKICBrZWVwX21hcmtlciwKICBkcm9wID0gRkFMU0UKXQoKcmV0YWluZWRfY2FsbF9yYXRlIDwtIGNhbGxfcmF0ZVsKICBrZWVwX21hcmtlcgpdCgpyZXRhaW5lZF9tYWYgPC0gbWFmWwogIGtlZXBfbWFya2VyCl0KCnJldGFpbmVkX2hldGVyb3p5Z29zaXR5IDwtIG9ic2VydmVkX2hldGVyb3p5Z29zaXR5WwogIGtlZXBfbWFya2VyCl0KCnJldGFpbmVkX3ZhcmlhbmNlIDwtIG1hcmtlcl92YXJpYW5jZVsKICBrZWVwX21hcmtlcgpdCgptYXJrZXJfY29udHJhY3QgPC0gZGF0YS5mcmFtZSgKICBQcm9wZXJ0eSA9IGMoCiAgICAiSW5kaXZpZHVhbHMiLAogICAgIlJldGFpbmVkIFNOUHMiLAogICAgIk1pbmltdW0gY2FsbCByYXRlIiwKICAgICJNaW5pbXVtIE1BRiIsCiAgICAiTWF4aW11bSBvYnNlcnZlZCBoZXRlcm96eWdvc2l0eSIsCiAgICAiTWluaW11bSBtYXJrZXIgdmFyaWFuY2UiCiAgKSwKICBWYWx1ZSA9IGMoCiAgICBucm93KEdfcWMpLAogICAgbmNvbChHX3FjKSwKICAgIG1pbihyZXRhaW5lZF9jYWxsX3JhdGUpLAogICAgbWluKHJldGFpbmVkX21hZiksCiAgICBtYXgocmV0YWluZWRfaGV0ZXJvenlnb3NpdHkpLAogICAgbWluKHJldGFpbmVkX3ZhcmlhbmNlKQogICksCiAgc3RyaW5nc0FzRmFjdG9ycyA9IEZBTFNFCikKCm1hcmtlcl9jb250cmFjdCB8PgogIGtuaXRyOjprYWJsZSgKICAgIGZvcm1hdCA9ICJodG1sIiwKICAgIGRpZ2l0cyA9IDQsCiAgICBjYXB0aW9uID0gIkNvbW1vbiBnZW5vbWljIG1hcmtlciBwYW5lbCBhZnRlciBxdWFsaXR5IGNvbnRyb2wiLAogICAgcm93Lm5hbWVzID0gRkFMU0UsCiAgICB0YWJsZS5hdHRyID0gJ2NsYXNzPSJ0YWJsZSB0YWJsZS1zdHJpcGVkIHRhYmxlLWhvdmVyIHRhYmxlLWJvcmRlcmVkIiBzdHlsZT0id2lkdGg6MTAwJTsiJwogICkKCnN0b3BpZm5vdCgKICBucm93KEdfcWMpID09IDE5NUwsCiAgYWxsKHJldGFpbmVkX2NhbGxfcmF0ZSA+PSBDQUxMX1JBVEVfTUlOKSwKICBhbGwocmV0YWluZWRfbWFmID49IE1BRl9NSU4pLAogIGFsbChyZXRhaW5lZF9oZXRlcm96eWdvc2l0eSA8IDEpLAogIGFsbChyZXRhaW5lZF92YXJpYW5jZSA+IDApLAogICFhbnlEdXBsaWNhdGVkKGNvbG5hbWVzKEdfcWMpKQopCmBgYAoKVGhlIGZpbmFsIGdlbm9taWMgbWF0cml4IHRoZXJlZm9yZSBjb250YWlucyBgciBucm93KEdfcWMpYCBpbmRpdmlkdWFscyBhbmQKYHIgZm9ybWF0KG5jb2woR19xYyksIGJpZy5tYXJrID0gIiwiKWAgU05Qcy4gVGhlIGAtMS8wLzFgIGdlbm90eXBlIGNvZGluZyBhbmQKdGhlIFNOUCBjb2x1bW4gb3JkZXIgYXJlIHByZXNlcnZlZC4KCiMjIDkuIFNoYXJlZCBvYmplY3QgZm9yIGdlbm9taWMgcHJlZGljdGlvbgoKVGhlIGNvbW1vbiBvYmplY3Qga2VlcHMgdGhlIGFsaWduZWQgaW5kaXZpZHVhbHMsIHRoZSB0aHJlZSBwcmVkaWN0aW9uIHRhcmdldHMsCnRoZSByZXRhaW5lZCBnZW5vdHlwZSBtYXRyaXgsIHByb2dlbnkgbWVtYmVyc2hpcCwgbWFya2VyLWxldmVsIHF1YWxpdHkKc3RhdGlzdGljcywgYW5kIHRoZSBmaXhlZCBwcmVwcm9jZXNzaW5nIHNldHRpbmdzLgoKYGBge3IgYnVpbGQtY29tbW9uLW9iamVjdH0KcGhlbm90eXBlX3RhcmdldHMgPC0gYmx1cHNbCiAgLAogIGMoCiAgICAiUGhlbm90eXBlX0lEIiwKICAgICJDZXIiLAogICAgIkJNIiwKICAgICJMUCIKICApCl0KCnJlYWxfY29tbW9uIDwtIGxpc3QoCiAgZ2Vub3R5cGUgPSBHX3FjLAogIHBoZW5vdHlwZSA9IHBoZW5vdHlwZV90YXJnZXRzLAogIGluZGl2aWR1YWxzID0gaW5kaXZpZHVhbHMsCiAgdHJhaXRzID0gdHJhaXRzLAogIGZhbWlseSA9IHNldE5hbWVzKAogICAgZmFtaWx5LAogICAgaW5kaXZpZHVhbHMkUGhlbm90eXBlX0lECiAgKSwKICBtYXJrZXJfcWMgPSBtYXJrZXJfcWMsCiAgbWV0YWRhdGEgPSBsaXN0KAogICAgZGF0YXNldCA9ICJyZWFsIiwKICAgIHNwZWNpZXMgPSAiQ29mZmVhIGFyYWJpY2EiLAogICAgZ2Vub3R5cGluZ19tZXRob2QgPSAiQ2FwdHVyZS1TZXEiLAogICAgaW5kaXZpZHVhbHMgPSBucm93KEdfcWMpLAogICAgcmF3X21hcmtlcnMgPSBuY29sKEcpLAogICAgcmV0YWluZWRfbWFya2VycyA9IG5jb2woR19xYyksCiAgICBnZW5vdHlwZV9jb2RpbmcgPSBjKC0xLCAwLCAxKSwKICAgIGRvc2FnZV9jb252ZXJzaW9uID0gIkcgKyAxIiwKICAgIGNhbGxfcmF0ZV90aHJlc2hvbGQgPSBDQUxMX1JBVEVfTUlOLAogICAgbWFmX3RocmVzaG9sZCA9IE1BRl9NSU4sCiAgICBoZXRlcm96eWdvc2l0eV9ydWxlID0gIm9ic2VydmVkIGhldGVyb3p5Z29zaXR5IDwgMSIsCiAgICBwcm9nZW5pZXMgPSBsZW5ndGgodW5pcXVlKGZhbWlseSkpCiAgKQopCmBgYAoKYGBge3Igc2F2ZS1jb21tb24tb3V0cHV0cywgaW5jbHVkZT1GQUxTRX0Kc2F2ZVJEUygKICByZWFsX2NvbW1vbiwKICAib3V0cHV0L3JlYWwvYXVkaXQvcHJlcHJvY2Vzc2VkX3JlYWxfY29tbW9uLnJkcyIsCiAgY29tcHJlc3MgPSAiZ3ppcCIKKQoKd3JpdGUuY3N2KAogIG1hcmtlcl9xYywKICAib3V0cHV0L3JlYWwvYXVkaXQvcmVhbF9tYXJrZXJfcWMuY3N2IiwKICByb3cubmFtZXMgPSBGQUxTRQopCgp3cml0ZS5jc3YoCiAgcWNfc3VtbWFyeSwKICAib3V0cHV0L3JlYWwvYXVkaXQvcmVhbF9xY19zdW1tYXJ5LmNzdiIsCiAgcm93Lm5hbWVzID0gRkFMU0UKKQoKd3JpdGUuY3N2KAogIHRyYWl0X3N1bW1hcnksCiAgIm91dHB1dC9yZWFsL2F1ZGl0L3JlYWxfdHJhaXRfc3VtbWFyeS5jc3YiLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKCndyaXRlLmNzdigKICBmYW1pbHlfdGFibGUsCiAgIm91dHB1dC9yZWFsL2F1ZGl0L3JlYWxfZmFtaWx5X3N0cnVjdHVyZS5jc3YiLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKCndyaXRlLmNzdigKICBpbmRpdmlkdWFscywKICAib3V0cHV0L3JlYWwvYXVkaXQvcmVhbF9pbmRpdmlkdWFsX21hcC5jc3YiLAogIHJvdy5uYW1lcyA9IEZBTFNFCikKYGBgCgojIyAxMC4gUHJlcGFyZWQgaW5wdXQgZm9yIHRoZSBuZXh0IG1vZHVsZXMKClRoZSByZWFsLWRhdGEgd29ya2Zsb3cgcHJvY2VlZHMgd2l0aCBvbmUgY29tbW9uIGRhdGFzZXQ6CgotIDE5NSBpbmRpdmlkdWFscyBmcm9tIDEzIHByb2dlbmllczsKLSBpbmRpdmlkdWFsIEJMVVBzIGZvciBgQ2VyYCwgYEJNYCwgYW5kIGBMUGA7Ci0gYHIgZm9ybWF0KG5jb2woR19xYyksIGJpZy5tYXJrID0gIiwiKWAgU05QcyBhZnRlciBtYXJrZXIgcXVhbGl0eSBjb250cm9sOwotIGdlbm90eXBlIGNvZGluZyBgLTEvMC8xYDsKLSBpZGVudGljYWwgaW5kaXZpZHVhbHMsIG1hcmtlciBwYW5lbCwgYW5kIHByZWRpY3Rpb24gdGFyZ2V0cyBmb3IgZXZlcnkKICBkb3duc3RyZWFtIG1ldGhvZC4KClRoZSBuZXh0IG1vZHVsZSBkZWZpbmVzIHRoZSBjb21tb24gdmFsaWRhdGlvbiBkZXNpZ24gYmVmb3JlIEdCTFVQLUFERSBhbmQgQU5OCmFyZSBmaXR0ZWQuCg==</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("real_data_audit.Rmd");
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
