@@ -18,7 +18,7 @@ editor_options:
 ## 1. Purpose
 
 This module fits four feed-forward neural-network variants to the same six
-simulated scenarios and the same nested validation design established in M02:
+simulated scenarios and the same nested cross-validation procedure established in M02:
 `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2`.
 
 The scientific separation is fixed throughout the module:
@@ -151,7 +151,7 @@ ann_variants <- data.frame(
 ann_variants |>
   knitr::kable(
     format = "html",
-    caption = "ANN variants evaluated under the same validation design",
+    caption = "ANN variants evaluated with common cross-validation partitions",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
@@ -203,8 +203,7 @@ the detected CUDA devices.
 
 ## 3. Data and validation structure
 
-The ANN branch reuses the M01 data object and the M02 nested validation object
-directly.
+The ANN models use the common simulated dataset and nested cross-validation partitions.
 
 ```{r inputs}
 common <- readRDS(
@@ -1620,10 +1619,9 @@ Early-stop epoch information is stored as an optimization diagnostic but does
 not participate in candidate ranking. No predictive metric other than RMSE and
 Pearson is calculated, stored, or used in ANN hyperparameter tuning.
 
-## 6. Selected configurations and tuning diagnostics
+## 6. ANN hyperparameter selection
 
-The normal page build reads the previously completed tuning outputs rather than
-rerunning the 42,000 candidate-fold fits.
+The selected configurations summarize the inner cross-validation results for ANN architecture, learning rate, and regularization penalties.
 
 ```{r saved-tuning-results}
 selected_configurations <- readRDS(SELECTED_RDS)
@@ -1713,7 +1711,7 @@ learning_rate_frequency |>
   )
 ```
 
-The optimization diagnostics below are descriptive. Reaching an epoch cap or a
+The optimization summaries below are descriptive. Reaching an epoch cap or a
 search boundary does not retrospectively alter the tuning grid.
 
 ```{r tuning-diagnostics}
@@ -2685,11 +2683,7 @@ write.csv(
 )
 ```
 
-## 8. Saved ANN results
-
-The normal page build reads the completed final ANN outputs. This keeps the
-scientific results fixed while allowing the explanation, tables, and figures to
-be rebuilt without reexecuting tuning or final fitting.
+## 8. ANN genomic predictions
 
 ```{r saved-final-results}
 results <- readRDS(FINAL_RESULTS_RDS)
@@ -3018,4 +3012,4 @@ GBLUP-ADE are reserved for M05.
 
 ## 10. Navigation
 
-[Previous: Validation design](simulated_data_validation.html) | [Parallel branch: GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) | [Next: Model comparison](simulated_data_comparison.html)
+[Previous: Pre-validation](simulated_data_validation.html) | [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) | [Next: Model comparison](simulated_data_comparison.html)
