@@ -37,10 +37,10 @@ real *Coffea arabica* genomic-prediction data:
 - `ANN_L1_L2`: simultaneous L1 and L2 weight regularization.
 
 All four variants use the same 195 individuals, 20,887-marker panel, three
-individual-BLUP prediction targets, and nested validation design established in
+individual-BLUP prediction targets, and nested cross-validation procedure established in
 the preceding modules.
 
-The validation contract is fixed:
+Cross-validation and model selection follow these specifications:
 
 1. each outer task contains 156 analysis individuals and 39 untouched
    assessment individuals;
@@ -260,7 +260,7 @@ dir.create(
 The epoch limits are optimization caps rather than fixed training lengths.
 Early stopping can terminate a run before the corresponding cap.
 
-## 3. Common genomic object and validation design
+## 3. Genomic data and cross-validation
 
 ```{r inputs}
 stopifnot(
@@ -4977,8 +4977,8 @@ stopifnot(
 ## 9. Held-out predictive performance
 
 Pearson correlation, Spearman correlation, RMSE, and MAE are the primary
-held-out metrics. Bias and calibration slope are retained as secondary
-diagnostics. No \(R^2\) metric is used.
+held-out metrics. Bias and calibration slope are complementary measures.
+No \(R^2\) metric is used.
 
 ```{r performance-summary, eval=FINAL_OUTPUTS_AVAILABLE}
 performance_summary <- data.frame(
@@ -5645,7 +5645,7 @@ print(p_rmse)
 print(p_observed_predicted)
 ```
 
-## 12. Output contract
+## 12. Prediction results
 
 ```{r output-contract}
 output_contract <- data.frame(
