@@ -14,17 +14,29 @@
 
 ### Purpose
 
-This repository contains a reproducible `workflowr` project for genomic prediction using regularized artificial neural networks and a GBLUP-ADE genomic mixed-model benchmark.
+This repository contains a reproducible `workflowr` project for genomic prediction comparing three GBLUP genomic mixed models with four regularized artificial neural-network configurations.
 
-The study combines controlled simulated genomic data with real longitudinal *Coffea arabica* data. The central objective is to evaluate whether L1 and L2 weight regularization improves predictive performance and generalization relative to an unregularized neural network and GBLUP-ADE under matched validation designs.
+The study combines controlled simulated genomic data with real longitudinal *Coffea arabica* data. The central objective is to compare GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations under matched validation designs, while evaluating whether L1 and L2 weight regularization improves predictive performance and generalization relative to the unregularized ANN.
 
-Five genomic-prediction configurations are evaluated:
+Seven genomic-prediction configurations are evaluated:
 
-- **GBLUP-ADE** — additive, dominance, and epistatic genomic effects;
+- **GBLUP-A** — additive genomic effects;
+- **GBLUP-AD** — additive and dominance genomic effects;
+- **GBLUP-ADE** — additive, dominance, and additive-by-additive epistatic genomic effects;
 - **ANN-0** — artificial neural network without L1/L2 weight penalties;
 - **ANN-L1** — ANN with L1 weight regularization;
 - **ANN-L2** — ANN with L2 weight regularization;
 - **ANN-L1+L2** — ANN with simultaneous L1 and L2 weight regularization.
+
+### Model-selection and metric contract
+
+The simulated and real-data branches follow the same model and metric contract.
+
+- ANN hyperparameter tuning uses **mean inner-assessment RMSE as the primary selection criterion** and **mean inner-assessment Pearson correlation as the only performance tie-breaker**.
+- No other predictive metric is calculated, stored, or used as part of ANN hyperparameter tuning.
+- Held-out model evaluation reports **Pearson correlation, Spearman correlation, RMSE, and MAE** as the common predictive metrics.
+- **Bias** and **calibration slope** are retained only as secondary diagnostics.
+- **R-squared is not part of the analytical contract** and should not be produced or used by the simulated or real genomic-prediction modules.
 
 ### Analytical workflow
 
@@ -49,7 +61,7 @@ simulated_data_gblup.Rmd   simulated_data_ann.Rmd
       simulated_data_comparison.Rmd
 ```
 
-The simulated branch prepares the source data, defines a common validation design, fits GBLUP-ADE and ANN models independently, and performs terminal model comparison. Known true genetic values provide an independent evaluation target and are not used for model fitting or selection.
+The simulated branch prepares the source data, defines a common validation design, fits GBLUP-A, GBLUP-AD, GBLUP-ADE, and the four ANN configurations independently, and performs terminal model comparison. Known true genetic values provide an independent evaluation target and are not used for model fitting or selection.
 
 #### Real data
 
@@ -124,17 +136,29 @@ Except where otherwise indicated, original materials created for this repository
 
 ### Objetivo
 
-Este repositório contém um projeto reprodutível em `workflowr` para predição genômica utilizando redes neurais artificiais regularizadas e um modelo misto genômico GBLUP-ADE como referência de comparação.
+Este repositório contém um projeto reprodutível em `workflowr` para predição genômica comparando três modelos mistos genômicos GBLUP com quatro configurações de redes neurais artificiais regularizadas.
 
-O estudo combina dados genômicos simulados controlados com dados longitudinais reais de *Coffea arabica*. O objetivo central é avaliar se a regularização L1 e L2 dos pesos melhora o desempenho preditivo e a generalização em relação a uma rede neural não regularizada e ao GBLUP-ADE sob desenhos de validação equivalentes.
+O estudo combina dados genômicos simulados controlados com dados longitudinais reais de *Coffea arabica*. O objetivo central é comparar GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob desenhos de validação equivalentes, avaliando também se a regularização L1 e L2 dos pesos melhora o desempenho preditivo e a generalização em relação à ANN não regularizada.
 
-Cinco configurações de predição genômica são avaliadas:
+Sete configurações de predição genômica são avaliadas:
 
-- **GBLUP-ADE** — efeitos genômicos aditivos, de dominância e epistáticos;
+- **GBLUP-A** — efeitos genômicos aditivos;
+- **GBLUP-AD** — efeitos genômicos aditivos e de dominância;
+- **GBLUP-ADE** — efeitos genômicos aditivos, de dominância e epistáticos aditivo por aditivo;
 - **ANN-0** — rede neural artificial sem penalização L1/L2;
 - **ANN-L1** — ANN com regularização L1;
 - **ANN-L2** — ANN com regularização L2;
 - **ANN-L1+L2** — ANN com regularização simultânea L1 e L2.
+
+### Contrato de seleção dos modelos e métricas
+
+Os ramos de dados simulados e reais seguem o mesmo contrato de modelos e métricas.
+
+- O tuning das ANN utiliza **RMSE médio na avaliação interna como critério primário de seleção** e **correlação de Pearson média na avaliação interna como único desempate de desempenho**.
+- Nenhuma outra métrica preditiva é calculada, armazenada ou utilizada como parte do tuning dos hiperparâmetros das ANN.
+- A avaliação externa reporta **correlação de Pearson, correlação de Spearman, RMSE e MAE** como métricas preditivas comuns.
+- **Viés** e **inclinação de calibração** são mantidos apenas como diagnósticos secundários.
+- **R-quadrado não integra o contrato analítico** e não deve ser produzido nem utilizado pelos módulos de predição genômica simulados ou reais.
 
 ### Fluxo analítico
 
@@ -159,7 +183,7 @@ simulated_data_gblup.Rmd   simulated_data_ann.Rmd
       simulated_data_comparison.Rmd
 ```
 
-O ramo simulado prepara os dados-fonte, define um desenho comum de validação, ajusta GBLUP-ADE e ANN de forma independente e realiza a comparação terminal dos modelos. Os valores genéticos verdadeiros conhecidos fornecem um alvo independente de avaliação e não são usados no ajuste ou na seleção dos modelos.
+O ramo simulado prepara os dados-fonte, define um desenho comum de validação, ajusta GBLUP-A, GBLUP-AD, GBLUP-ADE e as quatro configurações de ANN de forma independente e realiza a comparação terminal dos modelos. Os valores genéticos verdadeiros conhecidos fornecem um alvo independente de avaliação e não são usados no ajuste ou na seleção dos modelos.
 
 #### Dados reais
 

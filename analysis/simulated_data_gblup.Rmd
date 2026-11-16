@@ -942,6 +942,12 @@ if (RUN_GBLUP) {
         method = "pearson"
       )
 
+      genetic_spearman <- cor(
+        gebv_test,
+        true_g_test,
+        method = "spearman"
+      )
+
       genetic_rmse <- sqrt(
         mean(
           (
@@ -958,10 +964,29 @@ if (RUN_GBLUP) {
         )
       )
 
+      genetic_bias <- mean(
+        gebv_test -
+          true_g_test
+      )
+
+      genetic_slope <- as.numeric(
+        coef(
+          lm(
+            true_g_test ~ gebv_test
+          )
+        )[2L]
+      )
+
       phenotype_pearson <- cor(
         gebv_test,
         observed_test,
         method = "pearson"
+      )
+
+      phenotype_spearman <- cor(
+        gebv_test,
+        observed_test,
+        method = "spearman"
       )
 
       phenotype_rmse <- sqrt(
@@ -978,6 +1003,19 @@ if (RUN_GBLUP) {
           gebv_test -
           observed_test
         )
+      )
+
+      phenotype_bias <- mean(
+        gebv_test -
+          observed_test
+      )
+
+      phenotype_slope <- as.numeric(
+        coef(
+          lm(
+            observed_test ~ gebv_test
+          )
+        )[2L]
       )
 
       meta <- control[
@@ -1005,16 +1043,28 @@ if (RUN_GBLUP) {
         ),
         Genetic_Pearson =
           genetic_pearson,
+        Genetic_Spearman =
+          genetic_spearman,
         Genetic_RMSE =
           genetic_rmse,
         Genetic_MAE =
           genetic_mae,
+        Genetic_Bias =
+          genetic_bias,
+        Genetic_Slope =
+          genetic_slope,
         Phenotype_Pearson =
           phenotype_pearson,
+        Phenotype_Spearman =
+          phenotype_spearman,
         Phenotype_RMSE =
           phenotype_rmse,
         Phenotype_MAE =
           phenotype_mae,
+        Phenotype_Bias =
+          phenotype_bias,
+        Phenotype_Slope =
+          phenotype_slope,
         Fit_seconds =
           fit_seconds,
         Predict_seconds =
@@ -1192,11 +1242,17 @@ simulation and directly measures recovery of the simulated genetic signal.
 The **phenotype** is retained as a secondary target because it includes the
 genetic signal together with residual variation.
 
-Three predictive metrics are reported:
+The held-out predictive metrics follow the common real/simulated contract:
 
-- **Pearson correlation:** linear agreement between GEBV and the target;
+- **Pearson correlation:** linear association between GEBV and the target;
+- **Spearman correlation:** rank association between GEBV and the target;
 - **RMSE:** prediction error on the original scale;
 - **MAE:** mean absolute prediction error on the original scale.
+
+Bias and calibration slope are retained only as secondary diagnostics. Bias is
+`mean(prediction - target)`, and calibration slope is the coefficient of
+prediction in `lm(target ~ prediction)`. R-squared is not part of the analytical
+contract.
 
 No evaluation target is used during model fitting.
 
@@ -1208,8 +1264,11 @@ No evaluation target is used during model fitting.
 genetic_performance <- aggregate(
   cbind(
     Genetic_Pearson,
+    Genetic_Spearman,
     Genetic_RMSE,
-    Genetic_MAE
+    Genetic_MAE,
+    Genetic_Bias,
+    Genetic_Slope
   ) ~ Scenario + Model,
   data = results,
   FUN = mean,
@@ -1254,8 +1313,11 @@ as isolated effects of one parameter.
 phenotype_performance <- aggregate(
   cbind(
     Phenotype_Pearson,
+    Phenotype_Spearman,
     Phenotype_RMSE,
-    Phenotype_MAE
+    Phenotype_MAE,
+    Phenotype_Bias,
+    Phenotype_Slope
   ) ~ Scenario + Model,
   data = results,
   FUN = mean,
@@ -1407,8 +1469,12 @@ split_summary <- data.frame(
   Pearson_sd = numeric(0),
   Pearson_min = numeric(0),
   Pearson_max = numeric(0),
+  Spearman_mean = numeric(0),
+  Spearman_sd = numeric(0),
   RMSE_mean = numeric(0),
   RMSE_sd = numeric(0),
+  MAE_mean = numeric(0),
+  MAE_sd = numeric(0),
   stringsAsFactors = FALSE
 )
 
@@ -1453,12 +1519,28 @@ for (
           x$Genetic_Pearson,
           na.rm = TRUE
         ),
+        Spearman_mean = mean(
+          x$Genetic_Spearman,
+          na.rm = TRUE
+        ),
+        Spearman_sd = sd(
+          x$Genetic_Spearman,
+          na.rm = TRUE
+        ),
         RMSE_mean = mean(
           x$Genetic_RMSE,
           na.rm = TRUE
         ),
         RMSE_sd = sd(
           x$Genetic_RMSE,
+          na.rm = TRUE
+        ),
+        MAE_mean = mean(
+          x$Genetic_MAE,
+          na.rm = TRUE
+        ),
+        MAE_sd = sd(
+          x$Genetic_MAE,
           na.rm = TRUE
         ),
         stringsAsFactors = FALSE

@@ -31,7 +31,7 @@ knitr::opts_chunk$set(
 
 ### Purpose and scientific scope
 
-This project investigates genomic prediction using regularized artificial neural networks. Its primary objective is to determine whether L1 and L2 weight penalties improve predictive generalization relative to an unregularized neural network and a GBLUP-ADE genomic mixed model.
+This project investigates genomic prediction using regularized artificial neural networks and three GBLUP genomic mixed models. Its primary objective is to compare GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations under matched validation designs, including whether L1 and L2 weight penalties improve predictive generalization relative to the unregularized ANN.
 
 The study combines controlled simulated genomic data with real longitudinal *Coffea arabica* phenotypic and genomic data. The two branches address related predictive questions while preserving a common separation between data preparation, validation design, model fitting, and terminal model comparison.
 
@@ -41,12 +41,14 @@ The simulated-data branch begins with phenotype, genotype, genetic-map, QTL, and
 
 The real-data branch contains an additional phenotypic stage. Complete longitudinal field observations are analyzed with the defined longitudinal mixed model fitted by REML. The resulting individual BLUPs are then integrated with the canonical genomic marker object in a separate data-preparation module.
 
-After data preparation, both branches use common outer-assessment partitions for GBLUP-ADE and ANN models and keep terminal model comparison separate from model fitting.
+After data preparation, both branches use common outer-assessment partitions for GBLUP-A, GBLUP-AD, GBLUP-ADE, and the four ANN configurations, while keeping terminal model comparison separate from model fitting.
 
 ### Prediction design
 
-Five genomic-prediction configurations are evaluated:
+Seven genomic-prediction configurations are evaluated:
 
+- GBLUP-A;
+- GBLUP-AD;
 - GBLUP-ADE;
 - ANN without L1/L2 regularization;
 - ANN-L1;
@@ -54,6 +56,8 @@ Five genomic-prediction configurations are evaluated:
 - ANN-L1+L2.
 
 Outer-assessment responses are excluded from model development. ANN hyperparameter and epoch selection are restricted to the corresponding outer-analysis sample. Model comparisons are therefore based on matched held-out individuals rather than on different data partitions.
+
+ANN tuning uses mean inner-assessment RMSE as the primary performance criterion and mean inner-assessment Pearson correlation as the only performance tie-breaker. No other predictive metric is calculated, stored, or used in ANN hyperparameter tuning. Held-out evaluation uses Pearson, Spearman, RMSE, and MAE as common predictive metrics; bias and calibration slope are secondary diagnostics, and R-squared is not used.
 
 ### Interpretation boundaries
 
@@ -87,7 +91,7 @@ Federal University of Viçosa<br>
 
 ### Objetivo e escopo científico
 
-Este projeto investiga predição genômica utilizando redes neurais artificiais regularizadas. Seu objetivo principal é determinar se penalizações L1 e L2 dos pesos melhoram a generalização preditiva em relação a uma rede neural não regularizada e a um modelo misto genômico GBLUP-ADE.
+Este projeto investiga predição genômica utilizando redes neurais artificiais regularizadas e três modelos mistos genômicos GBLUP. Seu objetivo principal é comparar GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob desenhos de validação equivalentes, incluindo se as penalizações L1 e L2 dos pesos melhoram a generalização preditiva em relação à ANN não regularizada.
 
 O estudo combina dados genômicos simulados controlados com dados fenotípicos e genômicos longitudinais reais de *Coffea arabica*. Os dois ramos respondem a perguntas preditivas relacionadas, preservando uma separação comum entre preparação dos dados, desenho de validação, ajuste dos modelos e comparação terminal.
 
@@ -97,12 +101,14 @@ O ramo de dados simulados começa com informações de fenótipos, genótipos, m
 
 O ramo de dados reais contém uma etapa fenotípica adicional. As observações longitudinais completas de campo são analisadas pelo modelo misto longitudinal definido, ajustado por REML. Os BLUPs individuais resultantes são então integrados ao objeto canônico de marcadores genômicos em um módulo separado de preparação dos dados.
 
-Após a preparação dos dados, os dois ramos utilizam partições externas de avaliação comuns para GBLUP-ADE e ANN e mantêm a comparação terminal separada do ajuste dos modelos.
+Após a preparação dos dados, os dois ramos utilizam partições externas de avaliação comuns para GBLUP-A, GBLUP-AD, GBLUP-ADE e as quatro configurações de ANN, mantendo a comparação terminal separada do ajuste dos modelos.
 
 ### Desenho de predição
 
-Cinco configurações de predição genômica são avaliadas:
+Sete configurações de predição genômica são avaliadas:
 
+- GBLUP-A;
+- GBLUP-AD;
 - GBLUP-ADE;
 - ANN sem regularização L1/L2;
 - ANN-L1;
@@ -110,6 +116,8 @@ Cinco configurações de predição genômica são avaliadas:
 - ANN-L1+L2.
 
 As respostas dos indivíduos de avaliação externa são excluídas do desenvolvimento dos modelos. A seleção de hiperparâmetros e de épocas das ANN é restrita à respectiva amostra de análise externa. As comparações dos modelos são, portanto, baseadas nos mesmos indivíduos mantidos fora do ajuste, e não em diferentes partições dos dados.
+
+O tuning das ANN utiliza o RMSE médio na avaliação interna como critério primário de desempenho e a correlação de Pearson média na avaliação interna como único desempate de desempenho. Nenhuma outra métrica preditiva é calculada, armazenada ou utilizada no tuning dos hiperparâmetros das ANN. A avaliação externa utiliza Pearson, Spearman, RMSE e MAE como métricas preditivas comuns; viés e inclinação de calibração são diagnósticos secundários, e R-quadrado não é utilizado.
 
 ### Limites de interpretação
 
