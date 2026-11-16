@@ -17,16 +17,26 @@ output/
 │   ├── ann/
 │   │   ├── tuning/
 │   │   └── final/
-│   └── comparison/
+│   ├── comparison/
+│   ├── m01/figures/
+│   ├── m02/figures/
+│   ├── m03/figures/
+│   ├── m04/figures/
+│   └── m05/figures/
 └── real/
     ├── phenotype/
+    │   └── figures/
     ├── audit/
+    │   └── figures/
     ├── validation/
     ├── gblup/
+    │   └── figures/
     ├── ann/
     │   ├── tuning/
-    │   └── final/
+    │   ├── final/
+    │   └── figures/
     └── comparison/
+        └── figures/
 ```
 
 ## Simulated-data outputs
@@ -34,16 +44,19 @@ output/
 `output/simulated/audit/` contains the common prepared simulated-data object and
 the summaries required downstream.
 
-`output/simulated/validation/` contains the shared outer and inner partition
-assignments.
+`output/simulated/validation/` contains the outer cross-validation partitions
+shared by GBLUP and ANN configurations, plus nested inner partitions for ANN
+hyperparameter selection.
 
-`output/simulated/gblup/` contains GBLUP-A, GBLUP-AD, and GBLUP-ADE predictions, performance
-summaries, kernel summaries, and execution metadata.
+`output/simulated/gblup/` contains predictions and performance results for
+GBLUP-A, GBLUP-AD, and GBLUP-ADE, together with genomic-kernel summaries.
 
-`output/simulated/ann/tuning/` contains training-only ANN hyperparameter
-selection results, while `output/simulated/ann/final/` contains final ANN
+`output/simulated/ann/tuning/` contains ANN hyperparameter-selection
+results based only on the corresponding outer analysis sets.
+`output/simulated/ann/final/` contains results from the selected ANN
+configurations fitted within each outer analysis set, including held-out
 predictions, performance summaries, epoch-selection results, and execution
-metadata.
+metadata. These outputs do not represent models refitted with all individuals.
 
 `output/simulated/comparison/` contains model-comparison summaries.
 
@@ -71,8 +84,9 @@ quality control, and creates the common real-data object used downstream.
 
 ### Pre-validation
 
-`output/real/validation/` contains the common outer and inner partitions used
-by GBLUP-ADE and ANN models.
+`output/real/validation/` contains outer cross-validation partitions shared by
+GBLUP-A, GBLUP-AD, GBLUP-ADE, and the four ANN configurations, plus nested
+inner partitions for ANN hyperparameter selection.
 
 ### GBLUP models
 
@@ -84,8 +98,10 @@ summaries, genomic-kernel information, and execution metadata.
 `output/real/ann/tuning/` contains ANN hyperparameter-selection results based
 only on the corresponding analysis samples.
 
-`output/real/ann/final/` contains final ANN predictions, performance summaries,
-epoch-selection results, and execution metadata.
+`output/real/ann/final/` contains results from the selected ANN configurations
+fitted within each outer analysis set, including held-out predictions,
+performance summaries, epoch-selection results, and execution metadata.
+These outputs do not represent models refitted with all individuals.
 
 ### Model comparison
 
