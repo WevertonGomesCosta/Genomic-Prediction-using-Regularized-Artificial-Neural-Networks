@@ -31,19 +31,27 @@ knitr::opts_chunk$set(
 
 ### Start here
 
-This website documents a reproducible study of genomic prediction using regularized artificial neural networks and a GBLUP-ADE genomic mixed-model benchmark.
+This website documents a reproducible study of genomic prediction comparing three GBLUP genomic mixed models with four regularized artificial neural-network configurations.
 
-The project combines controlled simulated genomic data with real longitudinal *Coffea arabica* data. Its central question is whether L1 and L2 weight regularization improves predictive performance and generalization relative to an unregularized ANN and GBLUP-ADE when all methods are evaluated under matched validation designs.
+The project combines controlled simulated genomic data with real longitudinal *Coffea arabica* data. Its central comparison includes GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations evaluated under matched validation designs, with specific interest in the effect of L1 and L2 weight regularization relative to the unregularized ANN.
 
 ### Project at a glance
 
 The genomic-prediction comparison includes:
 
-- GBLUP-ADE with additive, dominance, and epistatic genomic effects;
+- GBLUP-A;
+- GBLUP-AD;
+- GBLUP-ADE;
 - ANN without L1/L2 regularization;
 - ANN-L1;
 - ANN-L2;
 - ANN-L1+L2.
+
+### Metric and tuning contract
+
+ANN tuning uses **mean inner-assessment RMSE** as the primary performance criterion and **mean inner-assessment Pearson correlation** as the only performance tie-breaker. No other predictive metric is calculated, stored, or used in ANN tuning.
+
+Held-out evaluation uses **Pearson, Spearman, RMSE, and MAE** as common predictive metrics. Bias and calibration slope are secondary diagnostics. R-squared is not used.
 
 The simulated branch uses known true genetic values as an independent evaluation target. The real-data branch derives individual BLUPs from the complete longitudinal phenotypic dataset before integration with the genomic marker data.
 
@@ -54,7 +62,7 @@ The simulated-data workflow is organized as:
 1. [Data audit](simulated_data_audit.html) — source-data preparation, integrity checks, genotype and phenotype structure, genetic-map information, QTL information, and simulation-scenario summaries.
 2. [Validation design](simulated_data_validation.html) — common outer and inner validation partitions shared by all competing models.
 3. Parallel genomic-prediction branches:
-   - [GBLUP-ADE](simulated_data_gblup.html)
+   - [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html)
    - [Regularized ANN](simulated_data_ann.html)
 4. [Model comparison](simulated_data_comparison.html) — terminal comparison of saved predictions and performance summaries under the common validation design.
 
@@ -63,7 +71,7 @@ The real-data workflow is defined as:
 1. `real_data_phenotype.Rmd` — longitudinal phenotypic organization, descriptive analysis, REML mixed-model fitting, variance components, and individual BLUPs;
 2. `real_data_audit.Rmd` — integration of phenotypic BLUPs with `geno_real.rds`, individual alignment, marker quality control, and construction of the common real-data object;
 3. `real_data_validation.Rmd` — shared validation design;
-4. parallel GBLUP-ADE and ANN modeling branches;
+4. parallel GBLUP-A / GBLUP-AD / GBLUP-ADE and ANN modeling branches;
 5. `real_data_comparison.Rmd` — terminal task-matched model comparison.
 
 ### Validation scope
@@ -84,19 +92,27 @@ The repository [README](https://github.com/WevertonGomesCosta/Genomic-Prediction
 
 ### Comece aqui
 
-Este site documenta um estudo reprodutível de predição genômica utilizando redes neurais artificiais regularizadas e um modelo misto genômico GBLUP-ADE como referência de comparação.
+Este site documenta um estudo reprodutível de predição genômica comparando três modelos mistos genômicos GBLUP com quatro configurações de redes neurais artificiais regularizadas.
 
-O projeto combina dados genômicos simulados controlados com dados longitudinais reais de *Coffea arabica*. A pergunta central é se a regularização L1 e L2 dos pesos melhora o desempenho preditivo e a generalização em relação a uma ANN não regularizada e ao GBLUP-ADE quando todos os métodos são avaliados sob desenhos de validação equivalentes.
+O projeto combina dados genômicos simulados controlados com dados longitudinais reais de *Coffea arabica*. A comparação central inclui GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob desenhos de validação equivalentes, com interesse específico no efeito das regularizações L1 e L2 em relação à ANN não regularizada.
 
 ### Projeto em resumo
 
 A comparação de predição genômica inclui:
 
-- GBLUP-ADE com efeitos genômicos aditivos, de dominância e epistáticos;
+- GBLUP-A;
+- GBLUP-AD;
+- GBLUP-ADE;
 - ANN sem regularização L1/L2;
 - ANN-L1;
 - ANN-L2;
 - ANN-L1+L2.
+
+### Contrato de métricas e tuning
+
+O tuning das ANN utiliza **RMSE médio na avaliação interna** como critério primário de desempenho e **correlação de Pearson média na avaliação interna** como único desempate de desempenho. Nenhuma outra métrica preditiva é calculada, armazenada ou utilizada no tuning das ANN.
+
+A avaliação externa utiliza **Pearson, Spearman, RMSE e MAE** como métricas preditivas comuns. Viés e inclinação de calibração são diagnósticos secundários. R-quadrado não é utilizado.
 
 O ramo simulado utiliza valores genéticos verdadeiros conhecidos como alvo independente de avaliação. O ramo de dados reais obtém BLUPs individuais a partir do conjunto fenotípico longitudinal completo antes da integração com os dados de marcadores genômicos.
 
@@ -107,7 +123,7 @@ O fluxo de dados simulados está organizado em:
 1. [Auditoria dos dados](simulated_data_audit.html) — preparação dos dados-fonte, verificações de integridade, estrutura genotípica e fenotípica, mapa genético, informações de QTL e resumos dos cenários de simulação.
 2. [Desenho de validação](simulated_data_validation.html) — partições externas e internas comuns a todos os modelos concorrentes.
 3. Ramos paralelos de predição genômica:
-   - [GBLUP-ADE](simulated_data_gblup.html)
+   - [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html)
    - [ANN regularizadas](simulated_data_ann.html)
 4. [Comparação dos modelos](simulated_data_comparison.html) — comparação terminal das predições e dos resumos de desempenho sob o desenho comum de validação.
 
@@ -116,7 +132,7 @@ O fluxo de dados reais é definido como:
 1. `real_data_phenotype.Rmd` — organização fenotípica longitudinal, análises descritivas, ajuste do modelo misto por REML, componentes de variância e BLUPs individuais;
 2. `real_data_audit.Rmd` — integração dos BLUPs fenotípicos com `geno_real.rds`, alinhamento dos indivíduos, controle de qualidade dos marcadores e construção do objeto comum dos dados reais;
 3. `real_data_validation.Rmd` — desenho comum de validação;
-4. ramos paralelos de modelagem GBLUP-ADE e ANN;
+4. ramos paralelos de modelagem GBLUP-A / GBLUP-AD / GBLUP-ADE e ANN;
 5. `real_data_comparison.Rmd` — comparação terminal dos modelos em tarefas correspondentes.
 
 ### Escopo da validação

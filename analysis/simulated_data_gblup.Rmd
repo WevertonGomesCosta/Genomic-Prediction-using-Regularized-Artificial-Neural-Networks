@@ -1,5 +1,5 @@
 ---
-title: "Simulated data: GBLUP-ADE"
+title: "Simulated data: GBLUP A, AD, and ADE"
 author:
   - Weverton Gomes da Costa
 date: "`r Sys.Date()`"
@@ -17,26 +17,33 @@ editor_options:
 
 ## 1. Purpose
 
-This module fits the GBLUP-ADE benchmark to the six simulated scenarios under
-the validation design defined in M02. Each scenario is evaluated on the same 25
-outer held-out splits, giving **6 x 25 = 150 scenario-by-split fits**.
+This module evaluates three GBLUP structures under the six simulated scenarios
+and the validation design defined previously:
 
-Four principles define the analysis:
+- **GBLUP-A:** additive genomic effect;
+- **GBLUP-AD:** additive and dominance genomic effects;
+- **GBLUP-ADE:** additive, dominance, and additive-by-additive epistatic genomic
+  effects.
 
-- **Phenotype is the fitting response:** only phenotype values from the 800
-  outer-analysis individuals are available to a model fit.
-- **Outer assessment remains held out:** the corresponding 200 phenotype values
-  are replaced by `NA` before fitting.
-- **Genotypes are available for prediction:** marker profiles from all 1,000
-  individuals can be used to construct genomic relationship matrices because no
-  held-out phenotype or true genetic value enters those matrices.
-- **True genetic value is an evaluation target:** it does not participate in
-  partition generation, kernel construction, model fitting, or prediction; it is
-  subset only in the held-out evaluation block.
+Each model is evaluated on the same 25 outer held-out splits within each
+scenario. The complete workload therefore contains
 
-The benchmark separates additive, dominance, and epistatic genomic components.
-Its results are later compared with the regularized ANN branch under exactly the
-same outer validation assignments.
+\[
+6 \times 3 \times 25 = 450
+\]
+
+scenario-by-model-by-split fits.
+
+The analysis follows the same information separation used in the original
+GBLUP-ADE benchmark:
+
+- phenotype is the fitting response;
+- phenotype values from the 200 outer-assessment individuals are hidden before
+  fitting;
+- genotypes from all 1,000 individuals are available for construction of the
+  genomic relationship matrices;
+- true genetic value is used only after prediction as the primary evaluation
+  target.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -57,91 +64,35 @@ dir.create(
 )
 ```
 
-## 2. Packages and fixed fitting settings
-
-### 2.1 Packages
-
-Four packages support the module:
-
-- **`knitr`** formats the displayed tables.
-- **`ggplot2`** summarizes predictive performance across scenarios and outer
-  splits.
-- **`ggthemes`** applies the same Google Docs visual style used in M01 and M02.
-- **`sommer`** constructs the genomic relationship matrices and fits GBLUP-ADE
-  when a new run is explicitly requested.
+## 2. Packages and inputs
 
 ```{r packages, warning=FALSE, message=FALSE}
-RUN_GBLUP <- identical(Sys.getenv("RUN_GBLUP", "0"), "1")
+RUN_GBLUP <- identical(
+  Sys.getenv("RUN_GBLUP", "0"),
+  "1"
+)
 
-library(knitr)     # Format tables shown in the page.
-library(ggplot2)   # Plot held-out predictive performance.
-library(ggthemes)  # Apply the Google Docs theme and palettes.
+N_ITERS_SOMMER <- 50L
+
+library(knitr)
+library(ggplot2)
+library(ggthemes)
+library(sommer)
 
 if (RUN_GBLUP) {
-  suppressPackageStartupMessages(
-    library(sommer) # Build genomic kernels and fit GBLUP-ADE.
-  )
+  library(foreach)
+  library(doParallel)
 }
 ```
 
-### 2.2 Fixed settings
-
-A normal page build uses the saved GBLUP-ADE results rather than refitting all
-150 models. Setting the environment variable `RUN_GBLUP=1` activates the full
-fitting workflow.
-
-The statistical benchmark itself has two fixed controls:
-
-- **Global seed:** `20260821`.
-- **`sommer::mmes()` iterations:** 20 for every scenario-by-split fit.
-
-The iteration count is part of the prespecified benchmark and is not tuned from
-outer-assessment performance.
-
-```{r gblup-control}
-SEED_GLOBAL <- 20260821L
-N_ITERS_SOMMER <- 20L
-
-fitting_control <- data.frame(
-  Parameter = c(
-    "Global seed",
-    "Run new GBLUP-ADE fits",
-    "sommer iterations per fit"
-  ),
-  Value = c(
-    SEED_GLOBAL,
-    RUN_GBLUP,
-    N_ITERS_SOMMER
-  ),
-  Role = c(
-    "Reproduce the fitting workflow.",
-    "Control whether all 150 fits are executed.",
-    "Use the same fixed fitting control for every task."
-  )
-)
-
-fitting_control |>
-  knitr::kable(
-    format = "html",
-    caption = "Fixed GBLUP-ADE execution and fitting settings",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
-```
-
-## 3. Inputs and held-out information
-
-The model branch starts from two objects prepared earlier in the workflow:
-
-- the shared simulated-data object from M01;
-- the nested validation design from M02.
-
-The next chunk reads these objects directly and makes their roles explicit.
+The simulated-data object and the validation design are the same objects used by
+the other simulated-data modules.
 
 ```{r inputs}
 common <- readRDS(
   "output/simulated/audit/preprocessed_simulated_common.rds"
 )
+
 cv <- readRDS(
   "output/simulated/validation/simulated_cv_design.rds"
 )
@@ -149,12 +100,25 @@ cv <- readRDS(
 phenotype <- common$phenotype
 true_g <- common$true_genetic_value
 geno <- common$genotype_m101
-control <- common$scenario_control
 
-ids <- seq_len(nrow(geno))
-id_labels <- sprintf("ID%04d", ids)
+ids <- seq_len(
+  nrow(geno)
+)
+
+id_labels <- sprintf(
+  "ID%04d",
+  ids
+)
+
 rownames(geno) <- id_labels
+
 scenario_names <- colnames(phenotype)
+
+model_names <- c(
+  "GBLUP_A",
+  "GBLUP_AD",
+  "GBLUP_ADE"
+)
 
 input_summary <- data.frame(
   Object = c(
@@ -170,9 +134,9 @@ input_summary <- data.frame(
     length(cv$outer_splits)
   ),
   Role = c(
-    "Response used for fitting after outer assessment is masked.",
-    "Primary held-out evaluation target only.",
-    "Marker information used to construct A, D, and E.",
+    "Response used for model fitting.",
+    "Primary held-out evaluation target.",
+    "Marker information used to construct the genomic relationship matrices.",
     "Common held-out evaluation design used by all models."
   ),
   stringsAsFactors = FALSE
@@ -181,152 +145,395 @@ input_summary <- data.frame(
 input_summary |>
   knitr::kable(
     format = "html",
-    caption = "Objects entering the GBLUP-ADE workflow",
+    caption = "Objects entering the simulated GBLUP analysis",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
 
-The dimensions establish the data available to every task:
+The data contain 1,000 aligned individuals and six simulation scenarios. Every
+outer split contains 800 analysis individuals and 200 assessment individuals.
+Each individual is assessed once per repetition, giving five held-out
+predictions per scenario and model across the complete repeated validation
+design.
 
-- **1,000 individuals** are aligned across phenotype, true genetic value, and
-  genotype matrices;
-- phenotype and true genetic value contain the same **six scenarios**;
-- the genotype matrix contains **4,010 markers**;
-- the validation object supplies the same **25 outer splits** used throughout
-  the project.
+## 3. GBLUP models
 
-The crucial separation is by information type, not by availability of genotype.
-The 200 outer-assessment individuals retain their marker profiles, but their
-phenotypes are hidden before model fitting. True genetic values never enter
-partition generation, kernel construction, fitting, or prediction and are
-subset only after held-out predictions have been produced.
+### 3.1 GBLUP-A
 
-## 4. GBLUP-ADE model
-
-### 4.1 Statistical model
-
-For one scenario, the benchmark is
+The additive model is
 
 \[
-\mathbf{y} = \mathbf{1}\mu + \mathbf{a} + \mathbf{d} + \mathbf{e} +
+\mathbf{y}
+=
+\mathbf{1}\mu
++
+\mathbf{a}
++
+\boldsymbol{\varepsilon},
+\]
+
+with
+
+\[
+\mathbf{a}
+\sim
+N(0,\mathbf{A}\sigma_a^2).
+\]
+
+### 3.2 GBLUP-AD
+
+The additive-dominance model is
+
+\[
+\mathbf{y}
+=
+\mathbf{1}\mu
++
+\mathbf{a}
++
+\mathbf{d}
++
+\boldsymbol{\varepsilon},
+\]
+
+with
+
+\[
+\mathbf{d}
+\sim
+N(0,\mathbf{D}\sigma_d^2).
+\]
+
+### 3.3 GBLUP-ADE
+
+The third structure extends GBLUP-AD with the additive-by-additive epistatic
+effect:
+
+\[
+\mathbf{y}
+=
+\mathbf{1}\mu
++
+\mathbf{a}
++
+\mathbf{d}
++
+\mathbf{e}
++
 \boldsymbol{\varepsilon},
 \]
 
 where
 
 \[
-\mathbf{a}\sim N(0,\mathbf{A}\sigma_a^2),\qquad
-\mathbf{d}\sim N(0,\mathbf{D}\sigma_d^2),
+\mathbf{e}
+\sim
+N(0,\mathbf{E}\sigma_e^2).
 \]
+
+The residual term in all three models is
 
 \[
-\mathbf{e}\sim N(0,\mathbf{E}\sigma_e^2),\qquad
-\boldsymbol{\varepsilon}\sim N(0,\mathbf{I}\sigma_\varepsilon^2).
+\boldsymbol{\varepsilon}
+\sim
+N(0,\mathbf{I}\sigma_\varepsilon^2).
 \]
 
-The components have distinct roles:
-
-- \(\mu\): overall intercept;
-- \(\mathbf{a}\): additive genomic effect;
-- \(\mathbf{d}\): dominance genomic effect;
-- \(\mathbf{e}\): epistatic genomic effect;
-- \(\boldsymbol{\varepsilon}\): residual variation.
-
-### 4.2 Genomic relationship matrices
-
-The three random effects are associated with genomic relationship matrices
-constructed from the same marker matrix:
+### 3.4 Genomic relationship matrices
 
 ```{r relationship-matrix-roles}
 relationship_matrices <- data.frame(
-  Matrix = c("A", "D", "E"),
-  Genetic_component = c(
+  Model = c(
+    "GBLUP-A",
+    "GBLUP-AD",
+    "GBLUP-ADE"
+  ),
+  Matrices = c(
+    "A",
+    "A + D",
+    "A + D + E"
+  ),
+  Genetic_effects = c(
     "Additive",
-    "Dominance",
-    "Epistatic"
+    "Additive + dominance",
+    "Additive + dominance + epistasis"
   ),
-  Constructor = c(
-    "sommer::A.mat()",
-    "sommer::D.mat()",
-    "sommer::E.mat(type = \"A#A\")"
-  ),
-  Interpretation = c(
-    "Additive genomic covariance among individuals.",
-    "Dominance genomic covariance among individuals.",
-    "Second-order additive x additive genomic covariance."
-  )
+  stringsAsFactors = FALSE
 )
 
 relationship_matrices |>
   knitr::kable(
     format = "html",
-    caption = "Genomic relationship matrices used by GBLUP-ADE",
+    caption = "Genomic components represented by the three GBLUP models",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
 
-These matrices describe genomic covariance among individuals. They do not use
-phenotype or true genetic value, and they are built once and reused across all
-150 fits. In this benchmark, the epistatic matrix is the second-order additive x
-additive kernel (`type = "A#A"`), matching the interaction component represented
-by E rather than an unspecified generic epistasis kernel.
+Matrix A describes additive genomic covariance, D describes dominance genomic
+covariance, and E represents the second-order additive-by-additive relationship
+used in the ADE model. These matrices depend only on marker information and do
+not use phenotype or true genetic value.
 
-### 4.3 Prediction from the fitted components
+The matrices are built once and reused across all scenarios, models, and outer
+splits. A standard page build reads the saved matrix summary, whereas a complete
+rerun reconstructs the matrices directly from the marker data.
 
-In `sommer::mmes()`, `ism()` identifies the individual levels associated with a
-random effect and `vsm()` links that effect to its genomic relationship matrix
-through `Gu`.
+```{r genomic-kernels}
+if (RUN_GBLUP) {
 
-The fitted genomic component is
+  A_matrix <- sommer::A.mat(
+    geno,
+    min.MAF = 0
+  )
+
+  D_matrix <- sommer::D.mat(
+    geno,
+    nishio = TRUE,
+    min.MAF = 0
+  )
+
+  E_matrix <- sommer::E.mat(
+    geno,
+    nishio = TRUE,
+    type = "A#A",
+    min.MAF = 0
+  )
+
+  rownames(A_matrix) <- id_labels
+  colnames(A_matrix) <- id_labels
+
+  rownames(D_matrix) <- id_labels
+  colnames(D_matrix) <- id_labels
+
+  rownames(E_matrix) <- id_labels
+  colnames(E_matrix) <- id_labels
+
+  kernel_summary <- data.frame(
+    Kernel = c(
+      "Additive",
+      "Dominance",
+      "Epistatic"
+    ),
+    Rows = c(
+      nrow(A_matrix),
+      nrow(D_matrix),
+      nrow(E_matrix)
+    ),
+    Columns = c(
+      ncol(A_matrix),
+      ncol(D_matrix),
+      ncol(E_matrix)
+    ),
+    Symmetric = c(
+      isTRUE(
+        all.equal(
+          A_matrix,
+          t(A_matrix),
+          tolerance = 1e-8
+        )
+      ),
+      isTRUE(
+        all.equal(
+          D_matrix,
+          t(D_matrix),
+          tolerance = 1e-8
+        )
+      ),
+      isTRUE(
+        all.equal(
+          E_matrix,
+          t(E_matrix),
+          tolerance = 1e-8
+        )
+      )
+    ),
+    Finite = c(
+      all(is.finite(A_matrix)),
+      all(is.finite(D_matrix)),
+      all(is.finite(E_matrix))
+    ),
+    Mean_diagonal = c(
+      mean(diag(A_matrix)),
+      mean(diag(D_matrix)),
+      mean(diag(E_matrix))
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  dir.create(
+    "output/simulated/gblup",
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+
+  write.csv(
+    kernel_summary,
+    "output/simulated/gblup/simulated_gblup_kernel_summary.csv",
+    row.names = FALSE
+  )
+
+} else {
+
+  kernel_summary <- read.csv(
+    "output/simulated/gblup/simulated_gblup_kernel_summary.csv",
+    stringsAsFactors = FALSE
+  )
+}
+```
+
+```{r kernel-summary}
+kernel_summary[
+  ,
+  c(
+    "Kernel",
+    "Rows",
+    "Columns",
+    "Symmetric",
+    "Finite",
+    "Mean_diagonal"
+  )
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Genomic relationship matrices used by the GBLUP models",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+## 4. Held-out prediction
+
+For every scenario, model, and outer split, the 200 assessment phenotypes are
+replaced by `NA` before model fitting. The fitted model then predicts those
+individuals from the available genomic information.
+
+The GEBV is stored on the original trait scale and includes the fitted
+intercept together with the genomic effects represented by the corresponding
+model:
 
 \[
-\widehat{G}=
-\widehat{a}+\widehat{d}+\widehat{e}.
+\widehat{\mathrm{GEBV}}_{\mathrm{A}}
+=
+\widehat{\mu}
++
+\widehat{a},
 \]
-
-The final prediction stored by this benchmark is
 
 \[
-\widehat{y}=
-\widehat{\mu}+\widehat{G}.
+\widehat{\mathrm{GEBV}}_{\mathrm{AD}}
+=
+\widehat{\mu}
++
+\widehat{a}
++
+\widehat{d},
 \]
 
-Thus the output preserves both the total prediction and the additive,
-dominance, epistatic, and summed genomic components for every held-out
-individual. The historical output field `GEBV` is retained for compatibility;
-in this ADE model it stores the summed additive, dominance, and epistatic
-prediction and is interpreted here as the **total predicted genetic component**,
-not as a breeding value in the strict additive-only sense.
+and
 
-## 5. Evaluation metrics
+\[
+\widehat{\mathrm{GEBV}}_{\mathrm{ADE}}
+=
+\widehat{\mu}
++
+\widehat{a}
++
+\widehat{d}
++
+\widehat{e}.
+\]
 
-Two targets are evaluated after prediction:
+True genetic values are accessed only after the held-out GEBVs have been
+obtained.
 
-- **Primary target — true genetic value:** measures recovery of the known
-  simulated genetic signal.
-- **Secondary target — phenotype:** measures prediction of the observed response,
-  which also contains residual variation.
+## 5. Model fitting
 
-For each target, the stored metrics are **Pearson correlation**, RMSE, MAE,
-bias, calibration slope, and \(R^2\). Bias is defined as
-`mean(predicted - observed)`, so positive values indicate overprediction. The
-calibration slope is estimated from `observed ~ predicted`, and
-\(R^2=1-SSE/SST\). These formulas are calculated directly in the fitting loop
-instead of being hidden behind local metric wrappers.
+The same outer split is used by all three GBLUP structures. For one scenario
+and split, the three `sommer::mmes()` specifications are:
 
+```{r model-calls, eval=FALSE}
+fit_A <- sommer::mmes(
+  y ~ 1,
+  random = ~
+    vsm(
+      ism(id),
+      Gu = A_matrix
+    ),
+  rcov = ~ units,
+  nIters = N_ITERS_SOMMER,
+  tolParConvLL = 1e-4,
+  data = dat,
+  verbose = FALSE,
+  dateWarning = FALSE
+)
 
-## 6. Scenario-by-split workload
+fit_AD <- sommer::mmes(
+  y ~ 1,
+  random = ~
+    vsm(
+      ism(id),
+      Gu = A_matrix
+    ) +
+    vsm(
+      ism(idd),
+      Gu = D_matrix
+    ),
+  rcov = ~ units,
+  nIters = N_ITERS_SOMMER,
+  tolParConvLL = 1e-4,
+  data = dat,
+  verbose = FALSE,
+  dateWarning = FALSE
+)
 
-The six scenarios are crossed with the 25 outer splits from M02. This produces
-150 distinct fitting tasks while preserving the same held-out individuals used
-by the ANN branch.
+fit_ADE <- sommer::mmes(
+  y ~ 1,
+  random = ~
+    vsm(
+      ism(id),
+      Gu = A_matrix
+    ) +
+    vsm(
+      ism(idd),
+      Gu = D_matrix
+    ) +
+    vsm(
+      ism(ide),
+      Gu = E_matrix
+    ),
+  rcov = ~ units,
+  nIters = N_ITERS_SOMMER,
+  tolParConvLL = 1e-4,
+  data = dat,
+  verbose = FALSE,
+  dateWarning = FALSE
+)
+```
+
+The complete run contains 450 fits. A standard page build reads the saved
+results. To regenerate the complete GBLUP analysis from M01 and M02, set
+`RUN_GBLUP=1` before building this page. The optional environment variable
+`GBLUP_WORKERS` controls the number of parallel workers; when it is omitted, a
+conservative value is selected from the available logical processors.
 
 ```{r task-table}
+structures <- c(
+  "A",
+  "AD",
+  "ADE"
+)
+
 outer_meta <- unique(
   cv$outer_assignments[
-    , c("Repetition", "OuterFold", "SplitID")
+    ,
+    c(
+      "Repetition",
+      "OuterFold",
+      "SplitID"
+    )
   ]
 )
 
@@ -335,6 +542,8 @@ outer_meta <- outer_meta[
     outer_meta$Repetition,
     outer_meta$OuterFold
   ),
+  ,
+  drop = FALSE
 ]
 
 task_table <- merge(
@@ -342,752 +551,842 @@ task_table <- merge(
     Scenario = scenario_names,
     stringsAsFactors = FALSE
   ),
+  data.frame(
+    Structure = structures,
+    stringsAsFactors = FALSE
+  ),
+  by = NULL
+)
+
+task_table <- merge(
+  task_table,
   outer_meta,
   by = NULL
 )
 
+task_table$Model <- paste0(
+  "GBLUP_",
+  task_table$Structure
+)
+
 task_table <- task_table[
   order(
-    match(task_table$Scenario, scenario_names),
+    match(
+      task_table$Scenario,
+      scenario_names
+    ),
+    match(
+      task_table$Structure,
+      structures
+    ),
     task_table$Repetition,
     task_table$OuterFold
   ),
-]
-
-task_table$TaskID <- paste(
-  task_table$Scenario,
-  task_table$SplitID,
-  sep = "_"
-)
-rownames(task_table) <- NULL
-
-head(task_table, 15) |>
-  knitr::kable(
-    format = "html",
-    caption = "First 15 of the 150 GBLUP-ADE scenario-by-split tasks",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
-```
-
-`TaskID` links each fit to its 200 held-out predictions and later provides the
-common scenario-by-split key used for model comparison.
-
-## 7. Fitting procedure
-
-The fitting sequence is the same for every task:
-
-1. construct A, D, and E once from the complete genotype matrix;
-2. identify the 800 analysis and 200 assessment individuals for the task;
-3. replace the 200 assessment phenotypes by `NA`;
-4. fit the additive + dominance + epistatic mixed model;
-5. recover the three fitted genomic components;
-6. form the held-out prediction;
-7. access phenotype and true genetic value only for the 200 assessment
-   individuals and calculate the stored metrics.
-
-The same genomic kernels are reused for all tasks. Only the scenario response
-and outer assessment set change from one fit to another.
-
-### 7.1 One model call
-
-`sommer::mmes()` stores the fitted random effects in `fit$uList`. In the complete
-workflow below, each additive, dominance, and epistatic effect is mapped back to
-the 1,000 individual positions explicitly with its incidence matrix; no local
-helper function hides that transformation.
-
-
-For one scenario and one outer split, the mixed-model call is:
-
-```{r gblup-fit-example, eval=FALSE}
-fit <- sommer::mmes(
-  y ~ 1,
-  random = ~
-    vsm(ism(id),  Gu = A_matrix) +
-    vsm(ism(idd), Gu = D_matrix) +
-    vsm(ism(ide), Gu = E_matrix),
-  rcov = ~ units,
-  nIters = 20,
-  data = dat,
-  verbose = FALSE
-)
-```
-
-At this point `dat$y` contains phenotype values for the 800 outer-analysis
-individuals and `NA` for the 200 outer-assessment individuals.
-
-### 7.2 Complete 150-task workflow
-
-The full code is retained so the saved benchmark can be regenerated explicitly.
-It runs only when `RUN_GBLUP=1`; the standard page build skips these expensive
-fits and reads the existing saved results instead.
-
-```{r fit-gblup-ade, eval=RUN_GBLUP}
-set.seed(SEED_GLOBAL)
-
-run_start <- proc.time()[["elapsed"]]
-
-# Build A, D, and E once from the marker matrix.
-kernel_start <- proc.time()[["elapsed"]]
-
-A_matrix <- sommer::A.mat(geno)
-D_matrix <- sommer::D.mat(geno)
-E_matrix <- sommer::E.mat(
-  geno,
-  nishio = TRUE,
-  type = "A#A",
-  min.MAF = 0.02
-)
-
-kernel_seconds <- proc.time()[["elapsed"]] - kernel_start
-
-rownames(A_matrix) <- colnames(A_matrix) <- id_labels
-rownames(D_matrix) <- colnames(D_matrix) <- id_labels
-rownames(E_matrix) <- colnames(E_matrix) <- id_labels
-
-kernel_summary <- data.frame(
-  Kernel = c(
-    "Additive",
-    "Dominance",
-    "Epistatic"
-  ),
-  Rows = c(
-    nrow(A_matrix),
-    nrow(D_matrix),
-    nrow(E_matrix)
-  ),
-  Columns = c(
-    ncol(A_matrix),
-    ncol(D_matrix),
-    ncol(E_matrix)
-  ),
-  Symmetric = c(
-    isTRUE(
-      all.equal(
-        A_matrix,
-        t(A_matrix),
-        tolerance = 1e-8
-      )
-    ),
-    isTRUE(
-      all.equal(
-        D_matrix,
-        t(D_matrix),
-        tolerance = 1e-8
-      )
-    ),
-    isTRUE(
-      all.equal(
-        E_matrix,
-        t(E_matrix),
-        tolerance = 1e-8
-      )
-    )
-  ),
-  Finite = c(
-    all(is.finite(A_matrix)),
-    all(is.finite(D_matrix)),
-    all(is.finite(E_matrix))
-  ),
-  Mean_diagonal = c(
-    mean(diag(A_matrix)),
-    mean(diag(D_matrix)),
-    mean(diag(E_matrix))
-  ),
-  Kernel_build_seconds = rep(
-    kernel_seconds,
-    3L
-  ),
-  stringsAsFactors = FALSE
-)
-
-result_list <- vector(
-  "list",
-  nrow(task_table)
-)
-prediction_list <- vector(
-  "list",
-  nrow(task_table)
-)
-
-for (i in seq_len(nrow(task_table))) {
-
-  task <- task_table[i, ]
-  scenario <- task$Scenario
-  scenario_index <- match(
-    scenario,
-    scenario_names
-  )
-
-  # Recover the fixed outer split defined in M02.
-  split <- cv$outer_splits[[task$SplitID]]
-
-  analysis_index <- match(
-    split$analysis_ids,
-    ids
-  )
-  assessment_index <- match(
-    split$assessment_ids,
-    ids
-  )
-
-  phenotype_vector <- phenotype[
-    ,
-    scenario_index
-  ]
-
-  id_factor <- factor(
-    id_labels,
-    levels = id_labels
-  )
-
-  dat <- data.frame(
-    y = phenotype_vector,
-    id = id_factor,
-    idd = id_factor,
-    ide = id_factor
-  )
-
-  # Remove all response information from the outer assessment set.
-  dat$y[assessment_index] <- NA_real_
-
-  fit_start <- proc.time()[["elapsed"]]
-
-  # Fit the prespecified additive + dominance + epistatic model.
-  fit <- sommer::mmes(
-    y ~ 1,
-    random = ~
-      vsm(ism(id),  Gu = A_matrix) +
-      vsm(ism(idd), Gu = D_matrix) +
-      vsm(ism(ide), Gu = E_matrix),
-    rcov = ~ units,
-    nIters = N_ITERS_SOMMER,
-    data = dat,
-    verbose = FALSE,
-    dateWarning = FALSE
-  )
-
-  fit_seconds <-
-    proc.time()[["elapsed"]] -
-    fit_start
-
-  prediction_start <- proc.time()[["elapsed"]]
-
-  # Recover the additive effect for all individuals.
-  additive_effect <- as.matrix(
-    fit$uList[["vsm(ism(id), Gu = A_matrix)"]]
-  )
-  additive_incidence <- model.matrix(
-    ~ id - 1,
-    data = dat
-  )
-  additive <- as.numeric(
-    additive_incidence %*%
-      additive_effect[, 1L, drop = FALSE]
-  )
-
-  # Recover the dominance effect for all individuals.
-  dominance_effect <- as.matrix(
-    fit$uList[["vsm(ism(idd), Gu = D_matrix)"]]
-  )
-  dominance_incidence <- model.matrix(
-    ~ idd - 1,
-    data = dat
-  )
-  dominance <- as.numeric(
-    dominance_incidence %*%
-      dominance_effect[, 1L, drop = FALSE]
-  )
-
-  # Recover the additive x additive epistatic effect for all individuals.
-  epistatic_effect <- as.matrix(
-    fit$uList[["vsm(ism(ide), Gu = E_matrix)"]]
-  )
-  epistatic_incidence <- model.matrix(
-    ~ ide - 1,
-    data = dat
-  )
-  epistatic <- as.numeric(
-    epistatic_incidence %*%
-      epistatic_effect[, 1L, drop = FALSE]
-  )
-
-  genetic_component <-
-    additive +
-    dominance +
-    epistatic
-
-  intercept <- as.numeric(fit$b)[1L]
-  predicted_value <- intercept + genetic_component
-
-  predict_seconds <-
-    proc.time()[["elapsed"]] -
-    prediction_start
-
-  # Evaluate only after held-out predictions have been generated.
-  observed_test <- phenotype_vector[
-    assessment_index
-  ]
-  true_g_test <- true_g[
-    assessment_index,
-    scenario_index
-  ]
-  predicted_test <- predicted_value[
-    assessment_index
-  ]
-  genetic_component_test <- genetic_component[
-    assessment_index
-  ]
-
-  # Primary evaluation against the known simulated genetic value.
-  genetic_correlation <- cor(
-    predicted_test,
-    true_g_test
-  )
-  genetic_rmse <- sqrt(
-    mean((predicted_test - true_g_test)^2)
-  )
-  genetic_mae <- mean(
-    abs(predicted_test - true_g_test)
-  )
-  genetic_bias <- mean(
-    predicted_test - true_g_test
-  )
-  genetic_slope <- as.numeric(
-    coef(lm(true_g_test ~ predicted_test))[2]
-  )
-  genetic_r2 <- 1 -
-    sum((true_g_test - predicted_test)^2) /
-    sum((true_g_test - mean(true_g_test))^2)
-
-  # Secondary evaluation against the observed phenotype.
-  phenotype_correlation <- cor(
-    predicted_test,
-    observed_test
-  )
-  phenotype_rmse <- sqrt(
-    mean((predicted_test - observed_test)^2)
-  )
-  phenotype_mae <- mean(
-    abs(predicted_test - observed_test)
-  )
-  phenotype_bias <- mean(
-    predicted_test - observed_test
-  )
-  phenotype_slope <- as.numeric(
-    coef(lm(observed_test ~ predicted_test))[2]
-  )
-  phenotype_r2 <- 1 -
-    sum((observed_test - predicted_test)^2) /
-    sum((observed_test - mean(observed_test))^2)
-
-  meta <- control[
-    control$Scenario == scenario,
-    ,
-    drop = FALSE
-  ]
-
-  result_list[[i]] <- data.frame(
-    Dataset = "simulated",
-    Scenario = scenario,
-    QTL_N = meta$QTL_N,
-    H2_nominal = meta$H2_nominal,
-    Repetition = task$Repetition,
-    Fold = task$OuterFold,
-    SplitID = task$SplitID,
-    TaskID = task$TaskID,
-    Model = "GBLUP_ADE",
-    N_train = length(analysis_index),
-    N_test = length(assessment_index),
-    N_pred_finite = sum(is.finite(predicted_test)),
-    Genetic_Correlation =
-      genetic_correlation,
-    Genetic_RMSE =
-      genetic_rmse,
-    Genetic_MAE =
-      genetic_mae,
-    Genetic_Bias =
-      genetic_bias,
-    Genetic_Slope =
-      genetic_slope,
-    Genetic_R2 =
-      genetic_r2,
-    GEBV_TrueG_Correlation =
-      cor(genetic_component_test, true_g_test),
-    Phenotype_Correlation =
-      phenotype_correlation,
-    Phenotype_RMSE =
-      phenotype_rmse,
-    Phenotype_MAE =
-      phenotype_mae,
-    Phenotype_Bias =
-      phenotype_bias,
-    Phenotype_Slope =
-      phenotype_slope,
-    Phenotype_R2 =
-      phenotype_r2,
-    Kernel_build_seconds = kernel_seconds,
-    Fit_seconds = fit_seconds,
-    Predict_seconds = predict_seconds,
-    Status = "ok",
-    Error = NA_character_,
-    stringsAsFactors = FALSE
-  )
-
-  prediction_list[[i]] <- data.frame(
-    Dataset = "simulated",
-    Scenario = scenario,
-    QTL_N = meta$QTL_N,
-    H2_nominal = meta$H2_nominal,
-    Repetition = task$Repetition,
-    Fold = task$OuterFold,
-    SplitID = task$SplitID,
-    TaskID = task$TaskID,
-    Model = "GBLUP_ADE",
-    ID = ids[assessment_index],
-    Observed_Phenotype = observed_test,
-    True_Genetic_Value = true_g_test,
-    Predicted_Value = predicted_test,
-    GEBV = genetic_component_test,
-    Additive_Prediction = additive[assessment_index],
-    Dominance_Prediction = dominance[assessment_index],
-    Epistatic_Prediction = epistatic[assessment_index],
-    Status = "ok",
-    stringsAsFactors = FALSE
-  )
-
-  cat(
-    sprintf(
-      "[%03d/%03d] %s | rG=%.4f | RMSE_G=%.4f | fit=%.2fs\n",
-      i,
-      nrow(task_table),
-      task$TaskID,
-      result_list[[i]]$Genetic_Correlation,
-      result_list[[i]]$Genetic_RMSE,
-      fit_seconds
-    )
-  )
-}
-
-results <- do.call(
-  rbind,
-  result_list
-)
-predictions <- do.call(
-  rbind,
-  prediction_list
-)
-rownames(results) <- NULL
-rownames(predictions) <- NULL
-
-run_seconds <-
-  proc.time()[["elapsed"]] -
-  run_start
-
-run_metadata <- list(
-  dataset = "simulated",
-  model = "GBLUP_ADE",
-  seed_global = SEED_GLOBAL,
-  sommer_version = as.character(
-    packageVersion("sommer")
-  ),
-  nIters_sommer = N_ITERS_SOMMER,
-  tasks = nrow(results),
-  prediction_rows = nrow(predictions),
-  kernel_build_seconds = kernel_seconds,
-  total_run_seconds = run_seconds,
-  timestamp = as.character(Sys.time())
-)
-```
-
-```{r save-gblup-results, eval=RUN_GBLUP, include=FALSE}
-write.csv(
-  kernel_summary,
-  "output/simulated/gblup/simulated_gblup_ade_kernel_summary.csv",
-  row.names = FALSE
-)
-
-saveRDS(
-  results,
-  "output/simulated/gblup/simulated_gblup_ade_results.rds",
-  compress = "gzip"
-)
-saveRDS(
-  predictions,
-  "output/simulated/gblup/simulated_gblup_ade_predictions.rds",
-  compress = "gzip"
-)
-write.csv(
-  results,
-  "output/simulated/gblup/simulated_gblup_ade_results.csv",
-  row.names = FALSE
-)
-write.csv(
-  predictions,
-  "output/simulated/gblup/simulated_gblup_ade_predictions.csv",
-  row.names = FALSE
-)
-saveRDS(
-  run_metadata,
-  "output/simulated/gblup/simulated_gblup_ade_run_metadata.rds",
-  compress = "gzip"
-)
-```
-
-## 8. Genomic-kernel diagnostics
-
-The saved kernel summary records numerical properties of the three relationship
-matrices from the completed benchmark run.
-
-```{r kernel-diagnostics}
-kernel_summary <- read.csv(
-  "output/simulated/gblup/simulated_gblup_ade_kernel_summary.csv",
-  stringsAsFactors = FALSE
-)
-
-kernel_display <- kernel_summary[
-  , c(
-    "Kernel",
-    "Rows",
-    "Columns",
-    "Symmetric",
-    "Finite",
-    "Mean_diagonal"
-  )
-]
-
-kernel_display |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Numerical structure of the GBLUP-ADE genomic kernels",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
-```
-
-The three kernels are **1,000 x 1,000**, finite, and symmetric. Their mean
-diagonals are close to one, confirming the numerical structure expected for the
-relationship matrices used in the fitted benchmark.
-
-## 9. Saved results and predictive performance
-
-The normal page build now reads the completed GBLUP-ADE outputs. This keeps the
-scientific results fixed while allowing the explanation, tables, and figures to
-be rebuilt quickly.
-
-```{r saved-results}
-results <- readRDS(
-  "output/simulated/gblup/simulated_gblup_ade_results.rds"
-)
-predictions <- readRDS(
-  "output/simulated/gblup/simulated_gblup_ade_predictions.rds"
-)
-run_metadata <- readRDS(
-  "output/simulated/gblup/simulated_gblup_ade_run_metadata.rds"
-)
-
-result_structure <- data.frame(
-  Object = c(
-    "Task-level results",
-    "Held-out predictions"
-  ),
-  Rows = c(
-    nrow(results),
-    nrow(predictions)
-  ),
-  Unique_tasks = c(
-    length(unique(results$TaskID)),
-    length(unique(predictions$TaskID))
-  ),
-  Rows_per_task = c(
-    1,
-    paste(
-      range(
-        as.integer(
-          table(predictions$TaskID)
-        )
-      ),
-      collapse = " to "
-    )
-  )
-)
-
-result_structure |>
-  knitr::kable(
-    format = "html",
-    caption = "Stored GBLUP-ADE result structure",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
-```
-
-The stored benchmark contains one task-level result row for each of the 150
-scenario-by-split fits and 200 held-out predictions per task. The historical
-`Status = "ok"` field indicates that a fit returned and produced stored
-predictions; it is not interpreted here as independent evidence that numerical
-convergence was formally diagnosed for all 150 fits.
-
-### 9.1 Scenario means
-
-The primary and secondary metrics are averaged across the 25 outer splits within
-each scenario.
-
-```{r performance-summary}
-ok_results <- results[
-  results$Status == "ok",
   ,
   drop = FALSE
 ]
 
-scenario_performance <- aggregate(
+task_table$TaskID <- paste(
+  task_table$Scenario,
+  task_table$Model,
+  task_table$SplitID,
+  sep = "_"
+)
+
+rownames(task_table) <- NULL
+
+stopifnot(
+  nrow(task_table) == 450L,
+  !anyDuplicated(task_table$TaskID)
+)
+```
+
+```{r fit-all-gblup-models}
+if (RUN_GBLUP) {
+
+  logical_cores <- parallel::detectCores(
+    logical = TRUE
+  )
+
+  if (is.na(logical_cores)) {
+    logical_cores <- 2L
+  }
+
+  default_workers <- max(
+    1L,
+    min(
+      10L,
+      floor(logical_cores / 2L),
+      max(
+        1L,
+        logical_cores - 2L
+      )
+    )
+  )
+
+  requested_workers <- suppressWarnings(
+    as.integer(
+      Sys.getenv(
+        "GBLUP_WORKERS",
+        ""
+      )
+    )
+  )
+
+  if (
+    is.na(requested_workers) ||
+    requested_workers < 1L
+  ) {
+    N_WORKERS <- default_workers
+  } else {
+    N_WORKERS <- min(
+      requested_workers,
+      max(
+        1L,
+        logical_cores - 2L
+      )
+    )
+  }
+
+  control <- common$scenario_control
+
+  cluster <- parallel::makeCluster(
+    N_WORKERS
+  )
+
+  worker_libpaths <- .libPaths()
+
+  parallel::clusterExport(
+    cluster,
+    "worker_libpaths",
+    envir = environment()
+  )
+
+  parallel::clusterEvalQ(
+    cluster,
+    {
+      .libPaths(
+        worker_libpaths
+      )
+
+      library(foreach)
+      library(doParallel)
+      library(sommer)
+
+      NULL
+    }
+  )
+
+  doParallel::registerDoParallel(
+    cluster
+  )
+
+  parallel_results <-
+    foreach::foreach(
+      i = seq_len(
+        nrow(task_table)
+      ),
+      .packages = "sommer",
+      .inorder = TRUE,
+      .errorhandling = "stop"
+    ) %dopar% {
+
+      task <- task_table[
+        i,
+        ,
+        drop = FALSE
+      ]
+
+      scenario <- task$Scenario
+      structure <- task$Structure
+
+      scenario_index <- match(
+        scenario,
+        scenario_names
+      )
+
+      split <- cv$outer_splits[[
+        task$SplitID
+      ]]
+
+      analysis_index <- match(
+        split$analysis_ids,
+        ids
+      )
+
+      assessment_index <- match(
+        split$assessment_ids,
+        ids
+      )
+
+      phenotype_vector <- phenotype[
+        ,
+        scenario_index
+      ]
+
+      id_factor <- factor(
+        id_labels,
+        levels = id_labels
+      )
+
+      dat <- data.frame(
+        y = phenotype_vector,
+        id = id_factor,
+        idd = id_factor,
+        ide = id_factor
+      )
+
+      dat$y[
+        assessment_index
+      ] <- NA_real_
+
+      fit_start <- proc.time()[[
+        "elapsed"
+      ]]
+
+      if (structure == "A") {
+
+        fit <- sommer::mmes(
+          y ~ 1,
+          random = ~
+            vsm(
+              ism(id),
+              Gu = A_matrix
+            ),
+          rcov = ~ units,
+          nIters = N_ITERS_SOMMER,
+          tolParConvLL = 1e-4,
+          data = dat,
+          verbose = FALSE,
+          dateWarning = FALSE
+        )
+
+      } else if (structure == "AD") {
+
+        fit <- sommer::mmes(
+          y ~ 1,
+          random = ~
+            vsm(
+              ism(id),
+              Gu = A_matrix
+            ) +
+            vsm(
+              ism(idd),
+              Gu = D_matrix
+            ),
+          rcov = ~ units,
+          nIters = N_ITERS_SOMMER,
+          tolParConvLL = 1e-4,
+          data = dat,
+          verbose = FALSE,
+          dateWarning = FALSE
+        )
+
+      } else {
+
+        fit <- sommer::mmes(
+          y ~ 1,
+          random = ~
+            vsm(
+              ism(id),
+              Gu = A_matrix
+            ) +
+            vsm(
+              ism(idd),
+              Gu = D_matrix
+            ) +
+            vsm(
+              ism(ide),
+              Gu = E_matrix
+            ),
+          rcov = ~ units,
+          nIters = N_ITERS_SOMMER,
+          tolParConvLL = 1e-4,
+          data = dat,
+          verbose = FALSE,
+          dateWarning = FALSE
+        )
+      }
+
+      fit_seconds <-
+        proc.time()[[
+          "elapsed"
+        ]] -
+        fit_start
+
+      prediction_start <- proc.time()[[
+        "elapsed"
+      ]]
+
+      additive <- rep(
+        0,
+        length(ids)
+      )
+
+      dominance <- rep(
+        0,
+        length(ids)
+      )
+
+      epistatic <- rep(
+        0,
+        length(ids)
+      )
+
+      additive_effect <- as.matrix(
+        fit$uList[[
+          "vsm(ism(id), Gu = A_matrix)"
+        ]]
+      )
+
+      additive_incidence <- model.matrix(
+        ~ id - 1,
+        data = dat
+      )
+
+      additive <- as.numeric(
+        additive_incidence %*%
+          additive_effect[
+            ,
+            1L,
+            drop = FALSE
+          ]
+      )
+
+      if (
+        structure == "AD" ||
+        structure == "ADE"
+      ) {
+
+        dominance_effect <- as.matrix(
+          fit$uList[[
+            "vsm(ism(idd), Gu = D_matrix)"
+          ]]
+        )
+
+        dominance_incidence <- model.matrix(
+          ~ idd - 1,
+          data = dat
+        )
+
+        dominance <- as.numeric(
+          dominance_incidence %*%
+            dominance_effect[
+              ,
+              1L,
+              drop = FALSE
+            ]
+        )
+      }
+
+      if (structure == "ADE") {
+
+        epistatic_effect <- as.matrix(
+          fit$uList[[
+            "vsm(ism(ide), Gu = E_matrix)"
+          ]]
+        )
+
+        epistatic_incidence <- model.matrix(
+          ~ ide - 1,
+          data = dat
+        )
+
+        epistatic <- as.numeric(
+          epistatic_incidence %*%
+            epistatic_effect[
+              ,
+              1L,
+              drop = FALSE
+            ]
+        )
+      }
+
+      genomic_component <-
+        additive +
+        dominance +
+        epistatic
+
+      intercept <- as.numeric(
+        fit$b
+      )[
+        1L
+      ]
+
+      gebv <-
+        intercept +
+        genomic_component
+
+      predict_seconds <-
+        proc.time()[[
+          "elapsed"
+        ]] -
+        prediction_start
+
+      observed_test <- phenotype_vector[
+        assessment_index
+      ]
+
+      true_g_test <- true_g[
+        assessment_index,
+        scenario_index
+      ]
+
+      gebv_test <- gebv[
+        assessment_index
+      ]
+
+      genetic_pearson <- cor(
+        gebv_test,
+        true_g_test,
+        method = "pearson"
+      )
+
+      genetic_spearman <- cor(
+        gebv_test,
+        true_g_test,
+        method = "spearman"
+      )
+
+      genetic_rmse <- sqrt(
+        mean(
+          (
+            gebv_test -
+            true_g_test
+          )^2
+        )
+      )
+
+      genetic_mae <- mean(
+        abs(
+          gebv_test -
+          true_g_test
+        )
+      )
+
+      genetic_bias <- mean(
+        gebv_test -
+          true_g_test
+      )
+
+      genetic_slope <- as.numeric(
+        coef(
+          lm(
+            true_g_test ~ gebv_test
+          )
+        )[2L]
+      )
+
+      phenotype_pearson <- cor(
+        gebv_test,
+        observed_test,
+        method = "pearson"
+      )
+
+      phenotype_spearman <- cor(
+        gebv_test,
+        observed_test,
+        method = "spearman"
+      )
+
+      phenotype_rmse <- sqrt(
+        mean(
+          (
+            gebv_test -
+            observed_test
+          )^2
+        )
+      )
+
+      phenotype_mae <- mean(
+        abs(
+          gebv_test -
+          observed_test
+        )
+      )
+
+      phenotype_bias <- mean(
+        gebv_test -
+          observed_test
+      )
+
+      phenotype_slope <- as.numeric(
+        coef(
+          lm(
+            observed_test ~ gebv_test
+          )
+        )[2L]
+      )
+
+      meta <- control[
+        control$Scenario == scenario,
+        ,
+        drop = FALSE
+      ]
+
+      result_row <- data.frame(
+        Dataset = "simulated",
+        Scenario = scenario,
+        QTL_N = meta$QTL_N,
+        H2_nominal = meta$H2_nominal,
+        Repetition = task$Repetition,
+        Fold = task$OuterFold,
+        SplitID = task$SplitID,
+        TaskID = task$TaskID,
+        Model = task$Model,
+        Structure = structure,
+        N_train = length(
+          analysis_index
+        ),
+        N_test = length(
+          assessment_index
+        ),
+        Genetic_Pearson =
+          genetic_pearson,
+        Genetic_Spearman =
+          genetic_spearman,
+        Genetic_RMSE =
+          genetic_rmse,
+        Genetic_MAE =
+          genetic_mae,
+        Genetic_Bias =
+          genetic_bias,
+        Genetic_Slope =
+          genetic_slope,
+        Phenotype_Pearson =
+          phenotype_pearson,
+        Phenotype_Spearman =
+          phenotype_spearman,
+        Phenotype_RMSE =
+          phenotype_rmse,
+        Phenotype_MAE =
+          phenotype_mae,
+        Phenotype_Bias =
+          phenotype_bias,
+        Phenotype_Slope =
+          phenotype_slope,
+        Fit_seconds =
+          fit_seconds,
+        Predict_seconds =
+          predict_seconds,
+        stringsAsFactors = FALSE
+      )
+
+      prediction_rows <- data.frame(
+        Dataset = "simulated",
+        Scenario = scenario,
+        QTL_N = meta$QTL_N,
+        H2_nominal = meta$H2_nominal,
+        Repetition = task$Repetition,
+        Fold = task$OuterFold,
+        SplitID = task$SplitID,
+        TaskID = task$TaskID,
+        Model = task$Model,
+        Structure = structure,
+        ID = ids[
+          assessment_index
+        ],
+        Observed_Phenotype =
+          observed_test,
+        True_Genetic_Value =
+          true_g_test,
+        GEBV =
+          gebv_test,
+        Additive_Prediction =
+          additive[
+            assessment_index
+          ],
+        Dominance_Prediction =
+          dominance[
+            assessment_index
+          ],
+        Epistatic_Prediction =
+          epistatic[
+            assessment_index
+          ],
+        stringsAsFactors = FALSE
+      )
+
+      list(
+        result = result_row,
+        predictions = prediction_rows
+      )
+    }
+
+  parallel::stopCluster(
+    cluster
+  )
+
+  result_list <- vector(
+    "list",
+    length(parallel_results)
+  )
+
+  prediction_list <- vector(
+    "list",
+    length(parallel_results)
+  )
+
+  for (
+    i in
+      seq_along(parallel_results)
+  ) {
+
+    result_list[[i]] <-
+      parallel_results[[i]]$result
+
+    prediction_list[[i]] <-
+      parallel_results[[i]]$predictions
+  }
+
+  results <- do.call(
+    rbind,
+    result_list
+  )
+
+  predictions <- do.call(
+    rbind,
+    prediction_list
+  )
+
+  rownames(results) <- NULL
+  rownames(predictions) <- NULL
+
+  stopifnot(
+    nrow(results) == 450L,
+    nrow(predictions) == 90000L,
+    length(
+      unique(results$TaskID)
+    ) == 450L,
+    all(
+      table(
+        predictions$TaskID
+      ) == 200L
+    )
+  )
+
+  dir.create(
+    "output/simulated/gblup",
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+
+  saveRDS(
+    results,
+    "output/simulated/gblup/simulated_gblup_results.rds",
+    compress = "gzip"
+  )
+
+  write.csv(
+    results,
+    "output/simulated/gblup/simulated_gblup_results.csv",
+    row.names = FALSE
+  )
+
+  saveRDS(
+    predictions,
+    "output/simulated/gblup/simulated_gblup_predictions.rds",
+    compress = "gzip"
+  )
+
+  write.csv(
+    predictions,
+    "output/simulated/gblup/simulated_gblup_predictions.csv",
+    row.names = FALSE
+  )
+
+} else {
+
+  results <- readRDS(
+    "output/simulated/gblup/simulated_gblup_results.rds"
+  )
+
+}
+```
+
+```{r task-summary}
+results$Model <- factor(
+  results$Model,
+  levels = model_names
+)
+
+
+task_summary <- as.data.frame(
+  table(
+    results$Scenario,
+    results$Model
+  ),
+  stringsAsFactors = FALSE
+)
+
+names(task_summary) <- c(
+  "Scenario",
+  "Model",
+  "Fits"
+)
+
+task_summary |>
+  knitr::kable(
+    format = "html",
+    caption = "Number of outer GBLUP fits by scenario and model",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+## 6. Evaluation metrics
+
+The **true genetic value** is the primary target because it is known in the
+simulation and directly measures recovery of the simulated genetic signal.
+
+The **phenotype** is retained as a secondary target because it includes the
+genetic signal together with residual variation.
+
+The held-out predictive metrics follow the common real/simulated contract:
+
+- **Pearson correlation:** linear association between GEBV and the target;
+- **Spearman correlation:** rank association between GEBV and the target;
+- **RMSE:** prediction error on the original scale;
+- **MAE:** mean absolute prediction error on the original scale.
+
+Bias and calibration slope are retained only as secondary diagnostics. Bias is
+`mean(prediction - target)`, and calibration slope is the coefficient of
+prediction in `lm(target ~ prediction)`. R-squared is not part of the analytical
+contract.
+
+No evaluation target is used during model fitting.
+
+## 7. Predictive performance
+
+### 7.1 True genetic value
+
+```{r genetic-performance-summary}
+genetic_performance <- aggregate(
   cbind(
-    Genetic_Correlation,
+    Genetic_Pearson,
+    Genetic_Spearman,
     Genetic_RMSE,
     Genetic_MAE,
     Genetic_Bias,
-    Genetic_Slope,
-    Genetic_R2,
-    Phenotype_Correlation,
-    Phenotype_RMSE,
-    Phenotype_MAE,
-    Phenotype_Bias,
-    Phenotype_Slope,
-    Phenotype_R2
-  ) ~ Scenario + QTL_N + H2_nominal,
-  data = ok_results,
+    Genetic_Slope
+  ) ~ Scenario + Model,
+  data = results,
   FUN = mean,
   na.rm = TRUE
 )
 
-scenario_performance <- scenario_performance[
+genetic_performance <- genetic_performance[
   order(
     match(
-      scenario_performance$Scenario,
+      genetic_performance$Scenario,
       scenario_names
+    ),
+    match(
+      as.character(
+        genetic_performance$Model
+      ),
+      model_names
     )
   ),
+  ,
+  drop = FALSE
 ]
 
-genetic_performance_display <- scenario_performance[
-  , c(
-    "Scenario",
-    "QTL_N",
-    "H2_nominal",
-    "Genetic_Correlation",
-    "Genetic_RMSE",
-    "Genetic_MAE",
-    "Genetic_Bias",
-    "Genetic_Slope",
-    "Genetic_R2"
-  )
-]
-
-phenotype_performance_display <- scenario_performance[
-  , c(
-    "Scenario",
-    "QTL_N",
-    "H2_nominal",
-    "Phenotype_Correlation",
-    "Phenotype_RMSE",
-    "Phenotype_MAE",
-    "Phenotype_Bias",
-    "Phenotype_Slope",
-    "Phenotype_R2"
-  )
-]
-```
-
-#### True genetic value
-
-```{r genetic-performance}
-genetic_performance_display |>
+genetic_performance |>
   knitr::kable(
     format = "html",
     digits = 4,
-    caption = "Primary evaluation: true genetic-value prediction across the 25 outer splits",
+    caption = "Primary evaluation against true genetic value",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
 
-Across the six scenarios, mean held-out genetic correlation ranges from
-`r sprintf("%.4f", min(scenario_performance$Genetic_Correlation))` to
-`r sprintf("%.4f", max(scenario_performance$Genetic_Correlation))`, while mean
-genetic RMSE ranges from
-`r sprintf("%.4f", min(scenario_performance$Genetic_RMSE))` to
-`r sprintf("%.4f", max(scenario_performance$Genetic_RMSE))`.
+The scenario sequence represents the predefined simulation settings. Because
+the simulation factors change jointly across scenarios, differences among C1-C6
+should be interpreted as differences among the complete scenarios rather than
+as isolated effects of one parameter.
 
-The C1-C6 sequence represents a prespecified genetic-complexity gradient. QTL
-number and nominal heritability change together across that sequence, so the
-scenario pattern should not be interpreted as the isolated causal effect of
-either quantity.
+### 7.2 Phenotype
 
-#### Phenotype
+```{r phenotype-performance-summary}
+phenotype_performance <- aggregate(
+  cbind(
+    Phenotype_Pearson,
+    Phenotype_Spearman,
+    Phenotype_RMSE,
+    Phenotype_MAE,
+    Phenotype_Bias,
+    Phenotype_Slope
+  ) ~ Scenario + Model,
+  data = results,
+  FUN = mean,
+  na.rm = TRUE
+)
 
-```{r phenotype-performance}
-phenotype_performance_display |>
+phenotype_performance <- phenotype_performance[
+  order(
+    match(
+      phenotype_performance$Scenario,
+      scenario_names
+    ),
+    match(
+      as.character(
+        phenotype_performance$Model
+      ),
+      model_names
+    )
+  ),
+  ,
+  drop = FALSE
+]
+
+phenotype_performance |>
   knitr::kable(
     format = "html",
     digits = 4,
-    caption = "Secondary evaluation: phenotype prediction across the 25 outer splits",
+    caption = "Secondary evaluation against phenotype",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
 
-Phenotype is retained as a secondary target because it contains both genetic and
-residual variation. The known simulated genetic value remains the primary target
-for evaluating recovery of the simulated genetic signal.
+### 7.3 Performance across outer splits
 
-### 9.2 Held-out performance across outer splits
-
-Scenario means do not show how much performance changes with the particular
-individuals held out. The next two figures therefore display all 25 outer-split
-values within each scenario.
-
-```{r genetic-correlation-figure, fig.cap="Held-out true genetic-value correlation for GBLUP-ADE across the 25 outer splits in each scenario. Boxes summarize the split distribution; white diamonds indicate scenario means."}
+```{r genetic-correlation-figure, fig.cap="Held-out Pearson correlation between GEBV and true genetic value across the 25 outer splits for GBLUP-A, GBLUP-AD, and GBLUP-ADE."}
 p_genetic_correlation <- ggplot(
-  ok_results,
+  results,
   aes(
     x = Scenario,
-    y = Genetic_Correlation,
-    fill = Scenario
+    y = Genetic_Pearson,
+    fill = Model
   )
 ) +
   geom_boxplot(
-    width = 0.58,
+    width = 0.72,
     outlier.shape = NA,
-    alpha = 0.70
+    alpha = 0.75,
+    position = position_dodge(
+      width = 0.8
+    )
   ) +
-  geom_point(
-    position = position_jitter(
-      width = 0.10,
-      height = 0,
-      seed = SEED_GLOBAL + 301L
-    ),
-    alpha = 0.45,
-    size = 1.8
+  scale_fill_gdocs(
+    labels = c(
+      "GBLUP-A",
+      "GBLUP-AD",
+      "GBLUP-ADE"
+    )
   ) +
-  stat_summary(
-    fun = mean,
-    geom = "point",
-    shape = 23,
-    size = 3.2,
-    fill = "white"
-  ) +
-  scale_fill_gdocs() +
   labs(
     x = "Simulation scenario",
-    y = "Correlation with true genetic value",
+    y = "Pearson correlation with true genetic value",
     fill = NULL
   ) +
-  theme_gdocs() +
-  theme(
-    legend.position = "none"
-  )
+  theme_gdocs()
 
-print(p_genetic_correlation)
+print(
+  p_genetic_correlation
+)
 ```
 
 ```{r save-genetic-correlation-tiff, include=FALSE}
@@ -1103,48 +1402,40 @@ ggsave(
 )
 ```
 
-```{r genetic-rmse-figure, fig.cap="Held-out true genetic-value RMSE for GBLUP-ADE across the 25 outer splits in each scenario. Lower values indicate smaller prediction error; white diamonds indicate scenario means."}
+```{r genetic-rmse-figure, fig.cap="Held-out RMSE for true genetic value across the 25 outer splits for GBLUP-A, GBLUP-AD, and GBLUP-ADE."}
 p_genetic_rmse <- ggplot(
-  ok_results,
+  results,
   aes(
     x = Scenario,
     y = Genetic_RMSE,
-    fill = Scenario
+    fill = Model
   )
 ) +
   geom_boxplot(
-    width = 0.58,
+    width = 0.72,
     outlier.shape = NA,
-    alpha = 0.70
+    alpha = 0.75,
+    position = position_dodge(
+      width = 0.8
+    )
   ) +
-  geom_point(
-    position = position_jitter(
-      width = 0.10,
-      height = 0,
-      seed = SEED_GLOBAL + 302L
-    ),
-    alpha = 0.45,
-    size = 1.8
+  scale_fill_gdocs(
+    labels = c(
+      "GBLUP-A",
+      "GBLUP-AD",
+      "GBLUP-ADE"
+    )
   ) +
-  stat_summary(
-    fun = mean,
-    geom = "point",
-    shape = 23,
-    size = 3.2,
-    fill = "white"
-  ) +
-  scale_fill_gdocs() +
   labs(
     x = "Simulation scenario",
     y = "RMSE for true genetic value",
     fill = NULL
   ) +
-  theme_gdocs() +
-  theme(
-    legend.position = "none"
-  )
+  theme_gdocs()
 
-print(p_genetic_rmse)
+print(
+  p_genetic_rmse
+)
 ```
 
 ```{r save-genetic-rmse-tiff, include=FALSE}
@@ -1160,49 +1451,80 @@ ggsave(
 )
 ```
 
-The figures complement the scenario means in two ways:
+The boxplots summarize variation among the 25 held-out splits. They are
+descriptive summaries of the repeated validation design and are not treated as
+independent inferential replicates.
 
-- **Pearson correlation:** larger values indicate stronger linear association
-  with the known genetic signal;
-- **RMSE:** smaller values indicate less absolute prediction error on the scale
-  of the true genetic value.
+## 8. Split-level variability
 
-The spread within each scenario records sensitivity to the outer assessment
-sample rather than a new source of model tuning. These split-level distributions
-are descriptive summaries of held-out-sample sensitivity; the 25 values are not
-treated as statistically independent replicates or as inferential uncertainty.
-
-## 10. Split-level variability
-
-A compact numeric summary of the same 25 outer-split distributions is retained
-for reproducibility and direct comparison across scenarios.
+The same split-level results can be summarized numerically without introducing
+additional model-selection criteria.
 
 ```{r split-summary}
-split_summary <- do.call(
-  rbind,
-  lapply(
-    split(
-      ok_results,
-      ok_results$Scenario
-    ),
-    function(x) {
+split_summary <- data.frame(
+  Scenario = character(0),
+  Model = character(0),
+  N = integer(0),
+  Pearson_mean = numeric(0),
+  Pearson_sd = numeric(0),
+  Pearson_min = numeric(0),
+  Pearson_max = numeric(0),
+  Spearman_mean = numeric(0),
+  Spearman_sd = numeric(0),
+  RMSE_mean = numeric(0),
+  RMSE_sd = numeric(0),
+  MAE_mean = numeric(0),
+  MAE_sd = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (
+  scenario in
+    scenario_names
+) {
+
+  for (
+    model_name in
+      model_names
+  ) {
+
+    x <- results[
+      results$Scenario == scenario &
+        as.character(
+          results$Model
+        ) == model_name,
+      ,
+      drop = FALSE
+    ]
+
+    split_summary <- rbind(
+      split_summary,
       data.frame(
-        Scenario = unique(x$Scenario),
+        Scenario = scenario,
+        Model = model_name,
         N = nrow(x),
-        Cor_mean = mean(
-          x$Genetic_Correlation,
+        Pearson_mean = mean(
+          x$Genetic_Pearson,
           na.rm = TRUE
         ),
-        Cor_sd = sd(
-          x$Genetic_Correlation,
+        Pearson_sd = sd(
+          x$Genetic_Pearson,
           na.rm = TRUE
         ),
-        Cor_min = min(
-          x$Genetic_Correlation,
+        Pearson_min = min(
+          x$Genetic_Pearson,
           na.rm = TRUE
         ),
-        Cor_max = max(
-          x$Genetic_Correlation,
+        Pearson_max = max(
+          x$Genetic_Pearson,
+          na.rm = TRUE
+        ),
+        Spearman_mean = mean(
+          x$Genetic_Spearman,
+          na.rm = TRUE
+        ),
+        Spearman_sd = sd(
+          x$Genetic_Spearman,
           na.rm = TRUE
         ),
         RMSE_mean = mean(
@@ -1217,84 +1539,59 @@ split_summary <- do.call(
           x$Genetic_MAE,
           na.rm = TRUE
         ),
-        R2_mean = mean(
-          x$Genetic_R2,
+        MAE_sd = sd(
+          x$Genetic_MAE,
           na.rm = TRUE
-        )
+        ),
+        stringsAsFactors = FALSE
       )
-    }
-  )
-)
-
-rownames(split_summary) <- NULL
-split_summary <- split_summary[
-  order(
-    match(
-      split_summary$Scenario,
-      scenario_names
     )
-  ),
-]
+  }
+}
 
 split_summary |>
   knitr::kable(
     format = "html",
     digits = 4,
-    caption = "True genetic-value prediction variability across outer splits",
+    caption = "True genetic-value prediction across outer splits",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
 
-Reporting the mean, standard deviation, minimum, and maximum correlation prevents
-one favorable or unfavorable split from determining the interpretation of a
-scenario. These quantities remain descriptive because repeated cross-validation
-reuses individuals across outer analysis and assessment sets.
+## 9. Computational time
 
-## 11. Computational time
-
-Kernel construction is a one-time operation, whereas model fitting and
-prediction are repeated across the 150 tasks. The timing summary keeps those
-costs separate.
+The genomic matrices are constructed once and reused across the complete
+analysis. Model fitting is repeated for each scenario, model, and outer split.
+The table below summarizes the mean fitting and prediction time per model.
 
 ```{r time-summary}
 time_summary <- aggregate(
   cbind(
     Fit_seconds,
     Predict_seconds
-  ) ~ Scenario,
+  ) ~ Model,
   data = results,
   FUN = mean,
   na.rm = TRUE
 )
 
-time_summary$Kernel_build_seconds <-
-  run_metadata$kernel_build_seconds
-
 time_summary |>
   knitr::kable(
     format = "html",
     digits = 3,
-    caption = "GBLUP-ADE computational time",
+    caption = "Mean computational time per GBLUP fit",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 
-cat(
-  "Total run time:",
-  round(
-    run_metadata$total_run_seconds,
-    2
-  ),
-  "seconds.\n"
-)
+
 ```
 
-Because A, D, and E are built once and reused, their construction time should
-not be interpreted as a cost incurred separately for every outer split. The
-reported times describe the completed run recorded in the saved outputs and
-should not be interpreted as hardware-independent constants of GBLUP-ADE.
+These times describe the completed computation on the machine used for the
+analysis and should not be interpreted as hardware-independent characteristics
+of the models.
 
-## 12. Navigation
+## 10. Navigation
 
 [Previous: Validation design](simulated_data_validation.html) | [Parallel branch: Regularized ANN](simulated_data_ann.html) | [Next: Model comparison](simulated_data_comparison.html)

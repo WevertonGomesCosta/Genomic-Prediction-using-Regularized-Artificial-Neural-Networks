@@ -502,7 +502,7 @@ FINAL_EPOCH_CSV <- "output/simulated/ann/final/simulated_ann_epoch_selection.csv
 
 TUNING_V1_COMPATIBILITY_TOKEN <- 2000L
 ANN_TUNING_CONFIG_ID <- paste(
-  "ANN_TUNING_CANONICAL_V1",
+  "ANN_TUNING_CANONICAL_V2",
   paste(names(ARCHITECTURES), collapse = "-"),
   paste(LEARNING_RATES, collapse = "-"),
   paste(L1_VALUES, collapse = "-"),
@@ -516,7 +516,7 @@ ANN_TUNING_CONFIG_ID <- paste(
 )
 
 FINAL_CONFIG_ID <- paste0(
-  "ANN_FINAL_CANONICAL_V2__FROM__",
+  "ANN_FINAL_CANONICAL_V3__FROM__",
   ANN_TUNING_CONFIG_ID,
   "__FINAL_EPOCH_CAP_",
   FINAL_EPOCH_MAX_EPOCHS,
@@ -990,14 +990,10 @@ run_simulated_ann_tuning_task <- function(task_index) {
             (prediction_assessment - observed_assessment)^2
           )
         ),
-        Correlation = cor(
+        Pearson = cor(
           prediction_assessment,
-          observed_assessment
-        ),
-        MAE = mean(
-          abs(
-            prediction_assessment - observed_assessment
-          )
+          observed_assessment,
+          method = "pearson"
         ),
         EarlyStop_epoch = as.integer(checkpoint_epoch),
         Last_epoch = as.integer(last_epoch),
@@ -1027,8 +1023,7 @@ run_simulated_ann_tuning_task <- function(task_index) {
       L2 = 0,
       Inner_folds_ok = 4L,
       Mean_RMSE = mean(folds$RMSE),
-      Mean_Correlation = mean(folds$Correlation),
-      Mean_MAE = mean(folds$MAE),
+      Mean_Pearson = mean(folds$Pearson),
       Median_EarlyStop_epoch = median(folds$EarlyStop_epoch),
       Max_Last_epoch = max(folds$Last_epoch),
       N_epoch_ceiling = sum(folds$Hit_epoch_ceiling),
@@ -1056,7 +1051,7 @@ run_simulated_ann_tuning_task <- function(task_index) {
   structure_summary <- structure_summary[
     order(
       structure_summary$Mean_RMSE,
-      -structure_summary$Mean_Correlation,
+      -structure_summary$Mean_Pearson,
       structure_summary$Parameters,
       structure_summary$Penalty,
       structure_summary$Learning_rate,
@@ -1247,14 +1242,10 @@ run_simulated_ann_tuning_task <- function(task_index) {
               (prediction_assessment - observed_assessment)^2
             )
           ),
-          Correlation = cor(
+          Pearson = cor(
             prediction_assessment,
-            observed_assessment
-          ),
-          MAE = mean(
-            abs(
-              prediction_assessment - observed_assessment
-            )
+            observed_assessment,
+            method = "pearson"
           ),
           EarlyStop_epoch = as.integer(checkpoint_epoch),
           Last_epoch = as.integer(last_epoch),
@@ -1284,8 +1275,7 @@ run_simulated_ann_tuning_task <- function(task_index) {
         L2 = grid$L2[candidate_index],
         Inner_folds_ok = 4L,
         Mean_RMSE = mean(folds$RMSE),
-        Mean_Correlation = mean(folds$Correlation),
-        Mean_MAE = mean(folds$MAE),
+        Mean_Pearson = mean(folds$Pearson),
         Median_EarlyStop_epoch = median(folds$EarlyStop_epoch),
         Max_Last_epoch = max(folds$Last_epoch),
         N_epoch_ceiling = sum(folds$Hit_epoch_ceiling),
@@ -1309,7 +1299,7 @@ run_simulated_ann_tuning_task <- function(task_index) {
     model_summary <- model_summary[
       order(
         model_summary$Mean_RMSE,
-        -model_summary$Mean_Correlation,
+        -model_summary$Mean_Pearson,
         model_summary$Parameters,
         model_summary$Penalty,
         model_summary$Learning_rate,
@@ -1333,8 +1323,7 @@ run_simulated_ann_tuning_task <- function(task_index) {
       L1 = 0,
       L2 = 0,
       Inner_RMSE = chosen_structure$Mean_RMSE,
-      Inner_Correlation = chosen_structure$Mean_Correlation,
-      Inner_MAE = chosen_structure$Mean_MAE,
+      Inner_Pearson = chosen_structure$Mean_Pearson,
       stringsAsFactors = FALSE
     ),
     data.frame(
@@ -1344,8 +1333,7 @@ run_simulated_ann_tuning_task <- function(task_index) {
       L1 = penalty_selected$ANN_L1$L1,
       L2 = penalty_selected$ANN_L1$L2,
       Inner_RMSE = penalty_selected$ANN_L1$Mean_RMSE,
-      Inner_Correlation = penalty_selected$ANN_L1$Mean_Correlation,
-      Inner_MAE = penalty_selected$ANN_L1$Mean_MAE,
+      Inner_Pearson = penalty_selected$ANN_L1$Mean_Pearson,
       stringsAsFactors = FALSE
     ),
     data.frame(
@@ -1355,8 +1343,7 @@ run_simulated_ann_tuning_task <- function(task_index) {
       L1 = penalty_selected$ANN_L2$L1,
       L2 = penalty_selected$ANN_L2$L2,
       Inner_RMSE = penalty_selected$ANN_L2$Mean_RMSE,
-      Inner_Correlation = penalty_selected$ANN_L2$Mean_Correlation,
-      Inner_MAE = penalty_selected$ANN_L2$Mean_MAE,
+      Inner_Pearson = penalty_selected$ANN_L2$Mean_Pearson,
       stringsAsFactors = FALSE
     ),
     data.frame(
@@ -1366,8 +1353,7 @@ run_simulated_ann_tuning_task <- function(task_index) {
       L1 = penalty_selected$ANN_L1_L2$L1,
       L2 = penalty_selected$ANN_L1_L2$L2,
       Inner_RMSE = penalty_selected$ANN_L1_L2$Mean_RMSE,
-      Inner_Correlation = penalty_selected$ANN_L1_L2$Mean_Correlation,
-      Inner_MAE = penalty_selected$ANN_L1_L2$Mean_MAE,
+      Inner_Pearson = penalty_selected$ANN_L1_L2$Mean_Pearson,
       stringsAsFactors = FALSE
     )
   )
@@ -1525,7 +1511,7 @@ manifest <- list(
   min_delta = MIN_DELTA,
   early_validation_fraction = EARLY_VALIDATION_FRACTION,
   primary_tuning_metric = "mean inner-assessment RMSE",
-  secondary_tuning_metric = "mean inner-assessment correlation",
+  secondary_tuning_metric = "mean inner-assessment Pearson correlation",
   epoch_used_in_candidate_ranking = FALSE,
   outer_assessment_used = FALSE,
   true_genetic_value_used = FALSE,
@@ -1631,7 +1617,8 @@ hierarchy:
 6. candidate identifier.
 
 Early-stop epoch information is stored as an optimization diagnostic but does
-not participate in candidate ranking.
+not participate in candidate ranking. No predictive metric other than RMSE and
+Pearson is calculated, stored, or used in ANN hyperparameter tuning.
 
 ## 6. Selected configurations and tuning diagnostics
 
@@ -1643,6 +1630,19 @@ selected_configurations <- readRDS(SELECTED_RDS)
 candidate_summary <- readRDS(CANDIDATE_RDS)
 fold_results <- readRDS(FOLD_RDS)
 tuning_metadata <- readRDS(RUN_RDS)
+
+stopifnot(
+  identical(tuning_metadata$config_id, ANN_TUNING_CONFIG_ID),
+  setequal(
+    grep("^Inner_", names(selected_configurations), value = TRUE),
+    c("Inner_RMSE", "Inner_Pearson")
+  ),
+  setequal(
+    grep("^Mean_", names(candidate_summary), value = TRUE),
+    c("Mean_RMSE", "Mean_Pearson")
+  ),
+  all(c("RMSE", "Pearson") %in% names(fold_results))
+)
 
 saved_tuning_summary <- data.frame(
   Object = c(
@@ -2199,9 +2199,10 @@ run_simulated_ann_final_task <- function(task_index) {
         (validation_prediction - validation_observed)^2
       )
     )
-    validation_correlation <- cor(
+    validation_pearson <- cor(
       validation_prediction,
-      validation_observed
+      validation_observed,
+      method = "pearson"
     )
 
     # Refit all 800 outer-analysis individuals for exactly Best_epoch.
@@ -2347,9 +2348,15 @@ run_simulated_ann_final_task <- function(task_index) {
       scenario_index
     ]
 
-    genetic_correlation <- cor(
+    genetic_pearson <- cor(
       predicted_value,
-      true_genetic_value
+      true_genetic_value,
+      method = "pearson"
+    )
+    genetic_spearman <- cor(
+      predicted_value,
+      true_genetic_value,
+      method = "spearman"
     )
     genetic_rmse <- sqrt(
       mean(
@@ -2371,20 +2378,15 @@ run_simulated_ann_final_task <- function(task_index) {
         )
       )[2]
     )
-    genetic_r2 <- 1 -
-      sum(
-        (true_genetic_value - predicted_value)^2
-      ) /
-      sum(
-        (
-          true_genetic_value -
-          mean(true_genetic_value)
-        )^2
-      )
-
-    phenotype_correlation <- cor(
+    phenotype_pearson <- cor(
       predicted_value,
-      observed
+      observed,
+      method = "pearson"
+    )
+    phenotype_spearman <- cor(
+      predicted_value,
+      observed,
+      method = "spearman"
     )
     phenotype_rmse <- sqrt(
       mean(
@@ -2404,14 +2406,6 @@ run_simulated_ann_final_task <- function(task_index) {
         lm(observed ~ predicted_value)
       )[2]
     )
-    phenotype_r2 <- 1 -
-      sum(
-        (observed - predicted_value)^2
-      ) /
-      sum(
-        (observed - mean(observed))^2
-      )
-
     meta <- control[
       control$Scenario == task$Scenario,
       ,
@@ -2439,24 +2433,23 @@ run_simulated_ann_final_task <- function(task_index) {
         last_epoch >= FINAL_EPOCH_MAX_EPOCHS &&
         !stopped_by_patience,
       Inner_RMSE = config$Inner_RMSE,
-      Inner_Correlation = config$Inner_Correlation,
-      Inner_MAE = config$Inner_MAE,
+      Inner_Pearson = config$Inner_Pearson,
       N_train = 800L,
       N_test = 200L,
       N_pred_finite = sum(is.finite(predicted_value)),
       N_zero_variance_markers = sum(zero_variance),
-      Genetic_Correlation = genetic_correlation,
+      Genetic_Pearson = genetic_pearson,
+      Genetic_Spearman = genetic_spearman,
       Genetic_RMSE = genetic_rmse,
       Genetic_MAE = genetic_mae,
       Genetic_Bias = genetic_bias,
       Genetic_Slope = genetic_slope,
-      Genetic_R2 = genetic_r2,
-      Phenotype_Correlation = phenotype_correlation,
+      Phenotype_Pearson = phenotype_pearson,
+      Phenotype_Spearman = phenotype_spearman,
       Phenotype_RMSE = phenotype_rmse,
       Phenotype_MAE = phenotype_mae,
       Phenotype_Bias = phenotype_bias,
       Phenotype_Slope = phenotype_slope,
-      Phenotype_R2 = phenotype_r2,
       Epoch_selection_seconds = epoch_fit_seconds,
       Final_fit_seconds = final_fit_seconds,
       Predict_seconds = prediction_seconds,
@@ -2506,7 +2499,7 @@ run_simulated_ann_final_task <- function(task_index) {
         last_epoch >= FINAL_EPOCH_MAX_EPOCHS &&
         !stopped_by_patience,
       Validation_RMSE = validation_rmse,
-      Validation_Correlation = validation_correlation,
+      Validation_Pearson = validation_pearson,
       N_epoch_fit = length(fit_ids),
       N_epoch_validation = length(validation_ids),
       Fit_seconds = epoch_fit_seconds,
@@ -2704,6 +2697,33 @@ predictions <- readRDS(FINAL_PREDICTIONS_RDS)
 epoch_selection <- readRDS(FINAL_EPOCH_RDS)
 final_meta <- readRDS(FINAL_RUN_RDS)
 
+expected_heldout_metrics <- c(
+  "Genetic_Pearson",
+  "Genetic_Spearman",
+  "Genetic_RMSE",
+  "Genetic_MAE",
+  "Genetic_Bias",
+  "Genetic_Slope",
+  "Phenotype_Pearson",
+  "Phenotype_Spearman",
+  "Phenotype_RMSE",
+  "Phenotype_MAE",
+  "Phenotype_Bias",
+  "Phenotype_Slope"
+)
+
+stopifnot(
+  identical(final_meta$config_id, FINAL_CONFIG_ID),
+  identical(final_meta$tuning_config_id, ANN_TUNING_CONFIG_ID),
+  all(expected_heldout_metrics %in% names(results)),
+  !any(grepl("R2", names(results), fixed = TRUE)),
+  setequal(
+    grep("^Inner_", names(results), value = TRUE),
+    c("Inner_RMSE", "Inner_Pearson")
+  ),
+  "Validation_Pearson" %in% names(epoch_selection)
+)
+
 final_output_summary <- data.frame(
   Object = c(
     "Model-task results",
@@ -2752,18 +2772,18 @@ ok <- results[
 
 scenario_performance <- aggregate(
   cbind(
-    Genetic_Correlation,
+    Genetic_Pearson,
+    Genetic_Spearman,
     Genetic_RMSE,
     Genetic_MAE,
     Genetic_Bias,
     Genetic_Slope,
-    Genetic_R2,
-    Phenotype_Correlation,
+    Phenotype_Pearson,
+    Phenotype_Spearman,
     Phenotype_RMSE,
     Phenotype_MAE,
     Phenotype_Bias,
-    Phenotype_Slope,
-    Phenotype_R2
+    Phenotype_Slope
   ) ~ Scenario + Model + QTL_N + H2_nominal,
   data = ok,
   FUN = mean,
@@ -2785,12 +2805,12 @@ scenario_performance[
     "Model",
     "QTL_N",
     "H2_nominal",
-    "Genetic_Correlation",
+    "Genetic_Pearson",
+    "Genetic_Spearman",
     "Genetic_RMSE",
     "Genetic_MAE",
     "Genetic_Bias",
-    "Genetic_Slope",
-    "Genetic_R2"
+    "Genetic_Slope"
   )
 ] |>
   knitr::kable(
@@ -2812,12 +2832,12 @@ scenario_performance[
   , c(
     "Scenario",
     "Model",
-    "Phenotype_Correlation",
+    "Phenotype_Pearson",
+    "Phenotype_Spearman",
     "Phenotype_RMSE",
     "Phenotype_MAE",
     "Phenotype_Bias",
-    "Phenotype_Slope",
-    "Phenotype_R2"
+    "Phenotype_Slope"
   )
 ] |>
   knitr::kable(
@@ -2841,7 +2861,7 @@ p_ann_correlation <- ggplot(
   ok,
   aes(
     x = Model,
-    y = Genetic_Correlation,
+    y = Genetic_Pearson,
     fill = Model
   )
 ) +
@@ -2965,9 +2985,10 @@ ggsave(
 ```{r overall-ann-summary}
 overall_ann <- aggregate(
   cbind(
-    Genetic_Correlation,
+    Genetic_Pearson,
+    Genetic_Spearman,
     Genetic_RMSE,
-    Genetic_R2
+    Genetic_MAE
   ) ~ Model,
   data = ok,
   FUN = mean,
@@ -2990,13 +3011,11 @@ overall_ann |>
   )
 ```
 
-Across all outer tasks, ANN-L1+L2 has the highest mean genetic correlation and
-lowest mean genetic RMSE among the four ANN variants, but its advantage over
-ANN-L1 is very small. ANN-L2 remains close to ANN_0. Within this bounded search
-space, the observed regularization gain is therefore driven mainly by the L1
-component. The formal task-matched comparison with GBLUP-ADE is reserved for
-M05.
+Across all outer tasks, the four ANN variants are summarized descriptively
+with the common held-out predictive metrics. Interpretation of regularization
+effects and the complete task-matched comparison with GBLUP-A, GBLUP-AD, and
+GBLUP-ADE are reserved for M05.
 
 ## 10. Navigation
 
-[Previous: Validation design](simulated_data_validation.html) | [Parallel branch: GBLUP-ADE](simulated_data_gblup.html) | [Next: Model comparison](simulated_data_comparison.html)
+[Previous: Validation design](simulated_data_validation.html) | [Parallel branch: GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) | [Next: Model comparison](simulated_data_comparison.html)

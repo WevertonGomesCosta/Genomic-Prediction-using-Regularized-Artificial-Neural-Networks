@@ -568,9 +568,10 @@ stopifnot(
 ```
 
 Candidate selection is prespecified. Mean inner-assessment RMSE is minimized
-first; mean Pearson correlation is the first tie-breaker, followed by mean
-Spearman correlation, parameter count, penalty magnitude, learning rate, and a
-deterministic candidate identifier.
+first; mean Pearson correlation is the only performance tie-breaker, followed
+by parameter count, penalty magnitude, learning rate, and a deterministic
+candidate identifier. No other predictive metric is calculated, stored, or
+used in ANN hyperparameter tuning.
 
 Architecture and learning rate are selected only once per trait and outer split
 using `ANN_0`. The three regularized variants then compare only their applicable
@@ -750,7 +751,7 @@ run_start <- proc.time()[[
 ]]
 
 ANN_TUNING_CONFIG_ID <- paste(
-  "REAL_ANN_TUNING_V1",
+  "REAL_ANN_TUNING_V2",
   paste(
     names(
       ARCHITECTURES
@@ -1885,16 +1886,9 @@ for (
             method = "pearson"
           )
 
-          spearman <- cor(
-            prediction_assessment,
-            observed_assessment,
-            method = "spearman"
-          )
-
         } else {
 
           pearson <- NA_real_
-          spearman <- NA_real_
         }
 
         rmse <- sqrt(
@@ -1903,13 +1897,6 @@ for (
               prediction_assessment -
               observed_assessment
             )^2
-          )
-        )
-
-        mae <- mean(
-          abs(
-            prediction_assessment -
-            observed_assessment
           )
         )
 
@@ -1971,10 +1958,6 @@ for (
             rmse,
           Pearson =
             pearson,
-          Spearman =
-            spearman,
-          MAE =
-            mae,
           EarlyStop_epoch =
             best_epoch,
           Last_epoch =
@@ -2021,25 +2004,12 @@ for (
         na.rm = TRUE
       )
 
-      mean_spearman <- mean(
-        candidate_folds$Spearman,
-        na.rm = TRUE
-      )
-
       if (
         !is.finite(
           mean_pearson
         )
       ) {
         mean_pearson <- NA_real_
-      }
-
-      if (
-        !is.finite(
-          mean_spearman
-        )
-      ) {
-        mean_spearman <- NA_real_
       }
 
       stage_summary_rows[[
@@ -2082,12 +2052,6 @@ for (
           ),
         Mean_Pearson =
           mean_pearson,
-        Mean_Spearman =
-          mean_spearman,
-        Mean_MAE =
-          mean(
-            candidate_folds$MAE
-          ),
         Median_EarlyStop_epoch =
           median(
             candidate_folds$EarlyStop_epoch
@@ -2142,19 +2106,10 @@ for (
         -Inf
       )
 
-      stage_summary$Spearman_order <- ifelse(
-        is.finite(
-          stage_summary$Mean_Spearman
-        ),
-        stage_summary$Mean_Spearman,
-        -Inf
-      )
-
       stage_summary <- stage_summary[
         order(
           stage_summary$Mean_RMSE,
           -stage_summary$Pearson_order,
-          -stage_summary$Spearman_order,
           stage_summary$Parameters,
           stage_summary$Penalty,
           stage_summary$Learning_rate,
@@ -2202,10 +2157,6 @@ for (
             chosen_structure$Mean_RMSE,
           Inner_Pearson =
             chosen_structure$Mean_Pearson,
-          Inner_Spearman =
-            chosen_structure$Mean_Spearman,
-          Inner_MAE =
-            chosen_structure$Mean_MAE,
           stringsAsFactors = FALSE
         )
       )
@@ -2236,19 +2187,10 @@ for (
           -Inf
         )
 
-        model_summary$Spearman_order <- ifelse(
-          is.finite(
-            model_summary$Mean_Spearman
-          ),
-          model_summary$Mean_Spearman,
-          -Inf
-        )
-
         model_summary <- model_summary[
           order(
             model_summary$Mean_RMSE,
             -model_summary$Pearson_order,
-            -model_summary$Spearman_order,
             model_summary$Parameters,
             model_summary$Penalty,
             model_summary$Learning_rate,
@@ -2292,10 +2234,6 @@ for (
               chosen_penalty$Mean_RMSE,
             Inner_Pearson =
               chosen_penalty$Mean_Pearson,
-            Inner_Spearman =
-              chosen_penalty$Mean_Spearman,
-            Inner_MAE =
-              chosen_penalty$Mean_MAE,
             stringsAsFactors = FALSE
           )
         )
@@ -2587,8 +2525,10 @@ tuning_meta <- list(
     MIN_DELTA,
   early_validation_fraction =
     EARLY_VALIDATION_FRACTION,
-  selection_metric =
+  primary_tuning_metric =
     "Mean inner-assessment RMSE",
+  secondary_tuning_metric =
+    "Mean inner-assessment Pearson correlation",
   device =
     ANN_DEVICE_LABEL,
   parallel_backend =
@@ -2750,6 +2690,52 @@ if (
   )
 }
 
+stopifnot(
+  setequal(
+    grep(
+      "^Inner_",
+      names(
+        selected_configurations
+      ),
+      value = TRUE
+    ),
+    c(
+      "Inner_RMSE",
+      "Inner_Pearson"
+    )
+  ),
+  setequal(
+    grep(
+      "^Mean_",
+      names(
+        candidate_summary
+      ),
+      value = TRUE
+    ),
+    c(
+      "Mean_RMSE",
+      "Mean_Pearson"
+    )
+  ),
+  identical(
+    intersect(
+      names(
+        fold_results
+      ),
+      c(
+        "RMSE",
+        "Pearson",
+        "Spearman",
+        "MAE"
+      )
+    ),
+    c(
+      "RMSE",
+      "Pearson"
+    )
+  )
+)
+
 tuning_output_summary <- data.frame(
   Object = c(
     "Selected configurations",
@@ -2827,7 +2813,7 @@ if (
 
 ```{r run-final-ann, eval=RUN_ANN}
 FINAL_CONFIG_ID <- paste(
-  "REAL_ANN_FINAL_V1",
+  "REAL_ANN_FINAL_V2",
   tuning_meta$config_id,
   FINAL_EPOCH_MAX_EPOCHS,
   "BEST_EPOCH_REFIT",
@@ -3834,16 +3820,9 @@ for (
         method = "pearson"
       )
 
-      validation_spearman <- cor(
-        validation_prediction,
-        validation_observed,
-        method = "spearman"
-      )
-
     } else {
 
       validation_pearson <- NA_real_
-      validation_spearman <- NA_real_
     }
 
     train_index <- match(
@@ -4348,10 +4327,6 @@ for (
         config$Inner_RMSE,
       Inner_Pearson =
         config$Inner_Pearson,
-      Inner_Spearman =
-        config$Inner_Spearman,
-      Inner_MAE =
-        config$Inner_MAE,
       N_train = 156L,
       N_test = 39L,
       N_pred_finite =
@@ -4468,8 +4443,6 @@ for (
         validation_rmse,
       Validation_Pearson =
         validation_pearson,
-      Validation_Spearman =
-        validation_spearman,
       N_epoch_fit =
         length(
           fit_index
@@ -4917,6 +4890,48 @@ if (
     FINAL_RUN_RDS
   )
 }
+
+stopifnot(
+  setequal(
+    grep(
+      "^Inner_",
+      names(
+        results
+      ),
+      value = TRUE
+    ),
+    c(
+      "Inner_RMSE",
+      "Inner_Pearson"
+    )
+  ),
+  all(
+    c(
+      "BLUP_Correlation",
+      "BLUP_Spearman",
+      "BLUP_RMSE",
+      "BLUP_MAE",
+      "BLUP_Bias",
+      "BLUP_Slope"
+    ) %in%
+      names(
+        results
+      )
+  ),
+  setequal(
+    grep(
+      "^Validation_",
+      names(
+        epoch_selection
+      ),
+      value = TRUE
+    ),
+    c(
+      "Validation_RMSE",
+      "Validation_Pearson"
+    )
+  )
+)
 
 final_output_summary <- data.frame(
   Object = c(
