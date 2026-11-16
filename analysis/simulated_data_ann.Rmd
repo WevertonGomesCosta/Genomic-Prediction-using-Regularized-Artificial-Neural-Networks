@@ -194,13 +194,6 @@ claims of numerical convergence and not fixed training lengths. Early stopping
 can terminate an optimization run earlier when the prespecified patience rule is
 met.
 
-Independent `Scenario x outer split` tasks are executed with
-`future::multisession`. `ANN_WORKERS` controls the number of concurrent R
-workers. When it is unset or zero, all logical CPU cores detected by R are
-eligible. The same worker rule is used for CPU and CUDA; CUDA is not restricted
-to a single worker. With multiple GPUs, tasks are distributed round-robin across
-the detected CUDA devices.
-
 ## 3. Data and validation structure
 
 The ANN models use the common simulated dataset and nested cross-validation partitions.
@@ -473,10 +466,6 @@ deviation are estimated **only from the current fitting subset**. Those fitted
 transformations are then applied unchanged to the early-validation and
 inner-assessment observations. Markers with fitting-set standard deviation below
 `1e-8` receive unit scale to avoid division by zero.
-
-The complete tuning code below writes the same historical output schemas when
-`RUN_ANN_TUNING=1`. The normal page build leaves this expensive stage disabled
-and reads the existing saved outputs instead.
 
 ```{r tuning-paths, include=FALSE}
 SELECTED_RDS <- "output/simulated/ann/tuning/simulated_ann_tuning_selected_configurations.rds"
@@ -1615,9 +1604,7 @@ hierarchy:
 5. smaller learning rate;
 6. candidate identifier.
 
-Early-stop epoch information is stored as an optimization diagnostic but does
-not participate in candidate ranking. No predictive metric other than RMSE and
-Pearson is calculated, stored, or used in ANN hyperparameter tuning.
+Early stopping determines the optimization length, whereas hyperparameter selection is based on inner-assessment RMSE with Pearson correlation as the performance tie-breaker.
 
 ## 6. ANN hyperparameter selection
 
