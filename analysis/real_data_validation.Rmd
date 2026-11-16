@@ -117,9 +117,7 @@ validation_parameters |>
 
 ## 3. Population entering validation
 
-The validation module reads only the common object prepared in the preceding
-data-preparation stage. The 195 aligned individuals and the common genomic
-matrix are therefore fixed before partition generation.
+Cross-validation is performed on the 195 genotyped individuals with aligned phenotypic BLUPs and genomic markers.
 
 ```{r validation-input}
 common <- readRDS(
