@@ -19,7 +19,7 @@ editor_options:
 
 This module closes the real-data genomic-prediction workflow by comparing the
 three GBLUP structures and the four artificial neural-network variants on the
-same repeated outer validation design.
+same repeated outer cross-validation procedure.
 
 The seven models are:
 
@@ -32,10 +32,7 @@ The seven models are:
 - `ANN_L2`: L2-regularized neural network;
 - `ANN_L1_L2`: neural network with simultaneous L1 and L2 regularization.
 
-No model is refitted in this module. The BLUPs obtained in the longitudinal
-phenotype module are the targets, and every genomic model produces GEBVs for
-the same individuals under the common validation design. Raw phenotypic
-observations are not compared in this module.
+The individual BLUPs from the phenotypic analysis constitute the prediction targets. All genomic models are evaluated using the same individuals and outer cross-validation partitions.
 
 The primary split-level metrics are Pearson correlation, Spearman correlation,
 RMSE, and MAE between BLUP and GEBV. For the global ranking, the five
@@ -85,9 +82,9 @@ dir.create(
 )
 ```
 
-## 2. Inputs and common evaluation design
+## 2. Prediction data and cross-validation
 
-### 2.1 Saved outputs from both model branches
+### 2.1 GBLUP and ANN predictions
 
 ```{r packages-and-inputs}
 library(knitr)
@@ -503,8 +500,8 @@ input_summary |>
   )
 ```
 
-The GBLUP branch contributes 225 model-by-trait-by-split results and 8,775
-GEBV records. The ANN branch contributes 300 model-by-trait-by-split results
+The GBLUP models contribute 225 model-by-trait-by-split results and 8,775
+GEBV records. The ANN models contribute 300 model-by-trait-by-split results
 and 11,700 GEBV records. The final comparison therefore contains 525
 model-by-trait-by-split results across seven models.
 
@@ -687,7 +684,7 @@ Four split-level metrics compare GEBV with BLUP.
   scale.
 
 Bias and calibration slope remain available in the stored model outputs as
-secondary diagnostics, but the cross-model comparison focuses on the four
+complementary measures, while the cross-model comparison focuses on the four
 prespecified primary metrics.
 
 For the global ranking, the five predictions available for each
@@ -1994,7 +1991,7 @@ paired_summary |>
 ```
 
 These paired contrasts summarize the direction and magnitude of differences
-within the common outer validation design. They are not interpreted as
+within the common outer cross-validation procedure. They are not interpreted as
 independent-replicate significance tests.
 
 ## 6. Global ranking
@@ -3396,7 +3393,7 @@ identical BLUPs, no model-specific post-processing of individual folds, and
 global ranking from the GEBV obtained for each individual from its five
 predictions.
 
-## 9. Comparison output contract
+## 9. Model-comparison results
 
 ```{r comparison-output-contract}
 output_contract <- data.frame(
@@ -3494,5 +3491,5 @@ output_contract |>
 
 [GBLUP A/AD/ADE](real_data_gblup.html) |
 [Regularized ANN](real_data_ann.html) |
-[Validation design](real_data_validation.html) |
+[Pre-validation](real_data_validation.html) |
 [Home](index.html)
