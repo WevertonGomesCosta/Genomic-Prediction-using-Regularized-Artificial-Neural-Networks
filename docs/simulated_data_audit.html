@@ -11,7 +11,7 @@
 
 <meta name="author" content="Weverton Gomes da Costa" />
 
-<meta name="date" content="2026-09-08" />
+<meta name="date" content="2026-11-16" />
 
 <title>Simulated genomic data: structure and preparation</title>
 
@@ -37,6 +37,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -59,115 +61,18 @@ div.section {
   ul.task-list{list-style: none;}
     </style>
 
-
-
-<style type="text/css">
-  code {
-    white-space: pre;
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
   }
-  .sourceCode {
-    overflow: visible;
-  }
-</style>
-<style type="text/css" data-origin="pandoc">
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
 }
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
-code span.al { color: #ff0000; } /* Alert */
-code span.an { color: #008000; } /* Annotation */
-code span.at { } /* Attribute */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #0000ff; } /* ControlFlow */
-code span.ch { color: #008080; } /* Char */
-code span.cn { } /* Constant */
-code span.co { color: #008000; } /* Comment */
-code span.cv { color: #008000; } /* CommentVar */
-code span.do { color: #008000; } /* Documentation */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.im { } /* Import */
-code span.in { color: #008000; } /* Information */
-code span.kw { color: #0000ff; } /* Keyword */
-code span.op { } /* Operator */
-code span.ot { color: #ff4000; } /* Other */
-code span.pp { color: #ff4000; } /* Preprocessor */
-code span.sc { color: #008080; } /* SpecialChar */
-code span.ss { color: #008080; } /* SpecialString */
-code span.st { color: #008080; } /* String */
-code span.va { } /* Variable */
-code span.vs { color: #008080; } /* VerbatimString */
-code span.wa { color: #008000; font-weight: bold; } /* Warning */
-
-.sourceCode .row {
-  width: 100%;
-}
-.sourceCode {
-  overflow-x: auto;
-}
-.code-folding-btn {
-  margin-right: -30px;
-}
-</style>
-<script>
-// apply pandoc div.sourceCode style to pre.sourceCode instead
-(function() {
-  var sheets = document.styleSheets;
-  for (var i = 0; i < sheets.length; i++) {
-    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
-    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    var j = 0;
-    while (j < rules.length) {
-      var rule = rules[j];
-      // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
-        j++;
-        continue;
-      }
-      var style = rule.style.cssText;
-      // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') {
-        j++;
-        continue;
-      }
-      // replace div.sourceCode by a pre.sourceCode rule
-      sheets[i].deleteRule(j);
-      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
-    }
-  }
-})();
 </script>
+
+
 
 
 <style type="text/css">
@@ -454,13 +359,40 @@ div.tocify {
       <a href="simulated_data_validation.html">Validation design</a>
     </li>
     <li>
-      <a href="simulated_data_gblup.html">GBLUP-ADE</a>
+      <a href="simulated_data_gblup.html">GBLUP A / AD / ADE</a>
     </li>
     <li>
       <a href="simulated_data_ann.html">ANN</a>
     </li>
     <li>
       <a href="simulated_data_comparison.html">Model comparison</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Real data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="real_data_phenotype.html">1. Longitudinal phenotypes and BLUPs</a>
+    </li>
+    <li>
+      <a href="real_data_audit.html">2. Genomic data audit</a>
+    </li>
+    <li>
+      <a href="real_data_validation.html">3. Validation design</a>
+    </li>
+    <li>
+      <a href="real_data_gblup.html">4A. GBLUP A / AD / ADE</a>
+    </li>
+    <li>
+      <a href="real_data_ann.html">4B. Regularized ANN</a>
+    </li>
+    <li>
+      <a href="real_data_comparison.html">5. Model comparison</a>
     </li>
   </ul>
 </li>
@@ -476,6 +408,7 @@ div.tocify {
   <a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks">
     <span class="fa fa-github"></span>
      
+    Source code
   </a>
 </li>
       </ul>
@@ -500,7 +433,7 @@ div.tocify {
 <h1 class="title toc-ignore">Simulated genomic data: structure and
 preparation</h1>
 <h4 class="author">Weverton Gomes da Costa</h4>
-<h4 class="date">2026-09-08</h4>
+<h4 class="date">2026-11-16</h4>
 
 </div>
 
@@ -529,7 +462,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-09-08
+<strong>Last updated:</strong> 2026-11-16
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -661,15 +594,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree97010e73e37325042eb701f9a2b749cfb4173823targetblank97010e7a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree818db1eef730b082e603d85e0f2fc336d84d55ectargetblank818db1ea">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/97010e73e37325042eb701f9a2b749cfb4173823" target="_blank">97010e7</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/818db1eef730b082e603d85e0f2fc336d84d55ec" target="_blank">818db1e</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree97010e73e37325042eb701f9a2b749cfb4173823targetblank97010e7a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree818db1eef730b082e603d85e0f2fc336d84d55ectargetblank818db1ea"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -679,7 +612,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/97010e73e37325042eb701f9a2b749cfb4173823" target="_blank">97010e7</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/818db1eef730b082e603d85e0f2fc336d84d55ec" target="_blank">818db1e</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -697,24 +630,8 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    .github/
-    Ignored:    .local/
-    Ignored:    code/legacy/
-    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica (1).xlsx
-    Ignored:    data/dados_reais/Fenótipos 2014_2015_2016_C.arabica.xlsx
-    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012
-    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.indv
-    Ignored:    data/dados_reais/FiltStep1_minQ10.0_minDP3_DPrange15-maxMeanDepth750_miss0.4_maf0.01_mac1_EMB_291701_SNPs_Raw.vcf.012.012.pos
-    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.indv.txt
-    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.pos.txt
-    Ignored:    data/dados_reais/FiltStep1_minQ10_minDP3_DPrange15-750_miss0.4_maf0.01_mac1_EMB_291701_filt1_snps_RAW.012.txt
-    Ignored:    data/dados_reais/Rótulos C. arabica_Proj_Piloto.xlsx
-    Ignored:    data/dados_reais/Rótulos Novos SNPs.xls
-    Ignored:    data/dados_reais/dados_cafe.xlsx
-    Ignored:    data/dados_reais/fpls-09-01934.pdf
     Ignored:    data/dados_reais/geno_real.rds
-    Ignored:    data/dados_reais/pheno_real.rds
-    Ignored:    data/dados_reais/plants-13-01876-v2.pdf
-    Ignored:    data/dados_reais/pos_geno_real.rds
+    Ignored:    output/simulated/gblup/figures/
     Ignored:    renv/library/
     Ignored:    renv/staging/
 
@@ -761,6 +678,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/e9f3f1d99a3ad2c9150d7ddb6fd42f34abe2ee0e/docs/simulated_data_audit.html" target="_blank">e9f3f1d</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-09-08
+</td>
+<td>
+Refresh workflowr provenance after M01-M05 merge
+</td>
+</tr>
 <tr>
 <td>
 html
@@ -1428,9 +1362,9 @@ all figures share the same visual language.</li>
 </ul>
 <p>The comments in the code provide a short reminder of these roles when
 the reader executes the chunk independently.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(knitr)     <span class="co"># Format data summaries as readable HTML tables.</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(ggplot2)   <span class="co"># Construct the statistical and genomic figures.</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(ggthemes)  <span class="co"># Apply the Google Docs theme and matching color scales.</span></span></code></pre></div>
+<pre class="r"><code>library(knitr)     # Format data summaries as readable HTML tables.
+library(ggplot2)   # Construct the statistical and genomic figures.
+library(ggthemes)  # Apply the Google Docs theme and matching color scales.</code></pre>
 <p>For figure output, two rules are applied consistently:</p>
 <ul>
 <li>figures shown in the HTML use <code>theme_gdocs()</code> and Google
@@ -1458,8 +1392,8 @@ background LD reference.</li>
 </ul>
 <p>Setting the seed here therefore reproduces the LD reference without
 modifying any of the simulated data.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>SEED_GLOBAL <span class="ot">&lt;-</span> <span class="dv">20260821</span><span class="dt">L</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">set.seed</span>(SEED_GLOBAL)</span></code></pre></div>
+<pre class="r"><code>SEED_GLOBAL &lt;- 20260821L
+set.seed(SEED_GLOBAL)</code></pre>
 </div>
 </div>
 <div id="phenotypic-and-true-genetic-values" class="section level2">
@@ -1490,40 +1424,40 @@ dispersion, and extreme values across scenarios.</li>
 </ul>
 <p>The original phenotype matrix remains unchanged for all later
 calculations.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Read phenotypes with individuals in rows and scenarios in columns.</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>phenotype <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="fu">read.table</span>(</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    <span class="st">&quot;data/dados_simulados/DG#gen_F2_Vfen.txt&quot;</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="at">header =</span> <span class="cn">FALSE</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  )</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>)</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="fu">colnames</span>(phenotype) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;C&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>)</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co"># Reshape only a plotting copy; the original matrix remains unchanged.</span></span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>phenotype_long <span class="ot">&lt;-</span> <span class="fu">stack</span>(<span class="fu">as.data.frame</span>(phenotype))</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="fu">names</span>(phenotype_long) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Phenotype&quot;</span>, <span class="st">&quot;Scenario&quot;</span>)</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>p_phenotype <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  phenotype_long,</span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>    <span class="at">x =</span> Scenario,</span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>    <span class="at">y =</span> Phenotype,</span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>    <span class="at">fill =</span> Scenario</span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  )</span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(</span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>    <span class="at">width =</span> <span class="fl">0.65</span>,</span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>    <span class="at">show.legend =</span> <span class="cn">FALSE</span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>  <span class="fu">scale_fill_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Simulation scenario&quot;</span>,</span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;Phenotypic value&quot;</span></span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>()</span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a></span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="fu">print</span>(p_phenotype)</span></code></pre></div>
+<pre class="r"><code># Read phenotypes with individuals in rows and scenarios in columns.
+phenotype &lt;- as.matrix(
+  read.table(
+    &quot;data/dados_simulados/DG#gen_F2_Vfen.txt&quot;,
+    header = FALSE
+  )
+)
+
+colnames(phenotype) &lt;- paste0(&quot;C&quot;, 1:6)
+
+# Reshape only a plotting copy; the original matrix remains unchanged.
+phenotype_long &lt;- stack(as.data.frame(phenotype))
+names(phenotype_long) &lt;- c(&quot;Phenotype&quot;, &quot;Scenario&quot;)
+
+p_phenotype &lt;- ggplot(
+  phenotype_long,
+  aes(
+    x = Scenario,
+    y = Phenotype,
+    fill = Scenario
+  )
+) +
+  geom_boxplot(
+    width = 0.65,
+    show.legend = FALSE
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = &quot;Simulation scenario&quot;,
+    y = &quot;Phenotypic value&quot;
+  ) +
+  theme_gdocs()
+
+print(p_phenotype)</code></pre>
 <div class="figure" style="text-align: center">
 <img src="figure/simulated_data_audit.Rmd/phenotype-1.png" alt="Distribution of phenotypic values across the six simulation scenarios." width="100%" />
 <p class="caption">
@@ -1592,40 +1526,40 @@ for held-out individuals.</li>
 a plotting copy. Comparing its distributions with the phenotype figure
 separates variation in the known genetic component from variation in the
 observed response.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Read the known genetic values generated by GENES.</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>true_genetic_value <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="fu">read.table</span>(</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="st">&quot;data/dados_simulados/DG#gen_F2_Vgen.dat&quot;</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    <span class="at">header =</span> <span class="cn">FALSE</span></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  )</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>)</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="fu">colnames</span>(true_genetic_value) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;C&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>)</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co"># Reshape a copy only for the reader-facing figure.</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>true_g_long <span class="ot">&lt;-</span> <span class="fu">stack</span>(<span class="fu">as.data.frame</span>(true_genetic_value))</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="fu">names</span>(true_g_long) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;True_genetic_value&quot;</span>, <span class="st">&quot;Scenario&quot;</span>)</span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>p_true_g <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>  true_g_long,</span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>    <span class="at">x =</span> Scenario,</span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>    <span class="at">y =</span> True_genetic_value,</span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>    <span class="at">fill =</span> Scenario</span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>  )</span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(</span>
-<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>    <span class="at">width =</span> <span class="fl">0.65</span>,</span>
-<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>    <span class="at">show.legend =</span> <span class="cn">FALSE</span></span>
-<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>  <span class="fu">scale_fill_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Simulation scenario&quot;</span>,</span>
-<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;True genetic value&quot;</span></span>
-<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>()</span>
-<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a></span>
-<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a><span class="fu">print</span>(p_true_g)</span></code></pre></div>
+<pre class="r"><code># Read the known genetic values generated by GENES.
+true_genetic_value &lt;- as.matrix(
+  read.table(
+    &quot;data/dados_simulados/DG#gen_F2_Vgen.dat&quot;,
+    header = FALSE
+  )
+)
+
+colnames(true_genetic_value) &lt;- paste0(&quot;C&quot;, 1:6)
+
+# Reshape a copy only for the reader-facing figure.
+true_g_long &lt;- stack(as.data.frame(true_genetic_value))
+names(true_g_long) &lt;- c(&quot;True_genetic_value&quot;, &quot;Scenario&quot;)
+
+p_true_g &lt;- ggplot(
+  true_g_long,
+  aes(
+    x = Scenario,
+    y = True_genetic_value,
+    fill = Scenario
+  )
+) +
+  geom_boxplot(
+    width = 0.65,
+    show.legend = FALSE
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = &quot;Simulation scenario&quot;,
+    y = &quot;True genetic value&quot;
+  ) +
+  theme_gdocs()
+
+print(p_true_g)</code></pre>
 <div class="figure" style="text-align: center">
 <img src="figure/simulated_data_audit.Rmd/true-genetic-values-1.png" alt="Distribution of true genetic values across the six simulation scenarios." width="100%" />
 <p class="caption">
@@ -1701,47 +1635,47 @@ convey that structure.</li>
 </ul>
 <p>The complete matrix, not the displayed sample, is retained for every
 subsequent calculation.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Read the GENES marker file and orient it as individuals x markers.</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>geno_012 <span class="ot">&lt;-</span> <span class="fu">t</span>(</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">as.matrix</span>(</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>    <span class="fu">read.table</span>(</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>      <span class="st">&quot;data/dados_simulados/genoma_mapa.txt&quot;</span>,</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>      <span class="at">header =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>    )</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  )</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>)</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co"># Select markers distributed from the beginning to the end of the matrix.</span></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>marker_sample <span class="ot">&lt;-</span> <span class="fu">unique</span>(</span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="fu">round</span>(</span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>    <span class="fu">seq</span>(</span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>      <span class="dv">1</span>,</span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>      <span class="fu">ncol</span>(geno_012),</span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>      <span class="at">length.out =</span> <span class="dv">12</span></span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>    )</span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>  )</span>
-<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>)</span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a></span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co"># Show a small real sample while retaining the complete matrix for analysis.</span></span>
-<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a>genotype_sample <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a>  <span class="at">Individual =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,</span>
-<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>  geno_012[</span>
-<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a>    <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,</span>
-<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>    marker_sample,</span>
-<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a>    <span class="at">drop =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a>  ],</span>
-<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a>)</span>
-<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a></span>
-<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="fu">names</span>(genotype_sample)[<span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;M&quot;</span>, marker_sample)</span>
-<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a></span>
-<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a>genotype_sample <span class="sc">|&gt;</span></span>
-<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Sample of 10 individuals and 12 markers distributed across the genotype matrix&quot;</span>,</span>
-<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code># Read the GENES marker file and orient it as individuals x markers.
+geno_012 &lt;- t(
+  as.matrix(
+    read.table(
+      &quot;data/dados_simulados/genoma_mapa.txt&quot;,
+      header = FALSE
+    )
+  )
+)
+
+# Select markers distributed from the beginning to the end of the matrix.
+marker_sample &lt;- unique(
+  round(
+    seq(
+      1,
+      ncol(geno_012),
+      length.out = 12
+    )
+  )
+)
+
+# Show a small real sample while retaining the complete matrix for analysis.
+genotype_sample &lt;- data.frame(
+  Individual = 1:10,
+  geno_012[
+    1:10,
+    marker_sample,
+    drop = FALSE
+  ],
+  check.names = FALSE
+)
+
+names(genotype_sample)[-1] &lt;- paste0(&quot;M&quot;, marker_sample)
+
+genotype_sample |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Sample of 10 individuals and 12 markers distributed across the genotype matrix&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Sample of 10 individuals and 12 markers distributed across the genotype
@@ -2226,18 +2160,18 @@ The recoding is deliberately simple:</p>
 and the underlying genotype class is preserved. The table below makes
 the transformation explicit before the recoded matrix is saved for
 downstream analyses.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>geno_m101 <span class="ot">&lt;-</span> geno_012 <span class="sc">-</span> <span class="dv">1</span><span class="dt">L</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">Original =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>),</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">Analysis_coding =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Genotype coding used in the prediction analyses&quot;</span>,</span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>geno_m101 &lt;- geno_012 - 1L
+
+data.frame(
+  Original = c(0, 1, 2),
+  Analysis_coding = c(-1, 0, 1)
+) |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Genotype coding used in the prediction analyses&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Genotype coding used in the prediction analyses
@@ -2302,57 +2236,57 @@ marker order, marker name, and position in centimorgans (cM).</li>
 <p>For later matching, a global marker index from 1 to 4,010 is added.
 This index is the bridge between the QTL numbers stored in the scenario
 file and their positions on the genetic map.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Read the marker-level portion of the GENES genetic-map file.</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>genetic_map <span class="ot">&lt;-</span> <span class="fu">read.table</span>(</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="st">&quot;data/dados_simulados/genoma.txt&quot;</span>,</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">header =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">sep =</span> <span class="st">&quot;,&quot;</span>,</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">skip =</span> <span class="dv">12</span>,</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">fill =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">strip.white =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">fileEncoding =</span> <span class="st">&quot;latin1&quot;</span>,</span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>)</span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>genetic_map <span class="ot">&lt;-</span> genetic_map[, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="fu">names</span>(genetic_map) <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>  <span class="st">&quot;LG&quot;</span>,</span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>  <span class="st">&quot;Marker_within_LG&quot;</span>,</span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="st">&quot;Type&quot;</span>,</span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>  <span class="st">&quot;Marker&quot;</span>,</span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  <span class="st">&quot;Position_cM&quot;</span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>)</span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co"># Convert the map fields used in numerical calculations.</span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>genetic_map<span class="sc">$</span>LG <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(genetic_map<span class="sc">$</span>LG)</span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>genetic_map<span class="sc">$</span>Marker_within_LG <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(genetic_map<span class="sc">$</span>Marker_within_LG)</span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>genetic_map<span class="sc">$</span>Position_cM <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(genetic_map<span class="sc">$</span>Position_cM)</span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>genetic_map<span class="sc">$</span>Global_marker <span class="ot">&lt;-</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(genetic_map))</span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>genetic_map<span class="sc">$</span>LG_label <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, genetic_map<span class="sc">$</span>LG),</span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>  <span class="at">levels =</span> <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>)</span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>)</span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a></span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>map_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>  <span class="at">Linkage_group =</span> <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>),</span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>  <span class="at">Markers =</span> <span class="fu">as.integer</span>(<span class="fu">table</span>(genetic_map<span class="sc">$</span>LG)),</span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a>  <span class="at">Start_cM =</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>    <span class="fu">tapply</span>(genetic_map<span class="sc">$</span>Position_cM, genetic_map<span class="sc">$</span>LG, min)</span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>  ),</span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>  <span class="at">End_cM =</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a>    <span class="fu">tapply</span>(genetic_map<span class="sc">$</span>Position_cM, genetic_map<span class="sc">$</span>LG, max)</span>
-<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>  )</span>
-<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>)</span>
-<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a></span>
-<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a>map_summary <span class="sc">|&gt;</span></span>
-<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Structure of the simulated genetic map&quot;</span>,</span>
-<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code># Read the marker-level portion of the GENES genetic-map file.
+genetic_map &lt;- read.table(
+  &quot;data/dados_simulados/genoma.txt&quot;,
+  header = FALSE,
+  sep = &quot;,&quot;,
+  skip = 12,
+  fill = TRUE,
+  strip.white = TRUE,
+  fileEncoding = &quot;latin1&quot;,
+  stringsAsFactors = FALSE
+)
+
+genetic_map &lt;- genetic_map[, 1:5]
+
+names(genetic_map) &lt;- c(
+  &quot;LG&quot;,
+  &quot;Marker_within_LG&quot;,
+  &quot;Type&quot;,
+  &quot;Marker&quot;,
+  &quot;Position_cM&quot;
+)
+
+# Convert the map fields used in numerical calculations.
+genetic_map$LG &lt;- as.integer(genetic_map$LG)
+genetic_map$Marker_within_LG &lt;- as.integer(genetic_map$Marker_within_LG)
+genetic_map$Position_cM &lt;- as.numeric(genetic_map$Position_cM)
+genetic_map$Global_marker &lt;- seq_len(nrow(genetic_map))
+
+genetic_map$LG_label &lt;- factor(
+  paste0(&quot;LG&quot;, genetic_map$LG),
+  levels = paste0(&quot;LG&quot;, 1:10)
+)
+
+map_summary &lt;- data.frame(
+  Linkage_group = paste0(&quot;LG&quot;, 1:10),
+  Markers = as.integer(table(genetic_map$LG)),
+  Start_cM = as.numeric(
+    tapply(genetic_map$Position_cM, genetic_map$LG, min)
+  ),
+  End_cM = as.numeric(
+    tapply(genetic_map$Position_cM, genetic_map$LG, max)
+  )
+)
+
+map_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Structure of the simulated genetic map&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Structure of the simulated genetic map
@@ -2529,60 +2463,60 @@ organization easier to read. Each colored body represents one linkage
 group and the short white ticks show every tenth marker. Displaying a
 regular subset of marker ticks keeps the 0.5-cM structure visible
 without drawing 401 overlapping marks on each linkage group.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Create one chromosome-like body for each linkage group.</span></span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>chromosome_map <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">LG =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">LG_label =</span> <span class="fu">factor</span>(</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>),</span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    <span class="at">levels =</span> <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  ),</span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  <span class="at">Start_cM =</span> <span class="dv">0</span>,</span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  <span class="at">End_cM =</span> <span class="dv">200</span></span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>)</span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co"># Show a regular subset of marker positions to keep the map legible.</span></span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>marker_ticks <span class="ot">&lt;-</span> genetic_map[</span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>  genetic_map<span class="sc">$</span>Marker_within_LG <span class="sc">%%</span> <span class="dv">10</span> <span class="sc">==</span> <span class="dv">1</span>,</span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">&quot;LG&quot;</span>, <span class="st">&quot;LG_label&quot;</span>, <span class="st">&quot;Position_cM&quot;</span>)</span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>]</span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a></span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>p_genetic_map <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>  <span class="fu">geom_segment</span>(</span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>    <span class="at">data =</span> chromosome_map,</span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>      <span class="at">x =</span> LG_label,</span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>      <span class="at">xend =</span> LG_label,</span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>      <span class="at">y =</span> Start_cM,</span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>      <span class="at">yend =</span> End_cM,</span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>      <span class="at">color =</span> LG_label</span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>    ),</span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="dv">12</span>,</span>
-<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>    <span class="at">lineend =</span> <span class="st">&quot;round&quot;</span>,</span>
-<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>    <span class="at">show.legend =</span> <span class="cn">FALSE</span></span>
-<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
-<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>    <span class="at">data =</span> marker_ticks,</span>
-<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
-<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>      <span class="at">x =</span> LG_label,</span>
-<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>      <span class="at">y =</span> Position_cM</span>
-<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a>    ),</span>
-<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a>    <span class="at">shape =</span> <span class="dv">95</span>,</span>
-<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">4.2</span>,</span>
-<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">&quot;white&quot;</span>,</span>
-<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.85</span></span>
-<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a>  <span class="fu">scale_color_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>  <span class="fu">scale_y_reverse</span>(</span>
-<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">200</span>, <span class="dv">25</span>),</span>
-<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a>    <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="at">mult =</span> <span class="fu">c</span>(<span class="fl">0.035</span>, <span class="fl">0.035</span>))</span>
-<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb8-49"><a href="#cb8-49" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Linkage group&quot;</span>,</span>
-<span id="cb8-50"><a href="#cb8-50" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;Position (cM)&quot;</span></span>
-<span id="cb8-51"><a href="#cb8-51" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb8-52"><a href="#cb8-52" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>()</span>
-<span id="cb8-53"><a href="#cb8-53" tabindex="-1"></a></span>
-<span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a><span class="fu">print</span>(p_genetic_map)</span></code></pre></div>
+<pre class="r"><code># Create one chromosome-like body for each linkage group.
+chromosome_map &lt;- data.frame(
+  LG = 1:10,
+  LG_label = factor(
+    paste0(&quot;LG&quot;, 1:10),
+    levels = paste0(&quot;LG&quot;, 1:10)
+  ),
+  Start_cM = 0,
+  End_cM = 200
+)
+
+# Show a regular subset of marker positions to keep the map legible.
+marker_ticks &lt;- genetic_map[
+  genetic_map$Marker_within_LG %% 10 == 1,
+  c(&quot;LG&quot;, &quot;LG_label&quot;, &quot;Position_cM&quot;)
+]
+
+p_genetic_map &lt;- ggplot() +
+  geom_segment(
+    data = chromosome_map,
+    aes(
+      x = LG_label,
+      xend = LG_label,
+      y = Start_cM,
+      yend = End_cM,
+      color = LG_label
+    ),
+    linewidth = 12,
+    lineend = &quot;round&quot;,
+    show.legend = FALSE
+  ) +
+  geom_point(
+    data = marker_ticks,
+    aes(
+      x = LG_label,
+      y = Position_cM
+    ),
+    shape = 95,
+    size = 4.2,
+    color = &quot;white&quot;,
+    alpha = 0.85
+  ) +
+  scale_color_gdocs() +
+  scale_y_reverse(
+    breaks = seq(0, 200, 25),
+    expand = expansion(mult = c(0.035, 0.035))
+  ) +
+  labs(
+    x = &quot;Linkage group&quot;,
+    y = &quot;Position (cM)&quot;
+  ) +
+  theme_gdocs()
+
+print(p_genetic_map)</code></pre>
 <div class="figure" style="text-align: center">
 <img src="figure/simulated_data_audit.Rmd/genetic-map-figure-1.png" alt="Chromosome-like representation of the ten linkage groups in the simulated genetic map. Colors identify linkage groups and white ticks show every tenth marker position." width="100%" />
 <p class="caption">
@@ -2690,124 +2624,124 @@ marker index from Section 5.</li>
 for the figure, the count table, and the object passed to later
 modules.</li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Read the six scenario blocks written by GENES.</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>control_raw <span class="ot">&lt;-</span> <span class="fu">readLines</span>(</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="st">&quot;data/dados_simulados/controlegenetico#1.dat&quot;</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  <span class="at">warn =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="at">encoding =</span> <span class="st">&quot;latin1&quot;</span></span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>)</span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co"># Transliterate accented text so the fixed block positions are read consistently.</span></span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>control_ascii <span class="ot">&lt;-</span> <span class="fu">iconv</span>(</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  control_raw,</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  <span class="at">from =</span> <span class="st">&quot;latin1&quot;</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  <span class="at">to =</span> <span class="st">&quot;ASCII//TRANSLIT&quot;</span>,</span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="at">sub =</span> <span class="st">&quot;&quot;</span></span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>)</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a></span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>scenario_start <span class="ot">&lt;-</span> <span class="fu">grep</span>(</span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>  <span class="st">&quot;^Variavel&quot;</span>,</span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  control_ascii</span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>)</span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>control_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>  <span class="at">Scenario =</span> <span class="fu">paste0</span>(<span class="st">&quot;C&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>),</span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>  <span class="at">Variable =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>  <span class="at">Total_loci =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>  <span class="at">QTL_N =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>  <span class="at">gmd =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>  <span class="at">Model =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>  <span class="at">H2_nominal =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>  <span class="at">Constant =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>  <span class="at">Scale =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>  <span class="at">CV_setting =</span> <span class="cn">NA_real_</span></span>
-<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>)</span>
-<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a></span>
-<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a>qtl_lists <span class="ot">&lt;-</span> <span class="fu">vector</span>(</span>
-<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>  <span class="st">&quot;list&quot;</span>,</span>
-<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>  <span class="fu">length</span>(scenario_start)</span>
-<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a>)</span>
-<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a></span>
-<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a><span class="co"># Recover the settings and QTL indices scenario by scenario.</span></span>
-<span id="cb9-40"><a href="#cb9-40" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(scenario_start)) {</span>
-<span id="cb9-41"><a href="#cb9-41" tabindex="-1"></a></span>
-<span id="cb9-42"><a href="#cb9-42" tabindex="-1"></a>  s <span class="ot">&lt;-</span> scenario_start[i]</span>
-<span id="cb9-43"><a href="#cb9-43" tabindex="-1"></a></span>
-<span id="cb9-44"><a href="#cb9-44" tabindex="-1"></a>  control_table<span class="sc">$</span>Variable[i] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb9-45"><a href="#cb9-45" tabindex="-1"></a>    <span class="fu">trimws</span>(<span class="fu">sub</span>(<span class="st">&quot;^[^,]*,&quot;</span>, <span class="st">&quot;&quot;</span>, control_ascii[s]))</span>
-<span id="cb9-46"><a href="#cb9-46" tabindex="-1"></a>  )</span>
-<span id="cb9-47"><a href="#cb9-47" tabindex="-1"></a>  control_table<span class="sc">$</span>Total_loci[i] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb9-48"><a href="#cb9-48" tabindex="-1"></a>    <span class="fu">trimws</span>(<span class="fu">sub</span>(<span class="st">&quot;^[^,]*,&quot;</span>, <span class="st">&quot;&quot;</span>, control_ascii[s <span class="sc">+</span> <span class="dv">1</span>]))</span>
-<span id="cb9-49"><a href="#cb9-49" tabindex="-1"></a>  )</span>
-<span id="cb9-50"><a href="#cb9-50" tabindex="-1"></a>  control_table<span class="sc">$</span>QTL_N[i] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb9-51"><a href="#cb9-51" tabindex="-1"></a>    <span class="fu">trimws</span>(<span class="fu">sub</span>(<span class="st">&quot;^[^,]*,&quot;</span>, <span class="st">&quot;&quot;</span>, control_ascii[s <span class="sc">+</span> <span class="dv">2</span>]))</span>
-<span id="cb9-52"><a href="#cb9-52" tabindex="-1"></a>  )</span>
-<span id="cb9-53"><a href="#cb9-53" tabindex="-1"></a></span>
-<span id="cb9-54"><a href="#cb9-54" tabindex="-1"></a>  <span class="co"># QTL values are marker indices and are therefore kept as integers.</span></span>
-<span id="cb9-55"><a href="#cb9-55" tabindex="-1"></a>  qtl_lists[[i]] <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(</span>
-<span id="cb9-56"><a href="#cb9-56" tabindex="-1"></a>    <span class="fu">scan</span>(</span>
-<span id="cb9-57"><a href="#cb9-57" tabindex="-1"></a>      <span class="at">text =</span> control_ascii[s <span class="sc">+</span> <span class="dv">3</span>],</span>
-<span id="cb9-58"><a href="#cb9-58" tabindex="-1"></a>      <span class="at">what =</span> <span class="fu">numeric</span>(),</span>
-<span id="cb9-59"><a href="#cb9-59" tabindex="-1"></a>      <span class="at">quiet =</span> <span class="cn">TRUE</span></span>
-<span id="cb9-60"><a href="#cb9-60" tabindex="-1"></a>    )</span>
-<span id="cb9-61"><a href="#cb9-61" tabindex="-1"></a>  )</span>
-<span id="cb9-62"><a href="#cb9-62" tabindex="-1"></a></span>
-<span id="cb9-63"><a href="#cb9-63" tabindex="-1"></a>  control_table<span class="sc">$</span>gmd[i] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb9-64"><a href="#cb9-64" tabindex="-1"></a>    <span class="fu">trimws</span>(<span class="fu">sub</span>(<span class="st">&quot;^[^,]*,&quot;</span>, <span class="st">&quot;&quot;</span>, control_ascii[s <span class="sc">+</span> <span class="dv">5</span>]))</span>
-<span id="cb9-65"><a href="#cb9-65" tabindex="-1"></a>  )</span>
-<span id="cb9-66"><a href="#cb9-66" tabindex="-1"></a>  control_table<span class="sc">$</span>Model[i] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb9-67"><a href="#cb9-67" tabindex="-1"></a>    <span class="fu">trimws</span>(<span class="fu">sub</span>(<span class="st">&quot;^[^,]*,&quot;</span>, <span class="st">&quot;&quot;</span>, control_ascii[s <span class="sc">+</span> <span class="dv">6</span>]))</span>
-<span id="cb9-68"><a href="#cb9-68" tabindex="-1"></a>  )</span>
-<span id="cb9-69"><a href="#cb9-69" tabindex="-1"></a>  control_table<span class="sc">$</span>H2_nominal[i] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb9-70"><a href="#cb9-70" tabindex="-1"></a>    <span class="fu">trimws</span>(<span class="fu">sub</span>(<span class="st">&quot;^[^,]*,&quot;</span>, <span class="st">&quot;&quot;</span>, control_ascii[s <span class="sc">+</span> <span class="dv">7</span>]))</span>
-<span id="cb9-71"><a href="#cb9-71" tabindex="-1"></a>  )</span>
-<span id="cb9-72"><a href="#cb9-72" tabindex="-1"></a>  control_table<span class="sc">$</span>Constant[i] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb9-73"><a href="#cb9-73" tabindex="-1"></a>    <span class="fu">trimws</span>(<span class="fu">sub</span>(<span class="st">&quot;^[^,]*,&quot;</span>, <span class="st">&quot;&quot;</span>, control_ascii[s <span class="sc">+</span> <span class="dv">8</span>]))</span>
-<span id="cb9-74"><a href="#cb9-74" tabindex="-1"></a>  )</span>
-<span id="cb9-75"><a href="#cb9-75" tabindex="-1"></a>  control_table<span class="sc">$</span>Scale[i] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb9-76"><a href="#cb9-76" tabindex="-1"></a>    <span class="fu">trimws</span>(<span class="fu">sub</span>(<span class="st">&quot;^[^,]*,&quot;</span>, <span class="st">&quot;&quot;</span>, control_ascii[s <span class="sc">+</span> <span class="dv">9</span>]))</span>
-<span id="cb9-77"><a href="#cb9-77" tabindex="-1"></a>  )</span>
-<span id="cb9-78"><a href="#cb9-78" tabindex="-1"></a>  control_table<span class="sc">$</span>CV_setting[i] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
-<span id="cb9-79"><a href="#cb9-79" tabindex="-1"></a>    <span class="fu">trimws</span>(<span class="fu">sub</span>(<span class="st">&quot;^[^,]*,&quot;</span>, <span class="st">&quot;&quot;</span>, control_ascii[s <span class="sc">+</span> <span class="dv">10</span>]))</span>
-<span id="cb9-80"><a href="#cb9-80" tabindex="-1"></a>  )</span>
-<span id="cb9-81"><a href="#cb9-81" tabindex="-1"></a>}</span>
-<span id="cb9-82"><a href="#cb9-82" tabindex="-1"></a></span>
-<span id="cb9-83"><a href="#cb9-83" tabindex="-1"></a><span class="co"># Match each QTL index to its linkage group and map position.</span></span>
-<span id="cb9-84"><a href="#cb9-84" tabindex="-1"></a>qtl_rows <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb9-85"><a href="#cb9-85" tabindex="-1"></a>  <span class="at">Scenario =</span> <span class="fu">character</span>(),</span>
-<span id="cb9-86"><a href="#cb9-86" tabindex="-1"></a>  <span class="at">QTL_index =</span> <span class="fu">integer</span>(),</span>
-<span id="cb9-87"><a href="#cb9-87" tabindex="-1"></a>  <span class="at">LG =</span> <span class="fu">integer</span>(),</span>
-<span id="cb9-88"><a href="#cb9-88" tabindex="-1"></a>  <span class="at">Position_cM =</span> <span class="fu">numeric</span>()</span>
-<span id="cb9-89"><a href="#cb9-89" tabindex="-1"></a>)</span>
-<span id="cb9-90"><a href="#cb9-90" tabindex="-1"></a></span>
-<span id="cb9-91"><a href="#cb9-91" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(qtl_lists)) {</span>
-<span id="cb9-92"><a href="#cb9-92" tabindex="-1"></a></span>
-<span id="cb9-93"><a href="#cb9-93" tabindex="-1"></a>  qtl <span class="ot">&lt;-</span> qtl_lists[[i]]</span>
-<span id="cb9-94"><a href="#cb9-94" tabindex="-1"></a></span>
-<span id="cb9-95"><a href="#cb9-95" tabindex="-1"></a>  qtl_rows <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
-<span id="cb9-96"><a href="#cb9-96" tabindex="-1"></a>    qtl_rows,</span>
-<span id="cb9-97"><a href="#cb9-97" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
-<span id="cb9-98"><a href="#cb9-98" tabindex="-1"></a>      <span class="at">Scenario =</span> <span class="fu">paste0</span>(<span class="st">&quot;C&quot;</span>, i),</span>
-<span id="cb9-99"><a href="#cb9-99" tabindex="-1"></a>      <span class="at">QTL_index =</span> qtl,</span>
-<span id="cb9-100"><a href="#cb9-100" tabindex="-1"></a>      <span class="at">LG =</span> genetic_map<span class="sc">$</span>LG[qtl],</span>
-<span id="cb9-101"><a href="#cb9-101" tabindex="-1"></a>      <span class="at">Position_cM =</span> genetic_map<span class="sc">$</span>Position_cM[qtl]</span>
-<span id="cb9-102"><a href="#cb9-102" tabindex="-1"></a>    )</span>
-<span id="cb9-103"><a href="#cb9-103" tabindex="-1"></a>  )</span>
-<span id="cb9-104"><a href="#cb9-104" tabindex="-1"></a>}</span>
-<span id="cb9-105"><a href="#cb9-105" tabindex="-1"></a></span>
-<span id="cb9-106"><a href="#cb9-106" tabindex="-1"></a>qtl_rows<span class="sc">$</span>LG_label <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
-<span id="cb9-107"><a href="#cb9-107" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, qtl_rows<span class="sc">$</span>LG),</span>
-<span id="cb9-108"><a href="#cb9-108" tabindex="-1"></a>  <span class="at">levels =</span> <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>)</span>
-<span id="cb9-109"><a href="#cb9-109" tabindex="-1"></a>)</span>
-<span id="cb9-110"><a href="#cb9-110" tabindex="-1"></a></span>
-<span id="cb9-111"><a href="#cb9-111" tabindex="-1"></a>control_table <span class="sc">|&gt;</span></span>
-<span id="cb9-112"><a href="#cb9-112" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb9-113"><a href="#cb9-113" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb9-114"><a href="#cb9-114" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">3</span>,</span>
-<span id="cb9-115"><a href="#cb9-115" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Settings used to generate the six simulation scenarios in GENES&quot;</span>,</span>
-<span id="cb9-116"><a href="#cb9-116" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb9-117"><a href="#cb9-117" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb9-118"><a href="#cb9-118" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code># Read the six scenario blocks written by GENES.
+control_raw &lt;- readLines(
+  &quot;data/dados_simulados/controlegenetico#1.dat&quot;,
+  warn = FALSE,
+  encoding = &quot;latin1&quot;
+)
+
+# Transliterate accented text so the fixed block positions are read consistently.
+control_ascii &lt;- iconv(
+  control_raw,
+  from = &quot;latin1&quot;,
+  to = &quot;ASCII//TRANSLIT&quot;,
+  sub = &quot;&quot;
+)
+
+scenario_start &lt;- grep(
+  &quot;^Variavel&quot;,
+  control_ascii
+)
+
+control_table &lt;- data.frame(
+  Scenario = paste0(&quot;C&quot;, 1:6),
+  Variable = NA_real_,
+  Total_loci = NA_real_,
+  QTL_N = NA_real_,
+  gmd = NA_real_,
+  Model = NA_real_,
+  H2_nominal = NA_real_,
+  Constant = NA_real_,
+  Scale = NA_real_,
+  CV_setting = NA_real_
+)
+
+qtl_lists &lt;- vector(
+  &quot;list&quot;,
+  length(scenario_start)
+)
+
+# Recover the settings and QTL indices scenario by scenario.
+for (i in seq_along(scenario_start)) {
+
+  s &lt;- scenario_start[i]
+
+  control_table$Variable[i] &lt;- as.numeric(
+    trimws(sub(&quot;^[^,]*,&quot;, &quot;&quot;, control_ascii[s]))
+  )
+  control_table$Total_loci[i] &lt;- as.numeric(
+    trimws(sub(&quot;^[^,]*,&quot;, &quot;&quot;, control_ascii[s + 1]))
+  )
+  control_table$QTL_N[i] &lt;- as.numeric(
+    trimws(sub(&quot;^[^,]*,&quot;, &quot;&quot;, control_ascii[s + 2]))
+  )
+
+  # QTL values are marker indices and are therefore kept as integers.
+  qtl_lists[[i]] &lt;- as.integer(
+    scan(
+      text = control_ascii[s + 3],
+      what = numeric(),
+      quiet = TRUE
+    )
+  )
+
+  control_table$gmd[i] &lt;- as.numeric(
+    trimws(sub(&quot;^[^,]*,&quot;, &quot;&quot;, control_ascii[s + 5]))
+  )
+  control_table$Model[i] &lt;- as.numeric(
+    trimws(sub(&quot;^[^,]*,&quot;, &quot;&quot;, control_ascii[s + 6]))
+  )
+  control_table$H2_nominal[i] &lt;- as.numeric(
+    trimws(sub(&quot;^[^,]*,&quot;, &quot;&quot;, control_ascii[s + 7]))
+  )
+  control_table$Constant[i] &lt;- as.numeric(
+    trimws(sub(&quot;^[^,]*,&quot;, &quot;&quot;, control_ascii[s + 8]))
+  )
+  control_table$Scale[i] &lt;- as.numeric(
+    trimws(sub(&quot;^[^,]*,&quot;, &quot;&quot;, control_ascii[s + 9]))
+  )
+  control_table$CV_setting[i] &lt;- as.numeric(
+    trimws(sub(&quot;^[^,]*,&quot;, &quot;&quot;, control_ascii[s + 10]))
+  )
+}
+
+# Match each QTL index to its linkage group and map position.
+qtl_rows &lt;- data.frame(
+  Scenario = character(),
+  QTL_index = integer(),
+  LG = integer(),
+  Position_cM = numeric()
+)
+
+for (i in seq_along(qtl_lists)) {
+
+  qtl &lt;- qtl_lists[[i]]
+
+  qtl_rows &lt;- rbind(
+    qtl_rows,
+    data.frame(
+      Scenario = paste0(&quot;C&quot;, i),
+      QTL_index = qtl,
+      LG = genetic_map$LG[qtl],
+      Position_cM = genetic_map$Position_cM[qtl]
+    )
+  )
+}
+
+qtl_rows$LG_label &lt;- factor(
+  paste0(&quot;LG&quot;, qtl_rows$LG),
+  levels = paste0(&quot;LG&quot;, 1:10)
+)
+
+control_table |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 3,
+    caption = &quot;Settings used to generate the six simulation scenarios in GENES&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Settings used to generate the six simulation scenarios in GENES
@@ -3062,68 +2996,68 @@ linkage-group representation from Section 5 and places all QTL for that
 scenario on their mapped positions. This avoids repeating a second
 combined QTL map while still showing both genomic location and the
 increase in QTL density across C1-C6.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Draw a chromosome-like body for every linkage group in every panel.</span></span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>qtl_reference <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">Scenario =</span> <span class="fu">paste0</span>(<span class="st">&quot;C&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>),</span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">LG_label =</span> <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>),</span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>)</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>qtl_reference<span class="sc">$</span>LG_label <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>  qtl_reference<span class="sc">$</span>LG_label,</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>  <span class="at">levels =</span> <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>)</span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>)</span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a></span>
-<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>qtl_reference<span class="sc">$</span>Start_cM <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>qtl_reference<span class="sc">$</span>End_cM <span class="ot">&lt;-</span> <span class="dv">200</span></span>
-<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a></span>
-<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>p_qtl <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>  <span class="fu">geom_segment</span>(</span>
-<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>    <span class="at">data =</span> qtl_reference,</span>
-<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
-<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>      <span class="at">x =</span> LG_label,</span>
-<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>      <span class="at">xend =</span> LG_label,</span>
-<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>      <span class="at">y =</span> Start_cM,</span>
-<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>      <span class="at">yend =</span> End_cM,</span>
-<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>      <span class="at">color =</span> LG_label</span>
-<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>    ),</span>
-<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">3.6</span>,</span>
-<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>    <span class="at">lineend =</span> <span class="st">&quot;round&quot;</span>,</span>
-<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a>    <span class="at">show.legend =</span> <span class="cn">FALSE</span></span>
-<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
-<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>    <span class="at">data =</span> qtl_rows,</span>
-<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
-<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>      <span class="at">x =</span> LG_label,</span>
-<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a>      <span class="at">y =</span> Position_cM</span>
-<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>    ),</span>
-<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a>    <span class="at">shape =</span> <span class="dv">21</span>,</span>
-<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">1.6</span>,</span>
-<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">&quot;white&quot;</span>,</span>
-<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">&quot;black&quot;</span>,</span>
-<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a>    <span class="at">stroke =</span> <span class="fl">0.25</span></span>
-<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(</span>
-<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a>    <span class="sc">~</span>Scenario,</span>
-<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a>    <span class="at">ncol =</span> <span class="dv">2</span></span>
-<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a>  <span class="fu">scale_color_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a>  <span class="fu">scale_y_reverse</span>(</span>
-<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">200</span>, <span class="dv">50</span>)</span>
-<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Linkage group&quot;</span>,</span>
-<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;Position (cM)&quot;</span></span>
-<span id="cb10-53"><a href="#cb10-53" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb10-54"><a href="#cb10-54" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb10-55"><a href="#cb10-55" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb10-56"><a href="#cb10-56" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(</span>
-<span id="cb10-57"><a href="#cb10-57" tabindex="-1"></a>      <span class="at">angle =</span> <span class="dv">45</span>,</span>
-<span id="cb10-58"><a href="#cb10-58" tabindex="-1"></a>      <span class="at">hjust =</span> <span class="dv">1</span></span>
-<span id="cb10-59"><a href="#cb10-59" tabindex="-1"></a>    )</span>
-<span id="cb10-60"><a href="#cb10-60" tabindex="-1"></a>  )</span>
-<span id="cb10-61"><a href="#cb10-61" tabindex="-1"></a></span>
-<span id="cb10-62"><a href="#cb10-62" tabindex="-1"></a><span class="fu">print</span>(p_qtl)</span></code></pre></div>
+<pre class="r"><code># Draw a chromosome-like body for every linkage group in every panel.
+qtl_reference &lt;- expand.grid(
+  Scenario = paste0(&quot;C&quot;, 1:6),
+  LG_label = paste0(&quot;LG&quot;, 1:10),
+  stringsAsFactors = FALSE
+)
+
+qtl_reference$LG_label &lt;- factor(
+  qtl_reference$LG_label,
+  levels = paste0(&quot;LG&quot;, 1:10)
+)
+
+qtl_reference$Start_cM &lt;- 0
+qtl_reference$End_cM &lt;- 200
+
+p_qtl &lt;- ggplot() +
+  geom_segment(
+    data = qtl_reference,
+    aes(
+      x = LG_label,
+      xend = LG_label,
+      y = Start_cM,
+      yend = End_cM,
+      color = LG_label
+    ),
+    linewidth = 3.6,
+    lineend = &quot;round&quot;,
+    show.legend = FALSE
+  ) +
+  geom_point(
+    data = qtl_rows,
+    aes(
+      x = LG_label,
+      y = Position_cM
+    ),
+    shape = 21,
+    size = 1.6,
+    fill = &quot;white&quot;,
+    color = &quot;black&quot;,
+    stroke = 0.25
+  ) +
+  facet_wrap(
+    ~Scenario,
+    ncol = 2
+  ) +
+  scale_color_gdocs() +
+  scale_y_reverse(
+    breaks = seq(0, 200, 50)
+  ) +
+  labs(
+    x = &quot;Linkage group&quot;,
+    y = &quot;Position (cM)&quot;
+  ) +
+  theme_gdocs() +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1
+    )
+  )
+
+print(p_qtl)</code></pre>
 <div class="figure" style="text-align: center">
 <img src="figure/simulated_data_audit.Rmd/qtl-map-1.png" alt="Positions of simulated QTL in each scenario. The linkage-group color scheme is constant across panels; LG9 and LG10 remain without QTL in all six scenarios." width="100%" />
 <p class="caption">
@@ -3178,27 +3112,27 @@ the exact counts needed to verify it:</p>
 <li>the zero counts in LG9 and LG10 make their reference role
 explicit.</li>
 </ul>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>qtl_table <span class="ot">&lt;-</span> <span class="fu">table</span>(</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="fu">factor</span>(qtl_rows<span class="sc">$</span>Scenario, <span class="at">levels =</span> <span class="fu">paste0</span>(<span class="st">&quot;C&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>)),</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="fu">factor</span>(qtl_rows<span class="sc">$</span>LG, <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>)</span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>)</span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a></span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a>qtl_by_lg <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>  <span class="at">Scenario =</span> <span class="fu">rownames</span>(qtl_table),</span>
-<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>  <span class="fu">unclass</span>(qtl_table),</span>
-<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">NULL</span></span>
-<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>)</span>
-<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a></span>
-<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="fu">names</span>(qtl_by_lg)[<span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;LG&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>)</span>
-<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a></span>
-<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>qtl_by_lg <span class="sc">|&gt;</span></span>
-<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Number of simulated QTL per linkage group&quot;</span>,</span>
-<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>qtl_table &lt;- table(
+  factor(qtl_rows$Scenario, levels = paste0(&quot;C&quot;, 1:6)),
+  factor(qtl_rows$LG, levels = 1:10)
+)
+
+qtl_by_lg &lt;- data.frame(
+  Scenario = rownames(qtl_table),
+  unclass(qtl_table),
+  check.names = FALSE,
+  row.names = NULL
+)
+
+names(qtl_by_lg)[-1] &lt;- paste0(&quot;LG&quot;, 1:10)
+
+qtl_by_lg |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Number of simulated QTL per linkage group&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Number of simulated QTL per linkage group
@@ -3479,73 +3413,73 @@ standard deviations used to describe the scale of each scenario.</li>
 </ul>
 <p>Together these summaries provide context for why prediction
 difficulty differs among scenarios before any model is fitted.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>scenario_names <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;C&quot;</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>residual_value <span class="ot">&lt;-</span> phenotype <span class="sc">-</span> true_genetic_value</span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>cor_p_g <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">6</span>)</span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>cor_g_e <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">6</span>)</span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>h2_realized <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">6</span>)</span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>var_g_over_var_p <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">6</span>)</span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a></span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co"># Calculate the signal summaries separately for each simulation scenario.</span></span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>) {</span>
-<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a></span>
-<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>  cor_p_g[j] <span class="ot">&lt;-</span> <span class="fu">cor</span>(</span>
-<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>    phenotype[, j],</span>
-<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>    true_genetic_value[, j]</span>
-<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>  )</span>
-<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a></span>
-<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>  cor_g_e[j] <span class="ot">&lt;-</span> <span class="fu">cor</span>(</span>
-<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>    true_genetic_value[, j],</span>
-<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>    residual_value[, j]</span>
-<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>  )</span>
-<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a></span>
-<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>  vg <span class="ot">&lt;-</span> <span class="fu">var</span>(true_genetic_value[, j])</span>
-<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a>  ve <span class="ot">&lt;-</span> <span class="fu">var</span>(residual_value[, j])</span>
-<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a></span>
-<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>  h2_realized[j] <span class="ot">&lt;-</span> vg <span class="sc">/</span> (vg <span class="sc">+</span> ve)</span>
-<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>  var_g_over_var_p[j] <span class="ot">&lt;-</span> vg <span class="sc">/</span> <span class="fu">var</span>(phenotype[, j])</span>
-<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a>}</span>
-<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a></span>
-<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a><span class="co"># Gather the quantities required for interpretation and later reuse.</span></span>
-<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a>scenario_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a>  <span class="at">Scenario =</span> scenario_names,</span>
-<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a>  <span class="at">QTL_N =</span> control_table<span class="sc">$</span>QTL_N,</span>
-<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a>  <span class="at">H2_nominal =</span> control_table<span class="sc">$</span>H2_nominal,</span>
-<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a>  <span class="at">Phenotype_mean =</span> <span class="fu">colMeans</span>(phenotype),</span>
-<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a>  <span class="at">Phenotype_sd =</span> <span class="fu">apply</span>(phenotype, <span class="dv">2</span>, sd),</span>
-<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a>  <span class="at">Genetic_mean =</span> <span class="fu">colMeans</span>(true_genetic_value),</span>
-<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a>  <span class="at">Genetic_sd =</span> <span class="fu">apply</span>(true_genetic_value, <span class="dv">2</span>, sd),</span>
-<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a>  <span class="at">Residual_mean =</span> <span class="fu">colMeans</span>(residual_value),</span>
-<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a>  <span class="at">Residual_sd =</span> <span class="fu">apply</span>(residual_value, <span class="dv">2</span>, sd),</span>
-<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a>  <span class="at">Cor_P_G =</span> cor_p_g,</span>
-<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a>  <span class="at">Cor_G_E =</span> cor_g_e,</span>
-<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a>  <span class="at">H2_realized =</span> h2_realized,</span>
-<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a>  <span class="at">VarG_over_VarP =</span> var_g_over_var_p,</span>
-<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a>  <span class="at">CV_empirical_pct =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">apply</span>(phenotype, <span class="dv">2</span>, sd) <span class="sc">/</span> <span class="fu">colMeans</span>(phenotype),</span>
-<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a>  <span class="at">CV_setting =</span> control_table<span class="sc">$</span>CV_setting</span>
-<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a>)</span>
-<span id="cb12-47"><a href="#cb12-47" tabindex="-1"></a></span>
-<span id="cb12-48"><a href="#cb12-48" tabindex="-1"></a>scenario_summary[</span>
-<span id="cb12-49"><a href="#cb12-49" tabindex="-1"></a>  ,</span>
-<span id="cb12-50"><a href="#cb12-50" tabindex="-1"></a>  <span class="fu">c</span>(</span>
-<span id="cb12-51"><a href="#cb12-51" tabindex="-1"></a>    <span class="st">&quot;Scenario&quot;</span>,</span>
-<span id="cb12-52"><a href="#cb12-52" tabindex="-1"></a>    <span class="st">&quot;QTL_N&quot;</span>,</span>
-<span id="cb12-53"><a href="#cb12-53" tabindex="-1"></a>    <span class="st">&quot;H2_nominal&quot;</span>,</span>
-<span id="cb12-54"><a href="#cb12-54" tabindex="-1"></a>    <span class="st">&quot;H2_realized&quot;</span>,</span>
-<span id="cb12-55"><a href="#cb12-55" tabindex="-1"></a>    <span class="st">&quot;Cor_P_G&quot;</span>,</span>
-<span id="cb12-56"><a href="#cb12-56" tabindex="-1"></a>    <span class="st">&quot;Phenotype_mean&quot;</span>,</span>
-<span id="cb12-57"><a href="#cb12-57" tabindex="-1"></a>    <span class="st">&quot;Genetic_mean&quot;</span>,</span>
-<span id="cb12-58"><a href="#cb12-58" tabindex="-1"></a>    <span class="st">&quot;Residual_sd&quot;</span></span>
-<span id="cb12-59"><a href="#cb12-59" tabindex="-1"></a>  )</span>
-<span id="cb12-60"><a href="#cb12-60" tabindex="-1"></a>] <span class="sc">|&gt;</span></span>
-<span id="cb12-61"><a href="#cb12-61" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb12-62"><a href="#cb12-62" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb12-63"><a href="#cb12-63" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
-<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Phenotypic and genetic signal by simulation scenario&quot;</span>,</span>
-<span id="cb12-65"><a href="#cb12-65" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb12-66"><a href="#cb12-66" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb12-67"><a href="#cb12-67" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>scenario_names &lt;- paste0(&quot;C&quot;, 1:6)
+residual_value &lt;- phenotype - true_genetic_value
+
+cor_p_g &lt;- numeric(6)
+cor_g_e &lt;- numeric(6)
+h2_realized &lt;- numeric(6)
+var_g_over_var_p &lt;- numeric(6)
+
+# Calculate the signal summaries separately for each simulation scenario.
+for (j in 1:6) {
+
+  cor_p_g[j] &lt;- cor(
+    phenotype[, j],
+    true_genetic_value[, j]
+  )
+
+  cor_g_e[j] &lt;- cor(
+    true_genetic_value[, j],
+    residual_value[, j]
+  )
+
+  vg &lt;- var(true_genetic_value[, j])
+  ve &lt;- var(residual_value[, j])
+
+  h2_realized[j] &lt;- vg / (vg + ve)
+  var_g_over_var_p[j] &lt;- vg / var(phenotype[, j])
+}
+
+# Gather the quantities required for interpretation and later reuse.
+scenario_summary &lt;- data.frame(
+  Scenario = scenario_names,
+  QTL_N = control_table$QTL_N,
+  H2_nominal = control_table$H2_nominal,
+  Phenotype_mean = colMeans(phenotype),
+  Phenotype_sd = apply(phenotype, 2, sd),
+  Genetic_mean = colMeans(true_genetic_value),
+  Genetic_sd = apply(true_genetic_value, 2, sd),
+  Residual_mean = colMeans(residual_value),
+  Residual_sd = apply(residual_value, 2, sd),
+  Cor_P_G = cor_p_g,
+  Cor_G_E = cor_g_e,
+  H2_realized = h2_realized,
+  VarG_over_VarP = var_g_over_var_p,
+  CV_empirical_pct = 100 * apply(phenotype, 2, sd) / colMeans(phenotype),
+  CV_setting = control_table$CV_setting
+)
+
+scenario_summary[
+  ,
+  c(
+    &quot;Scenario&quot;,
+    &quot;QTL_N&quot;,
+    &quot;H2_nominal&quot;,
+    &quot;H2_realized&quot;,
+    &quot;Cor_P_G&quot;,
+    &quot;Phenotype_mean&quot;,
+    &quot;Genetic_mean&quot;,
+    &quot;Residual_sd&quot;
+  )
+] |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 4,
+    caption = &quot;Phenotypic and genetic signal by simulation scenario&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Phenotypic and genetic signal by simulation scenario
@@ -3760,48 +3694,48 @@ finite simulated population.</li>
 </ul>
 <p>The comparison shows how closely each generated sample reflects its
 specified setting without redefining the scenario itself.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>heritability_plot <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>    <span class="at">Scenario =</span> scenario_summary<span class="sc">$</span>Scenario,</span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>    <span class="at">Heritability =</span> scenario_summary<span class="sc">$</span>H2_nominal,</span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>    <span class="at">Type =</span> <span class="st">&quot;GENES setting&quot;</span></span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  ),</span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
-<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>    <span class="at">Scenario =</span> scenario_summary<span class="sc">$</span>Scenario,</span>
-<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>    <span class="at">Heritability =</span> scenario_summary<span class="sc">$</span>H2_realized,</span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>    <span class="at">Type =</span> <span class="st">&quot;Realized&quot;</span></span>
-<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>  )</span>
-<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>)</span>
-<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a></span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>h2_difference <span class="ot">&lt;-</span> scenario_summary<span class="sc">$</span>H2_realized <span class="sc">-</span></span>
-<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>  scenario_summary<span class="sc">$</span>H2_nominal</span>
-<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a></span>
-<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>p_heritability <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
-<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a>  heritability_plot,</span>
-<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
-<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a>    <span class="at">x =</span> Scenario,</span>
-<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a>    <span class="at">y =</span> Heritability,</span>
-<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a>    <span class="at">group =</span> Type,</span>
-<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a>    <span class="at">color =</span> Type,</span>
-<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a>    <span class="at">shape =</span> Type</span>
-<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a>  )</span>
-<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
-<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">0.8</span></span>
-<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
-<span id="cb13-31"><a href="#cb13-31" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">2.5</span></span>
-<span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a>  <span class="fu">scale_color_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Simulation scenario&quot;</span>,</span>
-<span id="cb13-36"><a href="#cb13-36" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">expression</span>(H<span class="sc">^</span><span class="dv">2</span>),</span>
-<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a>    <span class="at">color =</span> <span class="cn">NULL</span>,</span>
-<span id="cb13-38"><a href="#cb13-38" tabindex="-1"></a>    <span class="at">shape =</span> <span class="cn">NULL</span></span>
-<span id="cb13-39"><a href="#cb13-39" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb13-40"><a href="#cb13-40" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>()</span>
-<span id="cb13-41"><a href="#cb13-41" tabindex="-1"></a></span>
-<span id="cb13-42"><a href="#cb13-42" tabindex="-1"></a><span class="fu">print</span>(p_heritability)</span></code></pre></div>
+<pre class="r"><code>heritability_plot &lt;- rbind(
+  data.frame(
+    Scenario = scenario_summary$Scenario,
+    Heritability = scenario_summary$H2_nominal,
+    Type = &quot;GENES setting&quot;
+  ),
+  data.frame(
+    Scenario = scenario_summary$Scenario,
+    Heritability = scenario_summary$H2_realized,
+    Type = &quot;Realized&quot;
+  )
+)
+
+h2_difference &lt;- scenario_summary$H2_realized -
+  scenario_summary$H2_nominal
+
+p_heritability &lt;- ggplot(
+  heritability_plot,
+  aes(
+    x = Scenario,
+    y = Heritability,
+    group = Type,
+    color = Type,
+    shape = Type
+  )
+) +
+  geom_line(
+    linewidth = 0.8
+  ) +
+  geom_point(
+    size = 2.5
+  ) +
+  scale_color_gdocs() +
+  labs(
+    x = &quot;Simulation scenario&quot;,
+    y = expression(H^2),
+    color = NULL,
+    shape = NULL
+  ) +
+  theme_gdocs()
+
+print(p_heritability)</code></pre>
 <div class="figure" style="text-align: center">
 <img src="figure/simulated_data_audit.Rmd/heritability-comparison-1.png" alt="Heritability specified in GENES and realized heritability in the generated population." width="100%" />
 <p class="caption">
@@ -3870,48 +3804,48 @@ actually generated in each scenario.</li>
 </ul>
 <p>Displaying both prevents a simulation input from being mistaken for a
 descriptive statistic of this particular finite population.</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>cv_plot <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>    <span class="at">Scenario =</span> scenario_summary<span class="sc">$</span>Scenario,</span>
-<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>    <span class="at">CV =</span> scenario_summary<span class="sc">$</span>CV_setting,</span>
-<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>    <span class="at">Type =</span> <span class="st">&quot;GENES setting&quot;</span></span>
-<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>  ),</span>
-<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
-<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>    <span class="at">Scenario =</span> scenario_summary<span class="sc">$</span>Scenario,</span>
-<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>    <span class="at">CV =</span> scenario_summary<span class="sc">$</span>CV_empirical_pct,</span>
-<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>    <span class="at">Type =</span> <span class="st">&quot;Empirical phenotype&quot;</span></span>
-<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>  )</span>
-<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>)</span>
-<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a></span>
-<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a>cv_difference <span class="ot">&lt;-</span> scenario_summary<span class="sc">$</span>CV_empirical_pct <span class="sc">-</span></span>
-<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>  scenario_summary<span class="sc">$</span>CV_setting</span>
-<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a></span>
-<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a>p_cv <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
-<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a>  cv_plot,</span>
-<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
-<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a>    <span class="at">x =</span> Scenario,</span>
-<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a>    <span class="at">y =</span> CV,</span>
-<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a>    <span class="at">group =</span> Type,</span>
-<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a>    <span class="at">color =</span> Type,</span>
-<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a>    <span class="at">shape =</span> Type</span>
-<span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a>  )</span>
-<span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb14-27"><a href="#cb14-27" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
-<span id="cb14-28"><a href="#cb14-28" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">0.8</span></span>
-<span id="cb14-29"><a href="#cb14-29" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb14-30"><a href="#cb14-30" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
-<span id="cb14-31"><a href="#cb14-31" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">2.5</span></span>
-<span id="cb14-32"><a href="#cb14-32" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb14-33"><a href="#cb14-33" tabindex="-1"></a>  <span class="fu">scale_color_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb14-34"><a href="#cb14-34" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb14-35"><a href="#cb14-35" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Simulation scenario&quot;</span>,</span>
-<span id="cb14-36"><a href="#cb14-36" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;Coefficient of variation (%)&quot;</span>,</span>
-<span id="cb14-37"><a href="#cb14-37" tabindex="-1"></a>    <span class="at">color =</span> <span class="cn">NULL</span>,</span>
-<span id="cb14-38"><a href="#cb14-38" tabindex="-1"></a>    <span class="at">shape =</span> <span class="cn">NULL</span></span>
-<span id="cb14-39"><a href="#cb14-39" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb14-40"><a href="#cb14-40" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>()</span>
-<span id="cb14-41"><a href="#cb14-41" tabindex="-1"></a></span>
-<span id="cb14-42"><a href="#cb14-42" tabindex="-1"></a><span class="fu">print</span>(p_cv)</span></code></pre></div>
+<pre class="r"><code>cv_plot &lt;- rbind(
+  data.frame(
+    Scenario = scenario_summary$Scenario,
+    CV = scenario_summary$CV_setting,
+    Type = &quot;GENES setting&quot;
+  ),
+  data.frame(
+    Scenario = scenario_summary$Scenario,
+    CV = scenario_summary$CV_empirical_pct,
+    Type = &quot;Empirical phenotype&quot;
+  )
+)
+
+cv_difference &lt;- scenario_summary$CV_empirical_pct -
+  scenario_summary$CV_setting
+
+p_cv &lt;- ggplot(
+  cv_plot,
+  aes(
+    x = Scenario,
+    y = CV,
+    group = Type,
+    color = Type,
+    shape = Type
+  )
+) +
+  geom_line(
+    linewidth = 0.8
+  ) +
+  geom_point(
+    size = 2.5
+  ) +
+  scale_color_gdocs() +
+  labs(
+    x = &quot;Simulation scenario&quot;,
+    y = &quot;Coefficient of variation (%)&quot;,
+    color = NULL,
+    shape = NULL
+  ) +
+  theme_gdocs()
+
+print(p_cv)</code></pre>
 <div class="figure" style="text-align: center">
 <img src="figure/simulated_data_audit.Rmd/cv-comparison-1.png" alt="CV specified in GENES and empirical coefficient of variation calculated from the simulated phenotypes." width="100%" />
 <p class="caption">
@@ -3985,49 +3919,49 @@ proportions.</li>
 </ul>
 <p>The figure therefore compares the complete simulated marker matrix
 with the theoretical segregation expected for an F2 population.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># Calculate the observed frequency of each genotype state.</span></span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>geno_frequency <span class="ot">&lt;-</span> <span class="fu">prop.table</span>(</span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="fu">table</span>(</span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>    <span class="fu">factor</span>(</span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>      <span class="fu">as.vector</span>(geno_012),</span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>      <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">2</span></span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>    )</span>
-<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  )</span>
-<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>)</span>
-<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a></span>
-<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>segregation_plot <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
-<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>    <span class="at">Genotype =</span> <span class="fu">factor</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>),</span>
-<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a>    <span class="at">Proportion =</span> <span class="fu">as.numeric</span>(geno_frequency),</span>
-<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a>    <span class="at">Type =</span> <span class="st">&quot;Observed&quot;</span></span>
-<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a>  ),</span>
-<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
-<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a>    <span class="at">Genotype =</span> <span class="fu">factor</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">2</span>),</span>
-<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a>    <span class="at">Proportion =</span> <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.50</span>, <span class="fl">0.25</span>),</span>
-<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a>    <span class="at">Type =</span> <span class="st">&quot;F2 expectation&quot;</span></span>
-<span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a>  )</span>
-<span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a>)</span>
-<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a></span>
-<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a>p_segregation <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
-<span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a>  segregation_plot,</span>
-<span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
-<span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a>    <span class="at">x =</span> Genotype,</span>
-<span id="cb15-28"><a href="#cb15-28" tabindex="-1"></a>    <span class="at">y =</span> Proportion,</span>
-<span id="cb15-29"><a href="#cb15-29" tabindex="-1"></a>    <span class="at">fill =</span> Type</span>
-<span id="cb15-30"><a href="#cb15-30" tabindex="-1"></a>  )</span>
-<span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a>  <span class="fu">geom_col</span>(</span>
-<span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a>    <span class="at">position =</span> <span class="st">&quot;dodge&quot;</span></span>
-<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a>  <span class="fu">scale_fill_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Genotype coding&quot;</span>,</span>
-<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;Proportion&quot;</span>,</span>
-<span id="cb15-39"><a href="#cb15-39" tabindex="-1"></a>    <span class="at">fill =</span> <span class="cn">NULL</span></span>
-<span id="cb15-40"><a href="#cb15-40" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb15-41"><a href="#cb15-41" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>()</span>
-<span id="cb15-42"><a href="#cb15-42" tabindex="-1"></a></span>
-<span id="cb15-43"><a href="#cb15-43" tabindex="-1"></a><span class="fu">print</span>(p_segregation)</span></code></pre></div>
+<pre class="r"><code># Calculate the observed frequency of each genotype state.
+geno_frequency &lt;- prop.table(
+  table(
+    factor(
+      as.vector(geno_012),
+      levels = 0:2
+    )
+  )
+)
+
+segregation_plot &lt;- rbind(
+  data.frame(
+    Genotype = factor(0:2, levels = 0:2),
+    Proportion = as.numeric(geno_frequency),
+    Type = &quot;Observed&quot;
+  ),
+  data.frame(
+    Genotype = factor(0:2, levels = 0:2),
+    Proportion = c(0.25, 0.50, 0.25),
+    Type = &quot;F2 expectation&quot;
+  )
+)
+
+p_segregation &lt;- ggplot(
+  segregation_plot,
+  aes(
+    x = Genotype,
+    y = Proportion,
+    fill = Type
+  )
+) +
+  geom_col(
+    position = &quot;dodge&quot;
+  ) +
+  scale_fill_gdocs() +
+  labs(
+    x = &quot;Genotype coding&quot;,
+    y = &quot;Proportion&quot;,
+    fill = NULL
+  ) +
+  theme_gdocs()
+
+print(p_segregation)</code></pre>
 <div class="figure" style="text-align: center">
 <img src="figure/simulated_data_audit.Rmd/genotype-segregation-1.png" alt="Observed genotype proportions compared with the expected 1:2:1 segregation of an F2 population." width="100%" />
 <p class="caption">
@@ -4100,53 +4034,53 @@ heterozygous class at each marker.</li>
 </ul>
 <p>These quantities describe the simulated data. They are not used here
 as an automatic filtering rule.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="co"># Count missing data and repeated complete genotype profiles.</span></span>
-<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>missing_genotypes <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(geno_012))</span>
-<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>duplicate_individuals <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">duplicated</span>(geno_012, <span class="at">MARGIN =</span> <span class="dv">1</span>))</span>
-<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>duplicate_markers <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">duplicated</span>(geno_012, <span class="at">MARGIN =</span> <span class="dv">2</span>))</span>
-<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a></span>
-<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a><span class="co"># Summarize marker-level allele frequency, MAF, heterozygosity, and variance.</span></span>
-<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>allele_frequency <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(geno_012) <span class="sc">/</span> <span class="dv">2</span></span>
-<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>maf <span class="ot">&lt;-</span> <span class="fu">pmin</span>(allele_frequency, <span class="dv">1</span> <span class="sc">-</span> allele_frequency)</span>
-<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a>heterozygosity <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(geno_012 <span class="sc">==</span> <span class="dv">1</span>)</span>
-<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a>marker_variance <span class="ot">&lt;-</span> <span class="fu">apply</span>(geno_012, <span class="dv">2</span>, var)</span>
-<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a>monomorphic_markers <span class="ot">&lt;-</span> <span class="fu">sum</span>(marker_variance <span class="sc">==</span> <span class="dv">0</span>)</span>
-<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a></span>
-<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a>marker_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a>  <span class="at">Statistic =</span> <span class="fu">c</span>(</span>
-<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a>    <span class="st">&quot;Missing genotype cells&quot;</span>,</span>
-<span id="cb16-16"><a href="#cb16-16" tabindex="-1"></a>    <span class="st">&quot;Duplicate individuals&quot;</span>,</span>
-<span id="cb16-17"><a href="#cb16-17" tabindex="-1"></a>    <span class="st">&quot;Duplicate markers&quot;</span>,</span>
-<span id="cb16-18"><a href="#cb16-18" tabindex="-1"></a>    <span class="st">&quot;Monomorphic markers&quot;</span>,</span>
-<span id="cb16-19"><a href="#cb16-19" tabindex="-1"></a>    <span class="st">&quot;Minimum MAF&quot;</span>,</span>
-<span id="cb16-20"><a href="#cb16-20" tabindex="-1"></a>    <span class="st">&quot;Median MAF&quot;</span>,</span>
-<span id="cb16-21"><a href="#cb16-21" tabindex="-1"></a>    <span class="st">&quot;Maximum MAF&quot;</span>,</span>
-<span id="cb16-22"><a href="#cb16-22" tabindex="-1"></a>    <span class="st">&quot;Minimum heterozygosity&quot;</span>,</span>
-<span id="cb16-23"><a href="#cb16-23" tabindex="-1"></a>    <span class="st">&quot;Median heterozygosity&quot;</span>,</span>
-<span id="cb16-24"><a href="#cb16-24" tabindex="-1"></a>    <span class="st">&quot;Maximum heterozygosity&quot;</span></span>
-<span id="cb16-25"><a href="#cb16-25" tabindex="-1"></a>  ),</span>
-<span id="cb16-26"><a href="#cb16-26" tabindex="-1"></a>  <span class="at">Value =</span> <span class="fu">c</span>(</span>
-<span id="cb16-27"><a href="#cb16-27" tabindex="-1"></a>    missing_genotypes,</span>
-<span id="cb16-28"><a href="#cb16-28" tabindex="-1"></a>    duplicate_individuals,</span>
-<span id="cb16-29"><a href="#cb16-29" tabindex="-1"></a>    duplicate_markers,</span>
-<span id="cb16-30"><a href="#cb16-30" tabindex="-1"></a>    monomorphic_markers,</span>
-<span id="cb16-31"><a href="#cb16-31" tabindex="-1"></a>    <span class="fu">min</span>(maf),</span>
-<span id="cb16-32"><a href="#cb16-32" tabindex="-1"></a>    <span class="fu">median</span>(maf),</span>
-<span id="cb16-33"><a href="#cb16-33" tabindex="-1"></a>    <span class="fu">max</span>(maf),</span>
-<span id="cb16-34"><a href="#cb16-34" tabindex="-1"></a>    <span class="fu">min</span>(heterozygosity),</span>
-<span id="cb16-35"><a href="#cb16-35" tabindex="-1"></a>    <span class="fu">median</span>(heterozygosity),</span>
-<span id="cb16-36"><a href="#cb16-36" tabindex="-1"></a>    <span class="fu">max</span>(heterozygosity)</span>
-<span id="cb16-37"><a href="#cb16-37" tabindex="-1"></a>  )</span>
-<span id="cb16-38"><a href="#cb16-38" tabindex="-1"></a>)</span>
-<span id="cb16-39"><a href="#cb16-39" tabindex="-1"></a></span>
-<span id="cb16-40"><a href="#cb16-40" tabindex="-1"></a>marker_summary <span class="sc">|&gt;</span></span>
-<span id="cb16-41"><a href="#cb16-41" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb16-42"><a href="#cb16-42" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb16-43"><a href="#cb16-43" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">4</span>,</span>
-<span id="cb16-44"><a href="#cb16-44" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Summary of marker and individual properties&quot;</span>,</span>
-<span id="cb16-45"><a href="#cb16-45" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb16-46"><a href="#cb16-46" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb16-47"><a href="#cb16-47" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code># Count missing data and repeated complete genotype profiles.
+missing_genotypes &lt;- sum(is.na(geno_012))
+duplicate_individuals &lt;- sum(duplicated(geno_012, MARGIN = 1))
+duplicate_markers &lt;- sum(duplicated(geno_012, MARGIN = 2))
+
+# Summarize marker-level allele frequency, MAF, heterozygosity, and variance.
+allele_frequency &lt;- colMeans(geno_012) / 2
+maf &lt;- pmin(allele_frequency, 1 - allele_frequency)
+heterozygosity &lt;- colMeans(geno_012 == 1)
+marker_variance &lt;- apply(geno_012, 2, var)
+monomorphic_markers &lt;- sum(marker_variance == 0)
+
+marker_summary &lt;- data.frame(
+  Statistic = c(
+    &quot;Missing genotype cells&quot;,
+    &quot;Duplicate individuals&quot;,
+    &quot;Duplicate markers&quot;,
+    &quot;Monomorphic markers&quot;,
+    &quot;Minimum MAF&quot;,
+    &quot;Median MAF&quot;,
+    &quot;Maximum MAF&quot;,
+    &quot;Minimum heterozygosity&quot;,
+    &quot;Median heterozygosity&quot;,
+    &quot;Maximum heterozygosity&quot;
+  ),
+  Value = c(
+    missing_genotypes,
+    duplicate_individuals,
+    duplicate_markers,
+    monomorphic_markers,
+    min(maf),
+    median(maf),
+    max(maf),
+    min(heterozygosity),
+    median(heterozygosity),
+    max(heterozygosity)
+  )
+)
+
+marker_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 4,
+    caption = &quot;Summary of marker and individual properties&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Summary of marker and individual properties
@@ -4266,55 +4200,55 @@ parents used by GENES. The chunk reads four pieces of information:</p>
 <p>The resulting summary checks that both parents cover all ten linkage
 groups and shows the contrasting fixed states from which the three F2
 genotype classes were generated.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># Read the parental records across the ten linkage groups.</span></span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>parents <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(</span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  <span class="fu">read.table</span>(</span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>    <span class="st">&quot;data/dados_simulados/genoma_pais.txt&quot;</span>,</span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>    <span class="at">header =</span> <span class="cn">FALSE</span></span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>  )</span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>)</span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a></span>
-<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>parent_id <span class="ot">&lt;-</span> parents[, <span class="dv">1</span>]</span>
-<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>parent_lg <span class="ot">&lt;-</span> parents[, <span class="dv">2</span>]</span>
-<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>parent_nmarkers <span class="ot">&lt;-</span> parents[, <span class="dv">3</span>]</span>
-<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>parent_genotypes <span class="ot">&lt;-</span> parents[, <span class="dv">5</span><span class="sc">:</span><span class="dv">405</span>, drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
-<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a></span>
-<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co"># Summarize the linkage-group coverage and fixed marker state of each parent.</span></span>
-<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a>parent_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a>  <span class="at">Parent =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
-<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a>  <span class="at">Linkage_groups =</span> <span class="fu">c</span>(</span>
-<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(parent_lg[parent_id <span class="sc">==</span> <span class="dv">1</span>])),</span>
-<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(parent_lg[parent_id <span class="sc">==</span> <span class="dv">2</span>]))</span>
-<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a>  ),</span>
-<span id="cb17-21"><a href="#cb17-21" tabindex="-1"></a>  <span class="at">Marker_state =</span> <span class="fu">c</span>(</span>
-<span id="cb17-22"><a href="#cb17-22" tabindex="-1"></a>    <span class="fu">unique</span>(</span>
-<span id="cb17-23"><a href="#cb17-23" tabindex="-1"></a>      <span class="fu">as.vector</span>(</span>
-<span id="cb17-24"><a href="#cb17-24" tabindex="-1"></a>        parent_genotypes[</span>
-<span id="cb17-25"><a href="#cb17-25" tabindex="-1"></a>          parent_id <span class="sc">==</span> <span class="dv">1</span>,</span>
-<span id="cb17-26"><a href="#cb17-26" tabindex="-1"></a>          ,</span>
-<span id="cb17-27"><a href="#cb17-27" tabindex="-1"></a>          <span class="at">drop =</span> <span class="cn">FALSE</span></span>
-<span id="cb17-28"><a href="#cb17-28" tabindex="-1"></a>        ]</span>
-<span id="cb17-29"><a href="#cb17-29" tabindex="-1"></a>      )</span>
-<span id="cb17-30"><a href="#cb17-30" tabindex="-1"></a>    )[<span class="dv">1</span>],</span>
-<span id="cb17-31"><a href="#cb17-31" tabindex="-1"></a>    <span class="fu">unique</span>(</span>
-<span id="cb17-32"><a href="#cb17-32" tabindex="-1"></a>      <span class="fu">as.vector</span>(</span>
-<span id="cb17-33"><a href="#cb17-33" tabindex="-1"></a>        parent_genotypes[</span>
-<span id="cb17-34"><a href="#cb17-34" tabindex="-1"></a>          parent_id <span class="sc">==</span> <span class="dv">2</span>,</span>
-<span id="cb17-35"><a href="#cb17-35" tabindex="-1"></a>          ,</span>
-<span id="cb17-36"><a href="#cb17-36" tabindex="-1"></a>          <span class="at">drop =</span> <span class="cn">FALSE</span></span>
-<span id="cb17-37"><a href="#cb17-37" tabindex="-1"></a>        ]</span>
-<span id="cb17-38"><a href="#cb17-38" tabindex="-1"></a>      )</span>
-<span id="cb17-39"><a href="#cb17-39" tabindex="-1"></a>    )[<span class="dv">1</span>]</span>
-<span id="cb17-40"><a href="#cb17-40" tabindex="-1"></a>  )</span>
-<span id="cb17-41"><a href="#cb17-41" tabindex="-1"></a>)</span>
-<span id="cb17-42"><a href="#cb17-42" tabindex="-1"></a></span>
-<span id="cb17-43"><a href="#cb17-43" tabindex="-1"></a>parent_summary <span class="sc">|&gt;</span></span>
-<span id="cb17-44"><a href="#cb17-44" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb17-45"><a href="#cb17-45" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb17-46"><a href="#cb17-46" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Parental genotypes used to generate the simulated F2 population&quot;</span>,</span>
-<span id="cb17-47"><a href="#cb17-47" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb17-48"><a href="#cb17-48" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb17-49"><a href="#cb17-49" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code># Read the parental records across the ten linkage groups.
+parents &lt;- as.matrix(
+  read.table(
+    &quot;data/dados_simulados/genoma_pais.txt&quot;,
+    header = FALSE
+  )
+)
+
+parent_id &lt;- parents[, 1]
+parent_lg &lt;- parents[, 2]
+parent_nmarkers &lt;- parents[, 3]
+parent_genotypes &lt;- parents[, 5:405, drop = FALSE]
+
+# Summarize the linkage-group coverage and fixed marker state of each parent.
+parent_summary &lt;- data.frame(
+  Parent = c(1, 2),
+  Linkage_groups = c(
+    length(unique(parent_lg[parent_id == 1])),
+    length(unique(parent_lg[parent_id == 2]))
+  ),
+  Marker_state = c(
+    unique(
+      as.vector(
+        parent_genotypes[
+          parent_id == 1,
+          ,
+          drop = FALSE
+        ]
+      )
+    )[1],
+    unique(
+      as.vector(
+        parent_genotypes[
+          parent_id == 2,
+          ,
+          drop = FALSE
+        ]
+      )
+    )[1]
+  )
+)
+
+parent_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Parental genotypes used to generate the simulated F2 population&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Parental genotypes used to generate the simulated F2 population
@@ -4404,150 +4338,150 @@ categories with equal visual spacing because a continuous 0.5-200 cM
 axis compresses the short distances. This changes only the figure
 layout: every calculation still uses the true numeric distance in
 cM.</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># Standardize markers once so correlations can be calculated efficiently.</span></span>
-<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>geno_scaled <span class="ot">&lt;-</span> <span class="fu">scale</span>(geno_012)</span>
-<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>ld_distances <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>  <span class="fl">0.5</span>,</span>
-<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>  <span class="dv">1</span>,</span>
-<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>  <span class="fl">2.5</span>,</span>
-<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a>  <span class="dv">5</span>,</span>
-<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a>  <span class="dv">10</span>,</span>
-<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a>  <span class="dv">25</span>,</span>
-<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a>  <span class="dv">50</span>,</span>
-<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a>  <span class="dv">100</span>,</span>
-<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a>  <span class="dv">200</span></span>
-<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a>)</span>
-<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a></span>
-<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a>ld_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a>  <span class="at">Distance_cM =</span> ld_distances,</span>
-<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a>  <span class="at">Pairs =</span> <span class="cn">NA_integer_</span>,</span>
-<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a>  <span class="at">Mean_r2 =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a>  <span class="at">Median_r2 =</span> <span class="cn">NA_real_</span></span>
-<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a>)</span>
-<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a></span>
-<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a><span class="co"># Calculate LD for marker pairs separated by each distance within each LG.</span></span>
-<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a><span class="cf">for</span> (d <span class="cf">in</span> <span class="fu">seq_along</span>(ld_distances)) {</span>
-<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a></span>
-<span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a>  marker_shift <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(ld_distances[d] <span class="sc">/</span> <span class="fl">0.5</span>)</span>
-<span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a>  r2_all <span class="ot">&lt;-</span> <span class="fu">numeric</span>()</span>
-<span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a></span>
-<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a>  <span class="cf">for</span> (lg <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) {</span>
-<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a></span>
-<span id="cb18-31"><a href="#cb18-31" tabindex="-1"></a>    markers <span class="ot">&lt;-</span> <span class="fu">which</span>(genetic_map<span class="sc">$</span>LG <span class="sc">==</span> lg)</span>
-<span id="cb18-32"><a href="#cb18-32" tabindex="-1"></a></span>
-<span id="cb18-33"><a href="#cb18-33" tabindex="-1"></a>    marker_1 <span class="ot">&lt;-</span> markers[</span>
-<span id="cb18-34"><a href="#cb18-34" tabindex="-1"></a>      <span class="dv">1</span><span class="sc">:</span>(<span class="fu">length</span>(markers) <span class="sc">-</span> marker_shift)</span>
-<span id="cb18-35"><a href="#cb18-35" tabindex="-1"></a>    ]</span>
-<span id="cb18-36"><a href="#cb18-36" tabindex="-1"></a></span>
-<span id="cb18-37"><a href="#cb18-37" tabindex="-1"></a>    marker_2 <span class="ot">&lt;-</span> markers[</span>
-<span id="cb18-38"><a href="#cb18-38" tabindex="-1"></a>      (<span class="dv">1</span> <span class="sc">+</span> marker_shift)<span class="sc">:</span><span class="fu">length</span>(markers)</span>
-<span id="cb18-39"><a href="#cb18-39" tabindex="-1"></a>    ]</span>
-<span id="cb18-40"><a href="#cb18-40" tabindex="-1"></a></span>
-<span id="cb18-41"><a href="#cb18-41" tabindex="-1"></a>    r <span class="ot">&lt;-</span> <span class="fu">colSums</span>(</span>
-<span id="cb18-42"><a href="#cb18-42" tabindex="-1"></a>      geno_scaled[, marker_1, <span class="at">drop =</span> <span class="cn">FALSE</span>] <span class="sc">*</span></span>
-<span id="cb18-43"><a href="#cb18-43" tabindex="-1"></a>        geno_scaled[, marker_2, <span class="at">drop =</span> <span class="cn">FALSE</span>]</span>
-<span id="cb18-44"><a href="#cb18-44" tabindex="-1"></a>    ) <span class="sc">/</span> (<span class="fu">nrow</span>(geno_scaled) <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb18-45"><a href="#cb18-45" tabindex="-1"></a></span>
-<span id="cb18-46"><a href="#cb18-46" tabindex="-1"></a>    r2_all <span class="ot">&lt;-</span> <span class="fu">c</span>(r2_all, r<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb18-47"><a href="#cb18-47" tabindex="-1"></a>  }</span>
-<span id="cb18-48"><a href="#cb18-48" tabindex="-1"></a></span>
-<span id="cb18-49"><a href="#cb18-49" tabindex="-1"></a>  ld_summary<span class="sc">$</span>Pairs[d] <span class="ot">&lt;-</span> <span class="fu">length</span>(r2_all)</span>
-<span id="cb18-50"><a href="#cb18-50" tabindex="-1"></a>  ld_summary<span class="sc">$</span>Mean_r2[d] <span class="ot">&lt;-</span> <span class="fu">mean</span>(r2_all)</span>
-<span id="cb18-51"><a href="#cb18-51" tabindex="-1"></a>  ld_summary<span class="sc">$</span>Median_r2[d] <span class="ot">&lt;-</span> <span class="fu">median</span>(r2_all)</span>
-<span id="cb18-52"><a href="#cb18-52" tabindex="-1"></a>}</span>
-<span id="cb18-53"><a href="#cb18-53" tabindex="-1"></a></span>
-<span id="cb18-54"><a href="#cb18-54" tabindex="-1"></a><span class="co"># Draw marker pairs from different LGs for the background LD reference.</span></span>
-<span id="cb18-55"><a href="#cb18-55" tabindex="-1"></a><span class="fu">set.seed</span>(SEED_GLOBAL <span class="sc">+</span> <span class="dv">101</span><span class="dt">L</span>)</span>
-<span id="cb18-56"><a href="#cb18-56" tabindex="-1"></a></span>
-<span id="cb18-57"><a href="#cb18-57" tabindex="-1"></a>n_inter_pairs <span class="ot">&lt;-</span> <span class="dv">5000</span><span class="dt">L</span></span>
-<span id="cb18-58"><a href="#cb18-58" tabindex="-1"></a></span>
-<span id="cb18-59"><a href="#cb18-59" tabindex="-1"></a>inter_i <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
-<span id="cb18-60"><a href="#cb18-60" tabindex="-1"></a>  <span class="fu">seq_len</span>(<span class="fu">ncol</span>(geno_012)),</span>
-<span id="cb18-61"><a href="#cb18-61" tabindex="-1"></a>  n_inter_pairs,</span>
-<span id="cb18-62"><a href="#cb18-62" tabindex="-1"></a>  <span class="at">replace =</span> <span class="cn">TRUE</span></span>
-<span id="cb18-63"><a href="#cb18-63" tabindex="-1"></a>)</span>
-<span id="cb18-64"><a href="#cb18-64" tabindex="-1"></a></span>
-<span id="cb18-65"><a href="#cb18-65" tabindex="-1"></a>inter_j <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
-<span id="cb18-66"><a href="#cb18-66" tabindex="-1"></a>  <span class="fu">seq_len</span>(<span class="fu">ncol</span>(geno_012)),</span>
-<span id="cb18-67"><a href="#cb18-67" tabindex="-1"></a>  n_inter_pairs,</span>
-<span id="cb18-68"><a href="#cb18-68" tabindex="-1"></a>  <span class="at">replace =</span> <span class="cn">TRUE</span></span>
-<span id="cb18-69"><a href="#cb18-69" tabindex="-1"></a>)</span>
-<span id="cb18-70"><a href="#cb18-70" tabindex="-1"></a></span>
-<span id="cb18-71"><a href="#cb18-71" tabindex="-1"></a>same_lg <span class="ot">&lt;-</span> genetic_map<span class="sc">$</span>LG[inter_i] <span class="sc">==</span> genetic_map<span class="sc">$</span>LG[inter_j]</span>
-<span id="cb18-72"><a href="#cb18-72" tabindex="-1"></a></span>
-<span id="cb18-73"><a href="#cb18-73" tabindex="-1"></a><span class="co"># Resample only second markers that accidentally fall in the same LG.</span></span>
-<span id="cb18-74"><a href="#cb18-74" tabindex="-1"></a><span class="cf">while</span> (<span class="fu">any</span>(same_lg)) {</span>
-<span id="cb18-75"><a href="#cb18-75" tabindex="-1"></a></span>
-<span id="cb18-76"><a href="#cb18-76" tabindex="-1"></a>  inter_j[same_lg] <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
-<span id="cb18-77"><a href="#cb18-77" tabindex="-1"></a>    <span class="fu">seq_len</span>(<span class="fu">ncol</span>(geno_012)),</span>
-<span id="cb18-78"><a href="#cb18-78" tabindex="-1"></a>    <span class="fu">sum</span>(same_lg),</span>
-<span id="cb18-79"><a href="#cb18-79" tabindex="-1"></a>    <span class="at">replace =</span> <span class="cn">TRUE</span></span>
-<span id="cb18-80"><a href="#cb18-80" tabindex="-1"></a>  )</span>
-<span id="cb18-81"><a href="#cb18-81" tabindex="-1"></a></span>
-<span id="cb18-82"><a href="#cb18-82" tabindex="-1"></a>  same_lg <span class="ot">&lt;-</span> genetic_map<span class="sc">$</span>LG[inter_i] <span class="sc">==</span> genetic_map<span class="sc">$</span>LG[inter_j]</span>
-<span id="cb18-83"><a href="#cb18-83" tabindex="-1"></a>}</span>
-<span id="cb18-84"><a href="#cb18-84" tabindex="-1"></a></span>
-<span id="cb18-85"><a href="#cb18-85" tabindex="-1"></a>inter_r <span class="ot">&lt;-</span> <span class="fu">colSums</span>(</span>
-<span id="cb18-86"><a href="#cb18-86" tabindex="-1"></a>  geno_scaled[, inter_i, <span class="at">drop =</span> <span class="cn">FALSE</span>] <span class="sc">*</span></span>
-<span id="cb18-87"><a href="#cb18-87" tabindex="-1"></a>    geno_scaled[, inter_j, <span class="at">drop =</span> <span class="cn">FALSE</span>]</span>
-<span id="cb18-88"><a href="#cb18-88" tabindex="-1"></a>) <span class="sc">/</span> (<span class="fu">nrow</span>(geno_scaled) <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb18-89"><a href="#cb18-89" tabindex="-1"></a></span>
-<span id="cb18-90"><a href="#cb18-90" tabindex="-1"></a>inter_r2 <span class="ot">&lt;-</span> inter_r<span class="sc">^</span><span class="dv">2</span></span>
-<span id="cb18-91"><a href="#cb18-91" tabindex="-1"></a></span>
-<span id="cb18-92"><a href="#cb18-92" tabindex="-1"></a>interchromosomal_ld <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb18-93"><a href="#cb18-93" tabindex="-1"></a>  <span class="at">Distance_cM =</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb18-94"><a href="#cb18-94" tabindex="-1"></a>  <span class="at">Pairs =</span> <span class="fu">length</span>(inter_r2),</span>
-<span id="cb18-95"><a href="#cb18-95" tabindex="-1"></a>  <span class="at">Mean_r2 =</span> <span class="fu">mean</span>(inter_r2),</span>
-<span id="cb18-96"><a href="#cb18-96" tabindex="-1"></a>  <span class="at">Median_r2 =</span> <span class="fu">median</span>(inter_r2)</span>
-<span id="cb18-97"><a href="#cb18-97" tabindex="-1"></a>)</span>
-<span id="cb18-98"><a href="#cb18-98" tabindex="-1"></a></span>
-<span id="cb18-99"><a href="#cb18-99" tabindex="-1"></a><span class="co"># Convert distances to ordered labels only for the figure.</span></span>
-<span id="cb18-100"><a href="#cb18-100" tabindex="-1"></a>ld_plot_data <span class="ot">&lt;-</span> ld_summary</span>
-<span id="cb18-101"><a href="#cb18-101" tabindex="-1"></a>ld_plot_data<span class="sc">$</span>Distance_label <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
-<span id="cb18-102"><a href="#cb18-102" tabindex="-1"></a>  <span class="fu">as.character</span>(ld_plot_data<span class="sc">$</span>Distance_cM),</span>
-<span id="cb18-103"><a href="#cb18-103" tabindex="-1"></a>  <span class="at">levels =</span> <span class="fu">as.character</span>(ld_distances)</span>
-<span id="cb18-104"><a href="#cb18-104" tabindex="-1"></a>)</span>
-<span id="cb18-105"><a href="#cb18-105" tabindex="-1"></a>ld_plot_data<span class="sc">$</span>Type <span class="ot">&lt;-</span> <span class="st">&quot;Within linkage group&quot;</span></span>
-<span id="cb18-106"><a href="#cb18-106" tabindex="-1"></a></span>
-<span id="cb18-107"><a href="#cb18-107" tabindex="-1"></a>ld_reference_plot <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb18-108"><a href="#cb18-108" tabindex="-1"></a>  <span class="at">Mean_r2 =</span> interchromosomal_ld<span class="sc">$</span>Mean_r2,</span>
-<span id="cb18-109"><a href="#cb18-109" tabindex="-1"></a>  <span class="at">Type =</span> <span class="st">&quot;Between linkage groups&quot;</span></span>
-<span id="cb18-110"><a href="#cb18-110" tabindex="-1"></a>)</span>
-<span id="cb18-111"><a href="#cb18-111" tabindex="-1"></a></span>
-<span id="cb18-112"><a href="#cb18-112" tabindex="-1"></a>p_ld <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
-<span id="cb18-113"><a href="#cb18-113" tabindex="-1"></a>  ld_plot_data,</span>
-<span id="cb18-114"><a href="#cb18-114" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
-<span id="cb18-115"><a href="#cb18-115" tabindex="-1"></a>    <span class="at">x =</span> Distance_label,</span>
-<span id="cb18-116"><a href="#cb18-116" tabindex="-1"></a>    <span class="at">y =</span> Mean_r2,</span>
-<span id="cb18-117"><a href="#cb18-117" tabindex="-1"></a>    <span class="at">group =</span> <span class="dv">1</span>,</span>
-<span id="cb18-118"><a href="#cb18-118" tabindex="-1"></a>    <span class="at">color =</span> Type</span>
-<span id="cb18-119"><a href="#cb18-119" tabindex="-1"></a>  )</span>
-<span id="cb18-120"><a href="#cb18-120" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb18-121"><a href="#cb18-121" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
-<span id="cb18-122"><a href="#cb18-122" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">0.9</span></span>
-<span id="cb18-123"><a href="#cb18-123" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb18-124"><a href="#cb18-124" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
-<span id="cb18-125"><a href="#cb18-125" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">2.8</span></span>
-<span id="cb18-126"><a href="#cb18-126" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb18-127"><a href="#cb18-127" tabindex="-1"></a>  <span class="fu">geom_hline</span>(</span>
-<span id="cb18-128"><a href="#cb18-128" tabindex="-1"></a>    <span class="at">data =</span> ld_reference_plot,</span>
-<span id="cb18-129"><a href="#cb18-129" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
-<span id="cb18-130"><a href="#cb18-130" tabindex="-1"></a>      <span class="at">yintercept =</span> Mean_r2,</span>
-<span id="cb18-131"><a href="#cb18-131" tabindex="-1"></a>      <span class="at">color =</span> Type</span>
-<span id="cb18-132"><a href="#cb18-132" tabindex="-1"></a>    ),</span>
-<span id="cb18-133"><a href="#cb18-133" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>,</span>
-<span id="cb18-134"><a href="#cb18-134" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">0.9</span></span>
-<span id="cb18-135"><a href="#cb18-135" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb18-136"><a href="#cb18-136" tabindex="-1"></a>  <span class="fu">scale_color_gdocs</span>() <span class="sc">+</span></span>
-<span id="cb18-137"><a href="#cb18-137" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb18-138"><a href="#cb18-138" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;Map distance within linkage group (cM)&quot;</span>,</span>
-<span id="cb18-139"><a href="#cb18-139" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">expression</span>(<span class="fu">mean</span>(r<span class="sc">^</span><span class="dv">2</span>)),</span>
-<span id="cb18-140"><a href="#cb18-140" tabindex="-1"></a>    <span class="at">color =</span> <span class="cn">NULL</span></span>
-<span id="cb18-141"><a href="#cb18-141" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb18-142"><a href="#cb18-142" tabindex="-1"></a>  <span class="fu">theme_gdocs</span>()</span>
-<span id="cb18-143"><a href="#cb18-143" tabindex="-1"></a></span>
-<span id="cb18-144"><a href="#cb18-144" tabindex="-1"></a><span class="fu">print</span>(p_ld)</span></code></pre></div>
+<pre class="r"><code># Standardize markers once so correlations can be calculated efficiently.
+geno_scaled &lt;- scale(geno_012)
+
+ld_distances &lt;- c(
+  0.5,
+  1,
+  2.5,
+  5,
+  10,
+  25,
+  50,
+  100,
+  200
+)
+
+ld_summary &lt;- data.frame(
+  Distance_cM = ld_distances,
+  Pairs = NA_integer_,
+  Mean_r2 = NA_real_,
+  Median_r2 = NA_real_
+)
+
+# Calculate LD for marker pairs separated by each distance within each LG.
+for (d in seq_along(ld_distances)) {
+
+  marker_shift &lt;- as.integer(ld_distances[d] / 0.5)
+  r2_all &lt;- numeric()
+
+  for (lg in 1:10) {
+
+    markers &lt;- which(genetic_map$LG == lg)
+
+    marker_1 &lt;- markers[
+      1:(length(markers) - marker_shift)
+    ]
+
+    marker_2 &lt;- markers[
+      (1 + marker_shift):length(markers)
+    ]
+
+    r &lt;- colSums(
+      geno_scaled[, marker_1, drop = FALSE] *
+        geno_scaled[, marker_2, drop = FALSE]
+    ) / (nrow(geno_scaled) - 1)
+
+    r2_all &lt;- c(r2_all, r^2)
+  }
+
+  ld_summary$Pairs[d] &lt;- length(r2_all)
+  ld_summary$Mean_r2[d] &lt;- mean(r2_all)
+  ld_summary$Median_r2[d] &lt;- median(r2_all)
+}
+
+# Draw marker pairs from different LGs for the background LD reference.
+set.seed(SEED_GLOBAL + 101L)
+
+n_inter_pairs &lt;- 5000L
+
+inter_i &lt;- sample(
+  seq_len(ncol(geno_012)),
+  n_inter_pairs,
+  replace = TRUE
+)
+
+inter_j &lt;- sample(
+  seq_len(ncol(geno_012)),
+  n_inter_pairs,
+  replace = TRUE
+)
+
+same_lg &lt;- genetic_map$LG[inter_i] == genetic_map$LG[inter_j]
+
+# Resample only second markers that accidentally fall in the same LG.
+while (any(same_lg)) {
+
+  inter_j[same_lg] &lt;- sample(
+    seq_len(ncol(geno_012)),
+    sum(same_lg),
+    replace = TRUE
+  )
+
+  same_lg &lt;- genetic_map$LG[inter_i] == genetic_map$LG[inter_j]
+}
+
+inter_r &lt;- colSums(
+  geno_scaled[, inter_i, drop = FALSE] *
+    geno_scaled[, inter_j, drop = FALSE]
+) / (nrow(geno_scaled) - 1)
+
+inter_r2 &lt;- inter_r^2
+
+interchromosomal_ld &lt;- data.frame(
+  Distance_cM = NA_real_,
+  Pairs = length(inter_r2),
+  Mean_r2 = mean(inter_r2),
+  Median_r2 = median(inter_r2)
+)
+
+# Convert distances to ordered labels only for the figure.
+ld_plot_data &lt;- ld_summary
+ld_plot_data$Distance_label &lt;- factor(
+  as.character(ld_plot_data$Distance_cM),
+  levels = as.character(ld_distances)
+)
+ld_plot_data$Type &lt;- &quot;Within linkage group&quot;
+
+ld_reference_plot &lt;- data.frame(
+  Mean_r2 = interchromosomal_ld$Mean_r2,
+  Type = &quot;Between linkage groups&quot;
+)
+
+p_ld &lt;- ggplot(
+  ld_plot_data,
+  aes(
+    x = Distance_label,
+    y = Mean_r2,
+    group = 1,
+    color = Type
+  )
+) +
+  geom_line(
+    linewidth = 0.9
+  ) +
+  geom_point(
+    size = 2.8
+  ) +
+  geom_hline(
+    data = ld_reference_plot,
+    aes(
+      yintercept = Mean_r2,
+      color = Type
+    ),
+    linetype = &quot;dashed&quot;,
+    linewidth = 0.9
+  ) +
+  scale_color_gdocs() +
+  labs(
+    x = &quot;Map distance within linkage group (cM)&quot;,
+    y = expression(mean(r^2)),
+    color = NULL
+  ) +
+  theme_gdocs()
+
+print(p_ld)</code></pre>
 <div class="figure" style="text-align: center">
 <img src="figure/simulated_data_audit.Rmd/linkage-disequilibrium-1.png" alt="LD across the evaluated within-linkage-group distances. The dashed line is the mean r-squared from 5,000 marker pairs drawn from different linkage groups. Distances are equally spaced on the displayed x-axis for readability, but calculations use the true distances in cM." width="100%" />
 <p class="caption">
@@ -4613,14 +4547,14 @@ class="math inline">\(r^2\)</span> at each true map distance;</li>
 <li>the second reports the between-LG background reference from 5,000
 sampled pairs.</li>
 </ul>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>ld_summary <span class="sc">|&gt;</span></span>
-<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">5</span>,</span>
-<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Within-linkage-group LD by map distance&quot;</span>,</span>
-<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>ld_summary |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 5,
+    caption = &quot;Within-linkage-group LD by map distance&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Within-linkage-group LD by map distance
@@ -4770,14 +4704,14 @@ Median_r2
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>interchromosomal_ld <span class="sc">|&gt;</span></span>
-<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">5</span>,</span>
-<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;LD between markers from different linkage groups&quot;</span>,</span>
-<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>interchromosomal_ld |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    digits = 5,
+    caption = &quot;LD between markers from different linkage groups&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 LD between markers from different linkage groups
@@ -4839,46 +4773,46 @@ main structural facts established in the module:</p>
 <p>The table is a compact description of the prepared data, while the
 biological and statistical interpretation remains in the sections where
 each quantity is introduced.</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>data_overview <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>  <span class="at">Quantity =</span> <span class="fu">c</span>(</span>
-<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>    <span class="st">&quot;Individuals&quot;</span>,</span>
-<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>    <span class="st">&quot;Markers&quot;</span>,</span>
-<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>    <span class="st">&quot;Simulation scenarios&quot;</span>,</span>
-<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>    <span class="st">&quot;Linkage groups&quot;</span>,</span>
-<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a>    <span class="st">&quot;Markers per linkage group&quot;</span>,</span>
-<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a>    <span class="st">&quot;Missing genotype cells&quot;</span>,</span>
-<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a>    <span class="st">&quot;Duplicate individuals&quot;</span>,</span>
-<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a>    <span class="st">&quot;Duplicate markers&quot;</span>,</span>
-<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a>    <span class="st">&quot;Monomorphic markers&quot;</span>,</span>
-<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a>    <span class="st">&quot;Minimum MAF&quot;</span>,</span>
-<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a>    <span class="st">&quot;Mean r2 between linkage groups&quot;</span></span>
-<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a>  ),</span>
-<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a>  <span class="at">Observed =</span> <span class="fu">c</span>(</span>
-<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a>    <span class="fu">nrow</span>(geno_012),</span>
-<span id="cb21-17"><a href="#cb21-17" tabindex="-1"></a>    <span class="fu">ncol</span>(geno_012),</span>
-<span id="cb21-18"><a href="#cb21-18" tabindex="-1"></a>    <span class="fu">ncol</span>(phenotype),</span>
-<span id="cb21-19"><a href="#cb21-19" tabindex="-1"></a>    <span class="fu">length</span>(<span class="fu">unique</span>(genetic_map<span class="sc">$</span>LG)),</span>
-<span id="cb21-20"><a href="#cb21-20" tabindex="-1"></a>    <span class="fu">paste</span>(</span>
-<span id="cb21-21"><a href="#cb21-21" tabindex="-1"></a>      <span class="fu">unique</span>(<span class="fu">as.integer</span>(<span class="fu">table</span>(genetic_map<span class="sc">$</span>LG))),</span>
-<span id="cb21-22"><a href="#cb21-22" tabindex="-1"></a>      <span class="at">collapse =</span> <span class="st">&quot;, &quot;</span></span>
-<span id="cb21-23"><a href="#cb21-23" tabindex="-1"></a>    ),</span>
-<span id="cb21-24"><a href="#cb21-24" tabindex="-1"></a>    missing_genotypes,</span>
-<span id="cb21-25"><a href="#cb21-25" tabindex="-1"></a>    duplicate_individuals,</span>
-<span id="cb21-26"><a href="#cb21-26" tabindex="-1"></a>    duplicate_markers,</span>
-<span id="cb21-27"><a href="#cb21-27" tabindex="-1"></a>    monomorphic_markers,</span>
-<span id="cb21-28"><a href="#cb21-28" tabindex="-1"></a>    <span class="fu">round</span>(<span class="fu">min</span>(maf), <span class="dv">4</span>),</span>
-<span id="cb21-29"><a href="#cb21-29" tabindex="-1"></a>    <span class="fu">round</span>(interchromosomal_ld<span class="sc">$</span>Mean_r2, <span class="dv">5</span>)</span>
-<span id="cb21-30"><a href="#cb21-30" tabindex="-1"></a>  ),</span>
-<span id="cb21-31"><a href="#cb21-31" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb21-32"><a href="#cb21-32" tabindex="-1"></a>)</span>
-<span id="cb21-33"><a href="#cb21-33" tabindex="-1"></a></span>
-<span id="cb21-34"><a href="#cb21-34" tabindex="-1"></a>data_overview <span class="sc">|&gt;</span></span>
-<span id="cb21-35"><a href="#cb21-35" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb21-36"><a href="#cb21-36" tabindex="-1"></a>    <span class="at">format =</span> <span class="st">&quot;html&quot;</span>,</span>
-<span id="cb21-37"><a href="#cb21-37" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">&quot;Summary of the simulated genomic data&quot;</span>,</span>
-<span id="cb21-38"><a href="#cb21-38" tabindex="-1"></a>    <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb21-39"><a href="#cb21-39" tabindex="-1"></a>    <span class="at">table.attr =</span> <span class="st">&#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;</span></span>
-<span id="cb21-40"><a href="#cb21-40" tabindex="-1"></a>  )</span></code></pre></div>
+<pre class="r"><code>data_overview &lt;- data.frame(
+  Quantity = c(
+    &quot;Individuals&quot;,
+    &quot;Markers&quot;,
+    &quot;Simulation scenarios&quot;,
+    &quot;Linkage groups&quot;,
+    &quot;Markers per linkage group&quot;,
+    &quot;Missing genotype cells&quot;,
+    &quot;Duplicate individuals&quot;,
+    &quot;Duplicate markers&quot;,
+    &quot;Monomorphic markers&quot;,
+    &quot;Minimum MAF&quot;,
+    &quot;Mean r2 between linkage groups&quot;
+  ),
+  Observed = c(
+    nrow(geno_012),
+    ncol(geno_012),
+    ncol(phenotype),
+    length(unique(genetic_map$LG)),
+    paste(
+      unique(as.integer(table(genetic_map$LG))),
+      collapse = &quot;, &quot;
+    ),
+    missing_genotypes,
+    duplicate_individuals,
+    duplicate_markers,
+    monomorphic_markers,
+    round(min(maf), 4),
+    round(interchromosomal_ld$Mean_r2, 5)
+  ),
+  stringsAsFactors = FALSE
+)
+
+data_overview |&gt;
+  knitr::kable(
+    format = &quot;html&quot;,
+    caption = &quot;Summary of the simulated genomic data&quot;,
+    row.names = FALSE,
+    table.attr = &#39;class=&quot;table table-striped table-hover table-bordered&quot;&#39;
+  )</code></pre>
 <table class="table table-striped table-hover table-bordered">
 <caption>
 Summary of the simulated genomic data
@@ -5031,10 +4965,10 @@ Session information
 </button>
 </p>
 <div id="workflowr-sessioninfo" class="collapse">
-<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>R version 4.5.1 (2025-06-13 ucrt)
 Platform: x86_64-w64-mingw32/x64
-Running under: Windows 11 x64 (build 26200)
+Running under: Windows 11 x64 (build 26300)
 
 Matrix products: default
   LAPACK version 3.12.1

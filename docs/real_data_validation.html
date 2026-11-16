@@ -11,7 +11,7 @@
 
 <meta name="author" content="Weverton Gomes da Costa" />
 
-<meta name="date" content="2026-11-13" />
+<meta name="date" content="2026-11-16" />
 
 <title>Real data: nested validation design</title>
 
@@ -359,13 +359,40 @@ div.tocify {
       <a href="simulated_data_validation.html">Validation design</a>
     </li>
     <li>
-      <a href="simulated_data_gblup.html">GBLUP-ADE</a>
+      <a href="simulated_data_gblup.html">GBLUP A / AD / ADE</a>
     </li>
     <li>
       <a href="simulated_data_ann.html">ANN</a>
     </li>
     <li>
       <a href="simulated_data_comparison.html">Model comparison</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Real data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="real_data_phenotype.html">1. Longitudinal phenotypes and BLUPs</a>
+    </li>
+    <li>
+      <a href="real_data_audit.html">2. Genomic data audit</a>
+    </li>
+    <li>
+      <a href="real_data_validation.html">3. Validation design</a>
+    </li>
+    <li>
+      <a href="real_data_gblup.html">4A. GBLUP A / AD / ADE</a>
+    </li>
+    <li>
+      <a href="real_data_ann.html">4B. Regularized ANN</a>
+    </li>
+    <li>
+      <a href="real_data_comparison.html">5. Model comparison</a>
     </li>
   </ul>
 </li>
@@ -405,7 +432,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Real data: nested validation design</h1>
 <h4 class="author">Weverton Gomes da Costa</h4>
-<h4 class="date">2026-11-13</h4>
+<h4 class="date">2026-11-16</h4>
 
 </div>
 
@@ -413,7 +440,7 @@ div.tocify {
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+workflowr <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -424,8 +451,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> </a>
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -434,13 +461,13 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2026-11-13
+<strong>Last updated:</strong> 2026-11-16
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong>
@@ -464,21 +491,18 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
-<span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
-changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges"
+<div id="strongRMarkdownfilestronguptodate"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of
-the R Markdown file created these results, you’ll want to first commit
-it to the Git repo. If you’re still working on the analysis, you can
-ignore this warning. When you’re finished, you can run
-<code>wflow_publish</code> to commit the R Markdown file and build the
-HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
 </div>
 </div>
 </div>
@@ -569,15 +593,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef58ccc859fc9251e9c0ed73b8659731a4e558eb8targetblankf58ccc8a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree818db1eef730b082e603d85e0f2fc336d84d55ectargetblank818db1ea">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f58ccc859fc9251e9c0ed73b8659731a4e558eb8" target="_blank">f58ccc8</a>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/818db1eef730b082e603d85e0f2fc336d84d55ec" target="_blank">818db1e</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstreef58ccc859fc9251e9c0ed73b8659731a4e558eb8targetblankf58ccc8a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomWevertonGomesCostaGenomicPredictionusingRegularizedArtificialNeuralNetworkstree818db1eef730b082e603d85e0f2fc336d84d55ectargetblank818db1ea"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -587,7 +611,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/f58ccc859fc9251e9c0ed73b8659731a4e558eb8" target="_blank">f58ccc8</a>.
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/tree/818db1eef730b082e603d85e0f2fc336d84d55ec" target="_blank">818db1e</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -605,17 +629,17 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    .github/
-    Ignored:    .local/
     Ignored:    data/dados_reais/geno_real.rds
+    Ignored:    output/simulated/gblup/figures/
     Ignored:    renv/library/
     Ignored:    renv/staging/
 
-Untracked files:
-    Untracked:  analysis/real_data_comparison.Rmd
-    Untracked:  output/real/comparison/
-
 Unstaged changes:
-    Modified:   analysis/real_data_validation.Rmd
+    Modified:   output/real/phenotype/real_phenotype_run_metadata.rds
+    Modified:   output/simulated/m03/figures/gblup_genetic_correlation_by_scenario.tiff
+    Modified:   output/simulated/m03/figures/gblup_genetic_rmse_by_scenario.tiff
+    Modified:   output/simulated/m05/figures/model_genetic_correlation_comparison.tiff
+    Modified:   output/simulated/m05/figures/model_genetic_rmse_comparison.tiff
 
 </code></pre>
 <p>
@@ -660,6 +684,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/1faca28dd665fbb93c7cd3d22595a3bf87b881d5/analysis/real_data_validation.Rmd" target="_blank">1faca28</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-13
+</td>
+<td>
+Add real-data GBLUP and ANN comparison
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/1faca28dd665fbb93c7cd3d22595a3bf87b881d5/docs/real_data_validation.html" target="_blank">1faca28</a>
+</td>
+<td>
+WevertonGomesCosta
+</td>
+<td>
+2026-11-13
+</td>
+<td>
+Add real-data GBLUP and ANN comparison
+</td>
+</tr>
 <tr>
 <td>
 Rmd
