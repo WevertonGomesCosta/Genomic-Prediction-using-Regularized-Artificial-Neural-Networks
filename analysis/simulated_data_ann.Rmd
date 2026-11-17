@@ -64,12 +64,14 @@ dir.create(
 The four variants use the same multilayer perceptron and differ only in the
 penalties applied to network weights. Bias terms are not penalized.
 
-```{r packages-and-settings, warning=FALSE, message=FALSE}
+```{r packages, warning=FALSE, message=FALSE}
 library(knitr)
 library(ggplot2)
 library(ggthemes)
 library(future)
+```
 
+```{r runtime-settings, warning=FALSE, message=FALSE}
 RUN_ANN_TUNING <- identical(
   Sys.getenv("RUN_ANN_TUNING", "0"),
   "1"
@@ -84,40 +86,47 @@ ANN_FORCE <- identical(
   "1"
 )
 
+ANN_RUNTIME_REQUIRED <- RUN_ANN_TUNING || RUN_ANN
+
+if (ANN_RUNTIME_REQUIRED) {
+  suppressPackageStartupMessages(library(torch))
+}
+
 ANN_WORKERS_REQUESTED <- suppressWarnings(
   as.integer(Sys.getenv("ANN_WORKERS", "0"))
 )
+
+ANN_AVAILABLE_CORES <- max(
+  1L,
+  as.integer(parallelly::availableCores())
+)
+
+ANN_CUDA_FOR_WORKERS <- ANN_RUNTIME_REQUIRED &&
+  tolower(Sys.getenv("ANN_DEVICE", "auto")) != "cpu" &&
+  torch::cuda_is_available()
 
 ANN_WORKERS <- if (
   is.finite(ANN_WORKERS_REQUESTED) &&
   ANN_WORKERS_REQUESTED > 0L
 ) {
   ANN_WORKERS_REQUESTED
+} else if (ANN_CUDA_FOR_WORKERS) {
+  1L
 } else {
-  detected_cores <- suppressWarnings(
-    parallel::detectCores(
-      logical = TRUE
-    )
-  )
-
-  if (
-    is.finite(detected_cores) &&
-    detected_cores > 0L
-  ) {
-    as.integer(detected_cores)
-  } else {
-    as.integer(
-      future::availableCores()
-    )
-  }
+  min(4L, ANN_AVAILABLE_CORES)
 }
 
-ANN_WORKERS <- max(1L, ANN_WORKERS)
+if (ANN_RUNTIME_REQUIRED && ANN_WORKERS > ANN_AVAILABLE_CORES) {
+  warning(
+    "ANN_WORKERS exceeds the available CPU allocation."
+  )
+}
 
-ANN_RUNTIME_REQUIRED <- RUN_ANN_TUNING || RUN_ANN
-
-if (ANN_RUNTIME_REQUIRED) {
-  suppressPackageStartupMessages(library(torch))
+if (ANN_CUDA_FOR_WORKERS && ANN_WORKERS > 1L) {
+  warning(
+    "Multiple ANN workers will share CUDA resources; ",
+    "monitor GPU memory usage."
+  )
 }
 
 SEED_GLOBAL <- 20260821L
@@ -127,7 +136,9 @@ MIN_DELTA <- 1e-6
 EARLY_VALIDATION_FRACTION <- 0.15
 DROPOUT <- 0
 FINAL_EPOCH_MAX_EPOCHS <- 3000L
+```
 
+```{r ann-variants-and-controls, warning=FALSE, message=FALSE}
 MODEL_LEVELS <- c(
   "ANN_0",
   "ANN_L1",
@@ -512,7 +523,7 @@ FINAL_CONFIG_ID <- paste0(
 )
 ```
 
-```{r run-tuning, eval=RUN_ANN_TUNING}
+```{r tuning-task-setup, eval=RUN_ANN_TUNING}
 dir.create(
   "output/simulated/ann/tuning",
   recursive = TRUE,
@@ -569,7 +580,9 @@ fold_task_rows <- vector("list", nrow(task_table))
 task_seconds <- numeric(nrow(task_table))
 
 run_start <- proc.time()[["elapsed"]]
+```
 
+```{r tuning-model-fitting, eval=RUN_ANN_TUNING}
 run_simulated_ann_tuning_task <- function(task_index) {
   suppressPackageStartupMessages(
     library(torch)
@@ -1396,7 +1409,9 @@ run_simulated_ann_tuning_task <- function(task_index) {
   checkpoint
 
 }
+```
 
+```{r tuning-execution, eval=RUN_ANN_TUNING}
 cat(
   sprintf(
     "Simulated ANN tuning parallel executor: %d tasks | %d workers | device=%s\n",
@@ -1406,32 +1421,39 @@ cat(
   )
 )
 
-future::plan(
-  future::multisession,
-  workers = ANN_WORKERS
-)
+previous_future_plan <- future::plan()
 
-tuning_futures <- lapply(
-  seq_len(nrow(task_table)),
-  function(task_index) {
-    future::future(
-      run_simulated_ann_tuning_task(
-        task_index
-      ),
-      seed = TRUE
+tuning_task_results <- tryCatch(
+  {
+    future::plan(
+      future::multisession,
+      workers = ANN_WORKERS
     )
+
+    tuning_futures <- lapply(
+      seq_len(nrow(task_table)),
+      function(task_index) {
+        future::future(
+          run_simulated_ann_tuning_task(
+            task_index
+          ),
+          seed = TRUE
+        )
+      }
+    )
+
+    lapply(
+      tuning_futures,
+      future::value
+    )
+  },
+  finally = {
+    future::plan(previous_future_plan)
   }
 )
+```
 
-tuning_task_results <- lapply(
-  tuning_futures,
-  future::value
-)
-
-future::plan(
-  future::sequential
-)
-
+```{r tuning-results-save, eval=RUN_ANN_TUNING}
 selected_task_rows <- lapply(
   tuning_task_results,
   `[[`,
@@ -1750,7 +1772,7 @@ The final sequence is:
 The complete final-fitting code is shown directly below without local training,
 preprocessing, or metric wrappers.
 
-```{r run-final-ann, eval=RUN_ANN}
+```{r final-task-setup, eval=RUN_ANN}
 dir.create(
   "output/simulated/ann/final",
   recursive = TRUE,
@@ -1818,7 +1840,9 @@ final_task_seconds <- numeric(
 )
 
 run_start <- proc.time()[["elapsed"]]
+```
 
+```{r final-model-fitting, eval=RUN_ANN}
 run_simulated_ann_final_task <- function(task_index) {
   suppressPackageStartupMessages(
     library(torch)
@@ -2527,7 +2551,9 @@ run_simulated_ann_final_task <- function(task_index) {
   checkpoint
 
 }
+```
 
+```{r final-execution, eval=RUN_ANN}
 cat(
   sprintf(
     "Simulated ANN final parallel executor: %d tasks | %d workers | device=%s\n",
@@ -2537,32 +2563,39 @@ cat(
   )
 )
 
-future::plan(
-  future::multisession,
-  workers = ANN_WORKERS
-)
+previous_future_plan <- future::plan()
 
-final_futures <- lapply(
-  seq_len(nrow(final_task_table)),
-  function(task_index) {
-    future::future(
-      run_simulated_ann_final_task(
-        task_index
-      ),
-      seed = TRUE
+final_task_results <- tryCatch(
+  {
+    future::plan(
+      future::multisession,
+      workers = ANN_WORKERS
     )
+
+    final_futures <- lapply(
+      seq_len(nrow(final_task_table)),
+      function(task_index) {
+        future::future(
+          run_simulated_ann_final_task(
+            task_index
+          ),
+          seed = TRUE
+        )
+      }
+    )
+
+    lapply(
+      final_futures,
+      future::value
+    )
+  },
+  finally = {
+    future::plan(previous_future_plan)
   }
 )
+```
 
-final_task_results <- lapply(
-  final_futures,
-  future::value
-)
-
-future::plan(
-  future::sequential
-)
-
+```{r final-results-save, eval=RUN_ANN}
 result_task_rows <- lapply(
   final_task_results,
   `[[`,
