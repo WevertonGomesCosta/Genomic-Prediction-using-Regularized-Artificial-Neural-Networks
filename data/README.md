@@ -41,12 +41,9 @@ BLUPs, `analysis/real_data_audit.Rmd` saves the prepared analytical object at
 `output/real/audit/preprocessed_real_common.rds`. The versioned prepared object
 contains the retained genotype matrix and aligned prediction targets.
 
-Genotypes are integrated in `analysis/real_data_audit.Rmd`,
-after the phenotypic mixed-model stage is complete.
-
-That module aligns the genotyped individuals with the phenotypic BLUPs,
-performs the defined marker quality control, and creates the common real-data
-object used by cross-validation, GBLUP-A, GBLUP-AD, GBLUP-ADE, ANN, and model comparison.
+The module aligns the individual identifiers, applies common marker quality
+control, and prepares the inputs for cross-validation, GBLUP-A, GBLUP-AD,
+GBLUP-ADE, ANN, and comparison of the seven methods.
 
 ## Data and analysis directories
 
