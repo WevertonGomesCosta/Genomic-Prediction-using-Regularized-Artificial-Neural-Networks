@@ -17,10 +17,11 @@ editor_options:
 
 ## 1. Purpose
 
-This module defines the nested cross-validation procedure used by every genomic
-prediction model fitted to the simulated population. The partitions are created
-**before model fitting** so model development and final evaluation use the same
-individuals for GBLUP-ADE and all ANN variants.
+This module establishes common outer cross-validation partitions for
+GBLUP-A, GBLUP-AD, GBLUP-ADE, and all ANN variants. Nested inner
+cross-validation is used for ANN hyperparameter selection. The partitions
+are created **before model fitting** so every method is evaluated using
+the same outer assessment individuals.
 
 Cross-validation follows four specifications:
 
@@ -136,9 +137,10 @@ using any response or model information.
 
 ## 3. Individuals used to create the partitions
 
-The shared simulated-data object created in M01 contains the aligned phenotype,
-true genetic value, and genotype matrices. Before any fold is generated, the
-population is defined by the aligned individual identifiers used to generate the partitions.
+The shared simulated-data object created in M01 contains aligned phenotype,
+true genetic value, and genotype matrices. The partitions are generated from
+its individual row identifiers without using phenotype or true genetic values
+to determine fold membership.
 
 The next chunk therefore does three things:
 
@@ -549,8 +551,10 @@ The inner structure is constant across all outer splits:
 
 ### 5.3 Nested cross-validation summary
 
-The diagram below places the two levels on the same 1,000-individual scale. It
-shows why the outer assessment set cannot leak into ANN tuning:
+The diagram below places the two levels on the same 1,000-individual scale.
+The blocks are schematic: their positions do not represent consecutive
+individual identifiers or actual fold membership. The diagram illustrates
+why the outer assessment set is excluded from ANN tuning:
 
 - the outer level separates **800 analysis** from **200 assessment** individuals;
 - the inner level subdivides only the first 800 into **600 inner analysis** and
@@ -751,6 +755,10 @@ The cross-validation procedure comprises:
 - **100 inner splits** = 25 outer splits x 4 inner folds;
 - **800/200 outer separation** for model development and final evaluation;
 - **600/200 inner separation** inside every outer analysis set for ANN tuning.
+
+Because individuals appear across repetitions, the 25 outer assessments
+are not statistically independent population samples. Later comparisons
+should preserve the matched split structure across prediction methods.
 
 ### 7.1 Observed sizes and overlap
 
