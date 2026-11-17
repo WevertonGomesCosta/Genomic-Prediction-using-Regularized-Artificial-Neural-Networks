@@ -84,40 +84,47 @@ ANN_FORCE <- identical(
   "1"
 )
 
+ANN_RUNTIME_REQUIRED <- RUN_ANN_TUNING || RUN_ANN
+
+if (ANN_RUNTIME_REQUIRED) {
+  suppressPackageStartupMessages(library(torch))
+}
+
 ANN_WORKERS_REQUESTED <- suppressWarnings(
   as.integer(Sys.getenv("ANN_WORKERS", "0"))
 )
+
+ANN_AVAILABLE_CORES <- max(
+  1L,
+  as.integer(parallelly::availableCores())
+)
+
+ANN_CUDA_FOR_WORKERS <- ANN_RUNTIME_REQUIRED &&
+  tolower(Sys.getenv("ANN_DEVICE", "auto")) != "cpu" &&
+  torch::cuda_is_available()
 
 ANN_WORKERS <- if (
   is.finite(ANN_WORKERS_REQUESTED) &&
   ANN_WORKERS_REQUESTED > 0L
 ) {
   ANN_WORKERS_REQUESTED
+} else if (ANN_CUDA_FOR_WORKERS) {
+  1L
 } else {
-  detected_cores <- suppressWarnings(
-    parallel::detectCores(
-      logical = TRUE
-    )
-  )
-
-  if (
-    is.finite(detected_cores) &&
-    detected_cores > 0L
-  ) {
-    as.integer(detected_cores)
-  } else {
-    as.integer(
-      future::availableCores()
-    )
-  }
+  min(4L, ANN_AVAILABLE_CORES)
 }
 
-ANN_WORKERS <- max(1L, ANN_WORKERS)
+if (ANN_RUNTIME_REQUIRED && ANN_WORKERS > ANN_AVAILABLE_CORES) {
+  warning(
+    "ANN_WORKERS exceeds the available CPU allocation."
+  )
+}
 
-ANN_RUNTIME_REQUIRED <- RUN_ANN_TUNING || RUN_ANN
-
-if (ANN_RUNTIME_REQUIRED) {
-  suppressPackageStartupMessages(library(torch))
+if (ANN_CUDA_FOR_WORKERS && ANN_WORKERS > 1L) {
+  warning(
+    "Multiple ANN workers will share CUDA resources; ",
+    "monitor GPU memory usage."
+  )
 }
 
 SEED_GLOBAL <- 20260821L
@@ -1406,30 +1413,35 @@ cat(
   )
 )
 
-future::plan(
-  future::multisession,
-  workers = ANN_WORKERS
-)
+previous_future_plan <- future::plan()
 
-tuning_futures <- lapply(
-  seq_len(nrow(task_table)),
-  function(task_index) {
-    future::future(
-      run_simulated_ann_tuning_task(
-        task_index
-      ),
-      seed = TRUE
+tuning_task_results <- tryCatch(
+  {
+    future::plan(
+      future::multisession,
+      workers = ANN_WORKERS
     )
+
+    tuning_futures <- lapply(
+      seq_len(nrow(task_table)),
+      function(task_index) {
+        future::future(
+          run_simulated_ann_tuning_task(
+            task_index
+          ),
+          seed = TRUE
+        )
+      }
+    )
+
+    lapply(
+      tuning_futures,
+      future::value
+    )
+  },
+  finally = {
+    future::plan(previous_future_plan)
   }
-)
-
-tuning_task_results <- lapply(
-  tuning_futures,
-  future::value
-)
-
-future::plan(
-  future::sequential
 )
 
 selected_task_rows <- lapply(
@@ -2537,30 +2549,35 @@ cat(
   )
 )
 
-future::plan(
-  future::multisession,
-  workers = ANN_WORKERS
-)
+previous_future_plan <- future::plan()
 
-final_futures <- lapply(
-  seq_len(nrow(final_task_table)),
-  function(task_index) {
-    future::future(
-      run_simulated_ann_final_task(
-        task_index
-      ),
-      seed = TRUE
+final_task_results <- tryCatch(
+  {
+    future::plan(
+      future::multisession,
+      workers = ANN_WORKERS
     )
+
+    final_futures <- lapply(
+      seq_len(nrow(final_task_table)),
+      function(task_index) {
+        future::future(
+          run_simulated_ann_final_task(
+            task_index
+          ),
+          seed = TRUE
+        )
+      }
+    )
+
+    lapply(
+      final_futures,
+      future::value
+    )
+  },
+  finally = {
+    future::plan(previous_future_plan)
   }
-)
-
-final_task_results <- lapply(
-  final_futures,
-  future::value
-)
-
-future::plan(
-  future::sequential
 )
 
 result_task_rows <- lapply(
