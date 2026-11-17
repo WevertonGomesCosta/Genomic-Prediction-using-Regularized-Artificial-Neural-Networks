@@ -18,7 +18,7 @@ editor_options:
 <style>
 table.table {
   width: 100% !important;
-  max-width: 100%;
+  max-width: none;
   font-size: 0.92em;
 }
 table.table th,
@@ -75,7 +75,7 @@ dir.create(FIGURE_DIR, showWarnings = FALSE, recursive = TRUE)
 The phenotypic analysis uses three packages:
 
 - **`knitr`** formats experimental summaries and model results as HTML tables.
-- **`ggplot2`** displays the annual phenotypic distributions.
+- **`ggplot2`** displays the distributions of the individual BLUPs.
 - **`ggthemes`** applies the same visual style used in the simulated workflow.
 
 The mixed model is fitted directly from its mixed-model equations. This makes
@@ -85,6 +85,41 @@ the variance-component estimation and stopping rule explicit in the tutorial.
 library(knitr)
 library(ggplot2)
 library(ggthemes)
+```
+
+```{r table-formatting, include=FALSE}
+# Follow the reference tutorial: keep tables inspectable and scroll wide tables.
+format_table <- function(x, caption = NULL, digits = getOption("digits"),
+                         col.names = NA) {
+  min_width <- if (ncol(x) >= 8L) {
+    "min-width:1100px;"
+  } else if (ncol(x) >= 6L) {
+    "min-width:800px;"
+  } else {
+    ""
+  }
+
+  table <- knitr::kable(
+    x,
+    format = "html",
+    caption = caption,
+    digits = digits,
+    col.names = col.names,
+    row.names = FALSE,
+    table.attr = paste0(
+      'class="table table-striped table-hover" ',
+      'style="width:100%; margin-bottom:0; ', min_width, '"'
+    )
+  )
+
+  knitr::asis_output(
+    paste0(
+      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
+      table,
+      '</div>'
+    )
+  )
+}
 ```
 
 ### 2.2 Traits and fitting controls
@@ -109,11 +144,11 @@ fitting_settings <- data.frame(
 )
 
 fitting_settings |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "Trait-specific fitting settings",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Trait", "Tolerance", "Zero-coded missing"
+    )
   )
 ```
 
@@ -164,11 +199,11 @@ variable_dictionary <- data.frame(
 )
 
 variable_dictionary |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "Variables in the phenotypic data",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Variable", "Interpretation"
+    )
   )
 ```
 
@@ -202,11 +237,11 @@ structure_summary <- data.frame(
 )
 
 structure_summary |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "Experimental structure of the coffee phenotypic data",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Quantity", "Value"
+    )
   )
 
 target_repetitions <- table(table(target$ID_Planta))
@@ -243,11 +278,11 @@ evaluation years.
 
 ## 4. Phenotypic traits
 
-### 4.1 Descriptive summaries
-
-The raw observations are summarized before model fitting. These summaries show
-the original scale and annual variation; they do not replace the mixed-model
-adjustment.
+The source-file phenotypes are summarized by trait and evaluation year before
+model fitting. Because zero denotes an absent observation, descriptive
+statistics use only observed values. The `Zero_count` field documents the
+zero-coded records separately (seven for `LP`), consistently with the
+mixed-model analysis in Section 6.
 
 ```{r trait-summary}
 trait_summary <- data.frame()
@@ -255,16 +290,17 @@ trait_summary <- data.frame()
 for (trait in traits) {
 
   x <- phenotype[[trait]]
+  x_observed <- x[is.finite(x) & x != 0]
 
   trait_summary <- rbind(
     trait_summary,
     data.frame(
       Trait = trait,
-      N = sum(is.finite(x)),
-      Mean = mean(x, na.rm = TRUE),
-      SD = stats::sd(x, na.rm = TRUE),
-      Minimum = min(x, na.rm = TRUE),
-      Maximum = max(x, na.rm = TRUE),
+      N = length(x_observed),
+      Mean = mean(x_observed),
+      SD = stats::sd(x_observed),
+      Minimum = min(x_observed),
+      Maximum = max(x_observed),
       Zero_count = sum(x == 0, na.rm = TRUE),
       stringsAsFactors = FALSE
     )
@@ -273,13 +309,20 @@ for (trait in traits) {
 
 rownames(trait_summary) <- NULL
 
+stopifnot(
+  all(trait_summary$N == c(684L, 684L, 677L)),
+  all(trait_summary$Zero_count == c(0L, 0L, 7L))
+)
+
 trait_summary |>
-  knitr::kable(
-    format = "html",
+  format_table(
     digits = 3,
-    caption = "Raw phenotypic summaries",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    caption = "Observed phenotypic summaries with separate zero-coded missing counts",
+    col.names = c(
+      "Trait", "N", "Mean",
+      "SD", "Minimum", "Maximum",
+      "Zero-coded missing"
+    )
   )
 
 year_summary <- data.frame()
@@ -292,17 +335,19 @@ for (trait in traits) {
       phenotype$Ano == year,
       trait
     ]
+    x_observed <- x[is.finite(x) & x != 0]
 
     year_summary <- rbind(
       year_summary,
       data.frame(
         Trait = trait,
         Year = year,
-        N = length(x),
-        Mean = mean(x),
-        SD = stats::sd(x),
-        Minimum = min(x),
-        Maximum = max(x),
+        N = length(x_observed),
+        Zero_count = sum(x == 0, na.rm = TRUE),
+        Mean = mean(x_observed),
+        SD = stats::sd(x_observed),
+        Minimum = min(x_observed),
+        Maximum = max(x_observed),
         stringsAsFactors = FALSE
       )
     )
@@ -312,70 +357,15 @@ for (trait in traits) {
 rownames(year_summary) <- NULL
 
 year_summary |>
-  knitr::kable(
-    format = "html",
+  format_table(
     digits = 3,
-    caption = "Phenotypic summaries by evaluation year",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    caption = "Observed phenotypic summaries by year with separate missing counts",
+    col.names = c(
+      "Trait", "Year", "N",
+      "Zero-coded missing", "Mean", "SD",
+      "Minimum", "Maximum"
+    )
   )
-```
-
-### 4.2 Annual distributions
-
-The observations are separated by evaluation year to show the temporal
-variation present before mixed-model adjustment. This view helps explain why
-year is represented explicitly in the model instead of averaging the annual
-measurements before analysis.
-
-```{r phenotype-distributions, fig.cap="Annual phenotypic distributions for the three coffee traits."}
-phenotype_long <- rbind(
-  data.frame(Year = phenotype$Ano, Trait = "Cer", Value = phenotype$Cer),
-  data.frame(Year = phenotype$Ano, Trait = "BM", Value = phenotype$BM),
-  data.frame(Year = phenotype$Ano, Trait = "LP", Value = phenotype$LP)
-)
-
-phenotype_long$Year <- factor(
-  phenotype_long$Year,
-  levels = c(2014, 2015, 2016)
-)
-
-p_traits <- ggplot(
-  phenotype_long,
-  aes(x = Year, y = Value, fill = Year)
-) +
-  geom_boxplot(
-    width = 0.65,
-    show.legend = FALSE
-  ) +
-  facet_wrap(
-    ~ Trait,
-    scales = "free_y"
-  ) +
-  scale_fill_gdocs() +
-  labs(
-    x = "Evaluation year",
-    y = "Observed phenotype"
-  ) +
-  theme_gdocs()
-
-print(p_traits)
-```
-
-```{r save-phenotype-distributions, include=FALSE}
-ggsave(
-  file.path(
-    FIGURE_DIR,
-    "annual_phenotypic_distributions.tiff"
-  ),
-  plot = p_traits,
-  device = "tiff",
-  width = 9,
-  height = 5,
-  units = "in",
-  dpi = 300,
-  compression = "lzw"
-)
 ```
 
 ## 5. Phenotypic mixed model
@@ -422,18 +412,18 @@ model_terms <- data.frame(
     "Block", "Progeny x year", "Residual"
   ),
   Data_field = c(
-    "Ano", "Progenie", "ID_Planta", "Populacao", "Bloco", "Progenie_Ano", "-"
+    "Ano", "Progenie", "ID_Planta", "Populacao", "Bloco", "Progenie_Ano", "Not applicable"
   ),
   Type = c("Fixed", rep("Random", 5), "Residual"),
   stringsAsFactors = FALSE
 )
 
 model_terms |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "Terms in the phenotypic mixed model",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Model component", "Data field", "Type"
+    )
   )
 ```
 
@@ -499,11 +489,12 @@ records_used <- data.frame(
 )
 
 records_used |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "Records entering each trait-specific mixed model",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Trait", "Available", "Used",
+      "Excluded"
+    )
   )
 
 stopifnot(
@@ -885,7 +876,7 @@ The code above exposes the complete path from the incidence matrices to the
 variance updates and BLUP solutions without hiding any step in project-specific
 helper functions.
 
-## 8. Variance components and genetic parameters
+## 8. Variance components and derived ratios
 
 For each trait,
 
@@ -897,15 +888,17 @@ The following quantities describe the fitted variance components. The
 between-progeny and between-population proportions are calculated separately:
 
 \[
-h^2_{\mathrm{progeny}}=\frac{V_g}{V_f},\qquad
-h^2_{\mathrm{population}}=\frac{V_r}{V_f}.
+p_{\mathrm{progeny}}=\frac{V_g}{V_f},\qquad
+p_{\mathrm{population}}=\frac{V_r}{V_f}.
 \]
 
-The existing output field **h2_total** is the sum of those two proportions,
-\((V_g+V_r)/V_f\), and is reported as the **combined progeny-and-population
-variance proportion**. It describes variation attributed to those two
-between-group effects under the fitted model rather than a separately
-estimated additive genetic variance.
+The persisted fields `h2_progeny`, `h2_population`, and `h2_total` retain
+their existing names and numerical values for downstream compatibility. Their
+scientific interpretation in this model is as proportions of fitted phenotypic
+variance. Specifically, `h2_total` equals \((V_g+V_r)/V_f\), the **combined
+progeny-and-population variance proportion**. The model parameterizes these
+between-group components separately from the permanent-plant and other effects,
+without defining a distinct additive genetic variance component.
 
 The permanent-plant, block, and progeny-by-year proportions correspond to
 \(V_p/V_f\), \(V_b/V_f\), and \(V_i/V_f\), respectively. The reported
@@ -990,12 +983,15 @@ variance_table <- variance_components[
 ]
 
 variance_table |>
-  knitr::kable(
-    format = "html",
+  format_table(
     digits = 6,
     caption = "Variance components from the phenotypic mixed model",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Trait", "N", "Iterations",
+      "Progeny variance", "Plant variance", "Population variance",
+      "Block variance", "Progeny-by-year variance", "Residual variance",
+      "Phenotypic variance"
+    )
   )
 
 parameter_table <- variance_components[
@@ -1014,12 +1010,15 @@ parameter_table <- variance_components[
 ]
 
 parameter_table |>
-  knitr::kable(
-    format = "html",
+  format_table(
     digits = 6,
-    caption = "Variance ratios and genetic parameters",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    caption = "Model-implied variance proportions and within-plant repeatability",
+    col.names = c(
+      "Trait", "Progeny proportion", "Plant proportion",
+      "Population proportion", "Block proportion",
+      "Progeny-by-year proportion", "Plant repeatability",
+      "Progeny + population proportion", "Adjusted mean"
+    )
   )
 ```
 
@@ -1055,13 +1054,18 @@ for (trait in traits) {
 
 rownames(fixed_year_effects) <- NULL
 
-fixed_year_effects |>
-  knitr::kable(
-    format = "html",
+# Sort the displayed years chronologically without changing model solutions.
+fixed_year_effects[
+  order(match(fixed_year_effects$Trait, traits), fixed_year_effects$Year),
+  ,
+  drop = FALSE
+] |>
+  format_table(
     digits = 4,
     caption = "Adjusted fixed means by evaluation year",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Trait", "Year", "Adjusted mean"
+    )
   )
 ```
 
@@ -1096,11 +1100,12 @@ target_map$Phenotype_ID <- sprintf(
 )
 
 head(target_map, 15) |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "First 15 target plants used for genomic prediction",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Plant ID", "Progeny", "Plant",
+      "Population", "Phenotype ID"
+    )
   )
 ```
 
@@ -1196,12 +1201,14 @@ head(
   ],
   15
 ) |>
-  knitr::kable(
-    format = "html",
+  format_table(
     digits = 4,
     caption = "Components of the first 15 Cer BLUPs",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Phenotype ID", "Progeny", "Plant",
+      "Progeny effect", "Plant effect", "Population effect",
+      "BLUP"
+    )
   )
 ```
 
@@ -1242,27 +1249,30 @@ stopifnot(
 )
 
 head(blups, 15) |>
-  knitr::kable(
-    format = "html",
+  format_table(
     digits = 4,
     caption = "First 15 BLUPs prepared for genomic prediction",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%; max-width:100%;"'
+    col.names = c(
+      "Phenotype ID", "Plant ID", "Progeny",
+      "Plant", "Population", "Cer",
+      "BM", "LP"
+    )
   )
 ```
 
 ### 10.3 BLUP distributions
 
-The distributions of the 195 BLUPs can now be examined on the same three trait
-scales used for the raw phenotypes. This makes the effect of the mixed-model
-adjustment visible before the values enter the genomic-prediction workflow.
+The 195 plant-level BLUPs are displayed as trait-specific density curves.
+Each facet uses its own numerical scale and summarizes the adjusted phenotypic
+targets entering the genomic-prediction workflow.
 
-```{r blup-distributions, fig.cap="Distribution of the BLUPs for the 195 target coffee plants."}
+```{r blup-distributions, fig.width=9, fig.height=5, fig.cap="Density distributions of the BLUPs for the 195 target coffee plants.", fig.alt="Three density plots of individual BLUPs for Cer, BM, and LP, displayed in separate panels with trait-specific scales."}
 blup_long <- rbind(
   data.frame(Trait = "Cer", BLUP = blups$Cer),
   data.frame(Trait = "BM", BLUP = blups$BM),
   data.frame(Trait = "LP", BLUP = blups$LP)
 )
+blup_long$Trait <- factor(blup_long$Trait, levels = traits)
 
 p_blup_distribution <- ggplot(
   blup_long,
@@ -1281,8 +1291,8 @@ p_blup_distribution <- ggplot(
     ~ Trait,
     scales = "free"
   ) +
-  scale_fill_gdocs() +
-  scale_color_gdocs() +
+  scale_fill_gdocs(limits = c("BM", "Cer", "LP")) +
+  scale_color_gdocs(limits = c("BM", "Cer", "LP")) +
   labs(
     x = "BLUP",
     y = "Density"
@@ -1428,7 +1438,7 @@ The phenotypic analysis comprises:
 - year is fixed;
 - progeny, permanent individual plant, population, block, and progeny-by-year
   interaction are random;
-- zero values are excluded from mixed-model fitting;
+- zero-coded non-observations are excluded from mixed-model fitting (seven `LP` records);
 - 195 target plants receive one BLUP for each trait;
 - no genomic information is used before phenotypic adjustment is complete.
 
