@@ -157,7 +157,7 @@ variable_dictionary <- data.frame(
     "Progeny-by-year identifier",
     "Plant number within progeny",
     "Cercosporiosis score",
-    "Vegetative vigor score",
+    "Leaf-miner incidence score",
     "Production-related phenotype"
   ),
   stringsAsFactors = FALSE
@@ -445,9 +445,9 @@ plant.
 
 ### 6.1 Preparing each trait
 
-Zero is treated as a non-observation during mixed-model fitting. `Cer` and
-`BM` therefore retain all 684 records, whereas seven zero `LP` records are
-excluded.
+In the field-data coding used here, zero denotes an absent observation.
+The fitted models therefore use all 684 `Cer` and `BM` records and exclude
+the seven zero-coded `LP` records, retaining 677 observations for `LP`.
 
 Separate trait-specific data sets specify the observations used in each mixed model.
 
@@ -893,8 +893,37 @@ For each trait,
 V_f=V_g+V_p+V_r+V_b+V_i+V_e.
 \]
 
-The variance proportions, repeatability, and total heritability are calculated
-directly from the fitted components.
+The following quantities describe the fitted variance components. The
+between-progeny and between-population proportions are calculated separately:
+
+\[
+h^2_{\mathrm{progeny}}=\frac{V_g}{V_f},\qquad
+h^2_{\mathrm{population}}=\frac{V_r}{V_f}.
+\]
+
+The existing output field **h2_total** is the sum of those two proportions,
+\((V_g+V_r)/V_f\), and is reported as the **combined progeny-and-population
+variance proportion**. It describes variation attributed to those two
+between-group effects under the fitted model rather than a separately
+estimated additive genetic variance.
+
+The permanent-plant, block, and progeny-by-year proportions correspond to
+\(V_p/V_f\), \(V_b/V_f\), and \(V_i/V_f\), respectively. The reported
+**Repeatability** is the model-implied correlation between evaluations of
+the same plant in distinct years, sharing progeny, plant, population, and
+block effects after accounting for fixed year effects:
+
+\[
+R_{\mathrm{plant}}=\frac{V_g+V_p+V_r+V_b}{V_f}.
+\]
+
+This coefficient therefore quantifies repeated phenotypic agreement under
+the fitted experimental structure. The between-group genetic variance
+proportions and within-plant repeatability are distinct measures. This
+interpretation follows the variance-component model used for *Coffea
+arabica* by [Sousa et al. (2019)](https://doi.org/10.3389/fpls.2018.01934)
+and the distinction between genetic and phenotypic variance in plant-breeding
+models discussed by [Piepho and Möhring (2007)](https://doi.org/10.1534/genetics.107.074229).
 
 ```{r variance-components}
 variance_components <- data.frame()
@@ -1405,3 +1434,12 @@ The phenotypic analysis comprises:
 
 The resulting BLUP table is the phenotypic input to the real-data genomic
 workflow.
+
+## 13. Scientific references
+
+- Sousa, T. V., et al. (2019). Early selection enabled by the implementation
+  of genomic selection in *Coffea arabica* breeding. *Frontiers in Plant
+  Science*, **9**, 1934. https://doi.org/10.3389/fpls.2018.01934
+- Piepho, H.-P., and Möhring, J. (2007). Computing heritability and selection
+  response from unbalanced plant breeding trials. *Genetics*, **177**,
+  1881–1888. https://doi.org/10.1534/genetics.107.074229

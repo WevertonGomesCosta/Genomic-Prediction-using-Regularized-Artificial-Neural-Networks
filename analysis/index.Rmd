@@ -76,7 +76,7 @@ Outer-assessment responses are excluded from model fitting and model selection. 
 
 For simulated data, true genetic values are excluded from fitting and selection and are used only for independent predictive assessment.
 
-For real data, genomic prediction uses the individual BLUPs obtained from the phenotypic mixed model. Held-out genomic predictions should not be interpreted as final breeding values from a model refitted with all available responses.
+For real data, the phenotypic mixed model first estimates individual BLUPs, which are then used as genomic-prediction targets. Seeded, random individual-level cross-validation provides out-of-fold genomic predictions.
 
 
 
@@ -129,4 +129,4 @@ As respostas dos indivíduos de avaliação externa são excluídas do ajuste e 
 
 Nos dados simulados, os valores genéticos verdadeiros são excluídos do ajuste e da seleção e são utilizados apenas na avaliação preditiva independente.
 
-Nos dados reais, a predição genômica utiliza os BLUPs individuais obtidos do modelo misto fenotípico. As predições genômicas obtidas fora da amostra não devem ser interpretadas como valores genéticos finais provenientes de um modelo reajustado com todas as respostas disponíveis.
+Nos dados reais, o modelo misto fenotípico estima primeiro os BLUPs individuais, utilizados em seguida como alvos da predição genômica. A validação cruzada com sorteios aleatórios de indivíduos e sementes fixadas fornece predições fora da amostra.

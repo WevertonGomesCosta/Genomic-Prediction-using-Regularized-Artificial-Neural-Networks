@@ -86,9 +86,10 @@ MAF_MIN <- 0.05
 ## 3. Genomic and phenotypic inputs
 
 The genomic input contains individuals in rows and SNPs in columns. The
-phenotypic input contains the individual BLUPs obtained from the phenotypic
-mixed-model analysis for cercosporiosis (`Cer`), leaf-miner incidence (`BM`),
-and the production-related trait (`LP`).
+phenotypic input contains the individual BLUPs estimated first by the
+phenotypic mixed model for cercosporiosis (`Cer`), leaf-miner incidence (`BM`),
+and the production-related trait (`LP`). These BLUPs are aligned to SNP
+identifiers before the cross-validation partitions are generated.
 
 ```{r read-inputs}
 geno_raw <- readRDS(

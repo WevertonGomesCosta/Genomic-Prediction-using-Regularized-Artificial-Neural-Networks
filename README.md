@@ -65,7 +65,7 @@ Outer-assessment responses are excluded from model fitting and model selection. 
 
 For simulated data, true genetic values are used only as an independent assessment target. For real data, the response for genomic prediction consists of individual BLUPs estimated from the phenotypic mixed model.
 
-Held-out genomic predictions are predictive quantities generated under the specified validation procedure and should not be interpreted as final breeding values from a model refitted with all available responses.
+Genomic predictions are obtained out of fold for each assessment individual, using models trained on the complementary analysis individuals.
 
 ### Repository structure
 
@@ -81,7 +81,7 @@ Additional information on source data and analytical results is available in [`d
 
 The analyses use R and R Markdown. The scientific website is produced with `workflowr`, and R package versions are specified with `renv`.
 
-The genotype matrix `data/dados_reais/geno_real.rds` is not included in the version-controlled repository. Full reproduction of the real-data genomic analyses requires obtaining this file separately, subject to its applicable access and use conditions.
+The real-data workflow reads the canonical genotype input from `data/dados_reais/geno_real.rds` and integrates it with phenotypic BLUPs. The processed object `output/real/audit/preprocessed_real_common.rds` contains the marker panel and aligned prediction targets used by the downstream models.
 
 ### Citation and license
 
@@ -146,7 +146,7 @@ As respostas dos indivíduos de avaliação externa são excluídas do ajuste e 
 
 Nos dados simulados, os valores genéticos verdadeiros são utilizados somente como alvo independente de avaliação. Nos dados reais, a resposta da predição genômica consiste nos BLUPs individuais estimados a partir do modelo misto fenotípico.
 
-As predições genômicas obtidas fora da amostra são quantidades preditivas geradas sob o procedimento de validação especificado e não devem ser interpretadas como valores genéticos finais provenientes de um modelo reajustado com todas as respostas disponíveis.
+As predições genômicas são obtidas fora da amostra para cada indivíduo de avaliação, utilizando modelos treinados nos indivíduos das respectivas amostras de análise.
 
 ### Estrutura do repositório
 
@@ -162,7 +162,7 @@ Informações adicionais sobre dados-fonte e resultados analíticos estão dispo
 
 As análises utilizam R e R Markdown. O site científico é produzido com `workflowr`, e as versões dos pacotes R são especificadas com `renv`.
 
-A matriz genotípica `data/dados_reais/geno_real.rds` não está incluída no repositório versionado. A reprodução integral das análises genômicas com dados reais requer a obtenção desse arquivo separadamente, respeitando as condições aplicáveis de acesso e utilização.
+O fluxo de dados reais lê o arquivo genotípico canônico `data/dados_reais/geno_real.rds` e o integra aos BLUPs fenotípicos. O objeto processado `output/real/audit/preprocessed_real_common.rds` contém o painel de marcadores e os alvos preditivos alinhados utilizados pelos modelos seguintes.
 
 ### Citação e licença
 
