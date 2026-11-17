@@ -682,6 +682,9 @@ cluster <- parallel::makeCluster(
   N_WORKERS
 )
 
+# Ensure worker cleanup on success or failure.
+tryCatch({
+
 worker_libpaths <- .libPaths()
 
 parallel::clusterExport(
@@ -1162,10 +1165,11 @@ parallel_results <-
     )
   }
 
-# Release parallel workers after completing all tasks.
-parallel::stopCluster(
-  cluster
-)
+}, finally = {
+  # Restore sequential execution and release parallel workers.
+  foreach::registerDoSEQ()
+  parallel::stopCluster(cluster)
+})
 
 # Combine split-level summaries and individual predictions in task order.
 result_list <- vector(
