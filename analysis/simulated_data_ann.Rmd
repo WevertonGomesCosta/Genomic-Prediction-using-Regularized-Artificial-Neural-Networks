@@ -64,12 +64,14 @@ dir.create(
 The four variants use the same multilayer perceptron and differ only in the
 penalties applied to network weights. Bias terms are not penalized.
 
-```{r packages-and-settings, warning=FALSE, message=FALSE}
+```{r packages, warning=FALSE, message=FALSE}
 library(knitr)
 library(ggplot2)
 library(ggthemes)
 library(future)
+```
 
+```{r runtime-settings, warning=FALSE, message=FALSE}
 RUN_ANN_TUNING <- identical(
   Sys.getenv("RUN_ANN_TUNING", "0"),
   "1"
@@ -134,7 +136,9 @@ MIN_DELTA <- 1e-6
 EARLY_VALIDATION_FRACTION <- 0.15
 DROPOUT <- 0
 FINAL_EPOCH_MAX_EPOCHS <- 3000L
+```
 
+```{r ann-variants-and-controls, warning=FALSE, message=FALSE}
 MODEL_LEVELS <- c(
   "ANN_0",
   "ANN_L1",
@@ -519,7 +523,7 @@ FINAL_CONFIG_ID <- paste0(
 )
 ```
 
-```{r run-tuning, eval=RUN_ANN_TUNING}
+```{r tuning-task-setup, eval=RUN_ANN_TUNING}
 dir.create(
   "output/simulated/ann/tuning",
   recursive = TRUE,
@@ -576,7 +580,9 @@ fold_task_rows <- vector("list", nrow(task_table))
 task_seconds <- numeric(nrow(task_table))
 
 run_start <- proc.time()[["elapsed"]]
+```
 
+```{r tuning-model-fitting, eval=RUN_ANN_TUNING}
 run_simulated_ann_tuning_task <- function(task_index) {
   suppressPackageStartupMessages(
     library(torch)
@@ -1403,7 +1409,9 @@ run_simulated_ann_tuning_task <- function(task_index) {
   checkpoint
 
 }
+```
 
+```{r tuning-execution, eval=RUN_ANN_TUNING}
 cat(
   sprintf(
     "Simulated ANN tuning parallel executor: %d tasks | %d workers | device=%s\n",
@@ -1443,7 +1451,9 @@ tuning_task_results <- tryCatch(
     future::plan(previous_future_plan)
   }
 )
+```
 
+```{r tuning-results-save, eval=RUN_ANN_TUNING}
 selected_task_rows <- lapply(
   tuning_task_results,
   `[[`,
@@ -1762,7 +1772,7 @@ The final sequence is:
 The complete final-fitting code is shown directly below without local training,
 preprocessing, or metric wrappers.
 
-```{r run-final-ann, eval=RUN_ANN}
+```{r final-task-setup, eval=RUN_ANN}
 dir.create(
   "output/simulated/ann/final",
   recursive = TRUE,
@@ -1830,7 +1840,9 @@ final_task_seconds <- numeric(
 )
 
 run_start <- proc.time()[["elapsed"]]
+```
 
+```{r final-model-fitting, eval=RUN_ANN}
 run_simulated_ann_final_task <- function(task_index) {
   suppressPackageStartupMessages(
     library(torch)
@@ -2539,7 +2551,9 @@ run_simulated_ann_final_task <- function(task_index) {
   checkpoint
 
 }
+```
 
+```{r final-execution, eval=RUN_ANN}
 cat(
   sprintf(
     "Simulated ANN final parallel executor: %d tasks | %d workers | device=%s\n",
@@ -2579,7 +2593,9 @@ final_task_results <- tryCatch(
     future::plan(previous_future_plan)
   }
 )
+```
 
+```{r final-results-save, eval=RUN_ANN}
 result_task_rows <- lapply(
   final_task_results,
   `[[`,
