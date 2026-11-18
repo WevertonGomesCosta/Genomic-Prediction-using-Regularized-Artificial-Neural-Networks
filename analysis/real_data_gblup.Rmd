@@ -11,260 +11,124 @@ output:
     toc_float: true
     code_download: true
     code_folding: show
+    math_method: mathml
 editor_options:
   chunk_output_type: console
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
+  fig.align = "center",
+  out.width = "100%"
+)
+```
 
 # GBLUP models for the real-data analysis
 
 ## 1. Objective
 
-This module fits three nested genomic best linear unbiased prediction models
-under the common outer cross-validation procedure:
+This module applies genomic best linear unbiased prediction (GBLUP) to the
+individual phenotypic BLUPs prepared in R01. Three previously specified
+models use different genomic covariance structures, while all models share
+the outer assessment partitions established in R03:
 
-\[
-\text{GBLUP-A}: \quad y = \mu + a + \varepsilon,
-\]
+$$
+\begin{aligned}
+\text{GBLUP-A}:   &\quad y = \mu + a + \varepsilon,\\
+\text{GBLUP-AD}:  &\quad y = \mu + a + d + \varepsilon,\\
+\text{GBLUP-ADE}: &\quad y = \mu + a + d + aa + \varepsilon.
+\end{aligned}
+$$
 
-\[
-\text{GBLUP-AD}: \quad y = \mu + a + d + \varepsilon,
-\]
+The three prespecified structures are fitted using the same 25 outer
+cross-validation splits. For each trait and split, the models use the same
+analysis individuals and are evaluated on the same 39 assessment individuals.
 
-and
+The response is the individual BLUP obtained from the preceding phenotypic
+mixed-model analysis. Within each genomic fitting task, the 39 assessment BLUPs
+are masked before estimating the genomic effects. They are subsequently used
+to evaluate held-out predictions. The upstream phenotypic BLUP estimation is
+not repeated inside each genomic fold.
 
-\[
-\text{GBLUP-ADE}: \quad y = \mu + a + d + aa + \varepsilon.
-\]
+The functional workflow is:
 
-The three structures are evaluated independently in exactly the same outer
-splits. Increasing model complexity is therefore treated as an empirical
-question: dominance and epistatic components are retained as candidate
-structures, but predictive superiority is not assumed from model completeness.
+**receive aligned genotypes, BLUPs, and validation partitions → construct
+genomic relationship matrices → define the three GBLUP structures → organize
+the fitting tasks → obtain out-of-fold predictions → examine numerical
+diagnostics and predictive metrics → summarize individual rankings → deliver
+the results for comparison with the ANN models.**
 
-The response in every task is the individual BLUP obtained from the phenotypic mixed-model analysis. The 39 BLUPs assigned to the outer assessment set are masked
-before model fitting and are used only for held-out evaluation.
+## 2. Packages and dependencies
 
-## 2. Computational setup
+The packages below support different stages of the tutorial. `sommer` fits
+GBLUP models and constructs genomic relationship matrices; `ggplot2`
+produces predictive figures; `ggthemes` provides their graphical theme; and
+`kableExtra` adds horizontal scrolling to the wide ranking table. The `knitr`
+package, already used to render this document, formats the tables. Input files
+and parameter values appear only where they are needed.
 
-```{r setup-gblup}
-suppressPackageStartupMessages(
-  library(sommer)
-)
-
-suppressPackageStartupMessages(
-  library(ggplot2)
-)
-
-suppressPackageStartupMessages(
-  library(ggthemes)
-)
-
-knitr::opts_chunk$set(
-  echo = TRUE,
-  warning = FALSE,
-  message = FALSE
-)
-
-RUN_GBLUP <- identical(
-  Sys.getenv("RUN_GBLUP"),
-  "1"
-)
-
-SEED_GLOBAL <- 20261105L
-N_ITERS_SOMMER <- 50L
-TOL_LLIK <- 1e-4
-
-COMMON_PATH <-
-  "output/real/audit/preprocessed_real_common.rds"
-
-VALIDATION_PATH <-
-  "output/real/validation/real_cv_design.rds"
-
-OUTPUT_DIR <-
-  "output/real/gblup"
-
-FIGURE_DIR <-
-  file.path(
-    OUTPUT_DIR,
-    "figures"
-  )
-
-RESULTS_RDS <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_results.rds"
-  )
-
-RESULTS_CSV <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_results.csv"
-  )
-
-PREDICTIONS_RDS <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_predictions.rds"
-  )
-
-PREDICTIONS_CSV <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_predictions.csv"
-  )
-
-KERNEL_SUMMARY_CSV <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_kernel_summary.csv"
-  )
-
-NUMERICAL_SUMMARY_CSV <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_numerical_summary.csv"
-  )
-
-PERFORMANCE_SUMMARY_CSV <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_performance_summary.csv"
-  )
-
-RUN_METADATA_RDS <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_run_metadata.rds"
-  )
-
-RANKING_RDS <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_individual_ranking.rds"
-  )
-
-RANKING_CSV <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_individual_ranking.csv"
-  )
-
-RANKING_SUMMARY_CSV <-
-  file.path(
-    OUTPUT_DIR,
-    "real_gblup_ranking_summary.csv"
-  )
-
-dir.create(
-  OUTPUT_DIR,
-  recursive = TRUE,
-  showWarnings = FALSE
-)
-
-dir.create(
-  FIGURE_DIR,
-  recursive = TRUE,
-  showWarnings = FALSE
-)
+```{r packages, warning=FALSE, message=FALSE}
+library(sommer)   # Fit genomic mixed models.
+library(ggplot2)  # Create prediction and diagnostic figures.
+library(ggthemes) # Apply a consistent visual theme.
+library(kableExtra) # Make wide tables horizontally scrollable.
 ```
-
-The same numerical controls are used for the three structures. No model is
-changed after inspecting an outer assessment set, and no split-specific
-hyperparameter search is performed.
 
 ## 3. Genomic data and cross-validation
 
-```{r load-common-validation}
-stopifnot(
-  file.exists(COMMON_PATH),
-  file.exists(VALIDATION_PATH)
-)
+The analysis receives two saved R objects: a quality-controlled dataset
+from R02 and the fixed cross-validation partitions from R03. The first
+contains the genotype matrix and the precomputed phenotypic BLUPs; the second
+identifies which individuals belong to each analysis and assessment set.
+Individual identifiers link genotypes, BLUPs, and predictions throughout the
+module.
 
-common <- readRDS(
-  COMMON_PATH
-)
+### 3.1 Input objects
 
-cv <- readRDS(
-  VALIDATION_PATH
-)
+The first `readRDS()` retrieves the processed genotype and phenotype data.
+The second retrieves the five-repetition, five-fold outer validation design.
+The genotype matrix is then converted to an R matrix, while trait names and
+individual identifiers are taken from the previously prepared object; the
+pipeline does not reconstruct these inputs.
 
-geno <- as.matrix(
-  common$genotype
-)
+```{r read-common-data}
+common <- readRDS("output/real/audit/preprocessed_real_common.rds")
+cv <- readRDS("output/real/validation/real_cv_design.rds")
 
+geno <- as.matrix(common$genotype)
 blups <- common$phenotype
 traits <- common$traits
 ids <- rownames(geno)
+```
 
-stopifnot(
-  identical(
-    traits,
-    c(
-      "Cer",
-      "BM",
-      "LP"
-    )
-  ),
-  nrow(geno) == 195L,
-  ncol(geno) == 20887L,
-  length(ids) == 195L,
-  !anyDuplicated(ids),
-  all(
-    c(
-      "Phenotype_ID",
-      "Cer",
-      "BM",
-      "LP"
-    ) %in%
-      names(blups)
-  )
-)
+### 3.2 Outer cross-validation partitions
 
-phenotype_ids <- as.character(
-  blups$Phenotype_ID
-)
+The assessment assignments are summarized into one row for each outer split.
+`Repetition` identifies the repetition, `OuterFold` its fold, and `SplitID`
+links that row to the corresponding lists of training and assessment IDs.
+Sorting by repetition and fold makes the subsequent task grid easier to read
+without modifying the original partitions.
 
-stopifnot(
-  identical(
-    phenotype_ids,
-    ids
-  )
-)
+```{r outer-partitions}
+# Identify the 25 predefined assessment partitions from R03.
+outer_meta <- unique(cv$outer_assignments[, c("Repetition", "OuterFold", "SplitID")])
+outer_meta <- outer_meta[order(outer_meta$Repetition, outer_meta$OuterFold), , drop = FALSE]
+rownames(outer_meta) <- NULL
+```
 
-outer_meta <- unique(
-  cv$outer_assignments[
-    ,
-    c(
-      "Repetition",
-      "OuterFold",
-      "SplitID"
-    )
-  ]
-)
+### 3.3 Input summary
 
-outer_meta <- outer_meta[
-  order(
-    outer_meta$Repetition,
-    outer_meta$OuterFold
-  ),
-  ,
-  drop = FALSE
-]
+The table summarizes the imported objects. Population size, marker count,
+traits, and split count are obtained directly from the data. Training and
+assessment sizes are read from the first saved outer split, which follows the
+same 156/39 allocation as the other partitions defined in R03. The GBLUP
+structures are introduced separately in Section 5.
 
-rownames(
-  outer_meta
-) <- NULL
-
-stopifnot(
-  nrow(outer_meta) == 25L,
-  length(
-    unique(
-      outer_meta$SplitID
-    )
-  ) == 25L
-)
-
+```{r input-summary}
 input_summary <- data.frame(
   Item = c(
     "Individuals",
@@ -272,28 +136,26 @@ input_summary <- data.frame(
     "Traits",
     "Outer splits",
     "Outer analysis size",
-    "Outer assessment size",
-    "Candidate GBLUP structures"
+    "Outer assessment size"
   ),
   Value = c(
     nrow(geno),
     ncol(geno),
     length(traits),
     nrow(outer_meta),
-    156L,
-    39L,
-    3L
+    length(cv$outer_splits[[1L]]$analysis_ids),
+    length(cv$outer_splits[[1L]]$assessment_ids)
   ),
   stringsAsFactors = FALSE
 )
 
-input_summary |>
-  knitr::kable(
-    format = "html",
-    caption = "Common inputs used by the GBLUP models",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+knitr::kable(
+  input_summary,
+  format = "html",
+  caption = "Common inputs used by the GBLUP models",
+  row.names = FALSE,
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
 ```
 
 The validation object is consumed without modification. Consequently, A, AD,
@@ -301,178 +163,106 @@ and ADE are compared on identical training and held-out individuals.
 
 ## 4. Genomic relationship matrices
 
-The additive, dominance, and epistatic genomic relationship matrices are derived from the 20,887-marker dataset.
+The 20,887 markers retained after the preceding quality-control stage are used
+to construct three genomic covariance structures, each indexed by the same
+195 individuals:
 
-The additive matrix represents realized additive relationships. The dominance
-matrix represents realized dominance relationships. The epistatic matrix is the
-additive-by-additive genomic relationship matrix.
+- **A (additive):** relates individuals through their additive marker effects;
+- **D (dominance):** describes marker-derived dominance relationships;
+- **E (additive-by-additive):** describes the second-order epistatic relationship
+  specified by `sommer::E.mat(type = "A#A")`.
 
-```{r build-kernels, eval=RUN_GBLUP}
+The `min.MAF = 0` arguments do not introduce an additional MAF threshold in
+this module. All three matrices are built from the already-filtered panel.
+Their dimensions, symmetry, finite entries, and mean diagonals are summarized
+in the following table.
+
+```{r build-kernels, eval=FALSE}
+# Construct additive, dominance, and additive-by-additive kernels.
 kernel_start <- proc.time()[["elapsed"]]
+A_matrix <- sommer::A.mat(geno, min.MAF = 0)
+D_matrix <- sommer::D.mat(geno, nishio = TRUE, min.MAF = 0)
+E_matrix <- sommer::E.mat(geno, nishio = TRUE, type = "A#A", min.MAF = 0)
+kernel_seconds <- proc.time()[["elapsed"]] - kernel_start
 
-A_matrix <- sommer::A.mat(
-  geno,
-  min.MAF = 0
-)
-
-D_matrix <- sommer::D.mat(
-  geno,
-  nishio = TRUE,
-  min.MAF = 0
-)
-
-E_matrix <- sommer::E.mat(
-  geno,
-  nishio = TRUE,
-  type = "A#A",
-  min.MAF = 0
-)
-
-kernel_seconds <-
-  proc.time()[["elapsed"]] -
-  kernel_start
-
+# Label rows and columns using the common individual identifiers.
 rownames(A_matrix) <- ids
 colnames(A_matrix) <- ids
-
 rownames(D_matrix) <- ids
 colnames(D_matrix) <- ids
-
 rownames(E_matrix) <- ids
 colnames(E_matrix) <- ids
 
 kernel_summary <- data.frame(
-  Kernel = c(
-    "Additive",
-    "Dominance",
-    "Epistatic_AxA"
-  ),
-  Rows = c(
-    nrow(A_matrix),
-    nrow(D_matrix),
-    nrow(E_matrix)
-  ),
-  Columns = c(
-    ncol(A_matrix),
-    ncol(D_matrix),
-    ncol(E_matrix)
-  ),
+  Kernel = c("Additive", "Dominance", "Epistatic_AxA"),
+  Rows = c(nrow(A_matrix), nrow(D_matrix), nrow(E_matrix)),
+  Columns = c(ncol(A_matrix), ncol(D_matrix), ncol(E_matrix)),
   Symmetric = c(
-    isTRUE(
-      all.equal(
-        A_matrix,
-        t(A_matrix),
-        tolerance = 1e-8
-      )
-    ),
-    isTRUE(
-      all.equal(
-        D_matrix,
-        t(D_matrix),
-        tolerance = 1e-8
-      )
-    ),
-    isTRUE(
-      all.equal(
-        E_matrix,
-        t(E_matrix),
-        tolerance = 1e-8
-      )
-    )
+    isTRUE(all.equal(A_matrix, t(A_matrix), tolerance = 1e-8)),
+    isTRUE(all.equal(D_matrix, t(D_matrix), tolerance = 1e-8)),
+    isTRUE(all.equal(E_matrix, t(E_matrix), tolerance = 1e-8))
   ),
-  Finite = c(
-    all(
-      is.finite(
-        A_matrix
-      )
-    ),
-    all(
-      is.finite(
-        D_matrix
-      )
-    ),
-    all(
-      is.finite(
-        E_matrix
-      )
-    )
-  ),
-  Mean_diagonal = c(
-    mean(
-      diag(
-        A_matrix
-      )
-    ),
-    mean(
-      diag(
-        D_matrix
-      )
-    ),
-    mean(
-      diag(
-        E_matrix
-      )
-    )
-  ),
-  Kernel_build_seconds = rep(
-    kernel_seconds,
-    3L
-  ),
-  stringsAsFactors = FALSE
-)
-
-stopifnot(
-  all(
-    kernel_summary$Rows == 195L
-  ),
-  all(
-    kernel_summary$Columns == 195L
-  ),
-  all(
-    kernel_summary$Symmetric
-  ),
-  all(
-    kernel_summary$Finite
-  )
-)
-
-write.csv(
-  kernel_summary,
-  KERNEL_SUMMARY_CSV,
-  row.names = FALSE
-)
-```
-
-```{r load-kernel-summary, eval=!RUN_GBLUP}
-stopifnot(
-  file.exists(
-    KERNEL_SUMMARY_CSV
-  )
-)
-
-kernel_summary <- read.csv(
-  KERNEL_SUMMARY_CSV,
+  Finite = c(all(is.finite(A_matrix)), all(is.finite(D_matrix)),
+             all(is.finite(E_matrix))),
+  Mean_diagonal = c(mean(diag(A_matrix)), mean(diag(D_matrix)),
+                    mean(diag(E_matrix))),
+  Kernel_build_seconds = rep(kernel_seconds, 3L),
   stringsAsFactors = FALSE
 )
 ```
+
+```{r load-kernel-summary, include=FALSE}
+kernel_summary <- read.csv("output/real/gblup/real_gblup_kernel_summary.csv",
+                           stringsAsFactors = FALSE)
+```
+
+The following table presents the dimensions and numerical summaries of the
+additive, dominance, and additive-by-additive relationship matrices.
 
 ```{r show-kernel-summary}
-kernel_summary |>
-  knitr::kable(
-    format = "html",
-    digits = 6,
-    caption = "Genomic relationship matrices used by the three GBLUP structures",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+knitr::kable(
+  kernel_summary,
+  format = "html",
+  caption = "Genomic relationship matrices used by the three GBLUP structures",
+  digits = 6,
+  row.names = FALSE,
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
 ```
+
+```{r save-kernel-summary, eval=FALSE}
+dir.create("output/real/gblup", recursive = TRUE, showWarnings = FALSE)
+write.csv(kernel_summary, "output/real/gblup/real_gblup_kernel_summary.csv",
+          row.names = FALSE)
+```
+
 
 ## 5. Fixed candidate structures
 
-The model structures are fixed before assessment performance is inspected.
+The fitted response is the **precomputed individual phenotypic BLUP**. For the
+three fixed GBLUP structures, the random effects are described by
 
-```{r model-contract}
-model_contract <- data.frame(
+$$
+\begin{aligned}
+a &\sim \mathcal{N}(0,\sigma_a^2\mathbf{A}),\\
+d &\sim \mathcal{N}(0,\sigma_d^2\mathbf{D}),\\
+aa &\sim \mathcal{N}(0,\sigma_{aa}^2\mathbf{E}),\\
+\varepsilon &\sim \mathcal{N}(0,\sigma_e^2\mathbf{I}).
+\end{aligned}
+$$
+
+Here, $\mu$ is the intercept, $a$ is the additive effect,
+$d$ is the dominance effect, $aa$ is the additive-by-additive effect,
+and $\varepsilon$ is the residual. Each structure includes only its
+specified components. The estimated intercept and applicable genomic effects
+are summed to obtain predictions on the BLUP scale.
+
+Each row in the next table identifies a model and the genomic effects
+included in its covariance specification. The labels are used unchanged in
+the task grid, saved predictions, and later results.
+
+```{r model-structures}
+model_structures <- data.frame(
   Structure = c(
     "A",
     "AD",
@@ -491,1075 +281,401 @@ model_contract <- data.frame(
   stringsAsFactors = FALSE
 )
 
-model_contract |>
-  knitr::kable(
-    format = "html",
-    caption = "Fixed GBLUP candidate structures",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+knitr::kable(
+  model_structures,
+  format = "html",
+  caption = "Fixed GBLUP candidate structures",
+  row.names = FALSE,
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
 ```
 
-The model comparison therefore evaluates whether additional genomic components
-improve prediction. The most complete structure is not assumed to be the best
-predictive structure.
+The three structures remain fixed throughout the analysis. Their predictions
+are evaluated using the same validation partitions and predefined metrics.
 
 ## 6. Evaluation grid
 
-Three traits, 25 outer splits, and three fixed GBLUP structures produce 225
-independent fitting tasks.
+The common grid contains three traits, 25 outer splits, and three fixed GBLUP
+structures:
+
+$$
+3\ \text{traits}\times25\ \text{outer splits}\times3\ \text{structures}
+=225\ \text{model-fitting tasks}.
+$$
+
+These are distinct adjustments, not statistically independent observations,
+because the analysis sets overlap across repetitions.
 
 ```{r task-grid}
+# Cross each characteristic with the 25 splits and three fixed structures.
 task_table <- data.frame(
-  Dataset = character(0),
-  Trait = character(0),
-  Repetition = integer(0),
-  OuterFold = integer(0),
-  SplitID = character(0),
-  Structure = character(0),
-  Model = character(0),
-  TaskID = character(0),
-  stringsAsFactors = FALSE
+  Dataset = character(0), Trait = character(0), Repetition = integer(0),
+  OuterFold = integer(0), SplitID = character(0), Structure = character(0),
+  Model = character(0), TaskID = character(0), stringsAsFactors = FALSE
 )
 
 for (trait in traits) {
-
-  for (
-    split_row in
-      seq_len(
-        nrow(
-          outer_meta
-        )
-      )
-  ) {
-
-    for (
-      model_row in
-        seq_len(
-          nrow(
-            model_contract
-          )
-        )
-    ) {
-
-      task_table <- rbind(
-        task_table,
-        data.frame(
-          Dataset = "real",
-          Trait = trait,
-          Repetition =
-            outer_meta$Repetition[
-              split_row
-            ],
-          OuterFold =
-            outer_meta$OuterFold[
-              split_row
-            ],
-          SplitID =
-            outer_meta$SplitID[
-              split_row
-            ],
-          Structure =
-            model_contract$Structure[
-              model_row
-            ],
-          Model =
-            model_contract$Model[
-              model_row
-            ],
-          TaskID = paste(
-            trait,
-            outer_meta$SplitID[
-              split_row
-            ],
-            model_contract$Structure[
-              model_row
-            ],
-            sep = "_"
-          ),
-          stringsAsFactors = FALSE
-        )
-      )
+  for (split_row in seq_len(nrow(outer_meta))) {
+    for (model_row in seq_len(nrow(model_structures))) {
+      split_id <- outer_meta$SplitID[split_row]
+      structure <- model_structures$Structure[model_row]
+      task_table <- rbind(task_table, data.frame(
+        Dataset = "real", Trait = trait,
+        Repetition = outer_meta$Repetition[split_row],
+        OuterFold = outer_meta$OuterFold[split_row],
+        SplitID = split_id, Structure = structure,
+        Model = model_structures$Model[model_row],
+        TaskID = paste(trait, split_id, structure, sep = "_"),
+        stringsAsFactors = FALSE
+      ))
     }
   }
 }
+rownames(task_table) <- NULL
 
-rownames(
-  task_table
-) <- NULL
+task_summary <- as.data.frame(table(task_table$Trait, task_table$Structure),
+                              stringsAsFactors = FALSE)
+names(task_summary) <- c("Trait", "Structure", "Tasks")
 
-stopifnot(
-  nrow(task_table) == 225L,
-  length(
-    unique(
-      task_table$TaskID
-    )
-  ) == 225L,
-  all(
-    table(
-      task_table$Trait
-    ) == 75L
-  ),
-  all(
-    table(
-      task_table$Structure
-    ) == 75L
-  )
-)
-
-task_summary <- as.data.frame(
-  table(
-    task_table$Trait,
-    task_table$Structure
-  ),
-  stringsAsFactors = FALSE
-)
-
-names(
-  task_summary
-) <- c(
-  "Trait",
-  "Structure",
-  "Tasks"
-)
-
-task_summary |>
-  knitr::kable(
-    format = "html",
-    caption = "Number of outer fitting tasks by trait and GBLUP structure",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+knitr::kable(task_summary, format = "html",
+               caption = "Number of outer fitting tasks by trait and GBLUP structure",
+               row.names = FALSE,
+               table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"')
 ```
 
 ## 7. Fit A, AD, and ADE in every outer split
 
-For each task, the 39 assessment BLUPs are replaced by `NA` before fitting. The
-model therefore receives all genomic relationships but no held-out response
-information.
+For each task, 156 individuals supply response information for fitting. The
+remaining 39 assessment BLUPs are replaced by `NA` before `sommer::mmes()` is
+called. Their observed values are recovered only for evaluating the resulting
+predictions. The marker-derived genomic relationships are common to the full
+panel of genotyped candidates; assessment phenotypes do not enter this GBLUP
+fitting step.
 
-All three structures use the same `sommer::mmes()` fitting controls. Numerical
-convergence results are summarized without changing model specifications for individual validation partitions.
+The model-fitting chunk documents the full fitting procedure without running
+the 225 adjustments during routine rendering. The subsequent export chunk shows
+how to save the results and is likewise disabled; the tutorial then reads the
+persisted files for its numerical summaries and figures.
 
-```{r fit-all-gblup-models, eval=RUN_GBLUP}
-set.seed(
-  SEED_GLOBAL
-)
+For reproducibility, the common numerical settings are defined immediately before
+the model-fitting code: `SEED_GLOBAL = 20261105L` fixes the random seed,
+`N_ITERS_SOMMER = 50L` sets the maximum number of `sommer` iterations per fit,
+and `TOL_LLIK = 1e-4` is passed to the `tolParConvLL` convergence-tolerance
+argument. The same settings are used for all 225 tasks.
 
+```{r fit-all-gblup-models, eval=FALSE}
+# Use the same numerical settings for every trait, split, and GBLUP structure.
+SEED_GLOBAL <- 20261105L
+N_ITERS_SOMMER <- 50L
+TOL_LLIK <- 1e-4
+set.seed(SEED_GLOBAL)
 run_start <- proc.time()[["elapsed"]]
 
-result_list <- vector(
-  "list",
-  nrow(task_table)
-)
+result_list <- vector("list", nrow(task_table))
+prediction_list <- vector("list", nrow(task_table))
 
-prediction_list <- vector(
-  "list",
-  nrow(task_table)
-)
-
-for (
-  i in
-    seq_len(
-      nrow(
-        task_table
-      )
-    )
-) {
-
-  task <- task_table[
-    i,
-    ,
-    drop = FALSE
-  ]
-
+for (i in seq_len(nrow(task_table))) {
+  # Locate the outer analysis and assessment individuals.
+  task <- task_table[i, , drop = FALSE]
   trait <- task$Trait
   structure <- task$Structure
+  split <- cv$outer_splits[[task$SplitID]]
+  analysis_index <- match(split$analysis_ids, ids)
+  assessment_index <- match(split$assessment_ids, ids)
+  response_vector <- blups[[trait]]
 
-  split <- cv$outer_splits[[
-    task$SplitID
-  ]]
+  # Mask assessment BLUPs before estimating the genomic effects.
+  id_factor <- factor(ids, levels = ids)
+  dat <- data.frame(y = response_vector, id = id_factor,
+                    idd = id_factor, ide = id_factor)
+  dat$y[assessment_index] <- NA_real_
 
-  analysis_index <- match(
-    split$analysis_ids,
-    ids
-  )
-
-  assessment_index <- match(
-    split$assessment_ids,
-    ids
-  )
-
-  stopifnot(
-    length(
-      analysis_index
-    ) == 156L,
-    length(
-      assessment_index
-    ) == 39L,
-    !anyNA(
-      analysis_index
-    ),
-    !anyNA(
-      assessment_index
-    ),
-    length(
-      intersect(
-        analysis_index,
-        assessment_index
-      )
-    ) == 0L
-  )
-
-  response_vector <- blups[[
-    trait
-  ]]
-
-  id_factor <- factor(
-    ids,
-    levels = ids
-  )
-
-  dat <- data.frame(
-    y = response_vector,
-    id = id_factor,
-    idd = id_factor,
-    ide = id_factor
-  )
-
-  dat$y[
-    assessment_index
-  ] <- NA_real_
-
-  fit_start <- proc.time()[[
-    "elapsed"
-  ]]
-
-  if (
-    structure == "A"
-  ) {
-
+  # Fit one of the three prespecified covariance structures.
+  fit_start <- proc.time()[["elapsed"]]
+  if (structure == "A") {
     fit <- sommer::mmes(
       y ~ 1,
-      random = ~
-        vsm(
-          ism(id),
-          Gu = A_matrix
-        ),
-      rcov = ~ units,
-      nIters = N_ITERS_SOMMER,
-      tolParConvLL = TOL_LLIK,
-      data = dat,
-      verbose = FALSE,
-      dateWarning = FALSE
+      random = ~ vsm(ism(id), Gu = A_matrix),
+      rcov = ~ units, nIters = N_ITERS_SOMMER,
+      tolParConvLL = TOL_LLIK, data = dat,
+      verbose = FALSE, dateWarning = FALSE
     )
-
-  } else if (
-    structure == "AD"
-  ) {
-
+  } else if (structure == "AD") {
     fit <- sommer::mmes(
       y ~ 1,
-      random = ~
-        vsm(
-          ism(id),
-          Gu = A_matrix
-        ) +
-        vsm(
-          ism(idd),
-          Gu = D_matrix
-        ),
-      rcov = ~ units,
-      nIters = N_ITERS_SOMMER,
-      tolParConvLL = TOL_LLIK,
-      data = dat,
-      verbose = FALSE,
-      dateWarning = FALSE
+      random = ~ vsm(ism(id), Gu = A_matrix) +
+        vsm(ism(idd), Gu = D_matrix),
+      rcov = ~ units, nIters = N_ITERS_SOMMER,
+      tolParConvLL = TOL_LLIK, data = dat,
+      verbose = FALSE, dateWarning = FALSE
     )
-
   } else {
-
     fit <- sommer::mmes(
       y ~ 1,
-      random = ~
-        vsm(
-          ism(id),
-          Gu = A_matrix
-        ) +
-        vsm(
-          ism(idd),
-          Gu = D_matrix
-        ) +
-        vsm(
-          ism(ide),
-          Gu = E_matrix
-        ),
-      rcov = ~ units,
-      nIters = N_ITERS_SOMMER,
-      tolParConvLL = TOL_LLIK,
-      data = dat,
-      verbose = FALSE,
-      dateWarning = FALSE
+      random = ~ vsm(ism(id), Gu = A_matrix) +
+        vsm(ism(idd), Gu = D_matrix) +
+        vsm(ism(ide), Gu = E_matrix),
+      rcov = ~ units, nIters = N_ITERS_SOMMER,
+      tolParConvLL = TOL_LLIK, data = dat,
+      verbose = FALSE, dateWarning = FALSE
     )
   }
+  fit_seconds <- proc.time()[["elapsed"]] - fit_start
 
-  fit_seconds <-
-    proc.time()[[
-      "elapsed"
-    ]] -
-    fit_start
-
-  theta <- as.numeric(
-    fit$theta
-  )
-
-  llik <- as.numeric(
-    fit$llik
-  )
-
-  if (
-    length(
-      llik
-    ) > 1L
-  ) {
-
-    last_llik_change <- tail(
-      diff(
-        llik
-      ),
-      1L
-    )
-
-  } else {
-
-    last_llik_change <- NA_real_
-  }
+  # Extract the variance components and numerical diagnostics.
+  theta <- as.numeric(fit$theta)
+  llik <- as.numeric(fit$llik)
+  last_llik_change <- if (length(llik) > 1L) tail(diff(llik), 1L) else NA_real_
 
   variance_A <- 0
   variance_D <- 0
   variance_E <- 0
   variance_residual <- 0
-
-  if (
-    structure == "A"
-  ) {
-
-    stopifnot(
-      length(
-        theta
-      ) == 2L
-    )
-
-    variance_A <- theta[
-      1L
-    ]
-
-    variance_residual <- theta[
-      2L
-    ]
-
-  } else if (
-    structure == "AD"
-  ) {
-
-    stopifnot(
-      length(
-        theta
-      ) == 3L
-    )
-
-    variance_A <- theta[
-      1L
-    ]
-
-    variance_D <- theta[
-      2L
-    ]
-
-    variance_residual <- theta[
-      3L
-    ]
-
+  if (structure == "A") {
+    variance_A <- theta[1L]
+    variance_residual <- theta[2L]
+  } else if (structure == "AD") {
+    variance_A <- theta[1L]
+    variance_D <- theta[2L]
+    variance_residual <- theta[3L]
   } else {
-
-    stopifnot(
-      length(
-        theta
-      ) == 4L
-    )
-
-    variance_A <- theta[
-      1L
-    ]
-
-    variance_D <- theta[
-      2L
-    ]
-
-    variance_E <- theta[
-      3L
-    ]
-
-    variance_residual <- theta[
-      4L
-    ]
+    variance_A <- theta[1L]
+    variance_D <- theta[2L]
+    variance_E <- theta[3L]
+    variance_residual <- theta[4L]
   }
+  any_negative <- any(c(variance_A, variance_D, variance_E, variance_residual) < 0)
+  pass_llik_gate <- is.finite(last_llik_change) && abs(last_llik_change) <= TOL_LLIK
 
-  any_negative <- any(
-    c(
-      variance_A,
-      variance_D,
-      variance_E,
-      variance_residual
-    ) < 0
-  )
+  # Recover the individual effects and calculate predictions on the BLUP scale.
+  prediction_start <- proc.time()[["elapsed"]]
+  additive <- rep(0, length(ids))
+  dominance <- rep(0, length(ids))
+  epistatic <- rep(0, length(ids))
 
-  pass_llik_gate <-
-    is.finite(
-      last_llik_change
-    ) &&
-    abs(
-      last_llik_change
-    ) <= TOL_LLIK
+  additive_effect <- as.matrix(fit$uList[["vsm(ism(id), Gu = A_matrix)"]])
+  additive_incidence <- model.matrix(~ id - 1, data = dat)
+  additive <- as.numeric(additive_incidence %*% additive_effect[, 1L, drop = FALSE])
 
-  prediction_start <- proc.time()[[
-    "elapsed"
-  ]]
-
-  additive <- rep(
-    0,
-    length(
-      ids
-    )
-  )
-
-  dominance <- rep(
-    0,
-    length(
-      ids
-    )
-  )
-
-  epistatic <- rep(
-    0,
-    length(
-      ids
-    )
-  )
-
-  additive_effect <- as.matrix(
-    fit$uList[[
-      "vsm(ism(id), Gu = A_matrix)"
-    ]]
-  )
-
-  additive_incidence <- model.matrix(
-    ~ id - 1,
-    data = dat
-  )
-
-  additive <- as.numeric(
-    additive_incidence %*%
-      additive_effect[
-        ,
-        1L,
-        drop = FALSE
-      ]
-  )
-
-  if (
-    structure %in%
-      c(
-        "AD",
-        "ADE"
-      )
-  ) {
-
-    dominance_effect <- as.matrix(
-      fit$uList[[
-        "vsm(ism(idd), Gu = D_matrix)"
-      ]]
-    )
-
-    dominance_incidence <- model.matrix(
-      ~ idd - 1,
-      data = dat
-    )
-
-    dominance <- as.numeric(
-      dominance_incidence %*%
-        dominance_effect[
-          ,
-          1L,
-          drop = FALSE
-        ]
-    )
+  if (structure %in% c("AD", "ADE")) {
+    dominance_effect <- as.matrix(fit$uList[["vsm(ism(idd), Gu = D_matrix)"]])
+    dominance_incidence <- model.matrix(~ idd - 1, data = dat)
+    dominance <- as.numeric(dominance_incidence %*% dominance_effect[, 1L, drop = FALSE])
   }
-
-  if (
-    structure == "ADE"
-  ) {
-
-    epistatic_effect <- as.matrix(
-      fit$uList[[
-        "vsm(ism(ide), Gu = E_matrix)"
-      ]]
-    )
-
-    epistatic_incidence <- model.matrix(
-      ~ ide - 1,
-      data = dat
-    )
-
-    epistatic <- as.numeric(
-      epistatic_incidence %*%
-        epistatic_effect[
-          ,
-          1L,
-          drop = FALSE
-        ]
-    )
+  if (structure == "ADE") {
+    epistatic_effect <- as.matrix(fit$uList[["vsm(ism(ide), Gu = E_matrix)"]])
+    epistatic_incidence <- model.matrix(~ ide - 1, data = dat)
+    epistatic <- as.numeric(epistatic_incidence %*% epistatic_effect[, 1L, drop = FALSE])
   }
+  genomic_component <- additive + dominance + epistatic
+  intercept <- as.numeric(fit$b)[1L]
+  predicted_value <- intercept + genomic_component
+  predict_seconds <- proc.time()[["elapsed"]] - prediction_start
 
-  genomic_component <-
-    additive +
-    dominance +
-    epistatic
+  # Evaluate only the 39 individuals withheld from the current fit.
+  observed_test <- response_vector[assessment_index]
+  predicted_test <- predicted_value[assessment_index]
+  constant_prediction <- length(unique(predicted_test)) == 1L
 
-  intercept <- as.numeric(
-    fit$b
-  )[
-    1L
-  ]
-
-  predicted_value <-
-    intercept +
-    genomic_component
-
-  predict_seconds <-
-    proc.time()[[
-      "elapsed"
-    ]] -
-    prediction_start
-
-  observed_test <- response_vector[
-    assessment_index
-  ]
-
-  predicted_test <- predicted_value[
-    assessment_index
-  ]
-
-  stopifnot(
-    length(
-      observed_test
-    ) == 39L,
-    length(
-      predicted_test
-    ) == 39L,
-    all(
-      is.finite(
-        observed_test
-      )
-    ),
-    all(
-      is.finite(
-        predicted_test
-      )
-    )
-  )
-
-  constant_prediction <-
-    length(
-      unique(
-        predicted_test
-      )
-    ) == 1L
-
-  if (
-    length(
-      unique(
-        observed_test
-      )
-    ) > 1L &&
-    !constant_prediction
-  ) {
-
-    correlation <- cor(
-      predicted_test,
-      observed_test,
-      method = "pearson"
-    )
-
-    spearman <- cor(
-      predicted_test,
-      observed_test,
-      method = "spearman"
-    )
-
+  if (length(unique(observed_test)) > 1L && !constant_prediction) {
+    correlation <- cor(predicted_test, observed_test, method = "pearson")
+    spearman <- cor(predicted_test, observed_test, method = "spearman")
   } else {
-
     correlation <- NA_real_
     spearman <- NA_real_
   }
-
-  rmse <- sqrt(
-    mean(
-      (
-        predicted_test -
-        observed_test
-      )^2
-    )
-  )
-
-  mae <- mean(
-    abs(
-      predicted_test -
-      observed_test
-    )
-  )
-
-  bias <- mean(
-    predicted_test -
-    observed_test
-  )
-
-  if (
-    !constant_prediction
-  ) {
-
-    slope <- as.numeric(
-      coef(
-        lm(
-          observed_test ~
-            predicted_test
-        )
-      )[
-        2L
-      ]
-    )
-
+  rmse <- sqrt(mean((predicted_test - observed_test)^2))
+  mae <- mean(abs(predicted_test - observed_test))
+  bias <- mean(predicted_test - observed_test)
+  slope <- if (!constant_prediction) {
+    as.numeric(coef(lm(observed_test ~ predicted_test))[2L])
   } else {
-
-    slope <- NA_real_
+    NA_real_
   }
 
-  result_list[[
-    i
-  ]] <- data.frame(
-    Dataset = "real",
-    Trait = trait,
-    Repetition = task$Repetition,
-    Fold = task$OuterFold,
-    SplitID = task$SplitID,
-    TaskID = task$TaskID,
-    Model = task$Model,
-    Structure = structure,
-    N_train = length(
-      analysis_index
-    ),
-    N_test = length(
-      assessment_index
-    ),
-    Convergence = isTRUE(
-      fit$convergence
-    ),
-    Iterations = length(
-      llik
-    ),
-    Final_LLik = tail(
-      llik,
-      1L
-    ),
-    Last_LLik_change =
-      last_llik_change,
-    Pass_LLik_gate =
-      pass_llik_gate,
-    Variance_A =
-      variance_A,
-    Variance_D =
-      variance_D,
-    Variance_E =
-      variance_E,
-    Variance_Residual =
-      variance_residual,
-    Any_negative =
-      any_negative,
-    Constant_prediction =
-      constant_prediction,
-    BLUP_Correlation =
-      correlation,
-    BLUP_Spearman =
-      spearman,
-    BLUP_RMSE =
-      rmse,
-    BLUP_MAE =
-      mae,
-    BLUP_Bias =
-      bias,
-    BLUP_Slope =
-      slope,
-    Kernel_build_seconds =
-      kernel_seconds,
-    Fit_seconds =
-      fit_seconds,
-    Predict_seconds =
-      predict_seconds,
+  # Store one row of diagnostics and 39 individual predictions per fit.
+  result_list[[i]] <- data.frame(
+    Dataset = "real", Trait = trait,
+    Repetition = task$Repetition, Fold = task$OuterFold,
+    SplitID = task$SplitID, TaskID = task$TaskID,
+    Model = task$Model, Structure = structure,
+    N_train = length(analysis_index), N_test = length(assessment_index),
+    Convergence = isTRUE(fit$convergence), Iterations = length(llik),
+    Final_LLik = tail(llik, 1L), Last_LLik_change = last_llik_change,
+    Pass_LLik_gate = pass_llik_gate,
+    Variance_A = variance_A, Variance_D = variance_D,
+    Variance_E = variance_E, Variance_Residual = variance_residual,
+    Any_negative = any_negative, Constant_prediction = constant_prediction,
+    BLUP_Correlation = correlation, BLUP_Spearman = spearman,
+    BLUP_RMSE = rmse, BLUP_MAE = mae, BLUP_Bias = bias, BLUP_Slope = slope,
+    Kernel_build_seconds = kernel_seconds, Fit_seconds = fit_seconds,
+    Predict_seconds = predict_seconds, stringsAsFactors = FALSE
+  )
+  prediction_list[[i]] <- data.frame(
+    Dataset = "real", Trait = trait,
+    Repetition = task$Repetition, Fold = task$OuterFold,
+    SplitID = task$SplitID, TaskID = task$TaskID,
+    Model = task$Model, Structure = structure, ID = ids[assessment_index],
+    Observed_BLUP = observed_test, Predicted_BLUP = predicted_test,
+    Genomic_Component = genomic_component[assessment_index],
+    Additive_Prediction = additive[assessment_index],
+    Dominance_Prediction = dominance[assessment_index],
+    Epistatic_Prediction = epistatic[assessment_index],
     stringsAsFactors = FALSE
   )
 
-  prediction_list[[
-    i
-  ]] <- data.frame(
-    Dataset = "real",
-    Trait = trait,
-    Repetition = task$Repetition,
-    Fold = task$OuterFold,
-    SplitID = task$SplitID,
-    TaskID = task$TaskID,
-    Model = task$Model,
-    Structure = structure,
-    ID = ids[
-      assessment_index
-    ],
-    Observed_BLUP =
-      observed_test,
-    Predicted_BLUP =
-      predicted_test,
-    Genomic_Component =
-      genomic_component[
-        assessment_index
-      ],
-    Additive_Prediction =
-      additive[
-        assessment_index
-      ],
-    Dominance_Prediction =
-      dominance[
-        assessment_index
-      ],
-    Epistatic_Prediction =
-      epistatic[
-        assessment_index
-      ],
-    stringsAsFactors = FALSE
-  )
-
-  cat(
-    sprintf(
-      "[%03d/%03d] %s | conv=%s | neg=%s | LL=%s | Pearson=%s | Spearman=%s | RMSE=%.4f\n",
-      i,
-      nrow(
-        task_table
-      ),
-      task$TaskID,
-      isTRUE(
-        fit$convergence
-      ),
-      any_negative,
-      pass_llik_gate,
-      ifelse(
-        is.finite(
-          correlation
-        ),
-        sprintf(
-          "%.4f",
-          correlation
-        ),
-        "NA"
-      ),
-      ifelse(
-        is.finite(
-          spearman
-        ),
-        sprintf(
-          "%.4f",
-          spearman
-        ),
-        "NA"
-      ),
-      rmse
-    )
-  )
 }
 
-results <- do.call(
-  rbind,
-  result_list
-)
+results <- do.call(rbind, result_list)
+predictions <- do.call(rbind, prediction_list)
+rownames(results) <- NULL
+rownames(predictions) <- NULL
+run_seconds <- proc.time()[["elapsed"]] - run_start
+```
 
-predictions <- do.call(
-  rbind,
-  prediction_list
-)
 
-rownames(
-  results
-) <- NULL
+```{r load-model-results, include=FALSE}
+# Restore previous fitting results only for routine rendering.
+if (!exists("results", inherits = FALSE)) {
+  results <- readRDS("output/real/gblup/real_gblup_results.rds")
+  predictions <- readRDS("output/real/gblup/real_gblup_predictions.rds")
+  run_metadata <- readRDS("output/real/gblup/real_gblup_run_metadata.rds")
+}
+```
 
-rownames(
-  predictions
-) <- NULL
+### 7.1 Model results
 
-stopifnot(
-  nrow(
-    results
-  ) == 225L,
-  nrow(
-    predictions
-  ) == 8775L,
-  length(
-    unique(
-      results$TaskID
-    )
-  ) == 225L,
-  length(
-    unique(
-      predictions$TaskID
-    )
-  ) == 225L,
-  all(
-    table(
-      results$Structure
-    ) == 75L
-  ),
-  all(
-    table(
-      results$Trait
-    ) == 75L
-  ),
-  all(
-    table(
-      predictions$TaskID
-    ) == 39L
-  ),
-  all(
-    results$N_train == 156L
-  ),
-  all(
-    results$N_test == 39L
-  ),
-  all(
-    is.finite(
-      predictions$Observed_BLUP
-    )
-  ),
-  all(
-    is.finite(
-      predictions$Predicted_BLUP
-    )
-  )
-)
+The first six rows illustrate one result per trait, outer split, and GBLUP
+structure. The preview focuses on partition sizes and predictive metrics;
+the saved `results` object retains all numerical diagnostics and variance
+components for the 225 fits.
 
-run_seconds <-
-  proc.time()[[
-    "elapsed"
-  ]] -
-  run_start
-
-write.csv(
-  results,
-  RESULTS_CSV,
-  row.names = FALSE
-)
-
-saveRDS(
-  results,
-  RESULTS_RDS
-)
-
-write.csv(
-  predictions,
-  PREDICTIONS_CSV,
-  row.names = FALSE
-)
-
-saveRDS(
-  predictions,
-  PREDICTIONS_RDS
-)
-
-run_metadata <- list(
-  dataset = "real",
-  models = c(
-    "GBLUP_A",
-    "GBLUP_AD",
-    "GBLUP_ADE"
-  ),
-  structures = c(
-    "A",
-    "AD",
-    "ADE"
-  ),
-  seed_global =
-    SEED_GLOBAL,
-  sommer_version =
-    as.character(
-      packageVersion(
-        "sommer"
-      )
-    ),
-  nIters_sommer =
-    N_ITERS_SOMMER,
-  tolParConvLL =
-    TOL_LLIK,
-  marker_panel_n =
-    ncol(
-      geno
-    ),
-  individuals_n =
-    nrow(
-      geno
-    ),
-  traits =
-    traits,
-  outer_splits =
-    nrow(
-      outer_meta
-    ),
-  tasks =
-    nrow(
-      results
-    ),
-  prediction_rows =
-    nrow(
-      predictions
-    ),
-  kernel_build_seconds =
-    kernel_seconds,
-  total_run_seconds =
-    run_seconds,
-  timestamp =
-    as.character(
-      Sys.time()
-    )
-)
-
-saveRDS(
-  run_metadata,
-  RUN_METADATA_RDS
+```{r preview-gblup-results}
+knitr::kable(
+  head(results[, c("Trait", "SplitID", "Structure", "N_train", "N_test",
+                   "BLUP_Correlation", "BLUP_RMSE")]),
+  format = "html", digits = 4, row.names = FALSE,
+  caption = "First six rows of the GBLUP model results",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
 ```
 
-```{r load-model-results, eval=!RUN_GBLUP}
-stopifnot(
-  file.exists(
-    RESULTS_RDS
-  ),
-  file.exists(
-    PREDICTIONS_RDS
-  ),
-  file.exists(
-    RUN_METADATA_RDS
-  )
-)
+### 7.2 Held-out predictions
 
-results <- readRDS(
-  RESULTS_RDS
-)
+Each row in `predictions` corresponds to one assessment individual from a
+particular outer split. The first six records show the observed phenotypic
+BLUP alongside its out-of-fold predicted value. The full object preserves
+all 8,775 predictions and their separate genomic components.
 
-predictions <- readRDS(
-  PREDICTIONS_RDS
+```{r preview-gblup-predictions}
+knitr::kable(
+  head(predictions[, c("Trait", "SplitID", "Structure", "ID",
+                       "Observed_BLUP", "Predicted_BLUP")]),
+  format = "html", digits = 4, row.names = FALSE,
+  caption = "First six held-out GBLUP predictions",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
+```
 
-run_metadata <- readRDS(
-  RUN_METADATA_RDS
+The following code documents how the complete fitting outputs and execution
+metadata are saved after fitting. It is disabled during routine rendering.
+
+```{r save-gblup-model-results, eval=FALSE}
+# Export the 225 model summaries and 8,775 assessment predictions.
+dir.create("output/real/gblup", recursive = TRUE, showWarnings = FALSE)
+write.csv(results, "output/real/gblup/real_gblup_results.csv", row.names = FALSE)
+saveRDS(results, "output/real/gblup/real_gblup_results.rds")
+write.csv(predictions, "output/real/gblup/real_gblup_predictions.csv", row.names = FALSE)
+saveRDS(predictions, "output/real/gblup/real_gblup_predictions.rds")
+
+# Record the numerical settings, software version, and elapsed run time.
+run_metadata <- list(
+  dataset = "real", models = c("GBLUP_A", "GBLUP_AD", "GBLUP_ADE"),
+  structures = c("A", "AD", "ADE"), seed_global = SEED_GLOBAL,
+  sommer_version = as.character(packageVersion("sommer")),
+  nIters_sommer = N_ITERS_SOMMER, tolParConvLL = TOL_LLIK,
+  marker_panel_n = ncol(geno), individuals_n = nrow(geno),
+  traits = traits, outer_splits = nrow(outer_meta),
+  tasks = nrow(results), prediction_rows = nrow(predictions),
+  kernel_build_seconds = kernel_seconds, total_run_seconds = run_seconds,
+  timestamp = as.character(Sys.time())
 )
+saveRDS(run_metadata, "output/real/gblup/real_gblup_run_metadata.rds")
 ```
 
 ## 8. Numerical behavior
 
-The numerical behavior of each model helps interpret differences in model complexity. Candidate structures are retained consistently across validation partitions.
+For each model and trait, the numerical summary reports the number of fits,
+the convergence flag returned by `sommer`, the presence of negative estimated
+variance components, the final log-likelihood-change check, and constant
+assessment predictions. These quantities describe the behavior of the
+prespecified fits; no fitted structure is changed based on an assessment fold.
 
 ```{r numerical-summary}
+# Count convergence and other numerical diagnostics by structure and trait.
 numerical_summary <- data.frame(
-  Structure = character(0),
-  Trait = character(0),
-  Fits = integer(0),
-  Converged = integer(0),
-  Negative_components = integer(0),
-  Pass_LLik_gate = integer(0),
-  Constant_predictions = integer(0),
+  Structure = character(0), Trait = character(0), Fits = integer(0),
+  Converged = integer(0), Negative_components = integer(0),
+  Pass_LLik_gate = integer(0), Constant_predictions = integer(0),
   stringsAsFactors = FALSE
 )
 
-for (
-  structure in
-    c(
-      "A",
-      "AD",
-      "ADE"
-    )
-) {
-
-  for (
-    trait in
-      traits
-  ) {
-
-    x <- results[
-      results$Structure ==
-        structure &
-        results$Trait ==
-        trait,
-      ,
-      drop = FALSE
-    ]
-
-    numerical_summary <- rbind(
-      numerical_summary,
-      data.frame(
-        Structure =
-          structure,
-        Trait =
-          trait,
-        Fits =
-          nrow(
-            x
-          ),
-        Converged =
-          sum(
-            x$Convergence
-          ),
-        Negative_components =
-          sum(
-            x$Any_negative
-          ),
-        Pass_LLik_gate =
-          sum(
-            x$Pass_LLik_gate
-          ),
-        Constant_predictions =
-          sum(
-            x$Constant_prediction
-          ),
-        stringsAsFactors = FALSE
-      )
-    )
+for (structure in c("A", "AD", "ADE")) {
+  for (trait in traits) {
+    x <- results[results$Structure == structure & results$Trait == trait,
+                 , drop = FALSE]
+    numerical_summary <- rbind(numerical_summary, data.frame(
+      Structure = structure, Trait = trait, Fits = nrow(x),
+      Converged = sum(x$Convergence),
+      Negative_components = sum(x$Any_negative),
+      Pass_LLik_gate = sum(x$Pass_LLik_gate),
+      Constant_predictions = sum(x$Constant_prediction),
+      stringsAsFactors = FALSE
+    ))
   }
 }
 
-write.csv(
+knitr::kable(
   numerical_summary,
-  NUMERICAL_SUMMARY_CSV,
-  row.names = FALSE
+  format = "html",
+  caption = "Numerical behavior of the fixed GBLUP structures",
+  row.names = FALSE,
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
-
-numerical_summary |>
-  knitr::kable(
-    format = "html",
-    caption = "Numerical behavior of the fixed GBLUP structures",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
 ```
 
-A variance component estimated near the boundary can be numerically difficult
-for a more complex covariance structure. These numerical results are therefore
-interpreted together with held-out predictive performance rather than as a
-criterion for changing the model assigned to a specific split.
+```{r save-numerical-summary, eval=FALSE}
+write.csv(numerical_summary,
+          "output/real/gblup/real_gblup_numerical_summary.csv",
+          row.names = FALSE)
+```
+
+Convergence as reported by the fitting routine and the additional
+log-likelihood-change check are separate diagnostics. Constant predictions
+prevent computation of correlation-based metrics, but still allow assessment
+of prediction errors. The numerical summary documents these cases without
+silently discarding their error metrics.
 
 ## 9. Held-out predictive performance
+
+The held-out BLUPs are compared with the predictions from the corresponding
+outer assessment split. Pearson correlation measures linear agreement,
+Spearman correlation measures rank agreement, RMSE and MAE measure prediction
+error on the BLUP scale, and bias measures the mean prediction difference.
+The calibration slope is estimated from observed BLUPs regressed on predicted
+BLUPs. For the $n$ held-out individuals in a split, the main error measures are
+
+$$
+\operatorname{RMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(\hat y_i-y_i)^2},
+\qquad
+\operatorname{MAE}=\frac{1}{n}\sum_{i=1}^{n}|\hat y_i-y_i|,
+\qquad
+\operatorname{Bias}=\frac{1}{n}\sum_{i=1}^{n}(\hat y_i-y_i).
+$$
+
+Here, $y_i$ and $\hat y_i$ are the observed and predicted individual BLUPs.
+Each reported summary is descriptive across the 25 matched outer tasks for
+that trait and model.
 
 Pearson and Spearman correlations and the calibration slope are undefined
 when all 39 held-out predictions from a task are constant. RMSE, MAE, and bias
@@ -1567,170 +683,64 @@ remain defined in those tasks. Each metric is therefore summarized from all
 tasks for which that specific metric is finite.
 
 ```{r performance-summary}
+# Summarize each metric across its finite outer-split observations.
 performance_summary <- data.frame(
-  Structure = character(0),
-  Model = character(0),
-  Trait = character(0),
-  Splits = integer(0),
-  Correlation_N = integer(0),
-  BLUP_Correlation = numeric(0),
-  BLUP_Correlation_SD = numeric(0),
-  Spearman_N = integer(0),
-  BLUP_Spearman = numeric(0),
-  BLUP_Spearman_SD = numeric(0),
-  RMSE_N = integer(0),
-  BLUP_RMSE = numeric(0),
-  MAE_N = integer(0),
-  BLUP_MAE = numeric(0),
-  Bias_N = integer(0),
-  BLUP_Bias = numeric(0),
-  Slope_N = integer(0),
-  BLUP_Slope = numeric(0),
+  Structure = character(0), Model = character(0), Trait = character(0),
+  Splits = integer(0), Correlation_N = integer(0),
+  BLUP_Correlation = numeric(0), BLUP_Correlation_SD = numeric(0),
+  Spearman_N = integer(0), BLUP_Spearman = numeric(0),
+  BLUP_Spearman_SD = numeric(0), RMSE_N = integer(0),
+  BLUP_RMSE = numeric(0), MAE_N = integer(0), BLUP_MAE = numeric(0),
+  Bias_N = integer(0), BLUP_Bias = numeric(0),
+  Slope_N = integer(0), BLUP_Slope = numeric(0),
   stringsAsFactors = FALSE
 )
 
-for (
-  structure in
-    c(
-      "A",
-      "AD",
-      "ADE"
-    )
-) {
-
-  for (
-    trait in
-      traits
-  ) {
-
-    x <- results[
-      results$Structure ==
-        structure &
-        results$Trait ==
-        trait,
-      ,
-      drop = FALSE
-    ]
-
-    model_name <- unique(
-      x$Model
-    )
-
-    stopifnot(
-      length(
-        model_name
-      ) == 1L
-    )
-
-    performance_summary <- rbind(
-      performance_summary,
-      data.frame(
-        Structure =
-          structure,
-        Model =
-          model_name,
-        Trait =
-          trait,
-        Splits =
-          nrow(
-            x
-          ),
-        Correlation_N =
-          sum(
-            is.finite(
-              x$BLUP_Correlation
-            )
-          ),
-        BLUP_Correlation =
-          mean(
-            x$BLUP_Correlation,
-            na.rm = TRUE
-          ),
-        BLUP_Correlation_SD =
-          sd(
-            x$BLUP_Correlation,
-            na.rm = TRUE
-          ),
-        Spearman_N =
-          sum(
-            is.finite(
-              x$BLUP_Spearman
-            )
-          ),
-        BLUP_Spearman =
-          mean(
-            x$BLUP_Spearman,
-            na.rm = TRUE
-          ),
-        BLUP_Spearman_SD =
-          sd(
-            x$BLUP_Spearman,
-            na.rm = TRUE
-          ),
-        RMSE_N =
-          sum(
-            is.finite(
-              x$BLUP_RMSE
-            )
-          ),
-        BLUP_RMSE =
-          mean(
-            x$BLUP_RMSE,
-            na.rm = TRUE
-          ),
-        MAE_N =
-          sum(
-            is.finite(
-              x$BLUP_MAE
-            )
-          ),
-        BLUP_MAE =
-          mean(
-            x$BLUP_MAE,
-            na.rm = TRUE
-          ),
-        Bias_N =
-          sum(
-            is.finite(
-              x$BLUP_Bias
-            )
-          ),
-        BLUP_Bias =
-          mean(
-            x$BLUP_Bias,
-            na.rm = TRUE
-          ),
-        Slope_N =
-          sum(
-            is.finite(
-              x$BLUP_Slope
-            )
-          ),
-        BLUP_Slope =
-          mean(
-            x$BLUP_Slope,
-            na.rm = TRUE
-          ),
-        stringsAsFactors = FALSE
-      )
-    )
+for (structure in c("A", "AD", "ADE")) {
+  for (trait in traits) {
+    x <- results[results$Structure == structure & results$Trait == trait,
+                 , drop = FALSE]
+    model_name <- unique(x$Model)
+    performance_summary <- rbind(performance_summary, data.frame(
+      Structure = structure, Model = model_name, Trait = trait,
+      Splits = nrow(x),
+      Correlation_N = sum(is.finite(x$BLUP_Correlation)),
+      BLUP_Correlation = mean(x$BLUP_Correlation, na.rm = TRUE),
+      BLUP_Correlation_SD = sd(x$BLUP_Correlation, na.rm = TRUE),
+      Spearman_N = sum(is.finite(x$BLUP_Spearman)),
+      BLUP_Spearman = mean(x$BLUP_Spearman, na.rm = TRUE),
+      BLUP_Spearman_SD = sd(x$BLUP_Spearman, na.rm = TRUE),
+      RMSE_N = sum(is.finite(x$BLUP_RMSE)),
+      BLUP_RMSE = mean(x$BLUP_RMSE, na.rm = TRUE),
+      MAE_N = sum(is.finite(x$BLUP_MAE)),
+      BLUP_MAE = mean(x$BLUP_MAE, na.rm = TRUE),
+      Bias_N = sum(is.finite(x$BLUP_Bias)),
+      BLUP_Bias = mean(x$BLUP_Bias, na.rm = TRUE),
+      Slope_N = sum(is.finite(x$BLUP_Slope)),
+      BLUP_Slope = mean(x$BLUP_Slope, na.rm = TRUE),
+      stringsAsFactors = FALSE
+    ))
   }
 }
 
-write.csv(
+knitr::kable(
   performance_summary,
-  PERFORMANCE_SUMMARY_CSV,
+  format = "html",
+  caption = "Mean held-out performance of A, AD, and ADE across the 25 outer splits",
+  digits = 4,
   row.names = FALSE
-)
+) |>
+  kableExtra::kable_styling(
+    full_width = TRUE,
+    bootstrap_options = c("striped", "hover", "bordered")
+  ) |>
+  kableExtra::scroll_box(width = "100%")
+```
 
-performance_summary |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Mean held-out performance of A, AD, and ADE across the 25 outer splits",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+```{r save-performance-summary, eval=FALSE}
+write.csv(performance_summary,
+          "output/real/gblup/real_gblup_performance_summary.csv",
+          row.names = FALSE)
 ```
 
 The comparison is intentionally descriptive at this stage. A more complete
@@ -1756,366 +766,134 @@ deterministic secondary ordering criterion so that both observed and predicted
 sets contain exactly 39 individuals.
 
 ```{r individual-ranking}
+# Each individual has five OOF predictions for every model and trait.
 TOP20_N <- 39L
-
 individual_ranking <- data.frame(
-  Structure = character(0),
-  Model = character(0),
-  Trait = character(0),
-  ID = character(0),
-  Observed_BLUP = numeric(0),
-  Predicted_BLUP = numeric(0),
-  Prediction_SD = numeric(0),
-  N_OOF = integer(0),
-  Observed_Rank = numeric(0),
-  Predicted_Rank = numeric(0),
-  Rank_Difference = numeric(0),
-  Absolute_Rank_Error = numeric(0),
-  Observed_Top20 = logical(0),
-  Predicted_Top20 = logical(0),
-  stringsAsFactors = FALSE
+  Structure = character(0), Model = character(0), Trait = character(0),
+  ID = character(0), Observed_BLUP = numeric(0),
+  Predicted_BLUP = numeric(0), Prediction_SD = numeric(0),
+  N_OOF = integer(0), Observed_Rank = numeric(0),
+  Predicted_Rank = numeric(0), Rank_Difference = numeric(0),
+  Absolute_Rank_Error = numeric(0), Observed_Top20 = logical(0),
+  Predicted_Top20 = logical(0), stringsAsFactors = FALSE
 )
-
 ranking_summary <- data.frame(
-  Structure = character(0),
-  Model = character(0),
-  Trait = character(0),
-  Individuals = integer(0),
-  Ranking_Spearman = numeric(0),
+  Structure = character(0), Model = character(0), Trait = character(0),
+  Individuals = integer(0), Ranking_Spearman = numeric(0),
   Mean_Absolute_Rank_Error = numeric(0),
-  Median_Absolute_Rank_Error = numeric(0),
-  Top20_N = integer(0),
-  Top20_Overlap_N = integer(0),
-  Top20_Overlap_Rate = numeric(0),
+  Median_Absolute_Rank_Error = numeric(0), Top20_N = integer(0),
+  Top20_Overlap_N = integer(0), Top20_Overlap_Rate = numeric(0),
   stringsAsFactors = FALSE
 )
 
-for (
-  structure in
-    c(
-      "A",
-      "AD",
-      "ADE"
-    )
-) {
-
-  for (
-    trait in
-      traits
-  ) {
-
-    x <- predictions[
-      predictions$Structure ==
-        structure &
-        predictions$Trait ==
-        trait,
-      ,
-      drop = FALSE
-    ]
-
-    model_name <- unique(
-      x$Model
-    )
-
-    stopifnot(
-      length(
-        model_name
-      ) == 1L
-    )
-
+for (structure in c("A", "AD", "ADE")) {
+  for (trait in traits) {
+    x <- predictions[predictions$Structure == structure &
+                     predictions$Trait == trait, , drop = FALSE]
+    model_name <- unique(x$Model)
     ranking_group <- data.frame(
-      Structure = character(0),
-      Model = character(0),
-      Trait = character(0),
-      ID = character(0),
-      Observed_BLUP = numeric(0),
-      Predicted_BLUP = numeric(0),
-      Prediction_SD = numeric(0),
-      N_OOF = integer(0),
-      stringsAsFactors = FALSE
+      Structure = character(0), Model = character(0), Trait = character(0),
+      ID = character(0), Observed_BLUP = numeric(0),
+      Predicted_BLUP = numeric(0), Prediction_SD = numeric(0),
+      N_OOF = integer(0), stringsAsFactors = FALSE
     )
 
-    for (
-      individual_id in
-        ids
-    ) {
-
-      xi <- x[
-        x$ID ==
-          individual_id,
-        ,
-        drop = FALSE
-      ]
-
-      stopifnot(
-        nrow(
-          xi
-        ) == 5L,
-        length(
-          unique(
-            xi$Observed_BLUP
-          )
-        ) == 1L
-      )
-
-      ranking_group <- rbind(
-        ranking_group,
-        data.frame(
-          Structure =
-            structure,
-          Model =
-            model_name,
-          Trait =
-            trait,
-          ID =
-            individual_id,
-          Observed_BLUP =
-            unique(
-              xi$Observed_BLUP
-            ),
-          Predicted_BLUP =
-            mean(
-              xi$Predicted_BLUP
-            ),
-          Prediction_SD =
-            sd(
-              xi$Predicted_BLUP
-            ),
-          N_OOF =
-            nrow(
-              xi
-            ),
-          stringsAsFactors = FALSE
-        )
-      )
+    # Average the five assessment predictions for each individual.
+    for (individual_id in ids) {
+      xi <- x[x$ID == individual_id, , drop = FALSE]
+      ranking_group <- rbind(ranking_group, data.frame(
+        Structure = structure, Model = model_name, Trait = trait,
+        ID = individual_id, Observed_BLUP = unique(xi$Observed_BLUP),
+        Predicted_BLUP = mean(xi$Predicted_BLUP),
+        Prediction_SD = sd(xi$Predicted_BLUP), N_OOF = nrow(xi),
+        stringsAsFactors = FALSE
+      ))
     }
 
-    ranking_group$Observed_Rank <- rank(
-      -ranking_group$Observed_BLUP,
-      ties.method = "average"
-    )
-
-    ranking_group$Predicted_Rank <- rank(
-      -ranking_group$Predicted_BLUP,
-      ties.method = "average"
-    )
-
-    ranking_group$Rank_Difference <-
-      ranking_group$Predicted_Rank -
+    # Compare descending rankings and the selected upper 20% of individuals.
+    ranking_group$Observed_Rank <- rank(-ranking_group$Observed_BLUP,
+                                        ties.method = "average")
+    ranking_group$Predicted_Rank <- rank(-ranking_group$Predicted_BLUP,
+                                         ties.method = "average")
+    ranking_group$Rank_Difference <- ranking_group$Predicted_Rank -
       ranking_group$Observed_Rank
+    ranking_group$Absolute_Rank_Error <- abs(ranking_group$Rank_Difference)
 
-    ranking_group$Absolute_Rank_Error <-
-      abs(
-        ranking_group$Rank_Difference
-      )
-
-    observed_order <- order(
-      -ranking_group$Observed_BLUP,
-      ranking_group$ID
-    )
-
-    predicted_order <- order(
-      -ranking_group$Predicted_BLUP,
-      ranking_group$ID
-    )
-
+    observed_order <- order(-ranking_group$Observed_BLUP, ranking_group$ID)
+    predicted_order <- order(-ranking_group$Predicted_BLUP, ranking_group$ID)
     ranking_group$Observed_Top20 <- FALSE
     ranking_group$Predicted_Top20 <- FALSE
+    ranking_group$Observed_Top20[observed_order[seq_len(TOP20_N)]] <- TRUE
+    ranking_group$Predicted_Top20[predicted_order[seq_len(TOP20_N)]] <- TRUE
 
-    ranking_group$Observed_Top20[
-      observed_order[
-        seq_len(
-          TOP20_N
-        )
-      ]
-    ] <- TRUE
-
-    ranking_group$Predicted_Top20[
-      predicted_order[
-        seq_len(
-          TOP20_N
-        )
-      ]
-    ] <- TRUE
-
-    top20_overlap_n <- sum(
-      ranking_group$Observed_Top20 &
-        ranking_group$Predicted_Top20
-    )
-
-    top20_overlap_rate <-
-      top20_overlap_n /
-      TOP20_N
-
-    stopifnot(
-      nrow(
-        ranking_group
-      ) == 195L,
-      all(
-        ranking_group$N_OOF ==
-          5L
-      ),
-      sum(
-        ranking_group$Observed_Top20
-      ) == TOP20_N,
-      sum(
-        ranking_group$Predicted_Top20
-      ) == TOP20_N,
-      top20_overlap_n >= 0L,
-      top20_overlap_n <= TOP20_N
-    )
-
-    individual_ranking <- rbind(
-      individual_ranking,
-      ranking_group
-    )
-
-    ranking_summary <- rbind(
-      ranking_summary,
-      data.frame(
-        Structure =
-          structure,
-        Model =
-          model_name,
-        Trait =
-          trait,
-        Individuals =
-          nrow(
-            ranking_group
-          ),
-        Ranking_Spearman =
-          cor(
-            ranking_group$Observed_Rank,
-            ranking_group$Predicted_Rank,
-            method = "spearman"
-          ),
-        Mean_Absolute_Rank_Error =
-          mean(
-            ranking_group$Absolute_Rank_Error
-          ),
-        Median_Absolute_Rank_Error =
-          median(
-            ranking_group$Absolute_Rank_Error
-          ),
-        Top20_N =
-          TOP20_N,
-        Top20_Overlap_N =
-          top20_overlap_n,
-        Top20_Overlap_Rate =
-          top20_overlap_rate,
-        stringsAsFactors = FALSE
-      )
-    )
+    top20_overlap_n <- sum(ranking_group$Observed_Top20 &
+                           ranking_group$Predicted_Top20)
+    top20_overlap_rate <- top20_overlap_n / TOP20_N
+    individual_ranking <- rbind(individual_ranking, ranking_group)
+    ranking_summary <- rbind(ranking_summary, data.frame(
+      Structure = structure, Model = model_name, Trait = trait,
+      Individuals = nrow(ranking_group),
+      Ranking_Spearman = cor(ranking_group$Observed_Rank,
+                             ranking_group$Predicted_Rank, method = "spearman"),
+      Mean_Absolute_Rank_Error = mean(ranking_group$Absolute_Rank_Error),
+      Median_Absolute_Rank_Error = median(ranking_group$Absolute_Rank_Error),
+      Top20_N = TOP20_N, Top20_Overlap_N = top20_overlap_n,
+      Top20_Overlap_Rate = top20_overlap_rate,
+      stringsAsFactors = FALSE
+    ))
   }
 }
+rownames(individual_ranking) <- NULL
+rownames(ranking_summary) <- NULL
 
-rownames(
-  individual_ranking
-) <- NULL
-
-rownames(
-  ranking_summary
-) <- NULL
-
-stopifnot(
-  nrow(
-    individual_ranking
-  ) == 1755L,
-  nrow(
-    ranking_summary
-  ) == 9L,
-  all(
-    individual_ranking$N_OOF ==
-      5L
-  ),
-  sum(
-    individual_ranking$Observed_Top20
-  ) == 351L,
-  sum(
-    individual_ranking$Predicted_Top20
-  ) == 351L,
-  all(
-    ranking_summary$Top20_N ==
-      39L
-  ),
-  all(
-    ranking_summary$Top20_Overlap_N >=
-      0L
-  ),
-  all(
-    ranking_summary$Top20_Overlap_N <=
-      39L
-  ),
-  all(
-    ranking_summary$Top20_Overlap_Rate >=
-      0
-  ),
-  all(
-    ranking_summary$Top20_Overlap_Rate <=
-      1
-  )
-)
-
-write.csv(
-  individual_ranking,
-  RANKING_CSV,
-  row.names = FALSE
-)
-
-saveRDS(
-  individual_ranking,
-  RANKING_RDS
-)
-
-write.csv(
+knitr::kable(
   ranking_summary,
-  RANKING_SUMMARY_CSV,
+  format = "html",
+  caption = "Agreement between observed and out-of-fold predicted rankings of the 195 individuals",
+  digits = 4,
   row.names = FALSE
-)
-
-ranking_summary |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Agreement between observed and out-of-fold predicted rankings of the 195 individuals",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+) |>
+  kableExtra::kable_styling(full_width = TRUE,
+                            bootstrap_options = c("striped", "hover")) |>
+  kableExtra::scroll_box(width = "100%")
 ```
 
-The ranking summary complements split-level Spearman correlation by evaluating
-the ordering obtained from the five out-of-fold predictions available for each
-individual. The top-20% overlap additionally measures how many of the 39
+```{r save-individual-ranking, eval=FALSE}
+write.csv(individual_ranking,
+          "output/real/gblup/real_gblup_individual_ranking.csv",
+          row.names = FALSE)
+saveRDS(individual_ranking,
+        "output/real/gblup/real_gblup_individual_ranking.rds")
+write.csv(ranking_summary,
+          "output/real/gblup/real_gblup_ranking_summary.csv",
+          row.names = FALSE)
+```
+
+The ranking table scrolls horizontally on narrower screens without shrinking
+the text or truncating metric names. It complements split-level Spearman
+correlation by evaluating the ordering obtained from the five out-of-fold
+predictions available for each individual. The top-20% overlap additionally measures how many of the 39
 individuals selected from observed BLUPs are recovered by the out-of-fold
 predicted ranking.
 
 ## 11. Predictive distributions across outer splits
 
-```{r performance-figures, eval=TRUE}
+The following figures show the distribution of the available held-out metrics
+across outer splits, separately for Cer, BM, and LP. Each point corresponds to
+one outer split; boxplots summarize the same split-level measurements. A final
+figure compares the individual BLUP with the mean of that individual's five
+out-of-fold predictions.
+
+```{r performance-figures}
+# Generate figure objects from persisted predictions and split metrics.
 plot_results <- results
 
-plot_results$Structure <- factor(
-  plot_results$Structure,
-  levels = c(
-    "A",
-    "AD",
-    "ADE"
-  )
-)
+plot_results$Structure <- factor(plot_results$Structure, levels = c("A", "AD", "ADE"))
 
-plot_results$Trait <- factor(
-  plot_results$Trait,
-  levels = traits
-)
+plot_results$Trait <- factor(plot_results$Trait, levels = traits)
 
 correlation_plot <- ggplot(
-  plot_results[
-    is.finite(
-      plot_results$BLUP_Correlation
-    ),
-    ,
-    drop = FALSE
-  ],
+  plot_results[is.finite(plot_results$BLUP_Correlation), , drop = FALSE],
   aes(
     x = Structure,
     y = BLUP_Correlation
@@ -2144,27 +922,10 @@ correlation_plot <- ggplot(
     legend.position = "none"
   )
 
-ggsave(
-  filename = file.path(
-    FIGURE_DIR,
-    "real_gblup_correlation_by_model_trait.tiff"
-  ),
-  plot = correlation_plot,
-  width = 9,
-  height = 5.5,
-  units = "in",
-  dpi = 300,
-  compression = "lzw"
-)
+
 
 spearman_plot <- ggplot(
-  plot_results[
-    is.finite(
-      plot_results$BLUP_Spearman
-    ),
-    ,
-    drop = FALSE
-  ],
+  plot_results[is.finite(plot_results$BLUP_Spearman), , drop = FALSE],
   aes(
     x = Structure,
     y = BLUP_Spearman
@@ -2193,18 +954,6 @@ spearman_plot <- ggplot(
     legend.position = "none"
   )
 
-ggsave(
-  filename = file.path(
-    FIGURE_DIR,
-    "real_gblup_spearman_by_model_trait.tiff"
-  ),
-  plot = spearman_plot,
-  width = 9,
-  height = 5.5,
-  units = "in",
-  dpi = 300,
-  compression = "lzw"
-)
 
 rmse_plot <- ggplot(
   plot_results,
@@ -2236,18 +985,6 @@ rmse_plot <- ggplot(
     legend.position = "none"
   )
 
-ggsave(
-  filename = file.path(
-    FIGURE_DIR,
-    "real_gblup_rmse_by_model_trait.tiff"
-  ),
-  plot = rmse_plot,
-  width = 9,
-  height = 5.5,
-  units = "in",
-  dpi = 300,
-  compression = "lzw"
-)
 observed_predicted_plot <- ggplot(
   individual_ranking,
   aes(
@@ -2277,12 +1014,67 @@ observed_predicted_plot <- ggplot(
   theme(
     legend.position = "none"
   )
+```
 
+```{r show-correlation-figure, fig.width=9, fig.height=5.5, fig.cap="Pearson correlation between observed BLUPs and held-out GBLUP predictions across outer splits, by trait and genomic structure.", fig.alt="Three faceted boxplots with individual split points showing held-out Pearson correlations for A, AD, and ADE, separately for Cer, BM, and LP."}
+print(correlation_plot)
+```
+
+```{r save-correlation-figure, eval=FALSE}
+dir.create("output/real/gblup/figures", recursive = TRUE, showWarnings = FALSE)
 ggsave(
-  filename = file.path(
-    FIGURE_DIR,
-    "real_gblup_observed_vs_predicted_by_model_trait.tiff"
-  ),
+  filename = "output/real/gblup/figures/real_gblup_correlation_by_model_trait.tiff",
+  plot = correlation_plot,
+  width = 9,
+  height = 5.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
+)
+```
+
+```{r show-spearman-figure, fig.width=9, fig.height=5.5, fig.cap="Spearman rank correlation between observed BLUPs and held-out GBLUP predictions across outer splits, by trait and genomic structure.", fig.alt="Three faceted boxplots with individual split points showing held-out Spearman correlations for A, AD, and ADE, separately for Cer, BM, and LP."}
+print(spearman_plot)
+```
+
+```{r save-spearman-figure, eval=FALSE}
+dir.create("output/real/gblup/figures", recursive = TRUE, showWarnings = FALSE)
+ggsave(
+  filename = "output/real/gblup/figures/real_gblup_spearman_by_model_trait.tiff",
+  plot = spearman_plot,
+  width = 9,
+  height = 5.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
+)
+```
+
+```{r show-rmse-figure, fig.width=9, fig.height=5.5, fig.cap="Root mean squared error of held-out GBLUP predictions across outer splits, by trait and genomic structure.", fig.alt="Three faceted boxplots with individual split points showing held-out RMSE for A, AD, and ADE, separately for Cer, BM, and LP."}
+print(rmse_plot)
+```
+
+```{r save-rmse-figure, eval=FALSE}
+dir.create("output/real/gblup/figures", recursive = TRUE, showWarnings = FALSE)
+ggsave(
+  filename = "output/real/gblup/figures/real_gblup_rmse_by_model_trait.tiff",
+  plot = rmse_plot,
+  width = 9,
+  height = 5.5,
+  units = "in",
+  dpi = 300,
+  compression = "lzw"
+)
+```
+
+```{r show-observed-predicted-figure, fig.width=9, fig.height=8, fig.cap="Observed individual BLUPs versus mean out-of-fold predicted BLUPs for all 195 individuals, by trait and GBLUP structure. The dashed line indicates equality.", fig.alt="Nine scatterplot panels arranged by Cer, BM, and LP and by A, AD, and ADE, comparing observed BLUPs with mean out-of-fold predicted BLUPs and showing a dashed identity line."}
+print(observed_predicted_plot)
+```
+
+```{r save-observed-predicted-figure, eval=FALSE}
+dir.create("output/real/gblup/figures", recursive = TRUE, showWarnings = FALSE)
+ggsave(
+  filename = "output/real/gblup/figures/real_gblup_observed_vs_predicted_by_model_trait.tiff",
   plot = observed_predicted_plot,
   width = 9,
   height = 8,
@@ -2290,33 +1082,23 @@ ggsave(
   dpi = 300,
   compression = "lzw"
 )
-
 ```
 
-```{r show-correlation-figure}
-print(correlation_plot)
-```
+The trait-specific panels allow comparison of the three structures within a
+trait without treating different trait scales as directly comparable. Correlation
+panels include only splits with defined correlations; the RMSE panel retains
+splits with constant predictions.
 
-```{r show-spearman-figure}
-print(spearman_plot)
-```
+## 12. Prediction results and saved outputs
 
-```{r show-rmse-figure}
-print(rmse_plot)
-```
+The persisted result table contains one row per trait, outer split, and GBLUP
+structure (225 rows). The prediction table contains 39 held-out individuals per
+task (8,775 rows), and the individual ranking table contains one record per
+trait, structure, and individual (1,755 rows). The table below lists the files saved at their respective analytical steps
+and identifies those used in the subsequent ANN comparison.
 
-```{r show-observed-predicted-figure}
-print(observed_predicted_plot)
-```
-
-## 12. Prediction results
-
-The saved result table contains one row per trait, outer split, and GBLUP
-structure. The prediction table contains one row per held-out individual and
-task.
-
-```{r output-contract}
-output_contract <- data.frame(
+```{r output-inventory}
+output_inventory <- data.frame(
   Object = c(
     "Results",
     "Predictions",
@@ -2328,144 +1110,39 @@ output_contract <- data.frame(
     "Run metadata"
   ),
   Expected_rows = c(
-    225L,
-    8775L,
-    1755L,
-    3L,
-    9L,
-    9L,
-    9L,
+    nrow(results),
+    nrow(predictions),
+    nrow(individual_ranking),
+    nrow(kernel_summary),
+    nrow(numerical_summary),
+    nrow(performance_summary),
+    nrow(ranking_summary),
     NA_integer_
   ),
   Path = c(
-    RESULTS_RDS,
-    PREDICTIONS_RDS,
-    RANKING_RDS,
-    KERNEL_SUMMARY_CSV,
-    NUMERICAL_SUMMARY_CSV,
-    PERFORMANCE_SUMMARY_CSV,
-    RANKING_SUMMARY_CSV,
-    RUN_METADATA_RDS
+    "output/real/gblup/real_gblup_results.rds",
+    "output/real/gblup/real_gblup_predictions.rds",
+    "output/real/gblup/real_gblup_individual_ranking.rds",
+    "output/real/gblup/real_gblup_kernel_summary.csv",
+    "output/real/gblup/real_gblup_numerical_summary.csv",
+    "output/real/gblup/real_gblup_performance_summary.csv",
+    "output/real/gblup/real_gblup_ranking_summary.csv",
+    "output/real/gblup/real_gblup_run_metadata.rds"
   ),
   stringsAsFactors = FALSE
 )
 
-output_contract |>
-  knitr::kable(
-    format = "html",
-    caption = "Outputs passed to the downstream real-data comparison",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
-```
-
-```{r final-integrity-check}
-stopifnot(
-  nrow(
-    results
-  ) == 225L,
-  nrow(
-    predictions
-  ) == 8775L,
-  all(
-    table(
-      results$Structure
-    ) == 75L
-  ),
-  all(
-    table(
-      results$Trait
-    ) == 75L
-  ),
-  all(
-    table(
-      predictions$TaskID
-    ) == 39L
-  ),
-  length(
-    unique(
-      predictions$ID
-    )
-  ) == 195L,
-  nrow(
-    individual_ranking
-  ) == 1755L,
-  nrow(
-    ranking_summary
-  ) == 9L,
-  all(
-    individual_ranking$N_OOF ==
-      5L
-  ),
-  sum(
-    individual_ranking$Observed_Top20
-  ) == 351L,
-  sum(
-    individual_ranking$Predicted_Top20
-  ) == 351L,
-  all(
-    ranking_summary$Top20_N ==
-      39L
-  ),
-  all(
-    ranking_summary$Top20_Overlap_N >=
-      0L
-  ),
-  all(
-    ranking_summary$Top20_Overlap_N <=
-      39L
-  ),
-  all(
-    ranking_summary$Top20_Overlap_Rate >=
-      0
-  ),
-  all(
-    ranking_summary$Top20_Overlap_Rate <=
-      1
-  )
+knitr::kable(
+  output_inventory,
+  format = "html",
+  caption = "Outputs passed to the downstream real-data comparison",
+  row.names = FALSE,
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
-
-for (
-  trait in
-    traits
-) {
-
-  for (
-    structure in
-      c(
-        "A",
-        "AD",
-        "ADE"
-      )
-  ) {
-
-    x <- predictions[
-      predictions$Trait ==
-        trait &
-        predictions$Structure ==
-        structure,
-      ,
-      drop = FALSE
-    ]
-
-    frequency <- table(
-      x$ID
-    )
-
-    stopifnot(
-      length(
-        frequency
-      ) == 195L,
-      min(
-        frequency
-      ) == 5L,
-      max(
-        frequency
-      ) == 5L
-    )
-  }
-}
 ```
 
-The three fixed GBLUP structures are now ready for comparison with the
-regularized ANN models under the same outer cross-validation procedure.
+The R04A saved results preserve the shared outer partitions, split-level
+predictive metrics, individual out-of-fold rankings, and diagnostic summaries.
+These objects provide the GBLUP inputs for the subsequent comparison with the
+regularized ANN models. The interpretation is restricted to prediction of the
+precomputed individual BLUPs under the established validation design.
