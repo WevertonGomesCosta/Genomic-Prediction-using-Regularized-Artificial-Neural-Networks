@@ -16,13 +16,15 @@ editor_options:
 ---
 
 <style>
-table {
+table.table {
   width: 100% !important;
+  max-width: none;
+  font-size: 0.92em;
 }
-table th,
-table td {
+table.table th,
+table.table td {
   white-space: normal !important;
-  vertical-align: middle !important;
+  vertical-align: top;
 }
 </style>
 
@@ -38,7 +40,8 @@ The module has four goals:
 - describe the genomic and phenotypic inputs used for prediction;
 - align the 195 genomic profiles with their corresponding individual BLUPs;
 - apply the same marker quality-control criteria to every prediction method;
-- save one common object for validation, GBLUP-ADE, ANN, and model comparison.
+- save one common object for validation, GBLUP-A, GBLUP-AD, GBLUP-ADE,
+  regularized ANN, and model comparison.
 
 No genomic prediction model is fitted here. All downstream methods receive the
 same individuals, phenotypic targets, and retained marker panel.
@@ -76,6 +79,41 @@ library(ggplot2)
 library(ggthemes)
 ```
 
+```{r table-formatting, include=FALSE}
+# Match R01 and the reference tutorial: scroll wider tables without altering data.
+format_table <- function(x, caption = NULL, digits = getOption("digits"),
+                         col.names = NA) {
+  min_width <- if (ncol(x) >= 8L) {
+    "min-width:1100px;"
+  } else if (ncol(x) >= 6L) {
+    "min-width:800px;"
+  } else {
+    ""
+  }
+
+  table <- knitr::kable(
+    x,
+    format = "html",
+    caption = caption,
+    digits = digits,
+    col.names = col.names,
+    row.names = FALSE,
+    table.attr = paste0(
+      'class="table table-striped table-hover" ',
+      'style="width:100%; margin-bottom:0; ', min_width, '"'
+    )
+  )
+
+  knitr::asis_output(
+    paste0(
+      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
+      table,
+      '</div>'
+    )
+  )
+}
+```
+
 The marker-quality criteria are fixed before preprocessing:
 
 ```{r quality-control-settings}
@@ -86,9 +124,10 @@ MAF_MIN <- 0.05
 ## 3. Genomic and phenotypic inputs
 
 The genomic input contains individuals in rows and SNPs in columns. The
-phenotypic input contains the individual BLUPs obtained from the phenotypic
-mixed-model analysis for cercosporiosis (`Cer`), leaf-miner incidence (`BM`),
-and the production-related trait (`LP`).
+phenotypic input contains the individual BLUPs estimated first by the
+phenotypic mixed model for cercosporiosis (`Cer`), leaf-miner incidence (`BM`),
+and the production-related trait (`LP`). These BLUPs are aligned with
+individual genotype identifiers before cross-validation partitions are generated.
 
 ```{r read-inputs}
 geno_raw <- readRDS(
@@ -122,11 +161,9 @@ input_summary <- data.frame(
 )
 
 input_summary |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "Real-data inputs used in the genomic-prediction workflow",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+    col.names = c("Input", "Individuals", "Variables", "Description")
   )
 ```
 
@@ -180,11 +217,9 @@ alignment_summary <- data.frame(
 )
 
 alignment_summary |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "Individual alignment between phenotype and genotype data",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+    col.names = c("Check", "Value")
   )
 
 stopifnot(
@@ -246,12 +281,15 @@ family_table <- data.frame(
   stringsAsFactors = FALSE
 )
 
-family_table |>
-  knitr::kable(
-    format = "html",
+# Display progenies in numeric order; preserve the exported family_table object.
+family_table[
+  order(as.integer(sub("^PROG ", "", family_table$Progeny))),
+  ,
+  drop = FALSE
+] |>
+  format_table(
     caption = "Number of genotyped individuals per progeny",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+    col.names = c("Progeny", "Individuals")
   )
 
 stopifnot(
@@ -301,12 +339,12 @@ for (trait in traits) {
 }
 
 trait_summary |>
-  knitr::kable(
-    format = "html",
+  format_table(
     digits = 4,
     caption = "Summary of individual BLUPs used as prediction targets",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+    col.names = c(
+      "Trait", "N", "Missing", "Mean", "SD", "Minimum", "Median", "Maximum"
+    )
   )
 
 stopifnot(
@@ -351,11 +389,9 @@ genotype_summary <- data.frame(
 )
 
 genotype_summary |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "Structure of the Capture-Seq genotype matrix",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+    col.names = c("Statistic", "Value")
   )
 
 stopifnot(
@@ -453,11 +489,9 @@ qc_summary <- data.frame(
 )
 
 qc_summary |>
-  knitr::kable(
-    format = "html",
+  format_table(
     caption = "Marker quality-control summary",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+    col.names = c("Criterion", "Markers")
   )
 ```
 
@@ -469,7 +503,7 @@ from the `r format(ncol(G), big.mark = ",")` raw Capture-Seq markers.
 The MAF distribution summarizes allele-frequency balance across the raw marker
 panel. The vertical line indicates the minimum MAF retained for prediction.
 
-```{r maf-distribution, fig.cap="Minor allele frequency distribution across the raw Capture-Seq SNP panel. The dashed line indicates the MAF threshold used for marker retention."}
+```{r maf-distribution, fig.width=9, fig.height=5, fig.alt="Density of minor allele frequencies among raw Capture-Seq SNPs, with a dashed vertical line marking the 0.05 minimum MAF threshold.", fig.cap="Minor allele frequency distribution across the raw Capture-Seq SNP panel. The dashed line indicates the MAF threshold used for marker retention."}
 maf_plot_data <- data.frame(
   MAF = maf,
   stringsAsFactors = FALSE
@@ -560,13 +594,20 @@ marker_contract <- data.frame(
   stringsAsFactors = FALSE
 )
 
-marker_contract |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
+# Display counts as integers and frequencies as decimals; keep numeric source intact.
+marker_contract_display <- marker_contract
+marker_contract_display$Value <- c(
+  format(
+    marker_contract$Value[1:2],
+    big.mark = ",", trim = TRUE, scientific = FALSE
+  ),
+  sprintf("%.4f", marker_contract$Value[-(1:2)])
+)
+
+marker_contract_display |>
+  format_table(
     caption = "Common genomic marker panel after quality control",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+    col.names = c("Property", "Value")
   )
 
 stopifnot(

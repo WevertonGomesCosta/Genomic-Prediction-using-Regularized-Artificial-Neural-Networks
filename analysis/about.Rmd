@@ -67,11 +67,7 @@ For real data, the genomic-prediction response consists of estimated individual 
 
 These BLUPs are estimated from the available field observations before the genomic cross-validation partitions are defined. The separation of training and assessment individuals applies to genomic prediction models, not to estimation of the BLUP targets.
 
-Held-out genomic predictions are not final breeding values from a full-data refit.
-
-Associations among predictions from different traits should not be interpreted automatically as multivariate genetic correlations unless they are estimated under an explicit multivariate genetic model.
-
-No model class is assumed to be universally superior. Conclusions are restricted to the datasets, model specifications, search spaces, and cross-validation procedures used in the study.
+Each method produces out-of-fold genomic predictions, which are evaluated using matched outer-assessment individuals. Predictions for the three traits are analyzed separately, and the seven genomic models are compared using the same predefined evaluation metrics.
 
 
 
@@ -123,11 +119,7 @@ Nos dados reais, a resposta da predição genômica consiste em BLUPs individuai
 
 Esses BLUPs são estimados a partir das observações de campo disponíveis antes da definição das partições de validação cruzada genômica. A separação entre indivíduos de treinamento e avaliação aplica-se aos modelos de predição genômica, não à estimação dos BLUPs de referência.
 
-As predições genômicas obtidas fora da amostra não são valores genéticos finais provenientes de um reajuste com todos os dados.
-
-Associações entre predições de características diferentes não devem ser interpretadas automaticamente como correlações genéticas multivariadas, a menos que sejam estimadas por um modelo genético multivariado explícito.
-
-Nenhuma classe de modelo é assumida como universalmente superior. As conclusões são restritas aos conjuntos de dados, especificações dos modelos, espaços de busca e procedimentos de validação cruzada utilizados no estudo.
+Cada método produz predições genômicas fora da amostra, avaliadas nos mesmos indivíduos das partições externas. As três características são analisadas separadamente, e os sete modelos genômicos são comparados pelas mesmas métricas predefinidas.
 
 
 

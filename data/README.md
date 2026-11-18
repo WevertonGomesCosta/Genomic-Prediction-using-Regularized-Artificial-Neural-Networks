@@ -35,17 +35,15 @@ derived analytical objects and are stored under `output/real/phenotype/`.
 
 ### Genomic marker data
 
-`data/dados_reais/geno_real.rds` is the canonical genotype object for the
-real-data genomic workflow. This file is excluded from Git versioning and is
-not distributed with the repository. Reproducing the real-data genomic analyses
-requires obtaining it separately, subject to applicable access and use conditions.
+`data/dados_reais/geno_real.rds` is the canonical local genotype input for the
+real-data genomic workflow. After integrating SNP genotypes with individual
+BLUPs, `analysis/real_data_audit.Rmd` saves the prepared analytical object at
+`output/real/audit/preprocessed_real_common.rds`. The versioned prepared object
+contains the retained genotype matrix and aligned prediction targets.
 
-Genotypes are integrated in `analysis/real_data_audit.Rmd`,
-after the phenotypic mixed-model stage is complete.
-
-That module aligns the genotyped individuals with the phenotypic BLUPs,
-performs the defined marker quality control, and creates the common real-data
-object used by cross-validation, GBLUP-A, GBLUP-AD, GBLUP-ADE, ANN, and model comparison.
+The module aligns the individual identifiers, applies common marker quality
+control, and prepares the inputs for cross-validation, GBLUP-A, GBLUP-AD,
+GBLUP-ADE, ANN, and comparison of the seven methods.
 
 ## Data and analysis directories
 
