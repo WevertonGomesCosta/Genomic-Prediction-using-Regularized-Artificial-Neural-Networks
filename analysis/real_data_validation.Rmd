@@ -50,6 +50,14 @@ Throughout this module, **analysis set** denotes individuals available for model
 development at the current validation level, whereas **assessment set** denotes
 individuals held out for evaluation at that level.
 
+The functional workflow is:
+
+**receive aligned individuals and genomic inputs → fix the validation design
+→ generate repeated outer assessment folds → verify outer-fold coverage
+→ create inner folds within each outer analysis set → verify that held-out
+outer individuals never enter inner tuning → document the partition scope
+→ export the shared validation contract for GBLUP and ANN.**
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -413,7 +421,10 @@ stopifnot(
 ```
 
 Across all outer partitions, every individual is assessed once in each
-repetition and five times in total.
+repetition and five times in total. Thus, within each repetition, the five
+assessment folds are disjoint and together cover the full population.
+The repeated assessments reuse individuals across repetitions; the 25 outer
+splits are not 25 independent external populations.
 
 ## 5. Nested inner cross-validation
 
@@ -658,7 +669,10 @@ stopifnot(
 
 The inner assessment sets are used only for model selection within the
 corresponding outer analysis sample. The outer assessment set remains untouched
-until final prediction for that split.
+until final prediction for that split. In particular, the checks above concern
+separation of individual IDs during partitioning and model selection; they do
+not imply that the BLUP targets were estimated without information from the
+held-out individuals, as clarified in Section 3.
 
 ## 6. Information used to create partitions
 
@@ -696,7 +710,11 @@ partition_information |>
 ```
 
 The same stored partitions are therefore valid for all three prediction traits
-and all prediction methods.
+and all prediction methods. Fold assignment is random at the **individual**
+level: entire progenies, years, and environments are not withheld as groups.
+Consequently, this design estimates prediction performance within the
+represented population, rather than leave-progeny-out or new-environment
+generalization.
 
 ## 7. Cross-validation summary
 
@@ -735,6 +753,11 @@ design_summary |>
     col.names = c("Design item", "Value")
   )
 ```
+
+The design contains **5 × 5 = 25 outer splits**, each with a separate
+assessment set, and **25 × 4 = 100 inner splits** used for model selection.
+These are nested resampling partitions of the same 195 individuals, not
+separate biological populations.
 
 ## 8. Common validation object
 
@@ -789,11 +812,25 @@ write.csv(
 )
 ```
 
-## 9. Validation input for genomic prediction
+## 9. Synthesis and transition to genomic prediction
+
+This module establishes **which individuals are used for model fitting,
+selection, and held-out assessment** in each repeated cross-validation split.
+No genomic-prediction model is fitted here. The same partitions are delivered
+to every downstream method, preserving a paired comparison across models.
+
+The persisted `real_cv_design.rds` contains the individual IDs, outer and inner
+assignment tables, explicit split vectors, fixed validation settings, and
+coverage and overlap checks. The companion files
+`real_outer_assignments.csv`, `real_inner_assignments.csv`, and
+`real_validation_summary.csv` allow independent inspection of the design.
 
 The primary model comparison uses the same 25 outer assessment sets for
 GBLUP-A, GBLUP-AD, GBLUP-ADE, and every ANN configuration. ANN model
-selection is restricted to the 100 inner splits nested within the corresponding
-outer analysis sets.
+selection is restricted to the four inner folds of each outer analysis set.
+No phenotypic or genomic values determine the partition membership.
 
-No phenotypic or genomic values are used to create the validation partitions.
+The next modules fit [GBLUP-A / AD / ADE](real_data_gblup.html) and
+[regularized ANN](real_data_ann.html) with this fixed design. Their predictive
+metrics describe performance against the precomputed individual BLUPs within
+the represented population, subject to the scope clarified in Section 3.
