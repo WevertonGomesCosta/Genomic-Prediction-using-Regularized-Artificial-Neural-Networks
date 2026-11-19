@@ -91,8 +91,8 @@ library(ggthemes)
 
 The six inputs are read from the GBLUP and ANN analyses. The prediction
 records retain the same outer partition identifiers (`Repetition`, `Fold`,
-and `SplitID`) and individual identifiers (`ID`), permitting matched
-comparisons without refitting any model.
+and `SplitID`) and individual identifiers (`ID`). These common identifiers permit
+matched comparisons within each external assessment partition.
 
 ```{r read-model-predictions}
 GBLUP_RESULTS_RDS <- "output/real/gblup/real_gblup_results.rds"
@@ -1023,7 +1023,8 @@ predictive_winners |>
     caption = "Best predictive metric by trait; correlations use common finite outer splits across all seven models",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+  ) |>
+  kableExtra::scroll_box(width = "100%")
 ```
 
 ```{r save-predictive-winners, eval=FALSE}
@@ -1105,7 +1106,9 @@ p_pearson <- ggplot(
   )
 
 print(p_pearson)
+```
 
+```{r save-pearson-comparison-tiff, eval=FALSE}
 ggsave(
   file.path(
     FIGURE_DIR,
@@ -1205,7 +1208,9 @@ p_spearman <- ggplot(
   )
 
 print(p_spearman)
+```
 
+```{r save-spearman-comparison-tiff, eval=FALSE}
 ggsave(
   file.path(
     FIGURE_DIR,
@@ -1272,7 +1277,9 @@ p_rmse <- ggplot(
   )
 
 print(p_rmse)
+```
 
+```{r save-rmse-comparison-tiff, eval=FALSE}
 ggsave(
   file.path(
     FIGURE_DIR,
@@ -1339,7 +1346,9 @@ p_mae <- ggplot(
   )
 
 print(p_mae)
+```
 
+```{r save-mae-comparison-tiff, eval=FALSE}
 ggsave(
   file.path(
     FIGURE_DIR,
@@ -1532,7 +1541,8 @@ paired_summary |>
     caption = "Matched ANN-versus-GBLUP mean performance advantage; positive values favor ANN",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+  ) |>
+  kableExtra::scroll_box(width = "100%")
 ```
 
 ```{r save-matched-contrasts, eval=FALSE}
@@ -1593,9 +1603,10 @@ stopifnot(
 )
 ```
 
-For each trait and model, the five predictions available for an
-individual are averaged to obtain its GEBV before the global ranking is
-calculated.
+The objects `gblup_ranking` and `ann_ranking` contain the GEBVs calculated
+from five held-out predictions per individual, trait, and model in R04A and
+R04B. The object `all_ranking` combines those individual records without
+recalculating their means.
 
 ### 6.2 Ranking summary
 
@@ -1718,7 +1729,8 @@ ranking_display |>
     caption = "Global BLUP-GEBV ranking and top-20% selection",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+  ) |>
+  kableExtra::scroll_box(width = "100%")
 ```
 
 ```{r save-ranking-summary, eval=FALSE}
@@ -1826,7 +1838,8 @@ ranking_winners |>
     caption = "Best global ranking and top-20% selection metric for each trait",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+  ) |>
+  kableExtra::scroll_box(width = "100%")
 ```
 
 ```{r save-ranking-winners, eval=FALSE}
@@ -1923,7 +1936,9 @@ p_ranking_spearman <- ggplot(
   )
 
 print(p_ranking_spearman)
+```
 
+```{r save-ranking-spearman-figure-tiff, eval=FALSE}
 ggsave(
   file.path(
     FIGURE_DIR,
@@ -1993,7 +2008,9 @@ p_top20 <- ggplot(
   )
 
 print(p_top20)
+```
 
+```{r save-top20-figure-tiff, eval=FALSE}
 ggsave(
   file.path(
     FIGURE_DIR,
@@ -2327,7 +2344,8 @@ kappa_summary |>
     caption = "Linearly weighted Cohen's kappa for each pair of genomic methods based on GEBV-ranking quintiles",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+  ) |>
+  kableExtra::scroll_box(width = "100%")
 ```
 
 ```{r save-quintile-kappa-summary, eval=FALSE}
@@ -2496,7 +2514,9 @@ p_kappa <- ggplot(
   )
 
 print(p_kappa)
+```
 
+```{r save-pairwise-quintile-weighted-kappa-heatmap-tiff, eval=FALSE}
 ggsave(
   file.path(
     FIGURE_DIR,
@@ -2518,8 +2538,9 @@ The following figures compare the BLUP with the GEBV for each individual and
 model. The GEBV is the mean of the five predictions available for that
 individual and is the same value used in the global ranking.
 
-```{r blup-vs-gebv, fig.width=12, fig.height=8.5, out.width="100%"}
-for (trait in traits) {
+```{r create-trait-blup-gebv-plot}
+# Use the same axis limits for BLUP and GEBV within each trait.
+make_blup_gebv_plot <- function(trait) {
 
   trait_data <- all_ranking[
     all_ranking$Trait ==
@@ -2596,27 +2617,61 @@ for (trait in traits) {
     theme_gdocs() +
     theme(legend.position = "none")
 
-  print(p_blup_gebv)
-
-  ggsave(
-    file.path(
-      FIGURE_DIR,
-      paste0(
-        "real_comparison_blup_vs_gebv_",
-        trait,
-        ".tiff"
-      )
-    ),
-    plot = p_blup_gebv,
-    device = "tiff",
-    width = 12,
-    height = 8.5,
-    units = "in",
-    dpi = 300,
-    compression = "lzw"
-  )
+  p_blup_gebv
 }
 ```
+
+### 7.1 Cer
+
+For Cer, the dashed diagonal indicates identical BLUP and GEBV values. Each panel represents one genomic-prediction model, with the same axis scale for both quantities.
+
+```{r blup-vs-gebv-cer, fig.width=12, fig.height=8.5, out.width="100%", fig.cap="BLUP versus GEBV for Cer across the seven genomic-prediction models. The dashed diagonal marks equality between observed BLUP and predicted GEBV.", fig.alt="Scatterplots of observed BLUP against predicted GEBV for Cer, with seven model panels and an equality diagonal."}
+p_blup_gebv_Cer <- make_blup_gebv_plot("Cer")
+print(p_blup_gebv_Cer)
+```
+
+```{r save-blup-gebv-cer-tiff, eval=FALSE}
+ggsave(
+  file.path(FIGURE_DIR, "real_comparison_blup_vs_gebv_Cer.tiff"),
+  plot = p_blup_gebv_Cer, device = "tiff", width = 12, height = 8.5,
+  units = "in", dpi = 300, compression = "lzw"
+)
+```
+
+### 7.2 BM
+
+For BM, the dashed diagonal indicates identical BLUP and GEBV values. Each panel represents one genomic-prediction model, with the same axis scale for both quantities.
+
+```{r blup-vs-gebv-bm, fig.width=12, fig.height=8.5, out.width="100%", fig.cap="BLUP versus GEBV for BM across the seven genomic-prediction models. The dashed diagonal marks equality between observed BLUP and predicted GEBV.", fig.alt="Scatterplots of observed BLUP against predicted GEBV for BM, with seven model panels and an equality diagonal."}
+p_blup_gebv_BM <- make_blup_gebv_plot("BM")
+print(p_blup_gebv_BM)
+```
+
+```{r save-blup-gebv-bm-tiff, eval=FALSE}
+ggsave(
+  file.path(FIGURE_DIR, "real_comparison_blup_vs_gebv_BM.tiff"),
+  plot = p_blup_gebv_BM, device = "tiff", width = 12, height = 8.5,
+  units = "in", dpi = 300, compression = "lzw"
+)
+```
+
+### 7.3 LP
+
+For LP, the dashed diagonal indicates identical BLUP and GEBV values. Each panel represents one genomic-prediction model, with the same axis scale for both quantities.
+
+```{r blup-vs-gebv-lp, fig.width=12, fig.height=8.5, out.width="100%", fig.cap="BLUP versus GEBV for LP across the seven genomic-prediction models. The dashed diagonal marks equality between observed BLUP and predicted GEBV.", fig.alt="Scatterplots of observed BLUP against predicted GEBV for LP, with seven model panels and an equality diagonal."}
+p_blup_gebv_LP <- make_blup_gebv_plot("LP")
+print(p_blup_gebv_LP)
+```
+
+```{r save-blup-gebv-lp-tiff, eval=FALSE}
+ggsave(
+  file.path(FIGURE_DIR, "real_comparison_blup_vs_gebv_LP.tiff"),
+  plot = p_blup_gebv_LP, device = "tiff", width = 12, height = 8.5,
+  units = "in", dpi = 300, compression = "lzw"
+)
+```
+
 
 ## 8. Integrated interpretation
 
