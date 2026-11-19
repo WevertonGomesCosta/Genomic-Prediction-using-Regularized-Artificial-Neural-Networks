@@ -156,7 +156,7 @@ p_phenotype <- ggplot(
 print(p_phenotype)
 ```
 
-```{r save-phenotype-tiff, include=FALSE}
+```{r save-phenotype-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/phenotype_distribution.tiff",
   plot = p_phenotype,
@@ -229,7 +229,7 @@ p_true_g <- ggplot(
 print(p_true_g)
 ```
 
-```{r save-true-genetic-value-tiff, include=FALSE}
+```{r save-true-genetic-value-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/true_genetic_value_distribution.tiff",
   plot = p_true_g,
@@ -492,7 +492,7 @@ p_genetic_map <- ggplot() +
 print(p_genetic_map)
 ```
 
-```{r save-genetic-map-tiff, include=FALSE}
+```{r save-genetic-map-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/genetic_map.tiff",
   plot = p_genetic_map,
@@ -594,7 +594,11 @@ qtl_lists <- vector(
   "list",
   length(scenario_start)
 )
+```
 
+The six scenario headers have been located and the GENES control table initialized. The next block reads the parameter values and QTL indices for each scenario.
+
+```{r read-scenario-settings}
 # Recover the settings and QTL indices scenario by scenario.
 for (i in seq_along(scenario_start)) {
 
@@ -638,7 +642,11 @@ for (i in seq_along(scenario_start)) {
     trimws(sub("^[^,]*,", "", control_ascii[s + 10]))
   )
 }
+```
 
+The QTL identifiers refer to global marker indices. The next block links those indices to the genetic map and displays the complete scenario settings.
+
+```{r map-simulated-qtl}
 # Match each QTL index to its linkage group and map position.
 qtl_rows <- data.frame(
   Scenario = character(),
@@ -676,7 +684,6 @@ control_table |>
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
-
 The six scenarios differ in two main characteristics that should be interpreted
 together:
 
@@ -761,7 +768,7 @@ p_qtl <- ggplot() +
 print(p_qtl)
 ```
 
-```{r save-qtl-map-tiff, include=FALSE}
+```{r save-qtl-map-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/qtl_positions_by_scenario.tiff",
   plot = p_qtl,
@@ -970,7 +977,7 @@ p_heritability <- ggplot(
 print(p_heritability)
 ```
 
-```{r save-heritability-tiff, include=FALSE}
+```{r save-heritability-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/heritability_specified_vs_realized.tiff",
   plot = p_heritability,
@@ -1054,7 +1061,7 @@ p_cv <- ggplot(
 print(p_cv)
 ```
 
-```{r save-cv-tiff, include=FALSE}
+```{r save-cv-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/cv_genes_vs_empirical.tiff",
   plot = p_cv,
@@ -1139,7 +1146,7 @@ p_segregation <- ggplot(
 print(p_segregation)
 ```
 
-```{r save-genotype-segregation-tiff, include=FALSE}
+```{r save-genotype-segregation-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/f2_genotype_proportions.tiff",
   plot = p_segregation,
@@ -1338,7 +1345,7 @@ equal visual spacing because a continuous 0.5-200 cM axis compresses the short
 distances. This changes only the figure layout: every calculation still uses the
 true numeric distance in cM.
 
-```{r linkage-disequilibrium, fig.cap="LD across the evaluated within-linkage-group distances. The dashed line is the mean r-squared from 5,000 marker pairs drawn from different linkage groups. Distances are equally spaced on the displayed x-axis for readability, but calculations use the true distances in cM."}
+```{r ld-within-linkage-groups}
 # Standardize markers once so correlations can be calculated efficiently.
 geno_scaled <- scale(geno_012)
 
@@ -1391,7 +1398,11 @@ for (d in seq_along(ld_distances)) {
   ld_summary$Mean_r2[d] <- mean(r2_all)
   ld_summary$Median_r2[d] <- median(r2_all)
 }
+```
 
+The within-linkage-group calculation uses every valid marker pair for each map distance. The next block constructs a separate reference using 5,000 pairs sampled from different linkage groups.
+
+```{r ld-between-linkage-groups}
 # Draw marker pairs from different LGs for the background LD reference.
 set.seed(SEED_GLOBAL + 101L)
 
@@ -1436,7 +1447,11 @@ interchromosomal_ld <- data.frame(
   Mean_r2 = mean(inter_r2),
   Median_r2 = median(inter_r2)
 )
+```
 
+The reference `interchromosomal_ld` is now available. The figure displays the tested distances as ordered categories for legibility, while the calculations above retain their actual genetic-map distances.
+
+```{r linkage-disequilibrium, fig.cap="LD across the evaluated within-linkage-group distances. The dashed line is the mean r-squared from 5,000 marker pairs drawn from different linkage groups. Distances are equally spaced on the displayed x-axis for readability, but calculations use the true distances in cM."}
 # Convert distances to ordered labels only for the figure.
 ld_plot_data <- ld_summary
 ld_plot_data$Distance_label <- factor(
@@ -1484,8 +1499,7 @@ p_ld <- ggplot(
 
 print(p_ld)
 ```
-
-```{r save-ld-tiff, include=FALSE}
+```{r save-ld-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m01/figures/ld_decay.tiff",
   plot = p_ld,
@@ -1623,7 +1637,7 @@ Its most important roles are:
 - **map and scenario objects:** linkage groups, QTL, scenario definitions, marker
   summaries, and LD values reused unchanged downstream.
 
-```{r save-shared-data, include=FALSE}
+```{r save-shared-data, eval=FALSE, include=FALSE}
 # Prepare the directory for the common simulation data objects.
 dir.create(
   "output/simulated/audit",
@@ -1670,7 +1684,11 @@ write.csv(
   "output/simulated/audit/simulated_ld_summary.csv",
   row.names = FALSE
 )
+```
 
+The first export block contains scenario, QTL and LD summaries; the second assembles the canonical RDS consumed by subsequent modules. Exports are disabled during site rendering to avoid rewriting versioned scientific data.
+
+```{r save-shared-rds, eval=FALSE, include=FALSE}
 # Preserve aligned responses, genotypes, maps, and scenario metadata together.
 simulated_common <- list(
   metadata = list(
@@ -1727,7 +1745,6 @@ saveRDS(
   compress = "gzip"
 )
 ```
-
 ## 13. References
 
 Cruz, C.D. (2013). GENES - a software package for analysis in experimental
