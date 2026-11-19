@@ -83,29 +83,17 @@ and `SplitID`) and individual identifiers (`ID`). These common identifiers permi
 matched comparisons within each external assessment partition.
 
 ```{r read-model-predictions}
-GBLUP_RESULTS_RDS <- "output/real/gblup/real_gblup_results.rds"
+gblup_results <- readRDS("output/real/gblup/real_gblup_results.rds")
 
-GBLUP_PREDICTIONS_RDS <- "output/real/gblup/real_gblup_predictions.rds"
+gblup_predictions <- readRDS("output/real/gblup/real_gblup_predictions.rds")
 
-GBLUP_RANKING_RDS <- "output/real/gblup/real_gblup_individual_ranking.rds"
+gblup_ranking <- readRDS("output/real/gblup/real_gblup_individual_ranking.rds")
 
-ANN_RESULTS_RDS <- "output/real/ann/final/real_ann_results.rds"
+ann_results <- readRDS("output/real/ann/final/real_ann_results.rds")
 
-ANN_PREDICTIONS_RDS <- "output/real/ann/final/real_ann_predictions.rds"
+ann_predictions <- readRDS("output/real/ann/final/real_ann_predictions.rds")
 
-ANN_RANKING_RDS <- "output/real/ann/final/real_ann_individual_ranking.rds"
-
-gblup_results <- readRDS(GBLUP_RESULTS_RDS)
-
-gblup_predictions <- readRDS(GBLUP_PREDICTIONS_RDS)
-
-gblup_ranking <- readRDS(GBLUP_RANKING_RDS)
-
-ann_results <- readRDS(ANN_RESULTS_RDS)
-
-ann_predictions <- readRDS(ANN_PREDICTIONS_RDS)
-
-ann_ranking <- readRDS(ANN_RANKING_RDS)
+ann_ranking <- readRDS("output/real/ann/final/real_ann_individual_ranking.rds")
 ```
 The GBLUP and ANN outputs use the same evaluation metrics but retain the
 original column names from their respective modules. The following mappings
