@@ -50,11 +50,7 @@ knitr::opts_chunk$set(
 
 options(stringsAsFactors = FALSE)
 
-dir.create(
-  "output/simulated/m01/figures",
-  showWarnings = FALSE,
-  recursive = TRUE
-)
+dir.create("output/simulated/m01/figures", showWarnings = FALSE, recursive = TRUE)
 ```
 
 ## 2. Software and simulation settings
@@ -134,24 +130,11 @@ colnames(phenotype) <- paste0("C", 1:6)
 phenotype_long <- stack(as.data.frame(phenotype))
 names(phenotype_long) <- c("Phenotype", "Scenario")
 
-p_phenotype <- ggplot(
-  phenotype_long,
-  aes(
-    x = Scenario,
-    y = Phenotype,
-    fill = Scenario
-  )
-) +
-  geom_boxplot(
-    width = 0.65,
-    show.legend = FALSE
-  ) +
-  scale_fill_gdocs() +
-  labs(
+p_phenotype <- ggplot(phenotype_long, aes(x = Scenario, y = Phenotype, fill = Scenario)) +
+  geom_boxplot(width = 0.65, show.legend = FALSE) + scale_fill_gdocs() + labs(
     x = "Simulation scenario",
     y = "Phenotypic value"
-  ) +
-  theme_gdocs()
+  ) + theme_gdocs()
 
 print(p_phenotype)
 ```
@@ -207,24 +190,11 @@ colnames(true_genetic_value) <- paste0("C", 1:6)
 true_g_long <- stack(as.data.frame(true_genetic_value))
 names(true_g_long) <- c("True_genetic_value", "Scenario")
 
-p_true_g <- ggplot(
-  true_g_long,
-  aes(
-    x = Scenario,
-    y = True_genetic_value,
-    fill = Scenario
-  )
-) +
-  geom_boxplot(
-    width = 0.65,
-    show.legend = FALSE
-  ) +
-  scale_fill_gdocs() +
-  labs(
+p_true_g <- ggplot(true_g_long, aes(x = Scenario, y = True_genetic_value, fill = Scenario)) +
+  geom_boxplot(width = 0.65, show.legend = FALSE) + scale_fill_gdocs() + labs(
     x = "Simulation scenario",
     y = "True genetic value"
-  ) +
-  theme_gdocs()
+  ) + theme_gdocs()
 
 print(p_true_g)
 ```
@@ -269,34 +239,15 @@ calculation.
 
 ```{r genotype-sample}
 # Read the GENES marker file and orient it as individuals x markers.
-geno_012 <- t(
-  as.matrix(
-    read.table(
-      "data/dados_simulados/genoma_mapa.txt",
-      header = FALSE
-    )
-  )
-)
+geno_012 <- t(as.matrix(read.table("data/dados_simulados/genoma_mapa.txt", header = FALSE)))
 
 # Select markers distributed from the beginning to the end of the matrix.
-marker_sample <- unique(
-  round(
-    seq(
-      1,
-      ncol(geno_012),
-      length.out = 12
-    )
-  )
-)
+marker_sample <- unique(round(seq(1, ncol(geno_012), length.out = 12)))
 
 # Show a small real sample while retaining the complete matrix for analysis.
 genotype_sample <- data.frame(
   Individual = 1:10,
-  geno_012[
-    1:10,
-    marker_sample,
-    drop = FALSE
-  ],
+  geno_012[1:10, marker_sample, drop = FALSE],
   check.names = FALSE
 )
 
@@ -335,10 +286,7 @@ explicit before the recoded matrix is saved for downstream analyses.
 ```{r genotype-coding}
 geno_m101 <- geno_012 - 1L
 
-data.frame(
-  Original = c(0, 1, 2),
-  Analysis_coding = c(-1, 0, 1)
-) |>
+data.frame(Original = c(0, 1, 2), Analysis_coding = c(-1, 0, 1)) |>
   knitr::kable(
     format = "html",
     caption = "Genotype coding used in the prediction analyses",
@@ -382,13 +330,7 @@ genetic_map <- read.table(
 
 genetic_map <- genetic_map[, 1:5]
 
-names(genetic_map) <- c(
-  "LG",
-  "Marker_within_LG",
-  "Type",
-  "Marker",
-  "Position_cM"
-)
+names(genetic_map) <- c("LG", "Marker_within_LG", "Type", "Marker", "Position_cM")
 
 # Convert the map fields used in numerical calculations.
 genetic_map$LG <- as.integer(genetic_map$LG)
@@ -396,20 +338,13 @@ genetic_map$Marker_within_LG <- as.integer(genetic_map$Marker_within_LG)
 genetic_map$Position_cM <- as.numeric(genetic_map$Position_cM)
 genetic_map$Global_marker <- seq_len(nrow(genetic_map))
 
-genetic_map$LG_label <- factor(
-  paste0("LG", genetic_map$LG),
-  levels = paste0("LG", 1:10)
-)
+genetic_map$LG_label <- factor(paste0("LG", genetic_map$LG), levels = paste0("LG", 1:10))
 
 map_summary <- data.frame(
   Linkage_group = paste0("LG", 1:10),
   Markers = as.integer(table(genetic_map$LG)),
-  Start_cM = as.numeric(
-    tapply(genetic_map$Position_cM, genetic_map$LG, min)
-  ),
-  End_cM = as.numeric(
-    tapply(genetic_map$Position_cM, genetic_map$LG, max)
-  )
+  Start_cM = as.numeric(tapply(genetic_map$Position_cM, genetic_map$LG, min)),
+  End_cM = as.numeric(tapply(genetic_map$Position_cM, genetic_map$LG, max))
 )
 
 map_summary |>
@@ -439,55 +374,30 @@ linkage group.
 # Create one chromosome-like body for each linkage group.
 chromosome_map <- data.frame(
   LG = 1:10,
-  LG_label = factor(
-    paste0("LG", 1:10),
-    levels = paste0("LG", 1:10)
-  ),
+  LG_label = factor(paste0("LG", 1:10), levels = paste0("LG", 1:10)),
   Start_cM = 0,
   End_cM = 200
 )
 
 # Show a regular subset of marker positions to keep the map legible.
-marker_ticks <- genetic_map[
-  genetic_map$Marker_within_LG %% 10 == 1,
-  c("LG", "LG_label", "Position_cM")
-]
+marker_ticks <- genetic_map[genetic_map$Marker_within_LG %% 10 == 1, c("LG", "LG_label", "Position_cM")]
 
-p_genetic_map <- ggplot() +
-  geom_segment(
+p_genetic_map <- ggplot() + geom_segment(
     data = chromosome_map,
-    aes(
-      x = LG_label,
-      xend = LG_label,
-      y = Start_cM,
-      yend = End_cM,
-      color = LG_label
-    ),
+    aes(x = LG_label, xend = LG_label, y = Start_cM, yend = End_cM, color = LG_label),
     linewidth = 12,
     lineend = "round",
     show.legend = FALSE
-  ) +
-  geom_point(
+  ) + geom_point(
     data = marker_ticks,
-    aes(
-      x = LG_label,
-      y = Position_cM
-    ),
+    aes(x = LG_label, y = Position_cM),
     shape = 95,
     size = 4.2,
     color = "white",
     alpha = 0.85
-  ) +
-  scale_color_gdocs() +
-  scale_y_reverse(
-    breaks = seq(0, 200, 25),
-    expand = expansion(mult = c(0.035, 0.035))
-  ) +
-  labs(
-    x = "Linkage group",
-    y = "Position (cM)"
-  ) +
-  theme_gdocs()
+  ) + scale_color_gdocs() +
+  scale_y_reverse(breaks = seq(0, 200, 25), expand = expansion(mult = c(0.035, 0.035))) +
+  labs(x = "Linkage group", y = "Position (cM)") + theme_gdocs()
 
 print(p_genetic_map)
 ```
@@ -565,17 +475,9 @@ control_raw <- readLines(
 )
 
 # Transliterate accented text so the fixed block positions are read consistently.
-control_ascii <- iconv(
-  control_raw,
-  from = "latin1",
-  to = "ASCII//TRANSLIT",
-  sub = ""
-)
+control_ascii <- iconv(control_raw, from = "latin1", to = "ASCII//TRANSLIT", sub = "")
 
-scenario_start <- grep(
-  "^Variavel",
-  control_ascii
-)
+scenario_start <- grep("^Variavel", control_ascii)
 
 control_table <- data.frame(
   Scenario = paste0("C", 1:6),
@@ -590,10 +492,7 @@ control_table <- data.frame(
   CV_setting = NA_real_
 )
 
-qtl_lists <- vector(
-  "list",
-  length(scenario_start)
-)
+qtl_lists <- vector("list", length(scenario_start))
 ```
 
 The six scenario headers have been located and the GENES control table initialized. The next block reads the parameter values and QTL indices for each scenario.
@@ -604,43 +503,19 @@ for (i in seq_along(scenario_start)) {
 
   s <- scenario_start[i]
 
-  control_table$Variable[i] <- as.numeric(
-    trimws(sub("^[^,]*,", "", control_ascii[s]))
-  )
-  control_table$Total_loci[i] <- as.numeric(
-    trimws(sub("^[^,]*,", "", control_ascii[s + 1]))
-  )
-  control_table$QTL_N[i] <- as.numeric(
-    trimws(sub("^[^,]*,", "", control_ascii[s + 2]))
-  )
+  control_table$Variable[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s])))
+  control_table$Total_loci[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 1])))
+  control_table$QTL_N[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 2])))
 
   # QTL values are marker indices and are therefore kept as integers.
-  qtl_lists[[i]] <- as.integer(
-    scan(
-      text = control_ascii[s + 3],
-      what = numeric(),
-      quiet = TRUE
-    )
-  )
+  qtl_lists[[i]] <- as.integer(scan(text = control_ascii[s + 3], what = numeric(), quiet = TRUE))
 
-  control_table$gmd[i] <- as.numeric(
-    trimws(sub("^[^,]*,", "", control_ascii[s + 5]))
-  )
-  control_table$Model[i] <- as.numeric(
-    trimws(sub("^[^,]*,", "", control_ascii[s + 6]))
-  )
-  control_table$H2_nominal[i] <- as.numeric(
-    trimws(sub("^[^,]*,", "", control_ascii[s + 7]))
-  )
-  control_table$Constant[i] <- as.numeric(
-    trimws(sub("^[^,]*,", "", control_ascii[s + 8]))
-  )
-  control_table$Scale[i] <- as.numeric(
-    trimws(sub("^[^,]*,", "", control_ascii[s + 9]))
-  )
-  control_table$CV_setting[i] <- as.numeric(
-    trimws(sub("^[^,]*,", "", control_ascii[s + 10]))
-  )
+  control_table$gmd[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 5])))
+  control_table$Model[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 6])))
+  control_table$H2_nominal[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 7])))
+  control_table$Constant[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 8])))
+  control_table$Scale[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 9])))
+  control_table$CV_setting[i] <- as.numeric(trimws(sub("^[^,]*,", "", control_ascii[s + 10])))
 }
 ```
 
@@ -648,12 +523,7 @@ The QTL identifiers refer to global marker indices. The next block links those i
 
 ```{r map-simulated-qtl}
 # Match each QTL index to its linkage group and map position.
-qtl_rows <- data.frame(
-  Scenario = character(),
-  QTL_index = integer(),
-  LG = integer(),
-  Position_cM = numeric()
-)
+qtl_rows <- data.frame(Scenario = character(), QTL_index = integer(), LG = integer(), Position_cM = numeric())
 
 for (i in seq_along(qtl_lists)) {
 
@@ -670,10 +540,7 @@ for (i in seq_along(qtl_lists)) {
   )
 }
 
-qtl_rows$LG_label <- factor(
-  paste0("LG", qtl_rows$LG),
-  levels = paste0("LG", 1:10)
-)
+qtl_rows$LG_label <- factor(paste0("LG", qtl_rows$LG), levels = paste0("LG", 1:10))
 
 control_table |>
   knitr::kable(
@@ -709,59 +576,32 @@ qtl_reference <- expand.grid(
   stringsAsFactors = FALSE
 )
 
-qtl_reference$LG_label <- factor(
-  qtl_reference$LG_label,
-  levels = paste0("LG", 1:10)
-)
+qtl_reference$LG_label <- factor(qtl_reference$LG_label, levels = paste0("LG", 1:10))
 
 qtl_reference$Start_cM <- 0
 qtl_reference$End_cM <- 200
 
 # Overlay mapped QTL positions on the linkage-group reference lines.
-p_qtl <- ggplot() +
-  geom_segment(
+p_qtl <- ggplot() + geom_segment(
     data = qtl_reference,
-    aes(
-      x = LG_label,
-      xend = LG_label,
-      y = Start_cM,
-      yend = End_cM,
-      color = LG_label
-    ),
+    aes(x = LG_label, xend = LG_label, y = Start_cM, yend = End_cM, color = LG_label),
     linewidth = 3.6,
     lineend = "round",
     show.legend = FALSE
-  ) +
-  geom_point(
+  ) + geom_point(
     data = qtl_rows,
-    aes(
-      x = LG_label,
-      y = Position_cM
-    ),
+    aes(x = LG_label, y = Position_cM),
     shape = 21,
     size = 1.6,
     fill = "white",
     color = "black",
     stroke = 0.25
-  ) +
-  facet_wrap(
+  ) + facet_wrap(
     ~Scenario,
     ncol = 2
-  ) +
-  scale_color_gdocs() +
-  scale_y_reverse(
-    breaks = seq(0, 200, 50)
-  ) +
-  labs(
-    x = "Linkage group",
-    y = "Position (cM)"
-  ) +
-  theme_gdocs() +
-  theme(
-    axis.text.x = element_text(
-      angle = 45,
-      hjust = 1
-    )
+  ) + scale_color_gdocs() + scale_y_reverse(breaks = seq(0, 200, 50)) +
+  labs(x = "Linkage group", y = "Position (cM)") + theme_gdocs() + theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
 # Display one panel per scenario with a common genomic position scale.
@@ -790,10 +630,7 @@ counts needed to verify it:
 - the zero counts in LG9 and LG10 make their reference role explicit.
 
 ```{r qtl-counts}
-qtl_table <- table(
-  factor(qtl_rows$Scenario, levels = paste0("C", 1:6)),
-  factor(qtl_rows$LG, levels = 1:10)
-)
+qtl_table <- table(factor(qtl_rows$Scenario, levels = paste0("C", 1:6)), factor(qtl_rows$LG, levels = 1:10))
 
 qtl_by_lg <- data.frame(
   Scenario = rownames(qtl_table),
@@ -849,15 +686,9 @@ var_g_over_var_p <- numeric(6)
 # Calculate the signal summaries separately for each simulation scenario.
 for (j in 1:6) {
 
-  cor_p_g[j] <- cor(
-    phenotype[, j],
-    true_genetic_value[, j]
-  )
+  cor_p_g[j] <- cor(phenotype[, j], true_genetic_value[, j])
 
-  cor_g_e[j] <- cor(
-    true_genetic_value[, j],
-    residual_value[, j]
-  )
+  cor_g_e[j] <- cor(true_genetic_value[, j], residual_value[, j])
 
   vg <- var(true_genetic_value[, j])
   ve <- var(residual_value[, j])
@@ -945,34 +776,18 @@ heritability_plot <- rbind(
 )
 
 # Quantify the scenario-specific difference between realized and nominal values.
-h2_difference <- scenario_summary$H2_realized -
-  scenario_summary$H2_nominal
+h2_difference <- scenario_summary$H2_realized - scenario_summary$H2_nominal
 
 # Display the two heritability measures on the same scenario axis.
 p_heritability <- ggplot(
   heritability_plot,
-  aes(
-    x = Scenario,
-    y = Heritability,
-    group = Type,
-    color = Type,
-    shape = Type
-  )
-) +
-  geom_line(
+  aes(x = Scenario, y = Heritability, group = Type, color = Type, shape = Type)
+) + geom_line(
     linewidth = 0.8
-  ) +
-  geom_point(
+  ) + geom_point(
     size = 2.5
-  ) +
-  scale_color_gdocs() +
-  labs(
-    x = "Simulation scenario",
-    y = expression(H^2),
-    color = NULL,
-    shape = NULL
-  ) +
-  theme_gdocs()
+  ) + scale_color_gdocs() +
+  labs(x = "Simulation scenario", y = expression(H^2), color = NULL, shape = NULL) + theme_gdocs()
 
 print(p_heritability)
 ```
@@ -1016,11 +831,7 @@ descriptive statistic of this particular finite population.
 ```{r cv-comparison, fig.cap="CV specified in GENES and empirical coefficient of variation calculated from the simulated phenotypes."}
 # Combine the recorded GENES CV and the empirical phenotype CV.
 cv_plot <- rbind(
-  data.frame(
-    Scenario = scenario_summary$Scenario,
-    CV = scenario_summary$CV_setting,
-    Type = "GENES setting"
-  ),
+  data.frame(Scenario = scenario_summary$Scenario, CV = scenario_summary$CV_setting, Type = "GENES setting"),
   data.frame(
     Scenario = scenario_summary$Scenario,
     CV = scenario_summary$CV_empirical_pct,
@@ -1029,34 +840,16 @@ cv_plot <- rbind(
 )
 
 # Express the empirical-minus-specified CV difference in percentage points.
-cv_difference <- scenario_summary$CV_empirical_pct -
-  scenario_summary$CV_setting
+cv_difference <- scenario_summary$CV_empirical_pct - scenario_summary$CV_setting
 
 # Compare the two measures across the six simulated scenarios.
-p_cv <- ggplot(
-  cv_plot,
-  aes(
-    x = Scenario,
-    y = CV,
-    group = Type,
-    color = Type,
-    shape = Type
-  )
-) +
-  geom_line(
-    linewidth = 0.8
-  ) +
-  geom_point(
-    size = 2.5
-  ) +
-  scale_color_gdocs() +
-  labs(
+p_cv <- ggplot(cv_plot, aes(x = Scenario, y = CV, group = Type, color = Type, shape = Type)) +
+  geom_line(linewidth = 0.8) + geom_point(size = 2.5) + scale_color_gdocs() + labs(
     x = "Simulation scenario",
     y = "Coefficient of variation (%)",
     color = NULL,
     shape = NULL
-  ) +
-  theme_gdocs()
+  ) + theme_gdocs()
 
 print(p_cv)
 ```
@@ -1102,14 +895,7 @@ theoretical segregation expected for an F2 population.
 
 ```{r genotype-segregation, fig.cap="Observed genotype proportions compared with the expected 1:2:1 segregation of an F2 population."}
 # Calculate the observed frequency of each genotype state.
-geno_frequency <- prop.table(
-  table(
-    factor(
-      as.vector(geno_012),
-      levels = 0:2
-    )
-  )
-)
+geno_frequency <- prop.table(table(factor(as.vector(geno_012), levels = 0:2)))
 
 segregation_plot <- rbind(
   data.frame(
@@ -1117,31 +903,15 @@ segregation_plot <- rbind(
     Proportion = as.numeric(geno_frequency),
     Type = "Observed"
   ),
-  data.frame(
-    Genotype = factor(0:2, levels = 0:2),
-    Proportion = c(0.25, 0.50, 0.25),
-    Type = "F2 expectation"
-  )
+  data.frame(Genotype = factor(0:2, levels = 0:2), Proportion = c(0.25, 0.50, 0.25), Type = "F2 expectation")
 )
 
-p_segregation <- ggplot(
-  segregation_plot,
-  aes(
-    x = Genotype,
-    y = Proportion,
-    fill = Type
-  )
-) +
-  geom_col(
-    position = "dodge"
-  ) +
-  scale_fill_gdocs() +
-  labs(
+p_segregation <- ggplot(segregation_plot, aes(x = Genotype, y = Proportion, fill = Type)) +
+  geom_col(position = "dodge") + scale_fill_gdocs() + labs(
     x = "Genotype coding",
     y = "Proportion",
     fill = NULL
-  ) +
-  theme_gdocs()
+  ) + theme_gdocs()
 
 print(p_segregation)
 ```
@@ -1255,12 +1025,7 @@ generated.
 
 ```{r parental-genotypes}
 # Read the parental records across the ten linkage groups.
-parents <- as.matrix(
-  read.table(
-    "data/dados_simulados/genoma_pais.txt",
-    header = FALSE
-  )
-)
+parents <- as.matrix(read.table("data/dados_simulados/genoma_pais.txt", header = FALSE))
 
 parent_id <- parents[, 1]
 parent_lg <- parents[, 2]
@@ -1270,28 +1035,13 @@ parent_genotypes <- parents[, 5:405, drop = FALSE]
 # Summarize the linkage-group coverage and fixed marker state of each parent.
 parent_summary <- data.frame(
   Parent = c(1, 2),
-  Linkage_groups = c(
-    length(unique(parent_lg[parent_id == 1])),
-    length(unique(parent_lg[parent_id == 2]))
-  ),
+  Linkage_groups = c(length(unique(parent_lg[parent_id == 1])), length(unique(parent_lg[parent_id == 2]))),
   Marker_state = c(
     unique(
-      as.vector(
-        parent_genotypes[
-          parent_id == 1,
-          ,
-          drop = FALSE
-        ]
-      )
+      as.vector(parent_genotypes[parent_id == 1,, drop = FALSE])
     )[1],
     unique(
-      as.vector(
-        parent_genotypes[
-          parent_id == 2,
-          ,
-          drop = FALSE
-        ]
-      )
+      as.vector(parent_genotypes[parent_id == 2,, drop = FALSE])
     )[1]
   )
 )
@@ -1349,17 +1099,7 @@ true numeric distance in cM.
 # Standardize markers once so correlations can be calculated efficiently.
 geno_scaled <- scale(geno_012)
 
-ld_distances <- c(
-  0.5,
-  1,
-  2.5,
-  5,
-  10,
-  25,
-  50,
-  100,
-  200
-)
+ld_distances <- c(0.5, 1, 2.5, 5, 10, 25, 50, 100, 200)
 
 ld_summary <- data.frame(
   Distance_cM = ld_distances,
@@ -1378,17 +1118,12 @@ for (d in seq_along(ld_distances)) {
 
     markers <- which(genetic_map$LG == lg)
 
-    marker_1 <- markers[
-      1:(length(markers) - marker_shift)
-    ]
+    marker_1 <- markers[1:(length(markers) - marker_shift)]
 
-    marker_2 <- markers[
-      (1 + marker_shift):length(markers)
-    ]
+    marker_2 <- markers[(1 + marker_shift):length(markers)]
 
     r <- colSums(
-      geno_scaled[, marker_1, drop = FALSE] *
-        geno_scaled[, marker_2, drop = FALSE]
+      geno_scaled[, marker_1, drop = FALSE] * geno_scaled[, marker_2, drop = FALSE]
     ) / (nrow(geno_scaled) - 1)
 
     r2_all <- c(r2_all, r^2)
@@ -1408,35 +1143,22 @@ set.seed(SEED_GLOBAL + 101L)
 
 n_inter_pairs <- 5000L
 
-inter_i <- sample(
-  seq_len(ncol(geno_012)),
-  n_inter_pairs,
-  replace = TRUE
-)
+inter_i <- sample(seq_len(ncol(geno_012)), n_inter_pairs, replace = TRUE)
 
-inter_j <- sample(
-  seq_len(ncol(geno_012)),
-  n_inter_pairs,
-  replace = TRUE
-)
+inter_j <- sample(seq_len(ncol(geno_012)), n_inter_pairs, replace = TRUE)
 
 same_lg <- genetic_map$LG[inter_i] == genetic_map$LG[inter_j]
 
 # Resample only second markers that accidentally fall in the same LG.
 while (any(same_lg)) {
 
-  inter_j[same_lg] <- sample(
-    seq_len(ncol(geno_012)),
-    sum(same_lg),
-    replace = TRUE
-  )
+  inter_j[same_lg] <- sample(seq_len(ncol(geno_012)), sum(same_lg), replace = TRUE)
 
   same_lg <- genetic_map$LG[inter_i] == genetic_map$LG[inter_j]
 }
 
 inter_r <- colSums(
-  geno_scaled[, inter_i, drop = FALSE] *
-    geno_scaled[, inter_j, drop = FALSE]
+  geno_scaled[, inter_i, drop = FALSE] * geno_scaled[, inter_j, drop = FALSE]
 ) / (nrow(geno_scaled) - 1)
 
 inter_r2 <- inter_r^2
@@ -1460,41 +1182,16 @@ ld_plot_data$Distance_label <- factor(
 )
 ld_plot_data$Type <- "Within linkage group"
 
-ld_reference_plot <- data.frame(
-  Mean_r2 = interchromosomal_ld$Mean_r2,
-  Type = "Between linkage groups"
-)
+ld_reference_plot <- data.frame(Mean_r2 = interchromosomal_ld$Mean_r2, Type = "Between linkage groups")
 
-p_ld <- ggplot(
-  ld_plot_data,
-  aes(
-    x = Distance_label,
-    y = Mean_r2,
-    group = 1,
-    color = Type
-  )
-) +
-  geom_line(
-    linewidth = 0.9
-  ) +
-  geom_point(
-    size = 2.8
-  ) +
-  geom_hline(
+p_ld <- ggplot(ld_plot_data, aes(x = Distance_label, y = Mean_r2, group = 1, color = Type)) +
+  geom_line(linewidth = 0.9) + geom_point(size = 2.8) + geom_hline(
     data = ld_reference_plot,
-    aes(
-      yintercept = Mean_r2,
-      color = Type
-    ),
+    aes(yintercept = Mean_r2, color = Type),
     linetype = "dashed",
     linewidth = 0.9
-  ) +
-  scale_color_gdocs() +
-  labs(
-    x = "Map distance within linkage group (cM)",
-    y = expression(mean(r^2)),
-    color = NULL
-  ) +
+  ) + scale_color_gdocs() +
+  labs(x = "Map distance within linkage group (cM)", y = expression(mean(r^2)), color = NULL) +
   theme_gdocs()
 
 print(p_ld)
@@ -1591,10 +1288,7 @@ data_overview <- data.frame(
     ncol(geno_012),
     ncol(phenotype),
     length(unique(genetic_map$LG)),
-    paste(
-      unique(as.integer(table(genetic_map$LG))),
-      collapse = ", "
-    ),
+    paste(unique(as.integer(table(genetic_map$LG))), collapse = ", "),
     missing_genotypes,
     duplicate_individuals,
     duplicate_markers,
@@ -1639,11 +1333,7 @@ Its most important roles are:
 
 ```{r save-shared-data, eval=FALSE, include=FALSE}
 # Prepare the directory for the common simulation data objects.
-dir.create(
-  "output/simulated/audit",
-  showWarnings = FALSE,
-  recursive = TRUE
-)
+dir.create("output/simulated/audit", showWarnings = FALSE, recursive = TRUE)
 
 # Standardize the name of the GENES CV metadata before serialization.
 control_table_saved <- control_table
@@ -1657,33 +1347,17 @@ names(scenario_summary_saved)[
 ] <- "CV_metadata"
 
 # Export scenario characteristics for reuse across prediction modules.
-write.csv(
-  scenario_summary_saved,
-  "output/simulated/audit/simulated_scenario_summary.csv",
-  row.names = FALSE
-)
+write.csv(scenario_summary_saved, "output/simulated/audit/simulated_scenario_summary.csv", row.names = FALSE)
 
 # Retain QTL indices and mapped linkage-group positions.
 write.csv(
-  qtl_rows[
-    ,
-    c(
-      "Scenario",
-      "QTL_index",
-      "LG",
-      "Position_cM"
-    )
-  ],
+  qtl_rows[, c("Scenario", "QTL_index", "LG", "Position_cM")],
   "output/simulated/audit/simulated_qtl_map.csv",
   row.names = FALSE
 )
 
 # Export the distance-specific linkage disequilibrium summary.
-write.csv(
-  ld_summary,
-  "output/simulated/audit/simulated_ld_summary.csv",
-  row.names = FALSE
-)
+write.csv(ld_summary, "output/simulated/audit/simulated_ld_summary.csv", row.names = FALSE)
 ```
 
 The first export block contains scenario, QTL and LD summaries; the second assembles the canonical RDS consumed by subsequent modules. Exports are disabled during site rendering to avoid rewriting versioned scientific data.
@@ -1706,44 +1380,18 @@ simulated_common <- list(
   residual_value = residual_value,
   genotype_012 = geno_012,
   genotype_m101 = geno_m101,
-  genetic_map = genetic_map[
-    ,
-    c(
-      "LG",
-      "Marker_within_LG",
-      "Type",
-      "Marker",
-      "Position_cM",
-      "Global_marker"
-    )
-  ],
+  genetic_map = genetic_map[, c("LG", "Marker_within_LG", "Type", "Marker", "Position_cM", "Global_marker")],
   scenario_control = control_table_saved,
   qtl_lists = qtl_lists,
-  qtl_map = qtl_rows[
-    ,
-    c(
-      "Scenario",
-      "QTL_index",
-      "LG",
-      "Position_cM"
-    )
-  ],
+  qtl_map = qtl_rows[, c("Scenario", "QTL_index", "LG", "Position_cM")],
   scenario_summary = scenario_summary_saved,
-  marker_qc = list(
-    allele_frequency = allele_frequency,
-    maf = maf,
-    heterozygosity = heterozygosity
-  ),
+  marker_qc = list(allele_frequency = allele_frequency, maf = maf, heterozygosity = heterozygosity),
   ld_summary = ld_summary,
   interchromosomal_ld = interchromosomal_ld
 )
 
 # Save one canonical input object for validation and model fitting.
-saveRDS(
-  simulated_common,
-  "output/simulated/audit/preprocessed_simulated_common.rds",
-  compress = "gzip"
-)
+saveRDS(simulated_common, "output/simulated/audit/preprocessed_simulated_common.rds", compress = "gzip")
 ```
 ## 13. References
 
