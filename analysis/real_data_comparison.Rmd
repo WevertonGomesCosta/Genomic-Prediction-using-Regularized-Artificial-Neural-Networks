@@ -17,7 +17,7 @@ editor_options:
 
 ## 1. Purpose
 
-This module closes the real-data genomic-prediction workflow by comparing the
+This analysis compares the
 three GBLUP structures and the four artificial neural-network variants on the
 same repeated outer cross-validation procedure.
 
@@ -56,8 +56,6 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 
-options(stringsAsFactors = FALSE)
-
 COMPARISON_DIR <- "output/real/comparison"
 
 FIGURE_DIR <-
@@ -85,11 +83,18 @@ The objects `gblup_results` and `ann_results` contain one prediction-performance
 
 ### 2.1 GBLUP and ANN predictions
 
-```{r packages-and-inputs}
+```{r packages}
 library(knitr)
 library(ggplot2)
 library(ggthemes)
+```
 
+The six inputs are read from the GBLUP and ANN analyses. The prediction
+records retain the same outer partition identifiers (`Repetition`, `Fold`,
+and `SplitID`) and individual identifiers (`ID`), permitting matched
+comparisons without refitting any model.
+
+```{r read-model-predictions}
 GBLUP_RESULTS_RDS <- "output/real/gblup/real_gblup_results.rds"
 
 GBLUP_PREDICTIONS_RDS <- "output/real/gblup/real_gblup_predictions.rds"
@@ -135,129 +140,40 @@ ann_ranking <- readRDS(
   ANN_RANKING_RDS
 )
 ```
+The GBLUP and ANN outputs use the same evaluation metrics but retain the
+original column names from their respective modules. The following mappings
+standardize those names in `gblup_results`, `ann_results`,
+`gblup_predictions`, `ann_predictions`, `gblup_ranking`, and
+`ann_ranking`. Only column names change; prediction values remain unchanged.
 
-```{r normalize-stored-output-names, include=FALSE}
-names(gblup_results)[
-  names(gblup_results) == "BLUP_Correlation"
-] <- "Pearson"
+```{r normalize-comparison-columns}
+# Apply the same name mapping to matching columns in both model families.
+rename_columns <- function(data, mapping) {
+  for (old_name in names(mapping)) {
+    names(data)[names(data) == old_name] <- mapping[[old_name]]
+  }
+  data
+}
 
-names(gblup_results)[
-  names(gblup_results) == "BLUP_Spearman"
-] <- "Spearman"
+metric_names <- c(
+  BLUP_Correlation = "Pearson", BLUP_Spearman = "Spearman",
+  BLUP_RMSE = "RMSE", BLUP_MAE = "MAE",
+  BLUP_Bias = "Bias", BLUP_Slope = "Slope"
+)
+prediction_names <- c(Observed_BLUP = "BLUP", Predicted_BLUP = "GEBV")
+ranking_names <- c(
+  prediction_names, Prediction_SD = "GEBV_SD",
+  Observed_Rank = "BLUP_Rank", Predicted_Rank = "GEBV_Rank",
+  Observed_Top20 = "BLUP_Top20", Predicted_Top20 = "GEBV_Top20"
+)
 
-names(gblup_results)[
-  names(gblup_results) == "BLUP_RMSE"
-] <- "RMSE"
-
-names(gblup_results)[
-  names(gblup_results) == "BLUP_MAE"
-] <- "MAE"
-
-names(gblup_results)[
-  names(gblup_results) == "BLUP_Bias"
-] <- "Bias"
-
-names(gblup_results)[
-  names(gblup_results) == "BLUP_Slope"
-] <- "Slope"
-
-names(ann_results)[
-  names(ann_results) == "BLUP_Correlation"
-] <- "Pearson"
-
-names(ann_results)[
-  names(ann_results) == "BLUP_Spearman"
-] <- "Spearman"
-
-names(ann_results)[
-  names(ann_results) == "BLUP_RMSE"
-] <- "RMSE"
-
-names(ann_results)[
-  names(ann_results) == "BLUP_MAE"
-] <- "MAE"
-
-names(ann_results)[
-  names(ann_results) == "BLUP_Bias"
-] <- "Bias"
-
-names(ann_results)[
-  names(ann_results) == "BLUP_Slope"
-] <- "Slope"
-
-names(gblup_predictions)[
-  names(gblup_predictions) == "Observed_BLUP"
-] <- "BLUP"
-
-names(gblup_predictions)[
-  names(gblup_predictions) == "Predicted_BLUP"
-] <- "GEBV"
-
-names(ann_predictions)[
-  names(ann_predictions) == "Observed_BLUP"
-] <- "BLUP"
-
-names(ann_predictions)[
-  names(ann_predictions) == "Predicted_BLUP"
-] <- "GEBV"
-
-names(gblup_ranking)[
-  names(gblup_ranking) == "Observed_BLUP"
-] <- "BLUP"
-
-names(gblup_ranking)[
-  names(gblup_ranking) == "Predicted_BLUP"
-] <- "GEBV"
-
-names(gblup_ranking)[
-  names(gblup_ranking) == "Prediction_SD"
-] <- "GEBV_SD"
-
-names(gblup_ranking)[
-  names(gblup_ranking) == "Observed_Rank"
-] <- "BLUP_Rank"
-
-names(gblup_ranking)[
-  names(gblup_ranking) == "Predicted_Rank"
-] <- "GEBV_Rank"
-
-names(gblup_ranking)[
-  names(gblup_ranking) == "Observed_Top20"
-] <- "BLUP_Top20"
-
-names(gblup_ranking)[
-  names(gblup_ranking) == "Predicted_Top20"
-] <- "GEBV_Top20"
-
-names(ann_ranking)[
-  names(ann_ranking) == "Observed_BLUP"
-] <- "BLUP"
-
-names(ann_ranking)[
-  names(ann_ranking) == "Predicted_BLUP"
-] <- "GEBV"
-
-names(ann_ranking)[
-  names(ann_ranking) == "Prediction_SD"
-] <- "GEBV_SD"
-
-names(ann_ranking)[
-  names(ann_ranking) == "Observed_Rank"
-] <- "BLUP_Rank"
-
-names(ann_ranking)[
-  names(ann_ranking) == "Predicted_Rank"
-] <- "GEBV_Rank"
-
-names(ann_ranking)[
-  names(ann_ranking) == "Observed_Top20"
-] <- "BLUP_Top20"
-
-names(ann_ranking)[
-  names(ann_ranking) == "Predicted_Top20"
-] <- "GEBV_Top20"
+gblup_results <- rename_columns(gblup_results, metric_names)
+ann_results <- rename_columns(ann_results, metric_names)
+gblup_predictions <- rename_columns(gblup_predictions, prediction_names)
+ann_predictions <- rename_columns(ann_predictions, prediction_names)
+gblup_ranking <- rename_columns(gblup_ranking, ranking_names)
+ann_ranking <- rename_columns(ann_ranking, ranking_names)
 ```
-
 ```{r model-contract}
 traits <- c("Cer", "BM", "LP")
 
@@ -312,7 +228,7 @@ input_summary <- data.frame(
 input_summary |>
   knitr::kable(
     format = "html",
-    caption = "Stored model outputs entering the real-data comparison",
+    caption = "Cross-validation predictions and performance records by model family",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
@@ -628,6 +544,7 @@ model_split_structure |>
 ### 4.2 Mean performance by trait and model
 
 ```{r performance-summary}
+# Record the mean, standard deviation, and finite-fold count for each metric.
 performance_summary <- data.frame(
   Model = character(0),
   Trait = character(0),
@@ -825,6 +742,7 @@ from RMSE or MAE comparisons because those metrics are defined in all 25 outer
 splits.
 
 ```{r common-finite-correlation-splits}
+# Separate model-specific finite estimates from matched finite-split comparisons.
 common_correlation_summary <- data.frame(
   Model = character(0),
   Trait = character(0),
@@ -1442,6 +1360,7 @@ that metric.
 ```{r matched-family-contrasts}
 split_keys <- c("Repetition", "Fold", "SplitID")
 
+# Calculate matched ANN-minus-GBLUP advantages for all model-family pairs.
 paired_summary <- data.frame(
   Trait = character(0),
   GBLUP = character(0),
@@ -1669,6 +1588,7 @@ calculated.
 ### 6.2 Ranking summary
 
 ```{r ranking-summary}
+# Compare the 195-individual rankings after aggregating five held-out predictions.
 ranking_summary <- data.frame(
   Model = character(0),
   Trait = character(0),
@@ -2096,6 +2016,7 @@ increases. This provides a chance-corrected measure of agreement in selection
 strata rather than a second measure of exact rank-position displacement.
 
 ```{r pairwise-quintile-weighted-kappa}
+# Allocate 195 individuals to five equal GEBV-ranking quintiles for each method.
 all_ranking$GEBV_Quintile <- (
   (
     all_ranking$GEBV_Rank -
@@ -2172,6 +2093,7 @@ for (row_index in quintile_levels) {
 For each trait, `kappa_summary` calculates linearly weighted Cohen's kappa, exact quintile agreement, and mean absolute quintile difference for each of the 21 unordered pairs of genomic models.
 
 ```{r compare-ranking-quintiles}
+# Compare every pair of genomic models separately within each trait.
 kappa_summary <- data.frame(
   Trait = character(0),
   Model_1 = character(0),
@@ -2855,9 +2777,7 @@ identical BLUPs, no model-specific post-processing of individual folds, and
 global ranking from the GEBV obtained for each individual from its five
 predictions.
 
-## 9. Model-comparison results
-
-```{r comparison-output-contract}
+```{r comparison-output-contract, include=FALSE}
 output_contract <- data.frame(
   Output = c(
     "Performance summary",
@@ -2947,7 +2867,7 @@ output_contract |>
   )
 ```
 
-## 10. Navigation
+## 9. Navigation
 
 [GBLUP A/AD/ADE](real_data_gblup.html) |
 [Regularized ANN](real_data_ann.html) |
