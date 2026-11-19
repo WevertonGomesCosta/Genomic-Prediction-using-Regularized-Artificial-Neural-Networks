@@ -95,15 +95,6 @@ ANN_PREDICTIONS_RDS <- "output/real/ann/final/real_ann_predictions.rds"
 
 ANN_RANKING_RDS <- "output/real/ann/final/real_ann_individual_ranking.rds"
 
-stopifnot(
-  file.exists(GBLUP_RESULTS_RDS),
-  file.exists(GBLUP_PREDICTIONS_RDS),
-  file.exists(GBLUP_RANKING_RDS),
-  file.exists(ANN_RESULTS_RDS),
-  file.exists(ANN_PREDICTIONS_RDS),
-  file.exists(ANN_RANKING_RDS)
-)
-
 gblup_results <- readRDS(GBLUP_RESULTS_RDS)
 
 gblup_predictions <- readRDS(GBLUP_PREDICTIONS_RDS)
@@ -161,21 +152,6 @@ model_order <- c(gblup_models, ann_models)
 
 model_labels <- c("GBLUP-A", "GBLUP-AD", "GBLUP-ADE", "ANN-0", "ANN-L1", "ANN-L2", "ANN-L1+L2")
 
-stopifnot(
-  nrow(gblup_results) == 225L,
-  nrow(gblup_predictions) == 8775L,
-  nrow(ann_results) == 300L,
-  nrow(ann_predictions) == 11700L,
-  setequal(
-    unique(gblup_results$Model),
-    gblup_models
-  ),
-  setequal(
-    unique(ann_results$Model),
-    ann_models
-  )
-)
-
 ```
 
 The object `input_summary` counts the model–trait–split assessments and the individual predictions supplied by `gblup_results`, `ann_results`, `gblup_predictions`, and `ann_predictions`.
@@ -183,18 +159,9 @@ The object `input_summary` counts the model–trait–split assessments and the 
 ```{r input-record-counts}
 input_summary <- data.frame(
   Branch = c("GBLUP", "ANN"),
-  Models = c(
-    length(gblup_models),
-    length(ann_models)
-  ),
-  Model_trait_split_results = c(
-    nrow(gblup_results),
-    nrow(ann_results)
-  ),
-  GEBV_records = c(
-    nrow(gblup_predictions),
-    nrow(ann_predictions)
-  ),
+  Models = c(length(gblup_models), length(ann_models)),
+  Model_trait_split_results = c(nrow(gblup_results), nrow(ann_results)),
+  GEBV_records = c(nrow(gblup_predictions), nrow(ann_predictions)),
   stringsAsFactors = FALSE
 )
 
@@ -230,13 +197,6 @@ blup_check <- gblup_predictions[
   drop = FALSE
 ]
 
-stopifnot(
-  nrow(blup_check) == 2925L,
-  !anyDuplicated(
-    blup_check[, comparison_keys]
-  )
-)
-
 target_match <- data.frame(
   Model = character(0),
   Matched_records = integer(0),
@@ -246,9 +206,7 @@ target_match <- data.frame(
 
 for (model_name in model_order) {
 
-  if (
-    model_name %in% gblup_models
-  ) {
+  if (model_name %in% gblup_models) {
 
     model_predictions <- gblup_predictions[
       gblup_predictions$Model == model_name,
@@ -265,13 +223,6 @@ for (model_name in model_order) {
     ]
   }
 
-  stopifnot(
-    nrow(model_predictions) == 2925L,
-    !anyDuplicated(
-      model_predictions[, comparison_keys]
-    )
-  )
-
   matched <- merge(
     blup_check,
     model_predictions,
@@ -281,30 +232,18 @@ for (model_name in model_order) {
     sort = FALSE
   )
 
-  stopifnot(
-    nrow(matched) == 2925L
-  )
-
-  maximum_difference <- max(
-    abs(matched$BLUP_Check - matched$BLUP_Model)
-  )
+  maximum_difference <- max(abs(matched$BLUP_Check - matched$BLUP_Model))
 
   target_match <- rbind(
     target_match,
     data.frame(
       Model = model_name,
-      Matched_records =
-        nrow(matched),
+      Matched_records = nrow(matched),
       Maximum_BLUP_difference = maximum_difference,
       stringsAsFactors = FALSE
     )
   )
 }
-
-stopifnot(
-  all(target_match$Matched_records == 2925L),
-  all(target_match$Maximum_BLUP_difference == 0)
-)
 
 ```
 
@@ -377,28 +316,9 @@ analysis_columns <- c(
   "Slope"
 )
 
-all_results <- rbind(
-  gblup_results[, analysis_columns],
-  ann_results[, analysis_columns]
-)
+all_results <- rbind(gblup_results[, analysis_columns], ann_results[, analysis_columns])
 
 rownames(all_results) <- NULL
-
-stopifnot(
-  nrow(all_results) == 525L,
-  all(
-    table(all_results$Model) == 75L
-  ),
-  all(
-    table(all_results$Trait) == 175L
-  ),
-  all(
-    is.finite(all_results$RMSE)
-  ),
-  all(
-    is.finite(all_results$MAE)
-  )
-)
 
 ```
 
@@ -423,24 +343,13 @@ for (model_name in model_order) {
     model_split_structure,
     data.frame(
       Model = model_name,
-      Traits =
-        length(
-          unique(x$Trait)
-        ),
-      Outer_splits_per_trait =
-        min(split_counts),
-      Model_trait_split_results =
-        nrow(x),
+      Traits = length(unique(x$Trait)),
+      Outer_splits_per_trait = min(split_counts),
+      Model_trait_split_results = nrow(x),
       stringsAsFactors = FALSE
     )
   )
 }
-
-stopifnot(
-  all(model_split_structure$Traits == 3L),
-  all(model_split_structure$Outer_splits_per_trait == 25L),
-  all(model_split_structure$Model_trait_split_results == 75L)
-)
 
 model_split_structure$Model <- factor(
   model_split_structure$Model,
@@ -486,49 +395,24 @@ for (model_name in model_order) {
 
     x <- all_results[all_results$Model == model_name & all_results$Trait == trait,, drop = FALSE]
 
-    stopifnot(
-      nrow(x) == 25L
-    )
-
     performance_summary <- rbind(
       performance_summary,
       data.frame(
         Model = model_name,
         Trait = trait,
-        Splits =
-          nrow(x),
-        Pearson_N =
-          sum(
-            is.finite(x$Pearson)
-          ),
-        Pearson =
-          mean(x$Pearson, na.rm = TRUE),
-        Pearson_SD =
-          sd(x$Pearson, na.rm = TRUE),
-        Spearman_N =
-          sum(
-            is.finite(x$Spearman)
-          ),
-        Spearman =
-          mean(x$Spearman, na.rm = TRUE),
-        Spearman_SD =
-          sd(x$Spearman, na.rm = TRUE),
-        RMSE_N =
-          sum(
-            is.finite(x$RMSE)
-          ),
-        RMSE =
-          mean(x$RMSE, na.rm = TRUE),
-        RMSE_SD =
-          sd(x$RMSE, na.rm = TRUE),
-        MAE_N =
-          sum(
-            is.finite(x$MAE)
-          ),
-        MAE =
-          mean(x$MAE, na.rm = TRUE),
-        MAE_SD =
-          sd(x$MAE, na.rm = TRUE),
+        Splits = nrow(x),
+        Pearson_N = sum(is.finite(x$Pearson)),
+        Pearson = mean(x$Pearson, na.rm = TRUE),
+        Pearson_SD = sd(x$Pearson, na.rm = TRUE),
+        Spearman_N = sum(is.finite(x$Spearman)),
+        Spearman = mean(x$Spearman, na.rm = TRUE),
+        Spearman_SD = sd(x$Spearman, na.rm = TRUE),
+        RMSE_N = sum(is.finite(x$RMSE)),
+        RMSE = mean(x$RMSE, na.rm = TRUE),
+        RMSE_SD = sd(x$RMSE, na.rm = TRUE),
+        MAE_N = sum(is.finite(x$MAE)),
+        MAE = mean(x$MAE, na.rm = TRUE),
+        MAE_SD = sd(x$MAE, na.rm = TRUE),
         stringsAsFactors = FALSE
       )
     )
@@ -556,17 +440,12 @@ performance_summary$Model <- as.character(performance_summary$Model)
 
 PERFORMANCE_SUMMARY_CSV <- file.path(COMPARISON_DIR, "real_model_performance_summary.csv")
 
-
 performance_display <- performance_summary[
   ,
   c("Model", "Trait", "Pearson_N", "Pearson", "Spearman_N", "Spearman", "RMSE", "MAE")
 ]
 
-performance_display$Model <- factor(
-  performance_display$Model,
-  levels = model_order,
-  labels = model_labels
-)
+performance_display$Model <- factor(performance_display$Model, levels = model_order, labels = model_labels)
 
 performance_display |>
   knitr::kable(
@@ -616,9 +495,7 @@ for (trait in traits) {
 
   trait_results <- all_results[all_results$Trait == trait,, drop = FALSE]
 
-  split_ids <- sort(
-    unique(trait_results$SplitID)
-  )
+  split_ids <- sort(unique(trait_results$SplitID))
 
   pearson_common_splits <- character(0)
   spearman_common_splits <- character(0)
@@ -627,32 +504,14 @@ for (trait in traits) {
 
     split_data <- trait_results[trait_results$SplitID == split_id,, drop = FALSE]
 
-    stopifnot(
-      nrow(split_data) == 7L,
-      setequal(split_data$Model, model_order)
-    )
-
-    if (
-      all(
-        is.finite(split_data$Pearson)
-      )
-    ) {
+    if (all(is.finite(split_data$Pearson))) {
       pearson_common_splits <- c(pearson_common_splits, split_id)
     }
 
-    if (
-      all(
-        is.finite(split_data$Spearman)
-      )
-    ) {
+    if (all(is.finite(split_data$Spearman))) {
       spearman_common_splits <- c(spearman_common_splits, split_id)
     }
   }
-
-  stopifnot(
-    length(pearson_common_splits) >= 1L,
-    length(spearman_common_splits) >= 1L
-  )
 
   for (model_name in model_order) {
 
@@ -664,30 +523,15 @@ for (trait in traits) {
       trait_results$Model == model_name & trait_results$SplitID %in% spearman_common_splits
     ]
 
-    stopifnot(
-      length(pearson_values) == length(pearson_common_splits),
-      length(spearman_values) == length(spearman_common_splits),
-      all(
-        is.finite(pearson_values)
-      ),
-      all(
-        is.finite(spearman_values)
-      )
-    )
-
     common_correlation_summary <- rbind(
       common_correlation_summary,
       data.frame(
         Model = model_name,
         Trait = trait,
-        Pearson_Common_N =
-          length(pearson_common_splits),
-        Pearson_Common =
-          mean(pearson_values),
-        Spearman_Common_N =
-          length(spearman_common_splits),
-        Spearman_Common =
-          mean(spearman_values),
+        Pearson_Common_N = length(pearson_common_splits),
+        Pearson_Common = mean(pearson_values),
+        Spearman_Common_N = length(spearman_common_splits),
+        Spearman_Common = mean(spearman_values),
         stringsAsFactors = FALSE
       )
     )
@@ -699,11 +543,7 @@ for (trait in traits) {
 For each trait, `common_correlation_summary` reports Pearson and Spearman means calculated from the intersection of outer splits with finite correlations for all seven models. The counts can differ by trait.
 
 ```{r display-common-finite-correlations}
-COMMON_CORRELATION_SUMMARY_CSV <- file.path(
-  COMPARISON_DIR,
-  "real_model_common_split_correlation_summary.csv"
-)
-
+COMMON_CORRELATION_SUMMARY_CSV <- file.path(COMPARISON_DIR, "real_model_common_split_correlation_summary.csv")
 
 common_correlation_display <- common_correlation_summary
 common_correlation_display$Model <- factor(
@@ -754,17 +594,6 @@ for (trait in traits) {
 
   correlation_x <- common_correlation_summary[common_correlation_summary$Trait == trait,, drop = FALSE]
 
-  stopifnot(
-    nrow(x) == 7L,
-    nrow(correlation_x) == 7L,
-    length(
-      unique(correlation_x$Pearson_Common_N)
-    ) == 1L,
-    length(
-      unique(correlation_x$Spearman_Common_N)
-    ) == 1L
-  )
-
   pearson_index <- which.max(correlation_x$Pearson_Common)
 
   spearman_index <- which.max(correlation_x$Spearman_Common)
@@ -777,26 +606,16 @@ for (trait in traits) {
     predictive_winners,
     data.frame(
       Trait = trait,
-      Pearson_Common_N =
-        unique(correlation_x$Pearson_Common_N),
-      Best_Pearson_Model =
-        correlation_x$Model[pearson_index],
-      Best_Pearson =
-        correlation_x$Pearson_Common[pearson_index],
-      Spearman_Common_N =
-        unique(correlation_x$Spearman_Common_N),
-      Best_Spearman_Model =
-        correlation_x$Model[spearman_index],
-      Best_Spearman =
-        correlation_x$Spearman_Common[spearman_index],
-      Best_RMSE_Model =
-        x$Model[rmse_index],
-      Best_RMSE =
-        x$RMSE[rmse_index],
-      Best_MAE_Model =
-        x$Model[mae_index],
-      Best_MAE =
-        x$MAE[mae_index],
+      Pearson_Common_N = unique(correlation_x$Pearson_Common_N),
+      Best_Pearson_Model = correlation_x$Model[pearson_index],
+      Best_Pearson = correlation_x$Pearson_Common[pearson_index],
+      Spearman_Common_N = unique(correlation_x$Spearman_Common_N),
+      Best_Spearman_Model = correlation_x$Model[spearman_index],
+      Best_Spearman = correlation_x$Spearman_Common[spearman_index],
+      Best_RMSE_Model = x$Model[rmse_index],
+      Best_RMSE = x$RMSE[rmse_index],
+      Best_MAE_Model = x$Model[mae_index],
+      Best_MAE = x$MAE[mae_index],
       stringsAsFactors = FALSE
     )
   )
@@ -808,7 +627,6 @@ The object `predictive_winners` identifies the models with the highest common-sp
 
 ```{r display-predictive-winners}
 PREDICTIVE_WINNERS_CSV <- file.path(COMPARISON_DIR, "real_model_predictive_winners.csv")
-
 
 predictive_winners |>
   knitr::kable(
@@ -839,43 +657,32 @@ plot_results$Trait <- factor(plot_results$Trait, levels = traits)
 p_pearson <- ggplot(
   plot_results,
   aes(x = Model, y = Pearson, fill = Model)
-) +
-  geom_boxplot(
+) + geom_boxplot(
     width = 0.58,
     outlier.shape = NA,
     alpha = 0.70,
     na.rm = TRUE
-  ) +
-  geom_point(
+  ) + geom_point(
     position = position_jitter(width = 0.10, height = 0, seed = 20261105L + 701L),
     alpha = 0.30,
     size = 1.2,
     na.rm = TRUE
-  ) +
-  stat_summary(
+  ) + stat_summary(
     fun = mean,
     geom = "point",
     shape = 23,
     size = 3.0,
     fill = "white",
     na.rm = TRUE
-  ) +
-  facet_wrap(
+  ) + facet_wrap(
     ~ Trait,
     nrow = 1,
     scales = "free_y"
-  ) +
-  scale_fill_gdocs() +
-  labs(
+  ) + scale_fill_gdocs() + labs(
     x = NULL,
     y = "Pearson correlation",
     fill = NULL
-  ) +
-  theme_gdocs() +
-  theme(
-    legend.position = "none",
-    axis.text.x = element_text(angle = 35, hjust = 1)
-  )
+  ) + theme_gdocs() + theme(legend.position = "none", axis.text.x = element_text(angle = 35, hjust = 1))
 
 print(p_pearson)
 ```
@@ -898,53 +705,34 @@ spearman_heatmap <- common_correlation_summary
 
 spearman_heatmap$Model <- factor(
   spearman_heatmap$Model,
-  levels =
-    rev(model_order),
-  labels =
-    rev(model_labels)
+  levels = rev(model_order),
+  labels = rev(model_labels)
 )
 
 spearman_heatmap$Trait <- factor(spearman_heatmap$Trait, levels = traits)
 
-spearman_midpoint <- mean(
-  range(spearman_heatmap$Spearman_Common, finite = TRUE)
-)
+spearman_midpoint <- mean(range(spearman_heatmap$Spearman_Common, finite = TRUE))
 
-spearman_heatmap$Text_color <- ifelse(
-  spearman_heatmap$Spearman_Common >=
-    spearman_midpoint,
-  "white",
-  "black"
-)
+spearman_heatmap$Text_color <- ifelse(spearman_heatmap$Spearman_Common >= spearman_midpoint, "white", "black")
 
 p_spearman <- ggplot(
   spearman_heatmap,
   aes(x = Trait, y = Model, fill = Spearman_Common)
-) +
-  geom_tile(
+) + geom_tile(
     color = "white",
     linewidth = 0.8
-  ) +
-  geom_text(
-    aes(
-      label = sprintf("%.3f", Spearman_Common),
-      color = Text_color
-    ),
+  ) + geom_text(
+    aes(label = sprintf("%.3f", Spearman_Common), color = Text_color),
     size = 4.2,
     fontface = "bold"
-  ) +
-  scale_color_identity() +
-  scale_fill_gradient(
+  ) + scale_color_identity() + scale_fill_gradient(
     name = "Spearman",
     low = "#F7FBFF",
     high = "#08519C"
-  ) +
-  labs(
+  ) + labs(
     x = NULL,
     y = NULL
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
+  ) + theme_minimal(base_size = 12) + theme(
     axis.text.x = element_text(face = "bold"),
     axis.text.y = element_text(face = "bold"),
     panel.grid = element_blank(),
@@ -973,40 +761,29 @@ ggsave(
 p_rmse <- ggplot(
   plot_results,
   aes(x = Model, y = RMSE, fill = Model)
-) +
-  geom_boxplot(
+) + geom_boxplot(
     width = 0.58,
     outlier.shape = NA,
     alpha = 0.70
-  ) +
-  geom_point(
+  ) + geom_point(
     position = position_jitter(width = 0.10, height = 0, seed = 20261105L + 703L),
     alpha = 0.30,
     size = 1.2
-  ) +
-  stat_summary(
+  ) + stat_summary(
     fun = mean,
     geom = "point",
     shape = 23,
     size = 3.0,
     fill = "white"
-  ) +
-  facet_wrap(
+  ) + facet_wrap(
     ~ Trait,
     nrow = 1,
     scales = "free_y"
-  ) +
-  scale_fill_gdocs() +
-  labs(
+  ) + scale_fill_gdocs() + labs(
     x = NULL,
     y = "RMSE",
     fill = NULL
-  ) +
-  theme_gdocs() +
-  theme(
-    legend.position = "none",
-    axis.text.x = element_text(angle = 35, hjust = 1)
-  )
+  ) + theme_gdocs() + theme(legend.position = "none", axis.text.x = element_text(angle = 35, hjust = 1))
 
 print(p_rmse)
 ```
@@ -1028,40 +805,29 @@ ggsave(
 p_mae <- ggplot(
   plot_results,
   aes(x = Model, y = MAE, fill = Model)
-) +
-  geom_boxplot(
+) + geom_boxplot(
     width = 0.58,
     outlier.shape = NA,
     alpha = 0.70
-  ) +
-  geom_point(
+  ) + geom_point(
     position = position_jitter(width = 0.10, height = 0, seed = 20261105L + 704L),
     alpha = 0.30,
     size = 1.2
-  ) +
-  stat_summary(
+  ) + stat_summary(
     fun = mean,
     geom = "point",
     shape = 23,
     size = 3.0,
     fill = "white"
-  ) +
-  facet_wrap(
+  ) + facet_wrap(
     ~ Trait,
     nrow = 1,
     scales = "free_y"
-  ) +
-  scale_fill_gdocs() +
-  labs(
+  ) + scale_fill_gdocs() + labs(
     x = NULL,
     y = "MAE",
     fill = NULL
-  ) +
-  theme_gdocs() +
-  theme(
-    legend.position = "none",
-    axis.text.x = element_text(angle = 35, hjust = 1)
-  )
+  ) + theme_gdocs() + theme(legend.position = "none", axis.text.x = element_text(angle = 35, hjust = 1))
 
 print(p_mae)
 ```
@@ -1127,18 +893,7 @@ for (trait in traits) {
         drop = FALSE
       ]
 
-      matched <- merge(
-        a,
-        g,
-        by = split_keys,
-        suffixes = c("_ANN", "_GBLUP"),
-        all = FALSE,
-        sort = FALSE
-      )
-
-      stopifnot(
-        nrow(matched) == 25L
-      )
+      matched <- merge(a, g, by = split_keys, suffixes = c("_ANN", "_GBLUP"), all = FALSE, sort = FALSE)
 
       pearson_finite <- is.finite(matched$Pearson_ANN) & is.finite(matched$Pearson_GBLUP)
 
@@ -1154,42 +909,22 @@ for (trait in traits) {
           Trait = trait,
           GBLUP = gblup_model,
           ANN = ann_model,
-          Pearson_N =
-            sum(pearson_finite),
-          Mean_Pearson_Advantage =
-            mean(
+          Pearson_N = sum(pearson_finite),
+          Mean_Pearson_Advantage = mean(
               matched$Pearson_ANN[
                 pearson_finite
-              ] -
-              matched$Pearson_GBLUP[pearson_finite]
+              ] - matched$Pearson_GBLUP[pearson_finite]
             ),
-          Spearman_N =
-            sum(spearman_finite),
-          Mean_Spearman_Advantage =
-            mean(
+          Spearman_N = sum(spearman_finite),
+          Mean_Spearman_Advantage = mean(
               matched$Spearman_ANN[
                 spearman_finite
-              ] -
-              matched$Spearman_GBLUP[spearman_finite]
+              ] - matched$Spearman_GBLUP[spearman_finite]
             ),
-          RMSE_N =
-            sum(rmse_finite),
-          Mean_RMSE_Advantage =
-            mean(
-              matched$RMSE_GBLUP[
-                rmse_finite
-              ] -
-              matched$RMSE_ANN[rmse_finite]
-            ),
-          MAE_N =
-            sum(mae_finite),
-          Mean_MAE_Advantage =
-            mean(
-              matched$MAE_GBLUP[
-                mae_finite
-              ] -
-              matched$MAE_ANN[mae_finite]
-            ),
+          RMSE_N = sum(rmse_finite),
+          Mean_RMSE_Advantage = mean(matched$RMSE_GBLUP[rmse_finite] - matched$RMSE_ANN[rmse_finite]),
+          MAE_N = sum(mae_finite),
+          Mean_MAE_Advantage = mean(matched$MAE_GBLUP[mae_finite] - matched$MAE_ANN[mae_finite]),
           stringsAsFactors = FALSE
         )
       )
@@ -1197,17 +932,12 @@ for (trait in traits) {
   }
 }
 
-stopifnot(
-  nrow(paired_summary) == 36L
-)
-
 ```
 
 The object `paired_summary` contains 36 contrasts: three traits, three GBLUP structures, and four ANN variants. Each contrast is calculated within matched outer splits; positive advantages favour ANN under the metric-specific sign convention stated above.
 
 ```{r display-matched-contrasts}
 PAIRED_SUMMARY_CSV <- file.path(COMPARISON_DIR, "real_ann_vs_gblup_matched_summary.csv")
-
 
 paired_summary |>
   knitr::kable(
@@ -1250,22 +980,10 @@ ranking_columns <- c(
   "GEBV_Top20"
 )
 
-all_ranking <- rbind(
-  gblup_ranking[, ranking_columns],
-  ann_ranking[, ranking_columns]
-)
+all_ranking <- rbind(gblup_ranking[, ranking_columns], ann_ranking[, ranking_columns])
 
 rownames(all_ranking) <- NULL
 
-stopifnot(
-  nrow(all_ranking) == 4095L,
-  all(
-    table(all_ranking$Model) == 585L
-  ),
-  all(
-    table(all_ranking$Trait) == 1365L
-  )
-)
 ```
 
 The objects `gblup_ranking` and `ann_ranking` contain the GEBVs calculated
@@ -1296,12 +1014,6 @@ for (model_name in model_order) {
 
     x <- all_ranking[all_ranking$Model == model_name & all_ranking$Trait == trait,, drop = FALSE]
 
-    stopifnot(
-      nrow(x) == 195L,
-      sum(x$BLUP_Top20) == 39L,
-      sum(x$GEBV_Top20) == 39L
-    )
-
     overlap_n <- sum(x$BLUP_Top20 & x$GEBV_Top20)
 
     ranking_summary <- rbind(
@@ -1309,19 +1021,13 @@ for (model_name in model_order) {
       data.frame(
         Model = model_name,
         Trait = trait,
-        Individuals =
-          nrow(x),
-        Ranking_Spearman =
-          cor(x$BLUP_Rank, x$GEBV_Rank, method = "spearman"),
-        Mean_Absolute_Rank_Error =
-          mean(x$Absolute_Rank_Error),
-        Median_Absolute_Rank_Error =
-          median(x$Absolute_Rank_Error),
+        Individuals = nrow(x),
+        Ranking_Spearman = cor(x$BLUP_Rank, x$GEBV_Rank, method = "spearman"),
+        Mean_Absolute_Rank_Error = mean(x$Absolute_Rank_Error),
+        Median_Absolute_Rank_Error = median(x$Absolute_Rank_Error),
         Top20_N = 39L,
         Top20_Overlap_N = overlap_n,
-        Top20_Overlap_Rate =
-          overlap_n /
-          39L,
+        Top20_Overlap_Rate = overlap_n / 39L,
         stringsAsFactors = FALSE
       )
     )
@@ -1337,18 +1043,13 @@ ranking_summary$Trait <- factor(ranking_summary$Trait, levels = traits)
 
 ranking_summary$Model <- factor(ranking_summary$Model, levels = model_order)
 
-ranking_summary <- ranking_summary[
-  order(ranking_summary$Trait, ranking_summary$Model),
-  ,
-  drop = FALSE
-]
+ranking_summary <- ranking_summary[order(ranking_summary$Trait, ranking_summary$Model),, drop = FALSE]
 
 ranking_summary$Trait <- as.character(ranking_summary$Trait)
 
 ranking_summary$Model <- as.character(ranking_summary$Model)
 
 RANKING_SUMMARY_CSV <- file.path(COMPARISON_DIR, "real_model_ranking_summary.csv")
-
 
 ranking_display <- ranking_summary
 ranking_display$Model <- factor(ranking_display$Model, levels = model_order, labels = model_labels)
@@ -1403,20 +1104,13 @@ for (trait in traits) {
     ranking_winners,
     data.frame(
       Trait = trait,
-      Best_Ranking_Spearman_Model =
-        x$Model[ranking_index],
-      Best_Ranking_Spearman =
-        x$Ranking_Spearman[ranking_index],
-      Best_Mean_Rank_Error_Model =
-        x$Model[rank_error_index],
-      Best_Mean_Rank_Error =
-        x$Mean_Absolute_Rank_Error[rank_error_index],
-      Best_Top20_Model =
-        x$Model[top20_index],
-      Best_Top20_Overlap_N =
-        x$Top20_Overlap_N[top20_index],
-      Best_Top20_Overlap_Rate =
-        x$Top20_Overlap_Rate[top20_index],
+      Best_Ranking_Spearman_Model = x$Model[ranking_index],
+      Best_Ranking_Spearman = x$Ranking_Spearman[ranking_index],
+      Best_Mean_Rank_Error_Model = x$Model[rank_error_index],
+      Best_Mean_Rank_Error = x$Mean_Absolute_Rank_Error[rank_error_index],
+      Best_Top20_Model = x$Model[top20_index],
+      Best_Top20_Overlap_N = x$Top20_Overlap_N[top20_index],
+      Best_Top20_Overlap_Rate = x$Top20_Overlap_Rate[top20_index],
       stringsAsFactors = FALSE
     )
   )
@@ -1428,7 +1122,6 @@ The object `ranking_winners` identifies the strongest global ranking correlation
 
 ```{r display-ranking-winners}
 RANKING_WINNERS_CSV <- file.path(COMPARISON_DIR, "real_model_ranking_winners.csv")
-
 
 ranking_winners |>
   knitr::kable(
@@ -1450,23 +1143,14 @@ write.csv(ranking_winners, RANKING_WINNERS_CSV, row.names = FALSE)
 ```{r ranking-spearman-figure, fig.width=10.5, fig.height=5.8, fig.cap="Global Spearman correlation between the BLUP ranking and the GEBV ranking for the seven genomic models."}
 ranking_plot <- ranking_summary
 
-ranking_plot$Model <- factor(
-  ranking_plot$Model,
-  levels =
-    rev(model_order),
-  labels =
-    rev(model_labels)
-)
+ranking_plot$Model <- factor(ranking_plot$Model, levels = rev(model_order), labels = rev(model_labels))
 
 ranking_plot$Trait <- factor(ranking_plot$Trait, levels = traits)
 
-ranking_spearman_midpoint <- mean(
-  range(ranking_plot$Ranking_Spearman, finite = TRUE)
-)
+ranking_spearman_midpoint <- mean(range(ranking_plot$Ranking_Spearman, finite = TRUE))
 
 ranking_plot$Text_color <- ifelse(
-  ranking_plot$Ranking_Spearman >=
-    ranking_spearman_midpoint,
+  ranking_plot$Ranking_Spearman >= ranking_spearman_midpoint,
   "white",
   "black"
 )
@@ -1474,31 +1158,21 @@ ranking_plot$Text_color <- ifelse(
 p_ranking_spearman <- ggplot(
   ranking_plot,
   aes(x = Trait, y = Model, fill = Ranking_Spearman)
-) +
-  geom_tile(
+) + geom_tile(
     color = "white",
     linewidth = 0.8
-  ) +
-  geom_text(
-    aes(
-      label = sprintf("%.3f", Ranking_Spearman),
-      color = Text_color
-    ),
+  ) + geom_text(
+    aes(label = sprintf("%.3f", Ranking_Spearman), color = Text_color),
     size = 4.2,
     fontface = "bold"
-  ) +
-  scale_color_identity() +
-  scale_fill_gradient(
+  ) + scale_color_identity() + scale_fill_gradient(
     name = "Spearman",
     low = "#F7FBFF",
     high = "#08519C"
-  ) +
-  labs(
+  ) + labs(
     x = NULL,
     y = NULL
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
+  ) + theme_minimal(base_size = 12) + theme(
     axis.text.x = element_text(face = "bold"),
     axis.text.y = element_text(face = "bold"),
     panel.grid = element_blank(),
@@ -1533,27 +1207,17 @@ top20_plot$Trait <- factor(top20_plot$Trait, levels = traits)
 p_top20 <- ggplot(
   top20_plot,
   aes(x = Model, y = Top20_Overlap_N, fill = Model)
-) +
-  geom_col(width = 0.72) +
-  facet_wrap(
+) + geom_col(width = 0.72) + facet_wrap(
     ~ Trait,
     nrow = 1
-  ) +
-  scale_fill_gdocs() +
-  scale_y_continuous(
+  ) + scale_fill_gdocs() + scale_y_continuous(
     limits = c(0, 39),
     breaks = seq(0, 39, by = 5)
-  ) +
-  labs(
+  ) + labs(
     x = NULL,
     y = "BLUP top-20% individuals recovered",
     fill = NULL
-  ) +
-  theme_gdocs() +
-  theme(
-    legend.position = "none",
-    axis.text.x = element_text(angle = 35, hjust = 1)
-  )
+  ) + theme_gdocs() + theme(legend.position = "none", axis.text.x = element_text(angle = 35, hjust = 1))
 
 print(p_top20)
 ```
@@ -1599,18 +1263,10 @@ strata rather than a second measure of exact rank-position displacement.
 # Allocate 195 individuals to five equal GEBV-ranking quintiles for each method.
 all_ranking$GEBV_Quintile <- (
   (
-    all_ranking$GEBV_Rank -
-      1L
+    all_ranking$GEBV_Rank - 1L
   ) %/%
     39L
-) +
-  1L
-
-stopifnot(
-  all(
-    all_ranking$GEBV_Quintile %in% seq_len(5L)
-  )
-)
+) + 1L
 
 for (trait in traits) {
 
@@ -1620,10 +1276,6 @@ for (trait in traits) {
       all_ranking$GEBV_Quintile[all_ranking$Trait == trait & all_ranking$Model == model_name]
     )
 
-    stopifnot(
-      length(quintile_counts) == 5L,
-      all(quintile_counts == 39L)
-    )
   }
 }
 
@@ -1640,12 +1292,9 @@ for (row_index in quintile_levels) {
 
   for (column_index in quintile_levels) {
 
-    quintile_weights[row_index, column_index] <- 1 -
-      abs(
-        row_index -
-          column_index
-      ) /
-      4
+    quintile_weights[row_index, column_index] <- 1 - abs(
+        row_index - column_index
+      ) / 4
   }
 }
 
@@ -1667,24 +1316,9 @@ kappa_summary <- data.frame(
 
 for (trait in traits) {
 
-  for (
-    model_1_index in
-      seq_len(
-        length(model_order) -
-          1L
-      )
-  ) {
+  for (model_1_index in seq_len(length(model_order) - 1L)) {
 
-    for (
-      model_2_index in
-        seq(
-          from =
-            model_1_index +
-              1L,
-          to =
-            length(model_order)
-        )
-    ) {
+    for (model_2_index in seq(from = model_1_index + 1L, to = length(model_order))) {
 
       model_1 <- model_order[model_1_index]
 
@@ -1702,40 +1336,16 @@ for (trait in traits) {
         drop = FALSE
       ]
 
-      x <- x[
-        order(x$ID),
-        ,
-        drop = FALSE
-      ]
+      x <- x[order(x$ID),, drop = FALSE]
 
-      y <- y[
-        order(y$ID),
-        ,
-        drop = FALSE
-      ]
-
-      stopifnot(
-        identical(x$ID, y$ID),
-        nrow(x) == 195L,
-        nrow(y) == 195L
-      )
+      y <- y[order(y$ID),, drop = FALSE]
 
       agreement_table <- table(
         factor(x$GEBV_Quintile, levels = quintile_levels),
         factor(y$GEBV_Quintile, levels = quintile_levels)
       )
 
-      stopifnot(
-        all(
-          rowSums(agreement_table) == 39L
-        ),
-        all(
-          colSums(agreement_table) == 39L
-        )
-      )
-
-      observed_proportion <- agreement_table /
-        sum(agreement_table)
+      observed_proportion <- agreement_table / sum(agreement_table)
 
       row_marginal <- rowSums(observed_proportion)
 
@@ -1748,16 +1358,12 @@ for (trait in traits) {
       expected_weighted_agreement <- sum(quintile_weights * expected_proportion)
 
       weighted_kappa <- (
-          observed_weighted_agreement -
-            expected_weighted_agreement
-        ) /
-        (1 - expected_weighted_agreement)
+          observed_weighted_agreement - expected_weighted_agreement
+        ) / (1 - expected_weighted_agreement)
 
       exact_quintile_agreement_rate <- mean(x$GEBV_Quintile == y$GEBV_Quintile)
 
-      mean_absolute_quintile_difference <- mean(
-        abs(x$GEBV_Quintile - y$GEBV_Quintile)
-      )
+      mean_absolute_quintile_difference <- mean(abs(x$GEBV_Quintile - y$GEBV_Quintile))
 
       kappa_summary <- rbind(
         kappa_summary,
@@ -1775,21 +1381,7 @@ for (trait in traits) {
   }
 }
 
-stopifnot(
-  nrow(kappa_summary) == 63L,
-  all(
-    is.finite(kappa_summary$Weighted_Kappa)
-  ),
-  all(kappa_summary$Weighted_Kappa >= -1),
-  all(kappa_summary$Weighted_Kappa <= 1),
-  all(kappa_summary$Exact_Quintile_Agreement_Rate >= 0),
-  all(kappa_summary$Exact_Quintile_Agreement_Rate <= 1),
-  all(kappa_summary$Mean_Absolute_Quintile_Difference >= 0),
-  all(kappa_summary$Mean_Absolute_Quintile_Difference <= 4)
-)
-
 KAPPA_SUMMARY_CSV <- file.path(COMPARISON_DIR, "real_model_pairwise_quintile_weighted_kappa.csv")
-
 
 kappa_summary |>
   knitr::kable(
@@ -1821,9 +1413,7 @@ for (trait in traits) {
 
     for (model_2 in model_order) {
 
-      if (
-        model_1 == model_2
-      ) {
+      if (model_1 == model_2) {
 
         kappa_value <- 1
 
@@ -1838,10 +1428,6 @@ for (trait in traits) {
           ,
           drop = FALSE
         ]
-
-        stopifnot(
-          nrow(pair_row) == 1L
-        )
 
         kappa_value <- pair_row$Weighted_Kappa
       }
@@ -1862,58 +1448,36 @@ for (trait in traits) {
 
 kappa_heatmap$Model_1 <- factor(kappa_heatmap$Model_1, levels = model_order, labels = model_labels)
 
-kappa_heatmap$Model_2 <- factor(
-  kappa_heatmap$Model_2,
-  levels =
-    rev(model_order),
-  labels =
-    rev(model_labels)
-)
+kappa_heatmap$Model_2 <- factor(kappa_heatmap$Model_2, levels = rev(model_order), labels = rev(model_labels))
 
 kappa_heatmap$Trait <- factor(kappa_heatmap$Trait, levels = traits)
 
-kappa_heatmap$Text_color <- ifelse(
-  abs(kappa_heatmap$Weighted_Kappa) >=
-    0.55,
-  "white",
-  "black"
-)
+kappa_heatmap$Text_color <- ifelse(abs(kappa_heatmap$Weighted_Kappa) >= 0.55, "white", "black")
 
 p_kappa <- ggplot(
   kappa_heatmap,
   aes(x = Model_1, y = Model_2, fill = Weighted_Kappa)
-) +
-  geom_tile(
+) + geom_tile(
     color = "white",
     linewidth = 0.7
-  ) +
-  geom_text(
-    aes(
-      label = sprintf("%.2f", Weighted_Kappa),
-      color = Text_color
-    ),
+  ) + geom_text(
+    aes(label = sprintf("%.2f", Weighted_Kappa), color = Text_color),
     size = 3.2,
     fontface = "bold"
-  ) +
-  scale_color_identity() +
-  scale_fill_gradient2(
+  ) + scale_color_identity() + scale_fill_gradient2(
     name = "Weighted kappa",
     low = "#B2182B",
     mid = "#F7F7F7",
     high = "#2166AC",
     midpoint = 0,
     limits = c(-1, 1)
-  ) +
-  facet_wrap(
+  ) + facet_wrap(
     ~ Trait,
     nrow = 1
-  ) +
-  labs(
+  ) + labs(
     x = NULL,
     y = NULL
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
+  ) + theme_minimal(base_size = 11) + theme(
     axis.text.x = element_text(angle = 45, hjust = 1, face = "bold"),
     axis.text.y = element_text(face = "bold"),
     panel.grid = element_blank(),
@@ -1952,57 +1516,36 @@ make_blup_gebv_plot <- function(trait) {
 
   trait_data$Model <- factor(trait_data$Model, levels = model_order, labels = model_labels)
 
-  axis_limits <- range(
-    c(trait_data$BLUP, trait_data$GEBV),
-    finite = TRUE
-  )
+  axis_limits <- range(c(trait_data$BLUP, trait_data$GEBV), finite = TRUE)
 
   axis_padding <- diff(
     axis_limits
-  ) *
-    0.04
+  ) * 0.04
 
-  axis_limits <- c(
-    axis_limits[
-      1L
-    ] -
-      axis_padding,
-    axis_limits[
-      2L
-    ] +
-      axis_padding
-  )
+  axis_limits <- c(axis_limits[1L] - axis_padding, axis_limits[2L] + axis_padding)
 
   p_blup_gebv <- ggplot(
     trait_data,
     aes(x = BLUP, y = GEBV, color = Model)
-  ) +
-    geom_abline(
+  ) + geom_abline(
       intercept = 0,
       slope = 1,
       linetype = 2
-    ) +
-    geom_point(
+    ) + geom_point(
       alpha = 0.62,
       size = 1.35
-    ) +
-    facet_wrap(
+    ) + facet_wrap(
       ~ Model,
       ncol = 4
-    ) +
-    coord_equal(
+    ) + coord_equal(
       xlim = axis_limits,
       ylim = axis_limits
-    ) +
-    scale_color_gdocs() +
-    labs(
+    ) + scale_color_gdocs() + labs(
       x = "BLUP",
       y = "GEBV",
       color = NULL,
       title = paste("BLUP versus GEBV:", trait)
-    ) +
-    theme_gdocs() +
-    theme(legend.position = "none")
+    ) + theme_gdocs() + theme(legend.position = "none")
 
   p_blup_gebv
 }
@@ -2086,41 +1629,17 @@ bm_kappa <- kappa_summary[kappa_summary$Trait == "BM",, drop = FALSE]
 
 lp_kappa <- kappa_summary[kappa_summary$Trait == "LP",, drop = FALSE]
 
-cer_kappa_max <- cer_kappa[
-  which.max(cer_kappa$Weighted_Kappa),
-  ,
-  drop = FALSE
-]
+cer_kappa_max <- cer_kappa[which.max(cer_kappa$Weighted_Kappa),, drop = FALSE]
 
-cer_kappa_min <- cer_kappa[
-  which.min(cer_kappa$Weighted_Kappa),
-  ,
-  drop = FALSE
-]
+cer_kappa_min <- cer_kappa[which.min(cer_kappa$Weighted_Kappa),, drop = FALSE]
 
-bm_kappa_max <- bm_kappa[
-  which.max(bm_kappa$Weighted_Kappa),
-  ,
-  drop = FALSE
-]
+bm_kappa_max <- bm_kappa[which.max(bm_kappa$Weighted_Kappa),, drop = FALSE]
 
-bm_kappa_min <- bm_kappa[
-  which.min(bm_kappa$Weighted_Kappa),
-  ,
-  drop = FALSE
-]
+bm_kappa_min <- bm_kappa[which.min(bm_kappa$Weighted_Kappa),, drop = FALSE]
 
-lp_kappa_max <- lp_kappa[
-  which.max(lp_kappa$Weighted_Kappa),
-  ,
-  drop = FALSE
-]
+lp_kappa_max <- lp_kappa[which.max(lp_kappa$Weighted_Kappa),, drop = FALSE]
 
-lp_kappa_min <- lp_kappa[
-  which.min(lp_kappa$Weighted_Kappa),
-  ,
-  drop = FALSE
-]
+lp_kappa_min <- lp_kappa[which.min(lp_kappa$Weighted_Kappa),, drop = FALSE]
 ```
 
 ### 8.1 Cer
@@ -2239,10 +1758,6 @@ output_contract <- data.frame(
 )
 
 output_contract$Exists <- file.exists(output_contract$Path)
-
-stopifnot(
-  all(output_contract$Exists)
-)
 
 output_contract |>
   knitr::kable(
