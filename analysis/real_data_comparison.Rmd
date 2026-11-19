@@ -687,11 +687,6 @@ PERFORMANCE_SUMMARY_CSV <- file.path(
   "real_model_performance_summary.csv"
 )
 
-write.csv(
-  performance_summary,
-  PERFORMANCE_SUMMARY_CSV,
-  row.names = FALSE
-)
 
 performance_display <- performance_summary[
   ,
@@ -721,6 +716,14 @@ performance_display |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
+```
+
+```{r save-performance-summary, eval=FALSE}
+write.csv(
+  performance_summary,
+  PERFORMANCE_SUMMARY_CSV,
+  row.names = FALSE
+)
 ```
 
 Pearson and Spearman are summarized from all outer splits where the respective
@@ -866,11 +869,6 @@ COMMON_CORRELATION_SUMMARY_CSV <- file.path(
   "real_model_common_split_correlation_summary.csv"
 )
 
-write.csv(
-  common_correlation_summary,
-  COMMON_CORRELATION_SUMMARY_CSV,
-  row.names = FALSE
-)
 
 common_correlation_display <- common_correlation_summary
 common_correlation_display$Model <- factor(
@@ -887,6 +885,14 @@ common_correlation_display |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
+```
+
+```{r save-common-finite-correlations, eval=FALSE}
+write.csv(
+  common_correlation_summary,
+  COMMON_CORRELATION_SUMMARY_CSV,
+  row.names = FALSE
+)
 ```
 
 ### 4.4 Predictive winners by trait
@@ -1009,11 +1015,6 @@ PREDICTIVE_WINNERS_CSV <- file.path(
   "real_model_predictive_winners.csv"
 )
 
-write.csv(
-  predictive_winners,
-  PREDICTIVE_WINNERS_CSV,
-  row.names = FALSE
-)
 
 predictive_winners |>
   knitr::kable(
@@ -1023,6 +1024,14 @@ predictive_winners |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
+```
+
+```{r save-predictive-winners, eval=FALSE}
+write.csv(
+  predictive_winners,
+  PREDICTIVE_WINNERS_CSV,
+  row.names = FALSE
+)
 ```
 
 ### 4.5 Distribution of split-level performance
@@ -1515,11 +1524,6 @@ PAIRED_SUMMARY_CSV <- file.path(
   "real_ann_vs_gblup_matched_summary.csv"
 )
 
-write.csv(
-  paired_summary,
-  PAIRED_SUMMARY_CSV,
-  row.names = FALSE
-)
 
 paired_summary |>
   knitr::kable(
@@ -1529,6 +1533,14 @@ paired_summary |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
+```
+
+```{r save-matched-contrasts, eval=FALSE}
+write.csv(
+  paired_summary,
+  PAIRED_SUMMARY_CSV,
+  row.names = FALSE
+)
 ```
 
 These paired contrasts summarize the direction and magnitude of differences
@@ -1691,11 +1703,6 @@ RANKING_SUMMARY_CSV <- file.path(
   "real_model_ranking_summary.csv"
 )
 
-write.csv(
-  ranking_summary,
-  RANKING_SUMMARY_CSV,
-  row.names = FALSE
-)
 
 ranking_display <- ranking_summary
 ranking_display$Model <- factor(
@@ -1712,6 +1719,14 @@ ranking_display |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
+```
+
+```{r save-ranking-summary, eval=FALSE}
+write.csv(
+  ranking_summary,
+  RANKING_SUMMARY_CSV,
+  row.names = FALSE
+)
 ```
 
 Split-level Spearman and global ranking Spearman answer different questions.
@@ -1803,11 +1818,6 @@ RANKING_WINNERS_CSV <- file.path(
   "real_model_ranking_winners.csv"
 )
 
-write.csv(
-  ranking_winners,
-  RANKING_WINNERS_CSV,
-  row.names = FALSE
-)
 
 ranking_winners |>
   knitr::kable(
@@ -1817,6 +1827,14 @@ ranking_winners |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
+```
+
+```{r save-ranking-winners, eval=FALSE}
+write.csv(
+  ranking_winners,
+  RANKING_WINNERS_CSV,
+  row.names = FALSE
+)
 ```
 
 ### 6.4 Ranking comparison figures
@@ -2301,11 +2319,6 @@ KAPPA_SUMMARY_CSV <- file.path(
   "real_model_pairwise_quintile_weighted_kappa.csv"
 )
 
-write.csv(
-  kappa_summary,
-  KAPPA_SUMMARY_CSV,
-  row.names = FALSE
-)
 
 kappa_summary |>
   knitr::kable(
@@ -2315,6 +2328,14 @@ kappa_summary |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
   )
+```
+
+```{r save-quintile-kappa-summary, eval=FALSE}
+write.csv(
+  kappa_summary,
+  KAPPA_SUMMARY_CSV,
+  row.names = FALSE
+)
 ```
 
 ```{r pairwise-quintile-weighted-kappa-heatmap, fig.width=13, fig.height=8.5, fig.cap="Linearly weighted Cohen's kappa for every pair of the seven genomic methods based on GEBV-ranking quintiles. Each panel is a complete 7 by 7 pairwise matrix for one trait; no aggregation by model family is applied. Larger values indicate stronger agreement in selection strata."}
