@@ -84,6 +84,8 @@ dir.create(
 
 ## 2. Prediction data and cross-validation
 
+The objects `gblup_results` and `ann_results` contain one prediction-performance record for each model, trait, and outer split. The objects `gblup_predictions` and `ann_predictions` provide the corresponding observed BLUPs and GEBVs; `gblup_ranking` and `ann_ranking` supply individual-level rankings.
+
 ### 2.1 GBLUP and ANN predictions
 
 ```{r packages-and-inputs}
@@ -459,6 +461,11 @@ stopifnot(
   )
 )
 
+```
+
+The object `input_summary` counts the model–trait–split assessments and the individual predictions supplied by `gblup_results`, `ann_results`, `gblup_predictions`, and `ann_predictions`.
+
+```{r input-record-counts}
 input_summary <- data.frame(
   Branch = c(
     "GBLUP",
@@ -650,6 +657,11 @@ stopifnot(
   )
 )
 
+```
+
+The table `target_match` shows the number of individual BLUP values matched to GBLUP-A and their maximum absolute differences for each genomic model. A zero difference indicates identical observed BLUP targets for every matched record.
+
+```{r display-blup-alignment}
 target_match$Model <- factor(
   target_match$Model,
   levels =
@@ -701,6 +713,8 @@ structure by penalizing disagreement progressively as two methods place an
 individual farther apart across ranking quintiles.
 
 ## 4. BLUP-GEBV performance across outer splits
+
+The object `all_results` concatenates the 225 GBLUP and 300 ANN assessments after the shared metric names have been aligned. No assessment predictions are pooled across different outer splits.
 
 ### 4.1 Combined result object
 
@@ -761,6 +775,11 @@ stopifnot(
   )
 )
 
+```
+
+The object `model_split_structure` counts the three traits, 25 outer splits per trait, and 75 assessments for each of the seven genomic models.
+
+```{r evaluate-model-coverage}
 model_split_structure <- data.frame(
   Model = character(0),
   Traits = integer(0),
@@ -969,6 +988,11 @@ for (
   }
 }
 
+```
+
+The object `performance_summary` aggregates Pearson, Spearman, RMSE, and MAE over the outer assessments. `Pearson_N` and `Spearman_N` identify how many splits yield finite correlation values for each model and trait.
+
+```{r display-performance-summary}
 performance_summary$Trait <- factor(
   performance_summary$Trait,
   levels =
@@ -1222,6 +1246,11 @@ for (
   }
 }
 
+```
+
+For each trait, `common_correlation_summary` reports Pearson and Spearman means calculated from the intersection of outer splits with finite correlations for all seven models. The counts can differ by trait.
+
+```{r display-common-finite-correlations}
 COMMON_CORRELATION_SUMMARY_CSV <- file.path(
   COMPARISON_DIR,
   "real_model_common_split_correlation_summary.csv"
@@ -1378,6 +1407,11 @@ for (
   )
 }
 
+```
+
+The object `predictive_winners` identifies the models with the highest common-split Pearson and Spearman correlations and the lowest RMSE and MAE for each trait.
+
+```{r display-predictive-winners}
 PREDICTIVE_WINNERS_CSV <- file.path(
   COMPARISON_DIR,
   "real_model_predictive_winners.csv"
@@ -1969,6 +2003,11 @@ stopifnot(
   ) == 36L
 )
 
+```
+
+The object `paired_summary` contains 36 contrasts: three traits, three GBLUP structures, and four ANN variants. Each contrast is calculated within matched outer splits; positive advantages favour ANN under the metric-specific sign convention stated above.
+
+```{r display-matched-contrasts}
 PAIRED_SUMMARY_CSV <- file.path(
   COMPARISON_DIR,
   "real_ann_vs_gblup_matched_summary.csv"
@@ -1995,6 +2034,8 @@ within the common outer cross-validation procedure. They are not interpreted as
 independent-replicate significance tests.
 
 ## 6. Global ranking
+
+The object `all_ranking` contains 4,095 model–trait–individual records. Each model contributes 195 individuals for each of the three traits.
 
 ### 6.1 Combined individual ranking object
 
@@ -2140,6 +2181,11 @@ for (
   }
 }
 
+```
+
+The object `ranking_summary` compares global BLUP–GEBV rank correlation, absolute rank error, and the number of BLUP top-20% individuals recovered by GEBV rankings among all 195 individuals.
+
+```{r display-ranking-summary}
 ranking_summary$Trait <- factor(
   ranking_summary$Trait,
   levels =
@@ -2282,6 +2328,11 @@ for (
   )
 }
 
+```
+
+The object `ranking_winners` identifies the strongest global ranking correlation, smallest mean rank error, and largest top-20% overlap for each trait. These selection criteria are kept separate.
+
+```{r display-ranking-winners}
 RANKING_WINNERS_CSV <- file.path(
   COMPARISON_DIR,
   "real_model_ranking_winners.csv"
@@ -2579,6 +2630,11 @@ for (
   }
 }
 
+```
+
+Linear weights decrease from 1 for identical quintiles to 0 for quintiles four categories apart. The matrix `quintile_weights` assigns these values to all 25 pairs of quintile categories.
+
+```{r compute-linear-quintile-weights}
 quintile_levels <- seq_len(
   5L
 )
@@ -2612,6 +2668,11 @@ for (
   }
 }
 
+```
+
+For each trait, `kappa_summary` calculates linearly weighted Cohen's kappa, exact quintile agreement, and mean absolute quintile difference for each of the 21 unordered pairs of genomic models.
+
+```{r compare-ranking-quintiles}
 kappa_summary <- data.frame(
   Trait = character(0),
   Model_1 = character(0),
