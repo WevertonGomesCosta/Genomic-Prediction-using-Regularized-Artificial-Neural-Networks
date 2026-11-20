@@ -45,6 +45,13 @@ GBLUP-ADE benchmark:
 - true genetic value is used only after prediction as the primary evaluation
   target.
 
+The tutorial proceeds from inputs and genomic relationship matrices to model
+specification, held-out prediction, and performance summaries. To keep the
+published page reproducible without repeating the 450 computationally
+expensive fits, the complete matrix-construction and model-fitting code is
+displayed but not executed during an ordinary website build. The numerical
+tables and plots instead use the existing, validated output files.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -276,16 +283,16 @@ relationship_matrices |>
   )
 ```
 
-Matrix A describes additive genomic covariance, D describes dominance genomic
-covariance, and E represents the second-order additive-by-additive relationship
-used in the ADE model. These matrices depend only on marker information and do
-not use phenotype or true genetic value.
+Matrix A represents additive genomic covariance, D represents dominance, and
+E represents additive-by-additive epistasis. All three matrices use the same
+individual ordering and depend exclusively on marker genotypes, not on
+phenotypes or simulated true genetic values. Thus, the matrices can be reused
+across scenarios and outer partitions without introducing phenotype leakage.
 
-The additive (A), dominance (D), and additive-by-additive epistatic (E)
-relationship matrices are constructed from marker genotypes. They have the
-same individual ordering and are used consistently across all scenarios and
-validation partitions. Their summaries describe matrix dimensions, symmetry,
-finite entries, and mean diagonal values.
+The following code shows how the matrices and their diagnostic summaries
+were constructed. It is intentionally not executed when rebuilding the
+published tutorial; the displayed diagnostics are read from the existing
+summary file.
 
 ```{r genomic-kernels, eval=FALSE}
 # Construct additive, dominance, and additive-by-additive genomic kernels.
@@ -384,8 +391,9 @@ write.csv(
 )
 ```
 
-The relationship matrices are summarized by their dimensions, symmetry,
-finite-valued entries, and mean diagonal values.
+The stored summary below checks matrix dimensions, symmetry, finite entries,
+and mean diagonal values. These diagnostics describe the matrices used in
+the original fits, without constructing or overwriting them during rendering.
 
 ```{r kernel-summary}
 # Retrieve the relationship-matrix summary for presentation.
@@ -461,6 +469,8 @@ obtained.
 
 ## 5. Model fitting
 
+### 5.1 Model specifications
+
 The three models use a common fixed intercept and residual variance, while
 the random-effect structure progressively includes additive, dominance, and
 epistatic genomic components. In `sommer::mmes()`, `Gu` supplies the relevant
@@ -530,6 +540,8 @@ fit_ADE <- sommer::mmes(
 )
 ```
 
+### 5.2 Scenario-model-split tasks
+
 For each of the six scenarios, the three model structures are paired with all
 25 outer splits, producing 450 fitting tasks. The task identifiers retain the
 scenario, model, repetition, fold, and partition so predictions can be compared
@@ -571,6 +583,8 @@ task_table$TaskID <- paste(
 rownames(task_table) <- NULL
 ```
 
+### 5.3 Complete fitting and held-out prediction
+
 Each task first identifies its training and assessment individuals. All marker
 genotypes remain available for genomic covariance calculations, but phenotypes
 from the 200 assessment individuals are masked before fitting. The model is
@@ -579,6 +593,12 @@ intercept and the relevant genomic effects. Held-out predictions are then
 compared with simulated true genetic values and observed phenotypes to obtain
 split-level performance metrics. The individual predictions are retained for
 subsequent comparisons, with independent fits distributed across workers.
+
+The next chunk documents the complete fitting routine, including recovery
+of additive, dominance, and epistatic predictions; their combination with
+the fitted intercept; and evaluation only on held-out individuals. It is
+intentionally marked `eval=FALSE`: the site build must not repeat these
+fits or replace their canonical results.
 
 ```{r fit-all-gblup-models, eval=FALSE}
 # 1. Configure parallel processing and ensure workers are released.
@@ -814,8 +834,12 @@ write.csv(predictions, "output/simulated/gblup/simulated_gblup_predictions.csv",
 
 ```
 
-The numbers of completed fits by scenario and model are summarized below.
-Each combination comprises five outer folds repeated five times.
+### 5.4 Previously computed results
+
+The following executed chunks load and summarize the persisted fit-level
+results; they do not estimate model parameters anew. Each scenario-model
+combination comprises five outer folds repeated five times, yielding 25
+completed fits.
 
 ```{r task-summary}
 # Read the fit-level results before summarizing counts.
@@ -868,9 +892,25 @@ Held-out predictive performance is summarized using the following metrics:
 - **RMSE:** prediction error on the original scale;
 - **MAE:** mean absolute prediction error on the original scale.
 
-Bias and calibration slope are complementary measures. Bias is
-`mean(prediction - target)`, and calibration slope is the coefficient of
-prediction in `lm(target ~ prediction)`. R-squared is not used.
+Writing $p_i$ for the held-out GEBV and $t_i$ for the corresponding target,
+with $n=200$ assessment individuals per split, the error metrics are
+
+\[
+\mathrm{RMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(p_i-t_i)^2},\qquad
+\mathrm{MAE}=\frac{1}{n}\sum_{i=1}^{n}|p_i-t_i|,
+\]
+
+and the prediction bias is
+
+\[
+\mathrm{Bias}=\frac{1}{n}\sum_{i=1}^{n}(p_i-t_i).
+\]
+
+The calibration slope is estimated by regressing the target on the GEBV,
+`lm(target ~ prediction)`, while the two correlations quantify linear
+and rank association. Each metric is computed within a held-out split;
+the tables below report the mean of the 25 split-specific metrics, not
+a metric pooled over all assessment records. R-squared is not used.
 
 No evaluation target is used during model fitting.
 
@@ -933,7 +973,11 @@ knitr::asis_output(paste0(
 The scenario sequence represents the predefined simulation settings. Because
 the simulation factors change jointly across scenarios, differences among C1-C6
 should be interpreted as differences among the complete scenarios rather than
-as isolated effects of one parameter.
+as isolated effects of one parameter. In C1, including dominance improves
+the mean held-out Pearson correlation relative to the additive-only model,
+with a smaller additional gain for ADE. The relative performance of AD and
+ADE is not identical across all scenarios, so adding an epistatic component
+should not be described as uniformly beneficial.
 
 ### 7.2 Phenotype
 
@@ -989,6 +1033,11 @@ knitr::asis_output(paste0(
 ))
 ```
 
+The secondary phenotype correlations are generally lower than the
+corresponding true-genetic-value correlations because observed phenotype
+contains residual variation. The two targets are therefore interpreted
+separately, even though they are evaluated using the same held-out GEBVs.
+
 ### 7.3 Performance across outer splits
 
 Boxplots show the variation in held-out Pearson correlations with true genetic
@@ -1031,7 +1080,7 @@ print(
 )
 ```
 
-```{r save-genetic-correlation-tiff, include=FALSE}
+```{r save-genetic-correlation-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m03/figures/gblup_genetic_correlation_by_scenario.tiff",
   plot = p_genetic_correlation,
@@ -1084,7 +1133,7 @@ print(
 )
 ```
 
-```{r save-genetic-rmse-tiff, include=FALSE}
+```{r save-genetic-rmse-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m03/figures/gblup_genetic_rmse_by_scenario.tiff",
   plot = p_genetic_rmse,
