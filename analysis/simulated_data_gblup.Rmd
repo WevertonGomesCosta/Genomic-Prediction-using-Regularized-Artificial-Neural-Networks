@@ -96,49 +96,41 @@ consistent identifiers assigned to its rows. The outer validation partitions
 identify which individuals contribute phenotypes to fitting and which are held
 out for prediction.
 
-```{r inputs}
+```{r inputs-loading}
 # Load the simulated population and common cross-validation design.
-common <- readRDS(
-  "output/simulated/audit/preprocessed_simulated_common.rds"
-)
+common <- readRDS("output/simulated/audit/preprocessed_simulated_common.rds")
 
-cv <- readRDS(
-  "output/simulated/validation/simulated_cv_design.rds"
-)
+cv <- readRDS("output/simulated/validation/simulated_cv_design.rds")
+```
 
+The following preparation extracts the analysis objects, assigns a
+stable individual identifier, and specifies the three model labels.
+
+```{r inputs-preparation}
 # Separate fitting responses, evaluation targets, and marker information.
 phenotype <- common$phenotype
 true_g <- common$true_genetic_value
 geno <- common$genotype_m101
 
 # Assign a consistent individual order to genotype rows and model effects.
-ids <- seq_len(
-  nrow(geno)
-)
+ids <- seq_len(nrow(geno))
 
-id_labels <- sprintf(
-  "ID%04d",
-  ids
-)
+id_labels <- sprintf("ID%04d", ids)
 
 rownames(geno) <- id_labels
 
 scenario_names <- colnames(phenotype)
 
-model_names <- c(
-  "GBLUP_A",
-  "GBLUP_AD",
-  "GBLUP_ADE"
-)
+model_names <- c("GBLUP_A", "GBLUP_AD", "GBLUP_ADE")
+```
 
+The next table checks the dimensions and roles of the inputs.
+
+```{r inputs-summary}
 # Summarize the dimensions and statistical roles of the input objects.
 input_summary <- data.frame(
-  Object = c(
-    "Phenotype",
-    "True genetic value",
-    "Genotype",
-    "Outer validation splits"
-  ),
+  Object = c("Phenotype", "True genetic value", "Genotype",
+             "Outer validation splits"),
   Structure = c(
     paste(dim(phenotype), collapse = " x "),
     paste(dim(true_g), collapse = " x "),
@@ -256,24 +248,15 @@ N(0,\mathbf{I}\sigma_\varepsilon^2).
 ```{r relationship-matrix-roles}
 # Associate each GBLUP structure with its genomic covariance components.
 relationship_matrices <- data.frame(
-  Model = c(
-    "GBLUP-A",
-    "GBLUP-AD",
-    "GBLUP-ADE"
-  ),
-  Matrices = c(
-    "A",
-    "A + D",
-    "A + D + E"
-  ),
-  Genetic_effects = c(
-    "Additive",
-    "Additive + dominance",
-    "Additive + dominance + epistasis"
-  ),
+  Model = c("GBLUP-A", "GBLUP-AD", "GBLUP-ADE"),
+  Matrices = c("A", "A + D", "A + D + E"),
+  Genetic_effects = c("Additive", "Additive + dominance",
+                      "Additive + dominance + epistasis"),
   stringsAsFactors = FALSE
 )
+```
 
+```{r relationship-matrix-table}
 relationship_matrices |>
   knitr::kable(
     format = "html",
@@ -296,23 +279,11 @@ summary file.
 
 ```{r genomic-kernels, eval=FALSE}
 # Construct additive, dominance, and additive-by-additive genomic kernels.
-A_matrix <- sommer::A.mat(
-  geno,
-  min.MAF = 0
-)
+A_matrix <- sommer::A.mat(geno, min.MAF = 0)
 
-D_matrix <- sommer::D.mat(
-  geno,
-  nishio = TRUE,
-  min.MAF = 0
-)
+D_matrix <- sommer::D.mat(geno, nishio = TRUE, min.MAF = 0)
 
-E_matrix <- sommer::E.mat(
-  geno,
-  nishio = TRUE,
-  type = "A#A",
-  min.MAF = 0
-)
+E_matrix <- sommer::E.mat(geno, nishio = TRUE, type = "A#A", min.MAF = 0)
 
 # Align rows and columns across all three matrices by individual.
 rownames(A_matrix) <- id_labels
@@ -323,7 +294,12 @@ colnames(D_matrix) <- id_labels
 
 rownames(E_matrix) <- id_labels
 colnames(E_matrix) <- id_labels
+```
 
+The matrix diagnostics evaluate dimensions, symmetry, finite entries,
+and diagonal values. They belong to the original matrix-generation stage.
+
+```{r genomic-kernel-diagnostics, eval=FALSE}
 # Describe dimensions, symmetry, finite entries, and mean diagonals.
 kernel_summary <- data.frame(
   Kernel = c(
@@ -376,7 +352,12 @@ kernel_summary <- data.frame(
   ),
   stringsAsFactors = FALSE
 )
+```
 
+The following export is also disabled during ordinary site builds,
+so the audited summary file is not overwritten.
+
+```{r genomic-kernel-export, eval=FALSE}
 dir.create(
   "output/simulated/gblup",
   recursive = TRUE,
@@ -395,24 +376,17 @@ The stored summary below checks matrix dimensions, symmetry, finite entries,
 and mean diagonal values. These diagnostics describe the matrices used in
 the original fits, without constructing or overwriting them during rendering.
 
-```{r kernel-summary}
+```{r kernel-summary-loading}
 # Retrieve the relationship-matrix summary for presentation.
 kernel_summary <- read.csv(
   "output/simulated/gblup/simulated_gblup_kernel_summary.csv",
   stringsAsFactors = FALSE
 )
+```
 
-kernel_summary[
-  ,
-  c(
-    "Kernel",
-    "Rows",
-    "Columns",
-    "Symmetric",
-    "Finite",
-    "Mean_diagonal"
-  )
-] |>
+```{r kernel-summary}
+kernel_summary[, c("Kernel", "Rows", "Columns",
+                   "Symmetric", "Finite", "Mean_diagonal")] |>
   knitr::kable(
     format = "html",
     digits = 4,
@@ -841,32 +815,26 @@ results; they do not estimate model parameters anew. Each scenario-model
 combination comprises five outer folds repeated five times, yielding 25
 completed fits.
 
-```{r task-summary}
+```{r gblup-results-loading}
 # Read the fit-level results before summarizing counts.
-results <- readRDS(
-  "output/simulated/gblup/simulated_gblup_results.rds"
-)
+results <- readRDS("output/simulated/gblup/simulated_gblup_results.rds")
+```
 
-results$Model <- factor(
-  results$Model,
-  levels = model_names
-)
+The model identifier is ordered for presentation without changing
+the stored numerical results.
 
+```{r gblup-results-preparation}
+results$Model <- factor(results$Model, levels = model_names)
+```
 
+```{r task-summary}
 # Tabulate completed fits for each scenario and model.
 task_summary <- as.data.frame(
-  table(
-    results$Scenario,
-    results$Model
-  ),
+  table(results$Scenario, results$Model),
   stringsAsFactors = FALSE
 )
 
-names(task_summary) <- c(
-  "Scenario",
-  "Model",
-  "Fits"
-)
+names(task_summary) <- c("Scenario", "Model", "Fits")
 
 task_summary |>
   knitr::kable(
@@ -938,20 +906,9 @@ genetic_performance <- aggregate(
 )
 
 genetic_performance <- genetic_performance[
-  order(
-    match(
-      genetic_performance$Scenario,
-      scenario_names
-    ),
-    match(
-      as.character(
-        genetic_performance$Model
-      ),
-      model_names
-    )
-  ),
-  ,
-  drop = FALSE
+  order(match(genetic_performance$Scenario, scenario_names),
+        match(as.character(genetic_performance$Model), model_names)),
+  , drop = FALSE
 ]
 
 # Keep all six metrics visible inside the page width.
@@ -1001,20 +958,9 @@ phenotype_performance <- aggregate(
 )
 
 phenotype_performance <- phenotype_performance[
-  order(
-    match(
-      phenotype_performance$Scenario,
-      scenario_names
-    ),
-    match(
-      as.character(
-        phenotype_performance$Model
-      ),
-      model_names
-    )
-  ),
-  ,
-  drop = FALSE
+  order(match(phenotype_performance$Scenario, scenario_names),
+        match(as.character(phenotype_performance$Model), model_names)),
+  , drop = FALSE
 ]
 
 # Keep all six metrics visible inside the page width.
@@ -1062,11 +1008,7 @@ p_genetic_correlation <- ggplot(
     )
   ) +
   scale_fill_gdocs(
-    labels = c(
-      "GBLUP-A",
-      "GBLUP-AD",
-      "GBLUP-ADE"
-    )
+    labels = c("GBLUP-A", "GBLUP-AD", "GBLUP-ADE")
   ) +
   labs(
     x = "Simulation scenario",
@@ -1075,9 +1017,7 @@ p_genetic_correlation <- ggplot(
   ) +
   theme_gdocs()
 
-print(
-  p_genetic_correlation
-)
+print(p_genetic_correlation)
 ```
 
 ```{r save-genetic-correlation-tiff, eval=FALSE, include=FALSE}
@@ -1115,11 +1055,7 @@ p_genetic_rmse <- ggplot(
     )
   ) +
   scale_fill_gdocs(
-    labels = c(
-      "GBLUP-A",
-      "GBLUP-AD",
-      "GBLUP-ADE"
-    )
+    labels = c("GBLUP-A", "GBLUP-AD", "GBLUP-ADE")
   ) +
   labs(
     x = "Simulation scenario",
@@ -1128,9 +1064,7 @@ p_genetic_rmse <- ggplot(
   ) +
   theme_gdocs()
 
-print(
-  p_genetic_rmse
-)
+print(p_genetic_rmse)
 ```
 
 ```{r save-genetic-rmse-tiff, eval=FALSE, include=FALSE}
@@ -1226,10 +1160,7 @@ The table below summarizes the mean fitting and prediction time per model.
 ```{r time-summary}
 # Average elapsed fitting and prediction times by model.
 time_summary <- aggregate(
-  cbind(
-    Fit_seconds,
-    Predict_seconds
-  ) ~ Model,
+  cbind(Fit_seconds, Predict_seconds) ~ Model,
   data = results,
   FUN = mean,
   na.rm = TRUE
