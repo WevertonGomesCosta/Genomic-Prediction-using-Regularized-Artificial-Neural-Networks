@@ -175,7 +175,11 @@ input_components |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
+```
 
+The dimensions above confirm the three aligned matrices. Partition membership is now generated solely from the row identifiers stored in the M01 object.
+
+```{r partition-identifier-universe}
 # Use only the stored row identifiers to generate the folds.
 ids <- as.integer(simulated_common$metadata$row_identifier)
 
@@ -200,7 +204,6 @@ individual_universe |>
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
-
 The displayed objects establish the partitioning universe:
 
 - **1,000 rows** are shared by phenotype, true genetic value, and genotype data;
@@ -234,7 +237,11 @@ outer_assignment_list <- vector(
   "list",
   N_OUTER_REPEATS
 )
+```
 
+The outer-assignment list is initialized once. The next block shuffles the same 1,000 identifiers independently for each repetition and assigns them to five balanced folds.
+
+```{r generate-outer-folds}
 # Build one balanced five-fold assignment for each repetition.
 for (rep_id in seq_len(N_OUTER_REPEATS)) {
 
@@ -284,7 +291,11 @@ outer_assignments$SplitID <- sprintf(
   outer_assignments$Repetition,
   outer_assignments$OuterFold
 )
+```
 
+The outer fold assignments have been constructed and labeled. Their assessment and analysis sizes are summarized separately to verify the intended 200/800 allocation.
+
+```{r summarize-outer-fold-sizes}
 # Count the assessment and analysis individuals in every outer split.
 outer_sizes <- aggregate(
   ID ~ Repetition + OuterFold + SplitID,
@@ -302,7 +313,6 @@ outer_sizes |>
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
-
 The outer table should be read as follows:
 
 - **25 rows:** 5 repetitions x 5 outer folds;
@@ -330,7 +340,11 @@ outer_splits <- setNames(
   vector("list", length(outer_split_ids)),
   outer_split_ids
 )
+```
 
+The 25 split identifiers are now available. Each one will be represented by two explicitly disjoint ID vectors, ready for reuse by GBLUP and ANN.
+
+```{r create-outer-split-sets}
 # Store the two ID sets consumed later by GBLUP-ADE and ANN.
 for (split_id in outer_split_ids) {
 
@@ -349,7 +363,11 @@ for (split_id in outer_split_ids) {
     assessment_ids = sort(assessment_ids)
   )
 }
+```
 
+The split-list objects are constructed. The first split illustrates the exact stored structure without changing which individuals belong to any fold.
+
+```{r example-outer-split}
 example_outer_split <- outer_splits[[1]]
 
 outer_object_summary <- data.frame(
@@ -392,7 +410,6 @@ outer_object_summary |>
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
-
 The example makes the outer separation explicit: the 800 analysis IDs and 200
 assessment IDs do not overlap, and the same list structure is stored for all 25
 outer splits.
@@ -429,7 +446,11 @@ inner_splits <- setNames(
   vector("list", length(outer_splits)),
   names(outer_splits)
 )
+```
 
+The nested data structures are initialized. The inner-fold loop begins only with `outer_split$analysis_ids`, ensuring that the 200 outer-assessment individuals cannot enter inner tuning.
+
+```{r generate-inner-folds}
 # Generate four inner folds separately within each outer analysis set.
 for (split_id in names(outer_splits)) {
 
@@ -511,7 +532,11 @@ for (split_id in names(outer_splits)) {
 
   inner_splits[[split_id]] <- current_inner_splits
 }
+```
 
+All 100 inner analysis/assessment pairs have been generated. The next block combines their assignment records and derives the realized fold sizes.
+
+```{r compile-inner-assignments}
 inner_assignments <- do.call(
   rbind,
   inner_assignments_list
@@ -526,7 +551,6 @@ inner_sizes <- aggregate(
 names(inner_sizes)[names(inner_sizes) == "ID"] <- "Assessment_N"
 inner_sizes$Analysis_N <- 800L - inner_sizes$Assessment_N
 ```
-
 ### 5.2 Inner split sizes
 
 The first 20 inner partitions illustrate the allocation of 600 analysis and 200 assessment individuals used in all 100 inner splits.
@@ -637,7 +661,7 @@ p_validation <- ggplot(validation_flow) +
 print(p_validation)
 ```
 
-```{r save-nested-validation-tiff, include=FALSE}
+```{r save-nested-validation-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m02/figures/nested_cross_validation_design.tiff",
   plot = p_validation,
@@ -782,7 +806,11 @@ for (i in seq_along(outer_splits)) {
 }
 
 outer_overlap <- max(outer_overlap_values)
+```
 
+The outer-split overlap has been measured. The same disjointness check now runs over all 100 inner splits, without using any prediction outcomes.
+
+```{r audit-inner-overlap}
 # Measure overlap directly from all 100 inner splits.
 inner_overlap_values <- integer(
   length(outer_splits) * N_INNER_FOLDS
@@ -807,7 +835,11 @@ for (split_id in names(inner_splits)) {
 }
 
 inner_overlap <- max(inner_overlap_values)
+```
 
+Both overlap summaries are available. The final table reports the observed counts from the stored partition objects, independently of the design parameters.
+
+```{r report-validation-integrity}
 validation_observed <- data.frame(
   Quantity = c(
     "Outer assignment rows",
@@ -843,7 +875,6 @@ validation_observed |>
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 ```
-
 The resulting partitions have the following characteristics:
 
 - **5,000 outer assignment rows:** 1,000 individuals x 5 repetitions;
@@ -864,7 +895,7 @@ The saved files retain:
 - the explicit analysis and assessment ID vectors for every split;
 - the cross-validation settings.
 
-```{r save-validation-design, include=FALSE}
+```{r save-validation-design, eval=FALSE, include=FALSE}
 dir.create(
   "output/simulated/validation",
   showWarnings = FALSE,
@@ -888,7 +919,11 @@ write.csv(
   "output/simulated/validation/simulated_cv_design_summary.csv",
   row.names = FALSE
 )
+```
 
+The three CSV export commands document the existing versioned files. They are disabled during ordinary site rendering so that scientific partition artifacts are not regenerated.
+
+```{r construct-validation-design, include=FALSE}
 # Preserve the established object structure consumed by M03 and M04.
 cv_design <- list(
   metadata = list(
@@ -913,14 +948,17 @@ cv_design <- list(
   inner_assignments = inner_assignments,
   inner_splits = inner_splits
 )
+```
 
+The `cv_design` list is assembled in memory with its original metadata and nested ID sets. The RDS export remains documented below but is disabled during HTML rendering, preserving the canonical file consumed by M03 and M04.
+
+```{r export-validation-rds, eval=FALSE, include=FALSE}
 saveRDS(
   cv_design,
   "output/simulated/validation/simulated_cv_design.rds",
   compress = "gzip"
 )
 ```
-
 The common cross-validation partitions allow direct comparison of GBLUP and ANN methods on identical assessment individuals.
 
 ## 9. Navigation
