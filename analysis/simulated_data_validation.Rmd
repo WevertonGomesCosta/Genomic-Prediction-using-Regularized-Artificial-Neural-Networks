@@ -29,8 +29,9 @@ Cross-validation follows four specifications:
   25 outer held-out evaluations.
 - **Nested inner cross-validation:** each outer analysis set is divided into 4
   inner folds for ANN hyperparameter selection.
-- **Common partitions:** the same outer and inner assignments are reused for all
-  six simulation scenarios and all prediction methods.
+- **Common partitions:** the outer assessment partitions are shared by GBLUP
+  and ANN across all six simulation scenarios. Inner partitions are reused
+  to compare ANN candidates within each outer split.
 - **Information separation:** phenotype, true genetic value, scenario, and model
   identity do not participate in fold generation.
 
@@ -713,16 +714,20 @@ The resulting partitions have the following characteristics:
 - **zero overlap:** analysis and assessment sets remain disjoint at both levels.
 
 
-## 8. Saved validation object
+## 8. Validation design for model comparison
 
-The GBLUP and ANN methods use a common set of cross-validation partitions.
+The `cv_design` object contains the partition definitions used by subsequent
+GBLUP and ANN analyses:
 
-The saved files retain:
+- `metadata` records the fixed seed, the six simulation scenarios, fold
+  counts, and analysis and assessment sample sizes;
+- `outer_assignments` and `outer_splits` specify the 25 shared outer
+  evaluations, each with 800 analysis and 200 assessment individuals;
+- `inner_assignments` and `inner_splits` specify the 100 inner
+  subdivisions, each with 600 analysis and 200 assessment individuals.
 
-- the 5,000 outer assignment rows;
-- the 20,000 inner assignment rows;
-- the explicit analysis and assessment ID vectors for every split;
-- the cross-validation settings.
+The inner partitions support ANN hyperparameter selection, while the
+outer assessment sets enable matched comparisons between GBLUP and ANN.
 
 ```{r save-validation-design, eval=FALSE, include=FALSE}
 dir.create("output/simulated/validation", showWarnings = FALSE, recursive = TRUE)
@@ -742,9 +747,7 @@ write.csv(
 write.csv(design_summary, "output/simulated/validation/simulated_cv_design_summary.csv", row.names = FALSE)
 ```
 
-The three CSV export commands document the existing versioned files. They are disabled during ordinary site rendering so that scientific partition artifacts are not regenerated.
-
-```{r construct-validation-design, include=FALSE}
+```{r construct-validation-design}
 # Preserve the established object structure consumed by M03 and M04.
 cv_design <- list(
   metadata = list(
@@ -771,12 +774,9 @@ cv_design <- list(
 )
 ```
 
-The `cv_design` list is assembled in memory with its original metadata and nested ID sets. The RDS export remains documented below but is disabled during HTML rendering, preserving the canonical file consumed by M03 and M04.
-
 ```{r export-validation-rds, eval=FALSE, include=FALSE}
 saveRDS(cv_design, "output/simulated/validation/simulated_cv_design.rds", compress = "gzip")
 ```
-The common cross-validation partitions allow direct comparison of GBLUP and ANN methods on identical assessment individuals.
 
 ## 9. Navigation
 
