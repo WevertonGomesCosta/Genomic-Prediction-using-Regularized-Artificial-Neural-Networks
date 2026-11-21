@@ -167,6 +167,12 @@ ann_variants |>
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
 
+```
+
+The optimization controls are listed separately from the ANN model definitions.
+
+
+```{r ann-fixed-controls, warning=FALSE, message=FALSE}
 fixed_controls <- data.frame(
   Control = c(
     "Activation",
@@ -191,6 +197,9 @@ fixed_controls <- data.frame(
   stringsAsFactors = FALSE
 )
 
+```
+
+```{r ann-fixed-controls-table, warning=FALSE, message=FALSE}
 fixed_controls |>
   knitr::kable(
     format = "html",
@@ -217,6 +226,12 @@ cv <- readRDS(
   "output/simulated/validation/simulated_cv_design.rds"
 )
 
+```
+
+The following objects are extracted from the common simulation data and validation design.
+
+
+```{r input-preparation}
 phenotype <- common$phenotype
 geno <- common$genotype_m101
 control <- common$scenario_control
@@ -224,6 +239,9 @@ control <- common$scenario_control
 ids <- seq_len(nrow(geno))
 scenario_names <- colnames(phenotype)
 
+```
+
+```{r input-summary}
 input_summary <- data.frame(
   Object = c(
     "Phenotype",
@@ -246,6 +264,9 @@ input_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 
+```
+
+```{r input-summary-table}
 input_summary |>
   knitr::kable(
     format = "html",
@@ -389,6 +410,12 @@ L1_L2_GRID <- expand.grid(
   stringsAsFactors = FALSE
 )
 
+```
+
+The following grids enumerate the prespecified candidate combinations without running any models.
+
+
+```{r candidate-grids}
 structure_grid <- expand.grid(
   Architecture = names(ARCHITECTURES),
   Learning_rate = LEARNING_RATES,
@@ -420,6 +447,9 @@ l1l2_grid <- data.frame(
   stringsAsFactors = FALSE
 )
 
+```
+
+```{r candidate-search-summary}
 search_summary <- data.frame(
   Stage = c(
     "Architecture + learning rate with ANN_0",
@@ -442,6 +472,9 @@ search_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 
+```
+
+```{r candidate-search-table}
 search_summary |>
   knitr::kable(
     format = "html",
@@ -1499,6 +1532,12 @@ rownames(fold_results) <- NULL
 run_seconds <-
   proc.time()[["elapsed"]] - run_start
 
+```
+
+The run metadata record the configuration and execution context of the tuning results.
+
+
+```{r tuning-run-metadata, eval=RUN_ANN_TUNING}
 manifest <- list(
   analysis = "canonical_simulated_ann_tuning",
   dataset = "simulated",
@@ -1566,6 +1605,12 @@ manifest_table <- data.frame(
   stringsAsFactors = FALSE
 )
 
+```
+
+The following export operations are part of the full tuning run and remain disabled in ordinary rendering.
+
+
+```{r tuning-artifacts-export, eval=RUN_ANN_TUNING}
 saveRDS(
   selected_configurations,
   SELECTED_RDS,
@@ -1638,6 +1683,12 @@ candidate_summary <- readRDS(CANDIDATE_RDS)
 fold_results <- readRDS(FOLD_RDS)
 tuning_metadata <- readRDS(RUN_RDS)
 
+```
+
+Saved tuning objects are checked against their configuration identifier and expected metric fields.
+
+
+```{r tuning-records-validation}
 stopifnot(
   identical(tuning_metadata$config_id, ANN_TUNING_CONFIG_ID),
   setequal(
@@ -1651,6 +1702,9 @@ stopifnot(
   all(c("RMSE", "Pearson") %in% names(fold_results))
 )
 
+```
+
+```{r tuning-records-summary}
 saved_tuning_summary <- data.frame(
   Object = c(
     "Selected configurations",
@@ -1665,6 +1719,9 @@ saved_tuning_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 
+```
+
+```{r tuning-records-table}
 saved_tuning_summary |>
   knitr::kable(
     format = "html",
@@ -1703,6 +1760,9 @@ names(learning_rate_frequency) <- c(
   "Selected_tasks"
 )
 
+```
+
+```{r tuning-frequency-tables}
 architecture_frequency |>
   knitr::kable(
     format = "html",
@@ -1742,6 +1802,9 @@ optimization_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 
+```
+
+```{r tuning-diagnostics-table}
 optimization_summary |>
   knitr::kable(
     format = "html",
@@ -2632,6 +2695,12 @@ rownames(epoch_selection) <- NULL
 run_seconds <-
   proc.time()[["elapsed"]] - run_start
 
+```
+
+The final run metadata document the selected-epoch refit rule and the stored results.
+
+
+```{r final-run-metadata, eval=RUN_ANN}
 final_meta <- list(
   dataset = "simulated",
   analysis = "canonical_simulated_ann",
@@ -2665,6 +2734,12 @@ final_meta <- list(
   timestamp = as.character(Sys.time())
 )
 
+```
+
+The following exports belong to the full ANN run and are not executed during ordinary rendering.
+
+
+```{r final-artifacts-export, eval=RUN_ANN}
 saveRDS(
   results,
   FINAL_RESULTS_RDS,
@@ -2711,6 +2786,12 @@ predictions <- readRDS(FINAL_PREDICTIONS_RDS)
 epoch_selection <- readRDS(FINAL_EPOCH_RDS)
 final_meta <- readRDS(FINAL_RUN_RDS)
 
+```
+
+The next checks verify the fields and configuration identifiers of the persisted final results.
+
+
+```{r final-records-validation}
 expected_heldout_metrics <- c(
   "Genetic_Pearson",
   "Genetic_Spearman",
@@ -2738,6 +2819,9 @@ stopifnot(
   "Validation_Pearson" %in% names(epoch_selection)
 )
 
+```
+
+```{r final-records-summary}
 final_output_summary <- data.frame(
   Object = c(
     "Model-task results",
@@ -2757,6 +2841,9 @@ final_output_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 
+```
+
+```{r final-records-table}
 final_output_summary |>
   knitr::kable(
     format = "html",
@@ -2813,6 +2900,9 @@ scenario_performance <- scenario_performance[
   drop = FALSE
 ]
 
+```
+
+```{r genetic-performance-table}
 scenario_performance[
   , c(
     "Scenario",
@@ -2919,7 +3009,7 @@ p_ann_correlation <- ggplot(
 print(p_ann_correlation)
 ```
 
-```{r save-ann-correlation-tiff, include=FALSE}
+```{r save-ann-correlation-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m04/figures/ann_genetic_correlation_by_model.tiff",
   plot = p_ann_correlation,
@@ -2981,7 +3071,7 @@ p_ann_rmse <- ggplot(
 print(p_ann_rmse)
 ```
 
-```{r save-ann-rmse-tiff, include=FALSE}
+```{r save-ann-rmse-tiff, eval=FALSE, include=FALSE}
 ggsave(
   "output/simulated/m04/figures/ann_genetic_rmse_by_model.tiff",
   plot = p_ann_rmse,
@@ -3015,6 +3105,9 @@ overall_ann <- overall_ann[
   drop = FALSE
 ]
 
+```
+
+```{r overall-ann-table}
 overall_ann |>
   knitr::kable(
     format = "html",
