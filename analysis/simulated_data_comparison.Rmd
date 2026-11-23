@@ -215,13 +215,19 @@ rownames(model_structure) <- NULL
 Each of the seven models should contribute 150 tasks and 200 assessment predictions per task.
 
 ```{r matched-task-table}
-model_structure |>
-  knitr::kable(
-    format = "html",
-    caption = "Observed task and assessment structure for the seven methods",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    model_structure |>
+      knitr::kable(
+        format = "html",
+        caption = "Observed task and assessment structure for the seven methods",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 Cross-model matching uses scenario, repetition, fold, split ID and individual ID. The model-specific TaskID is deliberately not a matching key.
@@ -286,14 +292,20 @@ coverage requires 30,000 matched records per model, with zero differences
 for both evaluation targets.
 
 ```{r matched-target-table}
-target_match |>
-  knitr::kable(
-    format = "html",
-    digits = 12,
-    caption = paste("Maximum paired target difference relative to", reference_model),
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    target_match |>
+      knitr::kable(
+        format = "html",
+        digits = 12,
+        caption = paste("Maximum paired target difference relative to", reference_model),
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 Every model contributes 150 tasks with 200 held-out predictions per task.
@@ -450,14 +462,20 @@ overall_genetic_display <- overall[
   drop = FALSE
 ]
 
-overall_genetic_display |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Overall held-out performance against true genetic value",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    overall_genetic_display |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "Overall held-out performance against true genetic value",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 The secondary table evaluates the same predictions against observed phenotypes, which include residual variation.
@@ -477,14 +495,20 @@ overall_phenotype_display <- overall[
   drop = FALSE
 ]
 
-overall_phenotype_display |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Secondary held-out performance against observed phenotype",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    overall_phenotype_display |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "Secondary held-out performance against observed phenotype",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 The following code identifies numerical leaders. It does not conduct a significance test.
@@ -731,14 +755,20 @@ scenario_display <- scenario_summary[
   drop = FALSE
 ]
 
-scenario_display |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Primary genetic-value prediction metrics by scenario",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    scenario_display |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "Primary genetic-value prediction metrics by scenario",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 The following code selects the model with the highest scenario-level mean
@@ -847,13 +877,19 @@ scenario_win_summary <- data.frame(
 For each metric the win counts sum to six, one winner per scenario.
 
 ```{r scenario-winners-table}
-scenario_win_summary |>
-  knitr::kable(
-    format = "html",
-    caption = "Number of scenario-level wins for each primary genetic metric",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    scenario_win_summary |>
+      knitr::kable(
+        format = "html",
+        caption = "Number of scenario-level wins for each primary genetic metric",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 GBLUP-AD has the highest mean genetic Pearson correlation in
@@ -981,69 +1017,93 @@ The four tables below organize the 84 matched contrasts by primary genetic metri
 #### Pearson
 
 ```{r matched-contrasts-pearson}
-pairwise_primary[
-  pairwise_primary$Metric == "Genetic_Pearson",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Pearson: matched contrasts for all 21 model pairs",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_primary[
+      pairwise_primary$Metric == "Genetic_Pearson",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "Pearson: matched contrasts for all 21 model pairs",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 #### Spearman
 
 ```{r matched-contrasts-spearman}
-pairwise_primary[
-  pairwise_primary$Metric == "Genetic_Spearman",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Spearman: matched contrasts for all 21 model pairs",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_primary[
+      pairwise_primary$Metric == "Genetic_Spearman",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "Spearman: matched contrasts for all 21 model pairs",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 #### RMSE
 
 ```{r matched-contrasts-rmse}
-pairwise_primary[
-  pairwise_primary$Metric == "Genetic_RMSE",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "RMSE: matched contrasts for all 21 model pairs",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_primary[
+      pairwise_primary$Metric == "Genetic_RMSE",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "RMSE: matched contrasts for all 21 model pairs",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 #### MAE
 
 ```{r matched-contrasts-mae}
-pairwise_primary[
-  pairwise_primary$Metric == "Genetic_MAE",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "MAE: matched contrasts for all 21 model pairs",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_primary[
+      pairwise_primary$Metric == "Genetic_MAE",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "MAE: matched contrasts for all 21 model pairs",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 `Model_1_better` and `Model_2_better` count matched outer tasks, so every
@@ -1148,103 +1208,139 @@ These results are descriptive, not independent significance tests.
 #### C1
 
 ```{r matched-scenario-c1}
-pairwise_scenario_primary[
-  pairwise_scenario_primary$Scenario == "C1",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "C1: matched contrasts for all 21 model pairs and four metrics",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_scenario_primary[
+      pairwise_scenario_primary$Scenario == "C1",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "C1: matched contrasts for all 21 model pairs and four metrics",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 #### C2
 
 ```{r matched-scenario-c2}
-pairwise_scenario_primary[
-  pairwise_scenario_primary$Scenario == "C2",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "C2: matched contrasts for all 21 model pairs and four metrics",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_scenario_primary[
+      pairwise_scenario_primary$Scenario == "C2",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "C2: matched contrasts for all 21 model pairs and four metrics",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 #### C3
 
 ```{r matched-scenario-c3}
-pairwise_scenario_primary[
-  pairwise_scenario_primary$Scenario == "C3",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "C3: matched contrasts for all 21 model pairs and four metrics",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_scenario_primary[
+      pairwise_scenario_primary$Scenario == "C3",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "C3: matched contrasts for all 21 model pairs and four metrics",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 #### C4
 
 ```{r matched-scenario-c4}
-pairwise_scenario_primary[
-  pairwise_scenario_primary$Scenario == "C4",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "C4: matched contrasts for all 21 model pairs and four metrics",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_scenario_primary[
+      pairwise_scenario_primary$Scenario == "C4",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "C4: matched contrasts for all 21 model pairs and four metrics",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 #### C5
 
 ```{r matched-scenario-c5}
-pairwise_scenario_primary[
-  pairwise_scenario_primary$Scenario == "C5",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "C5: matched contrasts for all 21 model pairs and four metrics",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_scenario_primary[
+      pairwise_scenario_primary$Scenario == "C5",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "C5: matched contrasts for all 21 model pairs and four metrics",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 #### C6
 
 ```{r matched-scenario-c6}
-pairwise_scenario_primary[
-  pairwise_scenario_primary$Scenario == "C6",
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "C6: matched contrasts for all 21 model pairs and four metrics",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    pairwise_scenario_primary[
+      pairwise_scenario_primary$Scenario == "C6",
+      ,
+      drop = FALSE
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "C6: matched contrasts for all 21 model pairs and four metrics",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 The scenario-level contrasts show whether pairwise differences are concentrated
@@ -1287,14 +1383,20 @@ ann_regularization_display <- overall[
   drop = FALSE
 ]
 
-ann_regularization_display |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Overall primary genetic-value performance among ANN variants",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    ann_regularization_display |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "Overall primary genetic-value performance among ANN variants",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 These objects supply the numerical values reported in the interpretation immediately below.
