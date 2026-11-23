@@ -824,46 +824,22 @@ not independent inferential replications.
 ```{r scenario-win-counts}
 scenario_win_summary <- data.frame(
   Model = model_order,
-  Pearson_wins = vapply(
-    model_order,
-    function(model) {
-      sum(
-        scenario_winners$Best_Pearson ==
-          model
-      )
-    },
-    integer(1)
-  ),
-  Spearman_wins = vapply(
-    model_order,
-    function(model) {
-      sum(
-        scenario_winners$Best_Spearman ==
-          model
-      )
-    },
-    integer(1)
-  ),
-  RMSE_wins = vapply(
-    model_order,
-    function(model) {
-      sum(
-        scenario_winners$Best_RMSE ==
-          model
-      )
-    },
-    integer(1)
-  ),
-  MAE_wins = vapply(
-    model_order,
-    function(model) {
-      sum(
-        scenario_winners$Best_MAE ==
-          model
-      )
-    },
-    integer(1)
-  ),
+  Pearson_wins = as.integer(table(factor(
+    scenario_winners$Best_Pearson,
+    levels = model_order
+  ))),
+  Spearman_wins = as.integer(table(factor(
+    scenario_winners$Best_Spearman,
+    levels = model_order
+  ))),
+  RMSE_wins = as.integer(table(factor(
+    scenario_winners$Best_RMSE,
+    levels = model_order
+  ))),
+  MAE_wins = as.integer(table(factor(
+    scenario_winners$Best_MAE,
+    levels = model_order
+  ))),
   stringsAsFactors = FALSE
 )
 ```
@@ -1000,14 +976,71 @@ pairwise_primary <- pairwise[
 ```
 
 
-This table displays matched model means, the mean signed advantage, the number N of finite comparisons, and the number of tasks favoring each model. N is not a count of independent replicates.
+The four tables below organize the 84 matched contrasts by primary genetic metric. Each table includes all 21 method pairs, their means, signed advantage, and task-level counts. N is not a count of statistically independent replicates.
 
-```{r matched-contrasts-table}
-pairwise_primary |>
+#### Pearson
+
+```{r matched-contrasts-pearson}
+pairwise_primary[
+  pairwise_primary$Metric == "Genetic_Pearson",
+  ,
+  drop = FALSE
+] |>
   knitr::kable(
     format = "html",
     digits = 4,
-    caption = "Matched pairwise contrasts among all seven methods for primary genetic-value metrics; positive advantage favors Model_1",
+    caption = "Pearson: matched contrasts for all 21 model pairs",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+#### Spearman
+
+```{r matched-contrasts-spearman}
+pairwise_primary[
+  pairwise_primary$Metric == "Genetic_Spearman",
+  ,
+  drop = FALSE
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "Spearman: matched contrasts for all 21 model pairs",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+#### RMSE
+
+```{r matched-contrasts-rmse}
+pairwise_primary[
+  pairwise_primary$Metric == "Genetic_RMSE",
+  ,
+  drop = FALSE
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "RMSE: matched contrasts for all 21 model pairs",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+#### MAE
+
+```{r matched-contrasts-mae}
+pairwise_primary[
+  pairwise_primary$Metric == "Genetic_MAE",
+  ,
+  drop = FALSE
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "MAE: matched contrasts for all 21 model pairs",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
@@ -1106,17 +1139,109 @@ pairwise_scenario_primary <- pairwise_scenario[
 ```
 
 
-The comprehensive table retains all 504 scenario-by-pair-by-metric contrasts.
-For each row, N is the count of matched tasks, and positive mean advantage
-favors Model_1. These rows are ordered by model pair and scenario, and are
-descriptive—not independent significance tests.
+The six tables below organize the 504 matched contrasts by simulation
+scenario. Each table contains all 21 method pairs and four primary
+genetic metrics, totaling 84 rows per scenario. N denotes the number
+of matched tasks, and positive mean advantage favors Model_1.
+These results are descriptive, not independent significance tests.
 
-```{r matched-scenario-table}
-pairwise_scenario_primary |>
+#### C1
+
+```{r matched-scenario-c1}
+pairwise_scenario_primary[
+  pairwise_scenario_primary$Scenario == "C1",
+  ,
+  drop = FALSE
+] |>
   knitr::kable(
     format = "html",
     digits = 4,
-    caption = "Matched pairwise advantages by scenario for the four primary genetic-value metrics; positive values favor Model_1",
+    caption = "C1: matched contrasts for all 21 model pairs and four metrics",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+#### C2
+
+```{r matched-scenario-c2}
+pairwise_scenario_primary[
+  pairwise_scenario_primary$Scenario == "C2",
+  ,
+  drop = FALSE
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "C2: matched contrasts for all 21 model pairs and four metrics",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+#### C3
+
+```{r matched-scenario-c3}
+pairwise_scenario_primary[
+  pairwise_scenario_primary$Scenario == "C3",
+  ,
+  drop = FALSE
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "C3: matched contrasts for all 21 model pairs and four metrics",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+#### C4
+
+```{r matched-scenario-c4}
+pairwise_scenario_primary[
+  pairwise_scenario_primary$Scenario == "C4",
+  ,
+  drop = FALSE
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "C4: matched contrasts for all 21 model pairs and four metrics",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+#### C5
+
+```{r matched-scenario-c5}
+pairwise_scenario_primary[
+  pairwise_scenario_primary$Scenario == "C5",
+  ,
+  drop = FALSE
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "C5: matched contrasts for all 21 model pairs and four metrics",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered"'
+  )
+```
+
+#### C6
+
+```{r matched-scenario-c6}
+pairwise_scenario_primary[
+  pairwise_scenario_primary$Scenario == "C6",
+  ,
+  drop = FALSE
+] |>
+  knitr::kable(
+    format = "html",
+    digits = 4,
+    caption = "C6: matched contrasts for all 21 model pairs and four metrics",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
