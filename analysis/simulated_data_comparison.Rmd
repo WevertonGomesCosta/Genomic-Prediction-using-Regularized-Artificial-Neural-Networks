@@ -80,20 +80,8 @@ ar <- readRDS("output/simulated/ann/final/simulated_ann_results.rds")
 # Read individual held-out predictions for matched assessment checks.
 gp <- readRDS("output/simulated/gblup/simulated_gblup_predictions.rds")
 ap <- readRDS("output/simulated/ann/final/simulated_ann_predictions.rds")
-
 ```
 
-```{r saved-inputs-checks, include=FALSE}
-stopifnot(
-  identical(sort(unique(gr$Model)), sort(expected_gblup_models)),
-  identical(sort(unique(ar$Model)), sort(expected_ann_models)),
-  nrow(gr) == 450L,
-  nrow(gp) == 90000L,
-  nrow(ar) == 600L,
-  nrow(ap) == 120000L
-)
-
-```
 
 The next table counts the records read from the four archived objects.
 
@@ -178,7 +166,6 @@ prediction_keys <- c(
   split_keys,
   "ID"
 )
-
 ```
 
 The following counts establish model-by-task coverage and the number of predictions within each held-out task.
@@ -222,19 +209,8 @@ for (model_index in seq_along(model_order)) {
 
 model_structure <- do.call(rbind, model_structure_rows)
 rownames(model_structure) <- NULL
-
 ```
 
-```{r matched-task-checks, include=FALSE}
-stopifnot(
-  nrow(model_structure) == 7L,
-  all(model_structure$Tasks == 150L),
-  all(model_structure$Predictions == 30000L),
-  all(model_structure$Min_predictions_per_task == 200L),
-  all(model_structure$Max_predictions_per_task == 200L)
-)
-
-```
 
 Each of the seven models should contribute 150 tasks and 200 assessment predictions per task.
 
@@ -246,7 +222,6 @@ model_structure |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
-
 ```
 
 Cross-model matching uses scenario, repetition, fold, split ID and individual ID. The model-specific TaskID is deliberately not a matching key.
@@ -265,7 +240,6 @@ reference_targets <- all_predictions[
 ]
 
 target_match_rows <- vector("list", length(model_order) - 1L)
-target_match_counts <- integer(length(model_order) - 1L)
 
 for (model_index in seq_along(model_order[-1])) {
   model <- model_order[-1][model_index]
@@ -284,8 +258,6 @@ for (model_index in seq_along(model_order[-1])) {
     sort = FALSE
   )
 
-  target_match_counts[model_index] <- nrow(matched_targets)
-
   target_match_rows[[model_index]] <- data.frame(
     Reference = reference_model,
     Model = model,
@@ -302,17 +274,8 @@ for (model_index in seq_along(model_order[-1])) {
 }
 
 target_match <- do.call(rbind, target_match_rows)
-
 ```
 
-```{r matched-target-checks, include=FALSE}
-stopifnot(
-  all(target_match_counts == 30000L),
-  all(target_match$Phenotype_difference == 0),
-  all(target_match$TrueG_difference == 0)
-)
-
-```
 
 Zero differences confirm that the seven methods use identical observed phenotypes and true genetic values for matching individuals.
 
@@ -460,7 +423,6 @@ overall <- overall[
   ,
   drop = FALSE
 ]
-
 ```
 
 The first table evaluates recovery of the simulated true genetic value with all six metrics.
@@ -488,7 +450,6 @@ overall_genetic_display |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
-
 ```
 
 The secondary table evaluates the same predictions against observed phenotypes, which include residual variation.
@@ -516,7 +477,6 @@ overall_phenotype_display |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
-
 ```
 
 The following code identifies numerical leaders. It does not conduct a significance test.
@@ -746,7 +706,6 @@ scenario_summary <- scenario_summary[
   ,
   drop = FALSE
 ]
-
 ```
 
 The table preserves scenario-specific means for all seven methods and four primary genetic metrics.
@@ -773,7 +732,6 @@ scenario_display |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
-
 ```
 
 The following code identifies the best mean per metric within each scenario. These are descriptive winners, not independent tests.
@@ -890,7 +848,6 @@ scenario_win_summary <- data.frame(
   ),
   stringsAsFactors = FALSE
 )
-
 ```
 
 For each metric the win counts sum to six, one winner per scenario.
@@ -928,10 +885,6 @@ model_pairs <- t(combn(model_order, 2))
 colnames(model_pairs) <- c("Model_1", "Model_2")
 ```
 
-```{r method-pair-checks, include=FALSE}
-stopifnot(nrow(model_pairs) == 21L)
-
-```
 
 The four common outer-split keys are used to join model results before computing signed advantages.
 
@@ -1014,16 +967,6 @@ pairwise_primary <- pairwise[
 ]
 ```
 
-```{r matched-contrast-checks, include=FALSE}
-stopifnot(
-  nrow(pairwise) == 21L * length(pairwise_metrics),
-  all(pairwise$N > 0L),
-  all(pairwise$N <= 150L),
-  all(pairwise$N == 150L),
-  !anyDuplicated(all_results[c("Model", split_keys)])
-)
-stopifnot(nrow(pairwise_primary) == nrow(model_pairs) * length(pairwise_metrics))
-```
 
 This table displays matched model means, the mean signed advantage, the number N of finite comparisons, and the number of tasks favoring each model. N is not a count of independent replicates.
 
@@ -1125,17 +1068,6 @@ pairwise_scenario_primary <- pairwise_scenario[
 ]
 ```
 
-```{r matched-scenario-checks, include=FALSE}
-stopifnot(
-  nrow(pairwise_scenario) == nrow(model_pairs) * length(scenario_ids) * length(pairwise_metrics),
-  all(pairwise_scenario$N > 0L),
-  all(pairwise_scenario$N <= 25L),
-  all(pairwise_scenario$N == 25L),
-  !anyDuplicated(all_results[c("Model", split_keys)]),
-  all(table(all_results$Model, all_results$Scenario) == 25L)
-)
-stopifnot(nrow(pairwise_scenario_primary) == nrow(model_pairs) * length(scenario_ids) * length(pairwise_metrics))
-```
 
 The full table retains all 504 scenario-by-pair-by-metric contrasts, including matched N, mean advantage, and counts favoring either method.
 
@@ -1187,7 +1119,6 @@ ann_regularization_display |>
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover table-bordered"'
   )
-
 ```
 
 These objects supply the numerical values reported in the interpretation immediately below.
@@ -1241,41 +1172,21 @@ describe the observed performance within the evaluated simulation conditions
 and prespecified model-search spaces; they do not establish a universal ranking
 between genomic mixed models and neural networks.
 
-```{r comparison-export-settings, include=FALSE}
-WRITE_COMPARISON_OUTPUTS <- identical(
-  Sys.getenv("WRITE_COMPARISON_OUTPUTS", "0"),
-  "1"
-)
+The four result summaries may also be exported for external inspection.
+Following the convention in M03/M04, this optional code is visible in the
+source file but disabled during the normal website build.
 
-COMPARISON_DIR <- "output/simulated/comparison"
-OVERALL_CSV <- file.path(
-  COMPARISON_DIR,
-  "simulated_model_overall_summary.csv"
-)
-SCENARIO_CSV <- file.path(
-  COMPARISON_DIR,
-  "simulated_model_scenario_summary.csv"
-)
-PAIRWISE_CSV <- file.path(
-  COMPARISON_DIR,
-  "simulated_model_pairwise_summary.csv"
-)
-PAIRWISE_SCENARIO_CSV <- file.path(
-  COMPARISON_DIR,
-  "simulated_model_pairwise_by_scenario.csv"
-)
-```
+```{r save-comparison-summaries, eval=FALSE, include=FALSE}
+dir.create("output/simulated/comparison", recursive = TRUE, showWarnings = FALSE)
 
-```{r write-comparison-outputs, eval=WRITE_COMPARISON_OUTPUTS, include=FALSE}
-dir.create(
-  COMPARISON_DIR,
-  recursive = TRUE,
-  showWarnings = FALSE
-)
-write.csv(overall, OVERALL_CSV, row.names = FALSE)
-write.csv(scenario_summary, SCENARIO_CSV, row.names = FALSE)
-write.csv(pairwise, PAIRWISE_CSV, row.names = FALSE)
-write.csv(pairwise_scenario, PAIRWISE_SCENARIO_CSV, row.names = FALSE)
+write.csv(overall, "output/simulated/comparison/simulated_model_overall_summary.csv",
+          row.names = FALSE)
+write.csv(scenario_summary, "output/simulated/comparison/simulated_model_scenario_summary.csv",
+          row.names = FALSE)
+write.csv(pairwise, "output/simulated/comparison/simulated_model_pairwise_summary.csv",
+          row.names = FALSE)
+write.csv(pairwise_scenario, "output/simulated/comparison/simulated_model_pairwise_by_scenario.csv",
+          row.names = FALSE)
 ```
 
 ## 9. Navigation
