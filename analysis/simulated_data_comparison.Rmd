@@ -261,6 +261,9 @@ for (model_index in seq_along(model_order[-1])) {
   target_match_rows[[model_index]] <- data.frame(
     Reference = reference_model,
     Model = model,
+    Reference_predictions = nrow(reference_targets),
+    Model_predictions = nrow(candidate_targets),
+    Matched_predictions = nrow(matched_targets),
     Phenotype_difference = max(abs(
       matched_targets$Observed_Phenotype_Reference -
         matched_targets$Observed_Phenotype_Candidate
@@ -277,7 +280,10 @@ target_match <- do.call(rbind, target_match_rows)
 ```
 
 
-Zero differences confirm that the seven methods use identical observed phenotypes and true genetic values for matching individuals.
+The following table reports the reference and candidate record counts,
+individual-level match coverage, and maximum paired differences. Full
+coverage requires 30,000 matched records per model, with zero differences
+for both evaluation targets.
 
 ```{r matched-target-table}
 target_match |>
@@ -290,9 +296,11 @@ target_match |>
   )
 ```
 
-Every model contributes 150 tasks with 200 held-out predictions per task. The
-maximum paired differences in phenotype and true genetic value are zero, so the
-methods are evaluated on identical targets for identical held-out individuals.
+Every model contributes 150 tasks with 200 held-out predictions per task.
+All six comparisons recovered `r paste(unique(target_match$Matched_predictions), collapse = ", ")`
+matched observations, the same number as the available records per model.
+The maximum paired differences in phenotype and true genetic value are zero,
+confirming equal evaluation targets for these matched individuals.
 
 ## 3. Evaluation metrics
 
@@ -673,10 +681,15 @@ ggsave(
 
 Each scenario contains 25 outer tasks per model. The following analysis summarizes stored task metrics within C1-C6 without fitting new models.
 
-The scenario summary asks whether the overall pattern persists across C1-C6.
-These scenarios jointly vary genetic complexity and nominal heritability, so
-the sequence is not interpreted as the isolated causal effect of either
-quantity.
+The six M01 simulation settings, also used in M03 and M04, are C1 (8 QTL;
+nominal heritability 0.7), C2 (40; 0.7), C3 (80; 0.5), C4 (120; 0.5),
+C5 (240; 0.3), and C6 (480; 0.3). The number of quantitative trait loci
+and nominal heritability are simulation settings, not estimated genetic
+parameters. Since both change across the series, differences between
+scenarios cannot be attributed to either factor in isolation.
+
+The scenario summary evaluates whether the overall performance pattern
+persists across these six combinations of genetic conditions.
 
 ```{r scenario-performance}
 scenario_summary <- aggregate(
@@ -728,7 +741,11 @@ scenario_display |>
   )
 ```
 
-The following code identifies the best mean per metric within each scenario. These are descriptive winners, not independent tests.
+The following code selects the model with the highest scenario-level mean
+Pearson/Spearman correlation or lowest mean RMSE/MAE. The selection uses
+full-precision values through `which.max()` and `which.min()`; values that
+look tied after rounding to four decimals may differ before rounding.
+These descriptive winners are not independent statistical tests.
 
 ```{r scenario-leading-models}
 scenario_ids <- sort(
@@ -863,9 +880,18 @@ scenario_win_summary |>
   )
 ```
 
-Scenario-level winners are descriptive summaries only. They do not treat the
-six scenarios or the repeated outer folds as independent inferential
-replicates.
+GBLUP-AD has the highest mean genetic Pearson correlation in
+`r scenario_win_summary$Pearson_wins[scenario_win_summary$Model == "GBLUP_AD"]`
+of six scenarios, while GBLUP-ADE leads in
+`r scenario_win_summary$Pearson_wins[scenario_win_summary$Model == "GBLUP_ADE"]`.
+Nevertheless, the overall Pearson mean is
+`r sprintf("%.4f", overall$Genetic_Pearson[overall$Model == "GBLUP_ADE"])`
+for GBLUP-ADE, compared with
+`r sprintf("%.4f", overall$Genetic_Pearson[overall$Model == "GBLUP_AD"])`
+for GBLUP-AD. These results are compatible: counting the number of leading
+scenarios does not consider the magnitude of the differences, whereas the
+overall mean averages the 150 task-level values. Neither criterion establishes
+statistical significance or a universal ranking.
 
 ## 6. Pairwise matched contrasts among all methods
 
@@ -957,7 +983,12 @@ for (pair_index in seq_len(nrow(model_pairs))) {
 
 pairwise <- do.call(rbind, pairwise_rows)
 rownames(pairwise) <- NULL
+```
 
+The next step selects the four primary genetic metrics and the model means,
+signed advantage, and task counts required for interpreting each pair.
+
+```{r matched-contrasts-summary}
 pairwise_primary <- pairwise[
   pairwise$Metric %in% pairwise_metrics,
   c(
@@ -1059,7 +1090,12 @@ for (pair_index in seq_len(nrow(model_pairs))) {
 
 pairwise_scenario <- do.call(rbind, pairwise_scenario_rows)
 rownames(pairwise_scenario) <- NULL
+```
 
+The following selection preserves all scenario-specific paired results while
+presenting only the four prespecified primary genetic metrics.
+
+```{r matched-scenario-summary}
 pairwise_scenario_primary <- pairwise_scenario[
   pairwise_scenario$Metric %in% pairwise_metrics,
   c(
@@ -1070,7 +1106,10 @@ pairwise_scenario_primary <- pairwise_scenario[
 ```
 
 
-The full table retains all 504 scenario-by-pair-by-metric contrasts, including matched N, mean advantage, and counts favoring either method.
+The comprehensive table retains all 504 scenario-by-pair-by-metric contrasts.
+For each row, N is the count of matched tasks, and positive mean advantage
+favors Model_1. These rows are ordered by model pair and scenario, and are
+descriptive—not independent significance tests.
 
 ```{r matched-scenario-table}
 pairwise_scenario_primary |>
