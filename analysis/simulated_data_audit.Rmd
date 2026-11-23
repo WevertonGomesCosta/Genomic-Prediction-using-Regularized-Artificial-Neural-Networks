@@ -253,13 +253,19 @@ genotype_sample <- data.frame(
 
 names(genotype_sample)[-1] <- paste0("M", marker_sample)
 
-genotype_sample |>
-  knitr::kable(
-    format = "html",
-    caption = "Sample of 10 individuals and 12 markers distributed across the genotype matrix",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    genotype_sample |>
+      knitr::kable(
+        format = "html",
+        caption = "Sample of 10 individuals and 12 markers distributed across the genotype matrix",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 The displayed sample makes the structure of the complete genotype object
@@ -641,13 +647,19 @@ qtl_by_lg <- data.frame(
 
 names(qtl_by_lg)[-1] <- paste0("LG", 1:10)
 
-qtl_by_lg |>
-  knitr::kable(
-    format = "html",
-    caption = "Number of simulated QTL per linkage group",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    qtl_by_lg |>
+      knitr::kable(
+        format = "html",
+        caption = "Number of simulated QTL per linkage group",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 ## 7. Phenotypic and genetic signal
@@ -716,26 +728,32 @@ scenario_summary <- data.frame(
   CV_setting = control_table$CV_setting
 )
 
-scenario_summary[
-  ,
-  c(
-    "Scenario",
-    "QTL_N",
-    "H2_nominal",
-    "H2_realized",
-    "Cor_P_G",
-    "Phenotype_mean",
-    "Genetic_mean",
-    "Residual_sd"
-  )
-] |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Phenotypic and genetic signal by simulation scenario",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    scenario_summary[
+      ,
+      c(
+        "Scenario",
+        "QTL_N",
+        "H2_nominal",
+        "H2_realized",
+        "Cor_P_G",
+        "Phenotype_mean",
+        "Genetic_mean",
+        "Residual_sd"
+      )
+    ] |>
+      knitr::kable(
+        format = "html",
+        digits = 4,
+        caption = "Phenotypic and genetic signal by simulation scenario",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 
 Two points from this table are especially important for later prediction:
