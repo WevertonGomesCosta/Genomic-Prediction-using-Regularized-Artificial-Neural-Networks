@@ -47,7 +47,7 @@ knitr::opts_chunk$set(
 options(stringsAsFactors = FALSE)
 
 dir.create(
-  "output/simulated/m05/figures",
+  "output/simulated/comparison/figures",
   recursive = TRUE,
   showWarnings = FALSE
 )
@@ -605,7 +605,7 @@ print(p_model_correlation)
 
 ```{r save-model-correlation-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m05/figures/model_genetic_correlation_comparison.tiff",
+  "output/simulated/comparison/figures/model_genetic_correlation_comparison.tiff",
   plot = p_model_correlation,
   device = "tiff",
   width = 8.5,
@@ -666,7 +666,7 @@ print(p_model_rmse)
 
 ```{r save-model-rmse-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m05/figures/model_genetic_rmse_comparison.tiff",
+  "output/simulated/comparison/figures/model_genetic_rmse_comparison.tiff",
   plot = p_model_rmse,
   device = "tiff",
   width = 8.5,
