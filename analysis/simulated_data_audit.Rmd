@@ -548,14 +548,20 @@ for (i in seq_along(qtl_lists)) {
 
 qtl_rows$LG_label <- factor(paste0("LG", qtl_rows$LG), levels = paste0("LG", 1:10))
 
-control_table |>
-  knitr::kable(
-    format = "html",
-    digits = 3,
-    caption = "Settings used to generate the six simulation scenarios in GENES",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
-  )
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
+    control_table |>
+      knitr::kable(
+        format = "html",
+        digits = 3,
+        caption = "Settings used to generate the six simulation scenarios in GENES",
+        row.names = FALSE,
+        table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
+      )
+  ),
+  "</div>"
+))
 ```
 The six scenarios differ in two main characteristics that should be interpreted
 together:
