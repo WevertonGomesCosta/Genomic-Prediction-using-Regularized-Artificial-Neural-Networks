@@ -59,7 +59,7 @@ knitr::opts_chunk$set(
 
 options(stringsAsFactors = FALSE)
 
-dir.create("output/simulated/m02/figures", showWarnings = FALSE, recursive = TRUE)
+dir.create("output/simulated/validation/figures", showWarnings = FALSE, recursive = TRUE)
 ```
 
 ## 2. Packages and fixed validation settings
@@ -510,7 +510,7 @@ print(p_validation)
 
 ```{r save-nested-validation-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m02/figures/nested_cross_validation_design.tiff",
+  "output/simulated/validation/figures/nested_cross_validation_design.tiff",
   plot = p_validation,
   device = "tiff",
   width = 10,

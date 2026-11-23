@@ -50,7 +50,7 @@ knitr::opts_chunk$set(
 
 options(stringsAsFactors = FALSE)
 
-dir.create("output/simulated/m01/figures", showWarnings = FALSE, recursive = TRUE)
+dir.create("output/simulated/audit/figures", showWarnings = FALSE, recursive = TRUE)
 ```
 
 ## 2. Software and simulation settings
@@ -141,7 +141,7 @@ print(p_phenotype)
 
 ```{r save-phenotype-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m01/figures/phenotype_distribution.tiff",
+  "output/simulated/audit/figures/phenotype_distribution.tiff",
   plot = p_phenotype,
   device = "tiff",
   width = 8,
@@ -201,7 +201,7 @@ print(p_true_g)
 
 ```{r save-true-genetic-value-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m01/figures/true_genetic_value_distribution.tiff",
+  "output/simulated/audit/figures/true_genetic_value_distribution.tiff",
   plot = p_true_g,
   device = "tiff",
   width = 8,
@@ -404,7 +404,7 @@ print(p_genetic_map)
 
 ```{r save-genetic-map-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m01/figures/genetic_map.tiff",
+  "output/simulated/audit/figures/genetic_map.tiff",
   plot = p_genetic_map,
   device = "tiff",
   width = 9,
@@ -610,7 +610,7 @@ print(p_qtl)
 
 ```{r save-qtl-map-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m01/figures/qtl_positions_by_scenario.tiff",
+  "output/simulated/audit/figures/qtl_positions_by_scenario.tiff",
   plot = p_qtl,
   device = "tiff",
   width = 10,
@@ -794,7 +794,7 @@ print(p_heritability)
 
 ```{r save-heritability-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m01/figures/heritability_specified_vs_realized.tiff",
+  "output/simulated/audit/figures/heritability_specified_vs_realized.tiff",
   plot = p_heritability,
   device = "tiff",
   width = 8,
@@ -856,7 +856,7 @@ print(p_cv)
 
 ```{r save-cv-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m01/figures/cv_genes_vs_empirical.tiff",
+  "output/simulated/audit/figures/cv_genes_vs_empirical.tiff",
   plot = p_cv,
   device = "tiff",
   width = 8,
@@ -918,7 +918,7 @@ print(p_segregation)
 
 ```{r save-genotype-segregation-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m01/figures/f2_genotype_proportions.tiff",
+  "output/simulated/audit/figures/f2_genotype_proportions.tiff",
   plot = p_segregation,
   device = "tiff",
   width = 7,
@@ -1198,7 +1198,7 @@ print(p_ld)
 ```
 ```{r save-ld-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m01/figures/ld_decay.tiff",
+  "output/simulated/audit/figures/ld_decay.tiff",
   plot = p_ld,
   device = "tiff",
   width = 9,

@@ -59,7 +59,7 @@ knitr::opts_chunk$set(
 options(stringsAsFactors = FALSE)
 
 dir.create(
-  "output/simulated/m04/figures",
+  "output/simulated/ann/figures",
   recursive = TRUE,
   showWarnings = FALSE
 )
@@ -3317,7 +3317,7 @@ print(p_ann_correlation)
 
 ```{r save-ann-correlation-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m04/figures/ann_genetic_correlation_by_model.tiff",
+  "output/simulated/ann/figures/ann_genetic_correlation_by_model.tiff",
   plot = p_ann_correlation,
   device = "tiff",
   width = 11,
@@ -3383,7 +3383,7 @@ print(p_ann_rmse)
 
 ```{r save-ann-rmse-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m04/figures/ann_genetic_rmse_by_model.tiff",
+  "output/simulated/ann/figures/ann_genetic_rmse_by_model.tiff",
   plot = p_ann_rmse,
   device = "tiff",
   width = 11,

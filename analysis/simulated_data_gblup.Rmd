@@ -65,7 +65,7 @@ knitr::opts_chunk$set(
 options(stringsAsFactors = FALSE)
 
 dir.create(
-  "output/simulated/m03/figures",
+  "output/simulated/gblup/figures",
   showWarnings = FALSE,
   recursive = TRUE
 )
@@ -1022,7 +1022,7 @@ print(p_genetic_correlation)
 
 ```{r save-genetic-correlation-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m03/figures/gblup_genetic_correlation_by_scenario.tiff",
+  "output/simulated/gblup/figures/gblup_genetic_correlation_by_scenario.tiff",
   plot = p_genetic_correlation,
   device = "tiff",
   width = 8.5,
@@ -1069,7 +1069,7 @@ print(p_genetic_rmse)
 
 ```{r save-genetic-rmse-tiff, eval=FALSE, include=FALSE}
 ggsave(
-  "output/simulated/m03/figures/gblup_genetic_rmse_by_scenario.tiff",
+  "output/simulated/gblup/figures/gblup_genetic_rmse_by_scenario.tiff",
   plot = p_genetic_rmse,
   device = "tiff",
   width = 8.5,
