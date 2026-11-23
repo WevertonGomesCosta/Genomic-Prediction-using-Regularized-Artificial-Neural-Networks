@@ -3207,6 +3207,9 @@ scenario_performance <- scenario_performance[
 ]
 
 
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
 scenario_performance[
   , c(
     "Scenario",
@@ -3226,8 +3229,11 @@ scenario_performance[
     digits = 4,
     caption = "Primary evaluation: mean outer-split ANN performance against true genetic value",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
+    table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
   )
+  ),
+  "</div>"
+))
 ```
 
 Here, larger **Pearson correlation** means stronger linear association with the
@@ -3237,6 +3243,9 @@ held-out scale.
 
 ```{r phenotype-performance}
 # Present the phenotype-based metrics separately from genetic-value recovery.
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
 scenario_performance[
   , c(
     "Scenario",
@@ -3254,8 +3263,11 @@ scenario_performance[
     digits = 4,
     caption = "Secondary evaluation: mean outer-split ANN performance against phenotype",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
+    table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
   )
+  ),
+  "</div>"
+))
 ```
 
 ### 9.3 Held-out performance across outer splits
@@ -3315,7 +3327,7 @@ p_ann_correlation <- ggplot(
 print(p_ann_correlation)
 ```
 
-```{r save-ann-correlation-tiff, eval=FALSE, include=FALSE}
+```{r save-ann-correlation-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/ann/figures/ann_genetic_correlation_by_model.tiff",
   plot = p_ann_correlation,
@@ -3381,7 +3393,7 @@ p_ann_rmse <- ggplot(
 print(p_ann_rmse)
 ```
 
-```{r save-ann-rmse-tiff, eval=FALSE, include=FALSE}
+```{r save-ann-rmse-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/ann/figures/ann_genetic_rmse_by_model.tiff",
   plot = p_ann_rmse,
@@ -3424,14 +3436,20 @@ overall_ann <- overall_ann[
 ]
 
 
+knitr::asis_output(paste0(
+  '<div style="max-width:100%; overflow-x:auto;">',
+  as.character(
 overall_ann |>
   knitr::kable(
     format = "html",
     digits = 4,
     caption = "Overall ANN performance against true genetic value",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered"'
+    table.attr = 'class="table table-striped table-hover table-bordered" style="white-space:nowrap;"'
   )
+  ),
+  "</div>"
+))
 ```
 
 Across all outer tasks, the four ANN variants are summarized descriptively
