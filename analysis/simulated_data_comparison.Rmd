@@ -376,13 +376,22 @@ metrics <- c(
 
 The known true genetic value is the **primary prediction target**.
 All seven methods are compared for each of the six metrics and for each
-C1-C6 scenario. C1-C6 differ jointly in QTL number and nominal heritability,
-so scenario differences cannot be attributed to either factor in isolation.
+C1-C6 scenario. The simulation configurations, inherited unchanged from M01,
+are **C1** (8 QTL; nominal heritability 0.7), **C2** (40; 0.7),
+**C3** (80; 0.5), **C4** (120; 0.5), **C5** (240; 0.3),
+and **C6** (480; 0.3). QTL counts and nominal heritabilities are
+simulation inputs, not estimated genetic parameters. Because these settings
+change together, scenario differences cannot be attributed to one factor
+in isolation.
 
 Within each panel, boxplots summarize 25 held-out task values, points show
-each task, and white diamonds mark within-scenario means. The shared metric
-scale enables comparison across the six panels. Because repeated splits
-overlap, the figures do not imply independent replication or significance.
+each task, and white diamonds mark within-scenario means. Pearson, Spearman,
+bias, and slope use common metric axes across the panels. RMSE and MAE use
+**scenario-specific horizontal axis ranges** to make smaller within-scenario
+differences visible; compare models within each panel and read its tick labels
+before comparing error magnitudes across scenarios. Repeated outer splits
+overlap, so the distributions do not imply independent replication
+or statistical significance.
 
 ```{r comparison-task-results}
 # Reuse the task-level metrics from M03 and M04 without refitting models.
@@ -568,9 +577,11 @@ ggsave(
 
 ### 4.3 RMSE
 
-Smaller values indicate smaller root mean squared prediction error.
+Smaller values indicate smaller root mean squared prediction error. The
+horizontal error axis is rescaled separately in each C1-C6 panel, so
+differences between methods within a scenario remain visible.
 
-```{r genetic-rmse-figure, fig.width=12, fig.height=10, fig.cap="True genetic value: rmse across C1-C6, with 25 outer-task observations per model and scenario. White diamonds denote within-scenario means."}
+```{r genetic-rmse-figure, fig.width=12, fig.height=10, fig.cap="True genetic value: rmse across C1-C6, with 25 outer-task observations per model and scenario. White diamonds denote within-scenario means. Horizontal error-axis limits differ across scenarios."}
 # Each facet is one simulation scenario, preserving all outer assessments.
 p_genetic_rmse <- ggplot(
   plot_results,
@@ -597,7 +608,7 @@ p_genetic_rmse <- ggplot(
     size = 2.7,
     fill = "white"
   ) +
-  facet_wrap(~ Scenario, ncol = 2) +
+  facet_wrap(~ Scenario, ncol = 2, scales = "free_y") +
   coord_flip() +
   scale_fill_gdocs() +
   labs(
@@ -631,9 +642,11 @@ ggsave(
 
 ### 4.4 MAE
 
-Smaller values indicate smaller mean absolute prediction error.
+Smaller values indicate smaller mean absolute prediction error. The
+horizontal error axis is rescaled separately in each scenario; compare
+the seven models using the ticks within their panel.
 
-```{r genetic-mae-figure, fig.width=12, fig.height=10, fig.cap="True genetic value: mae across C1-C6, with 25 outer-task observations per model and scenario. White diamonds denote within-scenario means."}
+```{r genetic-mae-figure, fig.width=12, fig.height=10, fig.cap="True genetic value: mae across C1-C6, with 25 outer-task observations per model and scenario. White diamonds denote within-scenario means. Horizontal error-axis limits differ across scenarios."}
 # Each facet is one simulation scenario, preserving all outer assessments.
 p_genetic_mae <- ggplot(
   plot_results,
@@ -660,7 +673,7 @@ p_genetic_mae <- ggplot(
     size = 2.7,
     fill = "white"
   ) +
-  facet_wrap(~ Scenario, ncol = 2) +
+  facet_wrap(~ Scenario, ncol = 2, scales = "free_y") +
   coord_flip() +
   scale_fill_gdocs() +
   labs(
@@ -955,9 +968,11 @@ ggsave(
 
 ### 5.3 RMSE
 
-Smaller values indicate smaller root mean squared prediction error.
+Smaller values indicate smaller root mean squared prediction error. Each
+scenario has its own horizontal error axis to resolve differences among
+the seven models.
 
-```{r phenotype-rmse-figure, fig.width=12, fig.height=10, fig.cap="Observed phenotype: rmse across C1-C6, with 25 outer-task observations per model and scenario. White diamonds denote within-scenario means."}
+```{r phenotype-rmse-figure, fig.width=12, fig.height=10, fig.cap="Observed phenotype: rmse across C1-C6, with 25 outer-task observations per model and scenario. White diamonds denote within-scenario means. Horizontal error-axis limits differ across scenarios."}
 # Each facet is one simulation scenario, preserving all outer assessments.
 p_phenotype_rmse <- ggplot(
   plot_results,
@@ -984,7 +999,7 @@ p_phenotype_rmse <- ggplot(
     size = 2.7,
     fill = "white"
   ) +
-  facet_wrap(~ Scenario, ncol = 2) +
+  facet_wrap(~ Scenario, ncol = 2, scales = "free_y") +
   coord_flip() +
   scale_fill_gdocs() +
   labs(
@@ -1018,9 +1033,11 @@ ggsave(
 
 ### 5.4 MAE
 
-Smaller values indicate smaller mean absolute prediction error.
+Smaller values indicate smaller mean absolute prediction error. Compare
+the seven models within each panel, noting that horizontal axis limits
+vary between scenarios.
 
-```{r phenotype-mae-figure, fig.width=12, fig.height=10, fig.cap="Observed phenotype: mae across C1-C6, with 25 outer-task observations per model and scenario. White diamonds denote within-scenario means."}
+```{r phenotype-mae-figure, fig.width=12, fig.height=10, fig.cap="Observed phenotype: mae across C1-C6, with 25 outer-task observations per model and scenario. White diamonds denote within-scenario means. Horizontal error-axis limits differ across scenarios."}
 # Each facet is one simulation scenario, preserving all outer assessments.
 p_phenotype_mae <- ggplot(
   plot_results,
@@ -1047,7 +1064,7 @@ p_phenotype_mae <- ggplot(
     size = 2.7,
     fill = "white"
   ) +
-  facet_wrap(~ Scenario, ncol = 2) +
+  facet_wrap(~ Scenario, ncol = 2, scales = "free_y") +
   coord_flip() +
   scale_fill_gdocs() +
   labs(
@@ -1207,16 +1224,119 @@ ggsave(
 )
 ```
 
-### 5.7 Regularization effects among ANN models
 
-ANN-0, ANN-L1, ANN-L2, and ANN-L1+L2 share the architecture and learning rate
-selected with ANN-0 within each outer task, as described in M04. Their
-differences in the figures are therefore conditional on that shared
-selection rule. Interpret the four regularization variants *within each
-scenario and metric*; do not assign an overall winner from a mean that
-combines the six scenarios.
+## 6. Scenario-specific interpretation
 
-## 6. Scientific conclusion
+The figures use all 25 outer-task observations per model and scenario;
+the following short reading guide uses the **means of those same 25 tasks
+within each scenario**. For each scenario it reports the descriptive leader
+for the four genetic metrics (Pearson, Spearman, RMSE, and MAE) and for
+phenotype Pearson and RMSE. These are numerical comparisons under the
+evaluated simulation conditions, not significance tests or an overall
+ranking of the seven models.
+
+The remaining phenotype Spearman and MAE plots assess agreement in ranks
+and absolute error. Bias and calibration slope must be read against their
+respective reference values of zero and one; they are not measures where
+the largest raw value is necessarily preferable. All twelve metrics
+remain visible in the preceding figures.
+
+```{r scenario-interpretation}
+# Read the scenario-wise means already computed in scenario-performance.
+# Each summary is based on 25 tasks within one scenario, never on an
+# overall mean that pools C1-C6.
+scenario_ids <- paste0("C", 1:6)
+scenario_details <- c(
+  "8 QTL; h2 = 0.7",
+  "40 QTL; h2 = 0.7",
+  "80 QTL; h2 = 0.5",
+  "120 QTL; h2 = 0.5",
+  "240 QTL; h2 = 0.3",
+  "480 QTL; h2 = 0.3"
+)
+
+scenario_interpretation <- character(length(scenario_ids))
+
+for (scenario_index in seq_along(scenario_ids)) {
+  scenario <- scenario_ids[scenario_index]
+
+  scenario_data <- scenario_summary[
+    scenario_summary$Scenario == scenario,
+    ,
+    drop = FALSE
+  ]
+
+  best_genetic_pearson <- scenario_data[
+    which.max(scenario_data$Genetic_Pearson), , drop = FALSE
+  ]
+  best_genetic_spearman <- scenario_data[
+    which.max(scenario_data$Genetic_Spearman), , drop = FALSE
+  ]
+  best_genetic_rmse <- scenario_data[
+    which.min(scenario_data$Genetic_RMSE), , drop = FALSE
+  ]
+  best_genetic_mae <- scenario_data[
+    which.min(scenario_data$Genetic_MAE), , drop = FALSE
+  ]
+  best_phenotype_pearson <- scenario_data[
+    which.max(scenario_data$Phenotype_Pearson), , drop = FALSE
+  ]
+  best_phenotype_rmse <- scenario_data[
+    which.min(scenario_data$Phenotype_RMSE), , drop = FALSE
+  ]
+
+  scenario_interpretation[scenario_index] <- sprintf(
+    paste0(
+      "**%s** (%s). For true genetic value, the highest mean Pearson ",
+      "was obtained by **%s** (%.3f) and the highest mean Spearman by ",
+      "**%s** (%.3f); the lowest mean RMSE was obtained by **%s** ",
+      "(%.3f) and the lowest mean MAE by **%s** (%.3f). ",
+      "For observed phenotype, the highest mean Pearson was obtained ",
+      "by **%s** (%.3f) and the lowest mean RMSE by **%s** (%.3f)."
+    ),
+    scenario,
+    scenario_details[scenario_index],
+    model_labels[match(best_genetic_pearson$Model, model_order)],
+    best_genetic_pearson$Genetic_Pearson,
+    model_labels[match(best_genetic_spearman$Model, model_order)],
+    best_genetic_spearman$Genetic_Spearman,
+    model_labels[match(best_genetic_rmse$Model, model_order)],
+    best_genetic_rmse$Genetic_RMSE,
+    model_labels[match(best_genetic_mae$Model, model_order)],
+    best_genetic_mae$Genetic_MAE,
+    model_labels[match(best_phenotype_pearson$Model, model_order)],
+    best_phenotype_pearson$Phenotype_Pearson,
+    model_labels[match(best_phenotype_rmse$Model, model_order)],
+    best_phenotype_rmse$Phenotype_RMSE
+  )
+}
+
+knitr::asis_output(
+  paste(scenario_interpretation, collapse = "\n\n")
+)
+```
+
+The comparison of leaders across C1-C6 should be interpreted alongside
+the width and overlap of the boxplots. A higher scenario-level mean does
+not alone establish that a model is reliably superior. In particular,
+error metrics can have substantially different numerical ranges across
+the six simulated settings.
+
+## 7. Regularization effects among ANN models
+
+ANN-0, ANN-L1, ANN-L2, and ANN-L1+L2 share the architecture and learning
+rate selected with ANN-0 within each outer task, as established in M04.
+Their differences therefore describe the evaluated regularization
+choices **conditional on that shared structural selection rule**.
+
+Compare the four ANN variants within each C1-C6 panel for the genetic
+and phenotype metrics. The Pearson and Spearman figures reveal their
+association with the two evaluation targets, RMSE and MAE show error
+magnitudes, and bias and slope show calibration differences. The
+relative effects of L1 and L2 should not be summarized by a mean
+that pools the six genetic scenarios.
+
+## 8. Scientific conclusion
 
 The seven genomic prediction methods were evaluated on matched outer tasks
 in six distinct simulated genetic settings. The twelve reported metrics
@@ -1245,6 +1365,6 @@ write.csv(
 )
 ```
 
-## 7. Navigation
+## 9. Navigation
 
 [GBLUP models](simulated_data_gblup.html) | [Regularized ANN](simulated_data_ann.html) | [Home](index.html)
