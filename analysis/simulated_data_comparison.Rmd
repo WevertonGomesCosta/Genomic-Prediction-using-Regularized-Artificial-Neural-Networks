@@ -53,63 +53,33 @@ dir.create(
 )
 ```
 
-## 2. Prediction data and matched evaluation
+## 2. Packages, saved results, and compared methods
 
-### 2.1 Saved model results
+### 2.1 Packages
 
-This module reads results previously computed in M03 and M04; no GBLUP or ANN models are refitted. The following packages format tables and figures.
+The module uses `knitr` for result tables and `ggplot2` with `ggthemes`
+for figures. Performance results were computed in M03 and M04 and are
+read from saved files; no prediction model is refitted here.
 
-```{r packages}
+```{r packages, warning=FALSE, message=FALSE}
 library(knitr)
 library(ggplot2)
 library(ggthemes)
-
 ```
 
-These files distinguish model-level metrics from individual held-out predictions. The listed model names define display order.
+### 2.2 Saved prediction results
+
+GBLUP and ANN task-level metrics and individual held-out predictions are
+stored in separate RDS files. Read the four inputs directly, as in M03/M04.
 
 ```{r saved-model-results}
-GBLUP_RESULTS_RDS <-
-  "output/simulated/gblup/simulated_gblup_results.rds"
-GBLUP_PREDICTIONS_RDS <-
-  "output/simulated/gblup/simulated_gblup_predictions.rds"
-ANN_RESULTS_RDS <-
-  "output/simulated/ann/final/simulated_ann_results.rds"
-ANN_PREDICTIONS_RDS <-
-  "output/simulated/ann/final/simulated_ann_predictions.rds"
+# Read saved task metrics from the two model-fitting modules.
+gr <- readRDS("output/simulated/gblup/simulated_gblup_results.rds")
+ar <- readRDS("output/simulated/ann/final/simulated_ann_results.rds")
 
-gr <- readRDS(GBLUP_RESULTS_RDS)
-gp <- readRDS(GBLUP_PREDICTIONS_RDS)
-ar <- readRDS(ANN_RESULTS_RDS)
-ap <- readRDS(ANN_PREDICTIONS_RDS)
-
-expected_gblup_models <- c(
-  "GBLUP_A",
-  "GBLUP_AD",
-  "GBLUP_ADE"
-)
-
-expected_ann_models <- c(
-  "ANN_0",
-  "ANN_L1",
-  "ANN_L2",
-  "ANN_L1_L2"
-)
-
-model_order <- c(
-  expected_gblup_models,
-  expected_ann_models
-)
-
-model_labels <- c(
-  "GBLUP-A",
-  "GBLUP-AD",
-  "GBLUP-ADE",
-  "ANN-0",
-  "ANN-L1",
-  "ANN-L2",
-  "ANN-L1+L2"
-)
+# Read individual held-out predictions for matched assessment checks.
+gp <- readRDS("output/simulated/gblup/simulated_gblup_predictions.rds")
+ap <- readRDS("output/simulated/ann/final/simulated_ann_predictions.rds")
 
 ```
 
@@ -152,10 +122,47 @@ The inputs contain 450 GBLUP task-by-model results, 600 ANN task-by-model
 results, 90,000 GBLUP held-out predictions, and 120,000 ANN held-out
 predictions. The comparison comprises the prediction results from all seven models.
 
-### 2.2 Matched tasks and assessment individuals
+### 2.3 Compared genomic prediction methods
 
-The next block checks the observed comparison structure directly. Because the
-current GBLUP `TaskID` is model-specific, cross-method matching deliberately uses
+The comparison includes three GBLUP structures from M03 (additive,
+additive-dominance, and additive-dominance-epistatic) and the four
+regularization variants from M04. These identifiers select the existing
+result records; they do not define or fit new models.
+
+```{r compared-models}
+# Fix the scientific model order and display labels.
+expected_gblup_models <- c(
+  "GBLUP_A",
+  "GBLUP_AD",
+  "GBLUP_ADE"
+)
+
+expected_ann_models <- c(
+  "ANN_0",
+  "ANN_L1",
+  "ANN_L2",
+  "ANN_L1_L2"
+)
+
+model_order <- c(
+  expected_gblup_models,
+  expected_ann_models
+)
+
+model_labels <- c(
+  "GBLUP-A",
+  "GBLUP-AD",
+  "GBLUP-ADE",
+  "ANN-0",
+  "ANN-L1",
+  "ANN-L2",
+  "ANN-L1+L2"
+)
+```
+### 2.4 Matched tasks and assessment individuals
+
+The next steps establish equivalent assessment records for the seven methods.
+Because the GBLUP `TaskID` is model-specific, cross-method matching uses
 the model-independent outer-split keys (`Scenario`, `Repetition`, `Fold`, and
 `SplitID`); prediction records additionally use the individual identifier `ID`.
 
