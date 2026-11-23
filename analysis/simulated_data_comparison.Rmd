@@ -522,12 +522,6 @@ best_mae_value <- min(
   na.rm = TRUE
 )
 
-ann_overall <- overall[
-  overall$Model %in%
-    expected_ann_models,
-  ,
-  drop = FALSE
-]
 ```
 
 Across the matched outer tasks, **`r best_pearson_model`** has the highest mean
@@ -804,6 +798,13 @@ scenario_winners <- do.call(
   scenario_winner_rows
 )
 
+```
+
+The scenario winners are counted separately for each method and metric.
+These frequencies describe the six simulation scenarios; they are
+not independent inferential replications.
+
+```{r scenario-win-counts}
 scenario_win_summary <- data.frame(
   Model = model_order,
   Pearson_wins = vapply(
@@ -1089,6 +1090,17 @@ They remain descriptive summaries of matched held-out tasks.
 ## 7. Regularization effects among ANN models
 
 The following section compares the four ANN variants on the already saved task metrics, without refitting or retuning their networks.
+
+The first step selects the four ANN records from the overall model summary. These records are subsequently used for the regularization-specific interpretation.
+
+```{r ann-summary-preparation}
+ann_overall <- overall[
+  overall$Model %in%
+    expected_ann_models,
+  ,
+  drop = FALSE
+]
+```
 
 The four ANN variants share, within each outer task, the architecture and
 learning rate selected with ANN_0 in M04. Their overall contrast therefore
