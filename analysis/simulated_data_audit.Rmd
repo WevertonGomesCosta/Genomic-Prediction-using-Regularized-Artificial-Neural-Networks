@@ -139,7 +139,7 @@ p_phenotype <- ggplot(phenotype_long, aes(x = Scenario, y = Phenotype, fill = Sc
 print(p_phenotype)
 ```
 
-```{r save-phenotype-tiff, eval=FALSE, include=FALSE}
+```{r save-phenotype-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/audit/figures/phenotype_distribution.tiff",
   plot = p_phenotype,
@@ -199,7 +199,7 @@ p_true_g <- ggplot(true_g_long, aes(x = Scenario, y = True_genetic_value, fill =
 print(p_true_g)
 ```
 
-```{r save-true-genetic-value-tiff, eval=FALSE, include=FALSE}
+```{r save-true-genetic-value-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/audit/figures/true_genetic_value_distribution.tiff",
   plot = p_true_g,
@@ -402,7 +402,7 @@ p_genetic_map <- ggplot() + geom_segment(
 print(p_genetic_map)
 ```
 
-```{r save-genetic-map-tiff, eval=FALSE, include=FALSE}
+```{r save-genetic-map-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/audit/figures/genetic_map.tiff",
   plot = p_genetic_map,
@@ -608,7 +608,7 @@ p_qtl <- ggplot() + geom_segment(
 print(p_qtl)
 ```
 
-```{r save-qtl-map-tiff, eval=FALSE, include=FALSE}
+```{r save-qtl-map-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/audit/figures/qtl_positions_by_scenario.tiff",
   plot = p_qtl,
@@ -792,7 +792,7 @@ p_heritability <- ggplot(
 print(p_heritability)
 ```
 
-```{r save-heritability-tiff, eval=FALSE, include=FALSE}
+```{r save-heritability-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/audit/figures/heritability_specified_vs_realized.tiff",
   plot = p_heritability,
@@ -854,7 +854,7 @@ p_cv <- ggplot(cv_plot, aes(x = Scenario, y = CV, group = Type, color = Type, sh
 print(p_cv)
 ```
 
-```{r save-cv-tiff, eval=FALSE, include=FALSE}
+```{r save-cv-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/audit/figures/cv_genes_vs_empirical.tiff",
   plot = p_cv,
@@ -916,7 +916,7 @@ p_segregation <- ggplot(segregation_plot, aes(x = Genotype, y = Proportion, fill
 print(p_segregation)
 ```
 
-```{r save-genotype-segregation-tiff, eval=FALSE, include=FALSE}
+```{r save-genotype-segregation-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/audit/figures/f2_genotype_proportions.tiff",
   plot = p_segregation,
@@ -1196,7 +1196,7 @@ p_ld <- ggplot(ld_plot_data, aes(x = Distance_label, y = Mean_r2, group = 1, col
 
 print(p_ld)
 ```
-```{r save-ld-tiff, eval=FALSE, include=FALSE}
+```{r save-ld-tiff, eval=TRUE, include=FALSE}
 ggsave(
   "output/simulated/audit/figures/ld_decay.tiff",
   plot = p_ld,
