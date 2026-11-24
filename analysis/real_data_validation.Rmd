@@ -60,12 +60,6 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
-
-dir.create(
-  "output/real/validation",
-  showWarnings = FALSE,
-  recursive = TRUE
-)
 ```
 
 ## 2. Software package and fixed validation settings
@@ -1059,8 +1053,40 @@ subject to the precomputed-BLUP limitation described in Sections 3 and 6.
 
 ## 8. Common validation object
 
-The stored validation object contains the assignment tables and explicit ID
-vectors required by the subsequent model-fitting modules.
+### 8.1 Structure of the shared validation object
+
+The analyses above produce `cv_design`, a single list that collects the
+individual identifiers, fixed validation settings, outer and inner fold
+assignments, and the existing integrity-check results. All fields are
+constructed by the original code. This section explains their roles
+without changing the partitions or their identifiers.
+
+| Element of `cv_design` | Contents and purpose |
+|---|---|
+| `dataset` | Label identifying the real-data workflow |
+| `seed_global` | Fixed starting seed, `20261105`, used in the original fold-generation formulas |
+| `n_outer_repeats` | Five repetitions of the outer cross-validation |
+| `n_outer_folds` | Five outer folds per repetition |
+| `n_inner_folds` | Four inner folds within each outer analysis set |
+| `ids` | The 195 aligned individual IDs from R02, in the genomic matrix row order |
+| `outer_assignments` | One record per individual and outer repetition, with `Repetition`, `ID`, `OuterFold`, and `SplitID` |
+| `outer_splits` | List of 25 outer splits, with `analysis_ids` (156) and `assessment_ids` (39) for each `SplitID` |
+| `inner_assignments` | Individual-level fold assignments within each outer analysis set, including `InnerFold` |
+| `inner_splits` | Four inner splits per outer split, each providing 117 analysis IDs and 39 assessment IDs |
+| `checks` | Previously calculated coverage, overlap, and separation checks for both validation levels |
+
+Table: Contents of the shared real-data validation object
+
+The nested `checks` list retains `outer_contract`, `inner_contract`,
+`outer_coverage`, `inner_coverage`, and `outer_leakage`. The first
+four report checks that must pass; `outer_leakage` is a detection flag
+that must remain `FALSE`. These are assessments of the **stored ID
+partitions**, not evidence that the earlier phenotypic BLUP estimation
+was independent of held-out individuals.
+
+The `SplitID` labels (such as `R01_F01`) connect the assignment tables
+to the corresponding split lists. The stored data, list names, individual
+order, and seed definitions must remain unchanged for downstream methods.
 
 ```{r build-validation-object}
 cv_design <- list(
@@ -1084,7 +1110,44 @@ cv_design <- list(
 )
 ```
 
-```{r save-validation-outputs, include=FALSE}
+### 8.2 Files produced by the validation stage
+
+The original analysis persisted one RDS file and three companion CSV files.
+The RDS preserves the complete nested lists of IDs used by the
+genomic-prediction modules; the CSV files provide an inspectable record of
+assignments and summary dimensions.
+
+| Saved file (under `output/real/validation/`) | Contents and use |
+|---|---|
+| `real_cv_design.rds` | The complete `cv_design` list, including all 25 outer and 100 inner splits; read by both GBLUP and ANN |
+| `real_outer_assignments.csv` | One assignment per individual per outer repetition (195 × 5 = 975 records) |
+| `real_inner_assignments.csv` | One assignment per outer-analysis individual per outer split (156 × 25 = 3,900 records) |
+| `real_validation_summary.csv` | Ten summary rows describing sample sizes, repeats, folds, and total numbers of splits |
+
+Table: Persisted validation outputs and their roles
+
+In `real_data_gblup.Rmd`, the GBLUP models read
+`real_cv_design.rds` and use `cv$outer_assignments` to organize
+the 25 evaluation tasks and `cv$outer_splits` to obtain each
+analysis and held-out assessment set. In `real_data_ann.Rmd`,
+the ANN models use the same outer partitions and additionally read
+`cv$inner_splits` for model selection within each outer analysis set.
+Consequently, the model comparisons use the original shared partitions.
+
+The export operations below remain in the source for reproducibility,
+with exactly the original object names, file paths, and write calls.
+They are **not evaluated or displayed during HTML rendering**
+(`eval=FALSE, include=FALSE`). The directory creation required for a
+manual export is also confined to that disabled chunk. Generating the
+tutorial therefore does not overwrite any persisted validation outputs.
+
+```{r save-validation-outputs, eval=FALSE, include=FALSE}
+dir.create(
+  "output/real/validation",
+  showWarnings = FALSE,
+  recursive = TRUE
+)
+
 saveRDS(
   cv_design,
   "output/real/validation/real_cv_design.rds",
@@ -1112,23 +1175,37 @@ write.csv(
 
 ## 9. Synthesis and transition to genomic prediction
 
-This module establishes **which individuals are used for model fitting,
-selection, and held-out assessment** in each repeated cross-validation split.
-No genomic-prediction model is fitted here. The same partitions are delivered
-to every downstream method, preserving a paired comparison across models.
+R03 provides the fixed and common nested cross-validation design for
+the real *Coffea arabica* population. It defines **which individuals enter
+model development, inner model selection, and held-out assessment**; it does
+not fit GBLUP or ANN models.
 
-The persisted `real_cv_design.rds` contains the individual IDs, outer and inner
-assignment tables, explicit split vectors, fixed validation settings, and
-coverage and overlap checks. The companion files
-`real_outer_assignments.csv`, `real_inner_assignments.csv`, and
-`real_validation_summary.csv` allow independent inspection of the design.
+- **Population:** 195 aligned plants with the previously estimated `Cer`,
+  `BM`, and `LP` BLUP targets and the common SNP panel from R02.
+- **Outer assessment:** five repetitions of five folds, giving 25 splits,
+  each with 156 analysis individuals and 39 held-out assessment individuals.
+- **Inner model selection:** four folds within each outer analysis set,
+  giving 100 inner splits, each with 117 analysis and 39 assessment individuals.
+- **Integrity:** the original checks confirm coverage and absence of
+  overlap within splits, including exclusion of outer-assessment IDs from
+  every corresponding inner split.
+- **Reproducibility:** fixed seeds, original `SplitID` labels and stored
+  `cv_design` fields are reused by the downstream genomic-prediction modules.
 
-The primary model comparison uses the same 25 outer assessment sets for
-GBLUP-A, GBLUP-AD, GBLUP-ADE, and every ANN configuration. ANN model
-selection is restricted to the four inner folds of each outer analysis set.
-No phenotypic or genomic values determine the partition membership.
+Each plant is assessed once per outer repetition. The repeated
+partitions are not independent biological populations, and fold membership
+is not generated from BLUP values, marker values, progeny or model
+identity. In particular, the assessment is **against BLUPs estimated
+before partitioning**, not against phenotypes whose estimation
+excluded the held-out individuals (Sections 3 and 6).
 
-The next modules fit [GBLUP-A / AD / ADE](real_data_gblup.html) and
-[regularized ANN](real_data_ann.html) with this fixed design. Their predictive
-metrics describe performance against the precomputed individual BLUPs within
-the represented population, subject to the scope clarified in Section 3.
+The next modules use the unchanged `real_cv_design.rds` to fit and
+compare GBLUP-A, GBLUP-AD, GBLUP-ADE, and the regularized ANN variants
+on matching held-out partitions.
+
+## 10. Navigation
+
+[Previous: Genomic data audit](real_data_audit.html) |
+[Home](index.html) |
+[Next: GBLUP models](real_data_gblup.html) |
+[Next: Regularized ANN](real_data_ann.html)
