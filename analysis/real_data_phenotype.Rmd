@@ -571,7 +571,7 @@ the estimated effects and the corresponding diagonal blocks of `C`. Here,
 the three evaluation-year columns in `X` are linearly independent, this
 matches the `n - rank(X)` denominator shown above.
 
-The 320-line fitting procedure is preserved as one continuous algorithm to
+The original fitting procedure is preserved as one continuous algorithm to
 make the dependencies among its stages explicit. It remains `eval=FALSE`:
 the tables in the next sections come from the previously saved RDS files,
 not from a new model fit during site rendering.
@@ -906,13 +906,10 @@ for (trait in traits) {
 }
 ```
 
-The code above exposes the complete path from the incidence matrices to the
-variance updates and BLUP solutions without hiding any step in project-specific
-helper functions.
-
-The code above documents the original model-fitting procedure without running
-it during site generation. The following code reads previously saved scientific
-results used in Sections 8–10; no model is refitted during site generation.
+The code above documents the original pathway from incidence matrices to
+variance updates and fitted effects. It is not executed during site generation.
+The following chunk reads the existing RDS outputs used in Sections 8–10;
+none of those values are re-estimated in this tutorial build.
 
 ```{r load-saved-phenotypic-results}
 # Reuse the existing phenotypic results without recalculating the models.
