@@ -318,7 +318,21 @@ aligned population and prepare its marker panel.
 
 ## 5. Population and trait structure
 
-The 195 individuals belong to 13 progenies, with 15 plants in each progeny.
+### 5.1 Progeny membership and population size
+
+The aligned population contains 195 individual plants from 13 experimental
+progenies, with 15 plants in each progeny. Progeny membership comes from the
+`Progenie` field retained from R01, not from the SNP values. Each plant is
+counted once, even though its original phenotypic observations span three
+evaluation years.
+
+\[
+13\ \text{progenies}\times15\ \text{plants}=195\ \text{individuals}.
+\]
+
+The following code constructs the `family` labels and counts the individuals
+in each progeny. It displays the progenies in numeric order for readability
+without changing the `family_table` object passed to the saved summaries.
 
 ```{r population-structure}
 family <- paste0(
@@ -356,7 +370,21 @@ stopifnot(
 )
 ```
 
-The three BLUP traits are summarized on the same 195-individual set.
+The table confirms the expected 13 groups of 15 plants. This balanced
+representation describes the **observed target population**; it does not imply
+that progeny labels are used to partition cross-validation folds.
+
+### 5.2 Distribution of the three phenotypic targets
+
+The genomic-prediction responses are the plant-level BLUPs of `Cer`
+(cercosporiosis), `BM` (leaf-miner incidence), and `LP` (the
+production-related trait) estimated in R01. Unlike the original annual
+observations, each BLUP column contains one adjusted value per individual.
+All three traits are summarized for the same 195 aligned plants.
+
+The table reports the number of available and missing targets, the mean,
+standard deviation, median, and range for each trait. These are descriptive
+summaries of the saved BLUPs, not new mixed-model estimates.
 
 ```{r trait-summary}
 traits <- c(
@@ -415,12 +443,77 @@ stopifnot(
 )
 ```
 
+The means and standard deviations should be interpreted within each trait:
+`Cer` and `BM` are recorded on different response distributions from
+`LP`. Differences in raw BLUP magnitude across traits therefore do not
+represent differences in predictive performance. The following boxplots show
+the median, interquartile range, and potential outlying values within each
+trait. Independent vertical scales prevent the larger numerical range of
+`LP` from hiding the variation in `Cer` and `BM`.
+
+```{r blup-target-boxplots, fig.width=9, fig.height=5, fig.cap="Distribution of the saved plant-level BLUP targets for Cer, BM, and LP. Each panel uses its own vertical scale.", fig.alt="Three boxplots showing distributions of individual Cer, BM, and LP BLUPs, each with an independent vertical axis."}
+# Reshape only a plotting copy; the 195-row BLUP table is not modified.
+blup_boxplot_data <- rbind(
+  data.frame(Trait = "Cer", BLUP = blups$Cer),
+  data.frame(Trait = "BM", BLUP = blups$BM),
+  data.frame(Trait = "LP", BLUP = blups$LP)
+)
+
+blup_boxplot_data$Trait <- factor(
+  blup_boxplot_data$Trait,
+  levels = traits
+)
+
+p_blup_targets <- ggplot(
+  blup_boxplot_data,
+  aes(x = Trait, y = BLUP, fill = Trait)
+) +
+  geom_boxplot(width = 0.55, show.legend = FALSE) +
+  facet_wrap(~ Trait, scales = "free_y") +
+  scale_fill_gdocs(limits = c("BM", "Cer", "LP")) +
+  labs(x = "Trait", y = "Individual BLUP") +
+  theme_gdocs()
+
+print(p_blup_targets)
+```
+
+The boxplots display the same saved values summarized in the table above.
+They do not select individuals, modify any BLUP, or provide inputs to
+marker filtering. The subsequent SNP quality-control analysis uses
+genotypes only.
+
 ## 6. Genotype coding and completeness
 
-The SNP matrix uses the discrete coding `-1`, `0`, and `1`. For allele-frequency
-calculations, these values are converted to dosages `0`, `1`, and `2` by adding
-one. The original `-1/0/1` coding is retained in the matrix used by the
-prediction models.
+### 6.1 SNP genotype coding and allele dosage
+
+The Capture-Seq matrix retains the discrete genotype coding
+`-1`, `0`, and `1`: the two outer states correspond to the two
+homozygous classes, and the middle state identifies heterozygotes.
+Section 3.2 illustrates these codes in the raw SNP records.
+
+For allele-frequency calculations in Section 7, adding one converts the
+stored values to allele dosages:
+
+| Stored SNP code (`G`) | Dosage (`G + 1`) | Genotype class |
+|:---:|:---:|:---|
+| `-1` | `0` | Homozygote for the allele represented by dosage zero |
+| `0` | `1` | Heterozygote |
+| `1` | `2` | Homozygote for the allele represented by dosage two |
+
+Table: Genotype coding and the corresponding allele-dosage transformation
+
+The conversion `G + 1` is used to calculate allele frequencies and MAF;
+it does **not** replace the original `-1/0/1` coding in the matrix supplied
+to the prediction models. The coding alone does not identify which allele is
+the reference or alternate allele.
+
+### 6.2 Genotype matrix structure and completeness
+
+The next table summarizes the aligned matrix `G`, including its number of
+individuals and raw SNPs, the observed genotype states, missing cells, and
+duplicate identifiers. Checking these properties precedes marker filtering.
+The original code then verifies that the three expected genotype states
+are present and that individual and marker identifiers are unique.
 
 ```{r genotype-coding}
 observed_codes <- sort(
