@@ -563,14 +563,47 @@ stopifnot(
 
 ## 7. Marker quality control
 
-Three criteria are applied to every SNP before model fitting:
+### 7.1 Computing marker-level quality statistics
 
-1. **Call rate:** at least 90% of individuals must have a genotype call.
-2. **Minor allele frequency:** MAF must be at least 0.05.
-3. **Observed heterozygosity:** loci with 100% heterozygous individuals are
-   removed because they provide no segregation among individuals.
+Marker quality control (QC) is applied to the 195 aligned genotype profiles
+before the cross-validation partitions are created. The same retained SNPs
+are subsequently supplied to every genomic-prediction method. SNP values
+are not used to decide which individuals enter the validation folds.
 
-The same retained marker panel is used by all genomic-prediction methods.
+Three criteria are evaluated separately for every marker:
+
+1. **Call rate:** the proportion of individuals with a non-missing genotype.
+   At least 90% of the 195 genotypes must be observed
+   (`call_rate >= CALL_RATE_MIN`).
+2. **Minor allele frequency (MAF):** the smaller of the two estimated
+   allele frequencies. A marker is retained only when
+   `maf >= MAF_MIN`, with `MAF_MIN = 0.05`.
+3. **Observed heterozygosity:** the proportion of non-missing individuals
+   coded as `0` (heterozygotes). Markers with all observed genotypes
+   heterozygous have no genotype variation and are removed using
+   `observed_heterozygosity < 1`.
+
+For marker \(j\), the calculations correspond to
+
+\[
+\begin{aligned}
+\mathrm{CallRate}_j
+  &= \frac{\text{number of observed genotypes at marker }j}{195},\\
+p_j &= \frac{\operatorname{mean}(G_{ij}+1)}{2},\\
+\mathrm{MAF}_j &= \min(p_j,1-p_j),\\
+H_{O,j} &= \frac{\text{number of observed heterozygotes at marker }j}
+{\text{number of observed genotypes at marker }j}.
+\end{aligned}
+\]
+
+The allele-frequency and heterozygosity calculations exclude missing
+genotypes (`na.rm = TRUE`). The additional `marker_variance` statistic
+describes variation in the original `-1/0/1` coding; it is recorded for
+inspection, **not used as a fourth marker-selection threshold**.
+
+A SNP passes QC only if it meets **all three** criteria. The logical vector
+`keep_marker` records this combined decision, while `marker_qc` retains
+the statistics and individual pass/fail flags for all raw SNPs.
 
 ```{r marker-quality-control}
 call_rate <- colMeans(
@@ -655,13 +688,63 @@ qc_summary |>
   )
 ```
 
-The retained panel contains `r format(sum(keep_marker), big.mark = ",")` SNPs
-from the `r format(ncol(G), big.mark = ",")` raw Capture-Seq markers.
+The table counts failures for each rule independently. `Total SNPs removed`
+instead counts the **union** of failures, so a marker that fails two rules
+is counted only once in that total. In the present dataset, there are
+`r sum(!pass_call_rate)` markers below the call-rate threshold,
+`r sum(!pass_maf)` below the MAF threshold, and
+`r sum(!pass_heterozygosity)` with complete observed heterozygosity.
+The `r sum(!keep_marker)` unique exclusions leave
+`r format(sum(keep_marker), big.mark = ",")` SNPs from the
+`r format(ncol(G), big.mark = ",")` raw Capture-Seq markers.
 
-### 7.1 Minor allele frequency
+### 7.2 Examples of marker decisions
 
-The MAF distribution summarizes allele-frequency balance across the raw marker
-panel. The vertical line indicates the minimum MAF retained for prediction.
+To connect the decision rules with actual SNP records, the next table
+displays one low-MAF marker, one completely heterozygous marker, and
+one retained marker. These are examples selected from `marker_qc`,
+not an additional filter or a replacement for the complete QC table.
+The `Keep` column identifies whether the SNP enters the common panel.
+
+```{r marker-qc-examples}
+# Select three illustrative SNP records without changing the QC results.
+qc_example_rows <- c(
+  which(!pass_maf)[1L],
+  which(!pass_heterozygosity)[1L],
+  which(keep_marker)[1L]
+)
+
+qc_examples <- marker_qc[
+  qc_example_rows,
+  c("Marker", "Call_Rate", "MAF", "Observed_Heterozygosity",
+    "Variance", "Keep"),
+  drop = FALSE
+]
+
+qc_examples <- cbind(
+  Example = c("Below MAF threshold", "Fully heterozygous", "Retained"),
+  qc_examples
+)
+rownames(qc_examples) <- NULL
+
+qc_examples |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    digits = 4,
+    caption = "Examples of excluded and retained Capture-Seq markers"
+  )
+```
+
+### 7.3 Minor allele frequency distribution
+
+The density plot shows the **raw** MAF distribution before filtering.
+The dashed line marks `MAF_MIN = 0.05`; markers to its left fail the MAF
+criterion. Markers can also fail the heterozygosity criterion when their
+MAF is high (for example, a locus that is heterozygous in every plant).
+The MAF curve therefore illustrates only one of the three QC rules
+and does not independently describe the final retained panel.
 
 ```{r maf-distribution, fig.width=9, fig.height=5, fig.alt="Density of minor allele frequencies among raw Capture-Seq SNPs, with a dashed vertical line marking the 0.05 minimum MAF threshold.", fig.cap="Minor allele frequency distribution across the raw Capture-Seq SNP panel. The dashed line indicates the MAF threshold used for marker retention."}
 maf_plot_data <- data.frame(
@@ -708,8 +791,21 @@ ggsave(
 
 ## 8. Common marker panel
 
-The quality-control rules are applied once to create the marker matrix shared by
-all downstream prediction methods.
+### 8.1 Constructing the retained SNP matrix
+
+The three pass/fail conditions from Section 7 are combined into the logical
+vector `keep_marker`. Selecting `G[, keep_marker, drop = FALSE]` creates
+`G_qc`, the common genomic matrix used by R03 and the prediction modules.
+The operation removes failing SNP **columns**, not individual plant rows.
+It also preserves the original order and `-1/0/1` values of the retained
+SNPs; neither missing-value imputation nor genotype recoding is performed
+here.
+
+The accompanying vectors of call rate, MAF, heterozygosity, and variance
+are restricted to the same retained SNP columns. Their minima and maxima
+summarize the panel after QC, while `marker_qc` continues to describe the
+**complete original panel**. The display-only formatting below does not
+modify the numerical values saved for later analyses.
 
 ```{r common-marker-panel}
 G_qc <- G[
@@ -786,6 +882,39 @@ stopifnot(
 The final genomic matrix therefore contains `r nrow(G_qc)` individuals and
 `r format(ncol(G_qc), big.mark = ",")` SNPs. The `-1/0/1` genotype coding and
 the SNP column order are preserved.
+
+### 8.2 Inspecting the retained marker order
+
+The following table selects the first six SNPs in `G_qc` and displays their
+original QC statistics. Marker names come directly from the retained matrix,
+while their properties are retrieved from `marker_qc`. This allows the
+retained panel to be inspected without recreating or reordering the SNPs.
+
+```{r retained-marker-example}
+# Read the original QC properties for the first retained SNP columns.
+retained_marker_example <- marker_qc[
+  match(head(colnames(G_qc), 6L), marker_qc$Marker),
+  c("Marker", "Call_Rate", "MAF", "Observed_Heterozygosity",
+    "Variance"),
+  drop = FALSE
+]
+rownames(retained_marker_example) <- NULL
+
+retained_marker_example |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    digits = 4,
+    caption = "First six SNPs in the common marker panel"
+  )
+```
+
+The resulting `G_qc` matrix is included unchanged in the shared object
+assembled in Section 9. The phenotype targets and individual order were
+already fixed in Section 4; marker QC does not change their correspondence.
+In R03, validation partitions are assigned to these same 195 individuals,
+using the common panel defined here.
 
 ## 9. Shared object for genomic prediction
 
