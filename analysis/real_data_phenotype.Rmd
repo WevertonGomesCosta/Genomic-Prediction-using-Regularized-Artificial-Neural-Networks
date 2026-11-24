@@ -15,24 +15,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-<style>
-table.table,
-#phenotypic-results table {
-  width: 100% !important;
-  max-width: 100%;
-  display: table;
-  table-layout: auto;
-  margin-bottom: 1.25rem;
-  font-size: 0.92em;
-}
-table.table th,
-table.table td,
-#phenotypic-results table th,
-#phenotypic-results table td {
-  white-space: normal !important;
-  vertical-align: top;
-}
-</style>
 
 ## 1. Purpose
 
@@ -156,7 +138,7 @@ variable_dictionary |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     caption = "Variables in the phenotypic data",
     col.names = c(
       "Variable", "Interpretation"
@@ -201,7 +183,7 @@ structure_summary |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     caption = "Experimental structure of the coffee phenotypic data",
     col.names = c(
       "Quantity", "Value"
@@ -260,7 +242,7 @@ trait_summary |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 3,
     caption = "Observed phenotypic summaries with separate zero-coded missing counts",
     col.names = c(
@@ -314,7 +296,7 @@ year_summary |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 3,
     caption = "Observed phenotypic summaries by year with separate missing counts",
     col.names = c(
@@ -385,7 +367,7 @@ model_terms |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     caption = "Terms in the phenotypic mixed model",
     col.names = c(
       "Model component", "Data field", "Type"
@@ -462,7 +444,7 @@ records_used |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     caption = "Records entering each trait-specific mixed model",
     col.names = c(
       "Trait", "Available", "Used",
@@ -552,7 +534,7 @@ fitting_settings |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     caption = "Trait-specific fitting settings",
     col.names = c(
       "Trait", "Tolerance", "Zero-coded missing"
@@ -1014,7 +996,7 @@ variance_table |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 6,
     caption = "Variance components from the phenotypic mixed model",
     col.names = c("Trait", "N", "Iterations", "Progeny variance",
@@ -1034,7 +1016,7 @@ parameter_table |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 6,
     caption = "Model-implied variance proportions and within-plant repeatability",
     col.names = c("Trait", "Progeny proportion", "Plant proportion",
@@ -1070,7 +1052,7 @@ fixed_year_effects[
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
 digits = 4,
     caption = "Adjusted fixed means by evaluation year",
     col.names = c("Trait", "Year", "Adjusted mean"))
@@ -1111,7 +1093,7 @@ head(target_map, 15) |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     caption = "First 15 target plants used for genomic prediction",
     col.names = c(
       "Plant ID", "Progeny", "Plant",
@@ -1208,7 +1190,7 @@ cer_components[, c("Phenotype_ID", "Progenie", "Planta",
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 4,
     caption = "Components of the first 15 Cer BLUPs",
     col.names = c("Phenotype ID", "Progeny", "Plant",
@@ -1255,7 +1237,7 @@ head(blups, 15) |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 4,
     caption = "First 15 BLUPs prepared for genomic prediction",
     col.names = c("Phenotype ID", "Plant ID", "Progeny",
@@ -1333,16 +1315,40 @@ the stored scientific outputs without regenerating them.
 The analysis produces the following files under `output/real/phenotype/`.
 Each output has a specific role in inspection or in subsequent genomic analyses:
 
-| Output file | Contents and intended use |
-|---|---|
-| `real_phenotype_blups.rds` | The 195 individual BLUPs for `Cer`, `BM`, and `LP`; direct input to R02. |
-| `real_phenotype_blups.csv` | Tabular version of the individual BLUPs for inspection. |
-| `real_phenotype_variance_components.rds` | Fitted variance components and derived quantities retained in R format. |
-| `real_phenotype_variance_components.csv` | Tabular presentation of those quantities. |
-| `real_phenotype_model_effects.rds` | Stored fixed-year solutions and random effects for each trait. |
-| `real_phenotype_summary.csv` | Descriptive summaries of the original phenotypic observations. |
-| `real_phenotype_run_metadata.rds` | Recorded information about the analysis execution and settings. |
-| `figures/blup_distributions.tiff` | High-resolution version of the BLUP distribution figure from Section 10.3. |
+```{r phenotypic-output-files}
+phenotypic_output_files <- data.frame(
+  Output_file = c(
+    "real_phenotype_blups.rds",
+    "real_phenotype_blups.csv",
+    "real_phenotype_variance_components.rds",
+    "real_phenotype_variance_components.csv",
+    "real_phenotype_model_effects.rds",
+    "real_phenotype_summary.csv",
+    "real_phenotype_run_metadata.rds",
+    "figures/blup_distributions.tiff"
+  ),
+  Contents_and_use = c(
+    "The 195 individual BLUPs for Cer, BM, and LP; direct input to R02.",
+    "Tabular version of the individual BLUPs for inspection.",
+    "Fitted variance components and derived quantities retained in R format.",
+    "Tabular presentation of those quantities.",
+    "Stored fixed-year solutions and random effects for each trait.",
+    "Descriptive summaries of the original phenotypic observations.",
+    "Recorded information about the analysis execution and settings.",
+    "High-resolution version of the BLUP distribution figure from Section 10.3."
+  ),
+  stringsAsFactors = FALSE
+)
+
+phenotypic_output_files |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    caption = "Saved phenotypic outputs and their role in the genomic workflow",
+    col.names = c("Output file", "Contents and intended use")
+  )
+```
 
 The individual-BLUP RDS is the phenotypic input consumed by R02. The other
 files preserve the fitted effects, descriptive summaries, and execution
