@@ -513,14 +513,35 @@ splits are not 25 independent external populations.
 
 ## 5. Nested inner cross-validation
 
-Each outer analysis set contains 156 individuals. Within each outer split,
-these individuals are randomly shuffled and divided into four equal inner folds.
-
-Each inner assessment set therefore contains 39 individuals, while the
-remaining 117 individuals form the corresponding inner analysis set. The outer
-assessment individuals do not participate in inner partition generation.
-
 ### 5.1 Inner fold assignments
+
+Each of the 25 outer splits has an **outer analysis set of 156 individuals**
+and a separate **outer assessment set of 39 individuals**. Inner validation
+uses only those 156 outer-analysis individuals; none of the 39 outer-assessment
+individuals can enter inner model selection.
+
+For each outer split, the 156 IDs are shuffled and divided into four
+non-overlapping inner folds. One fold of 39 individuals serves as the
+inner assessment set, and the complementary 117 individuals form the
+inner analysis set. This yields four inner splits per outer split and
+**25 × 4 = 100 inner splits** in total.
+
+| Set | Number of individuals | Role |
+|---|---:|---|
+| Outer analysis | 156 | Available for nested model development |
+| Outer assessment | 39 | Held out from all inner folds |
+| Inner analysis | 117 | Used to fit each candidate within the current inner split |
+| Inner assessment | 39 | Used to compare candidates within the current inner split |
+
+Table: Sizes and roles of the nested analysis and assessment sets
+
+The original seed formula,
+`SEED_GLOBAL + 100000L + rep_id * 100L + outer_fold`,
+sets a distinct deterministic shuffle for each outer split. Sampling
+draws only from `outer_analysis_ids`; subsequently sorting the assignment
+table by `ID` changes its display order, not its fold membership.
+Within each outer split, the four inner folds are labeled `I1` to `I4`.
+The nested structure and its seed formula remain unchanged.
 
 ```{r inner-folds}
 inner_assignments_list <- vector(
@@ -636,7 +657,62 @@ rownames(
 ) <- NULL
 ```
 
+The next table displays ten records from the assignment table for the first
+outer split, `R01_F01`. `InnerFold` indicates which of the four inner folds
+assesses each individual. The records are shown by identifier, **not in the
+random order** originally sampled.
+
+```{r inner-assignment-example}
+head(
+  inner_assignments[
+    inner_assignments$SplitID == "R01_F01",
+    c("SplitID", "Repetition", "OuterFold", "ID", "InnerFold"),
+    drop = FALSE
+  ],
+  10L
+) |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    caption = "Example of inner-fold assignments within outer split R01_F01"
+  )
+```
+
+For a specific inner split such as `R01_F01` / `I1`, the three
+relevant sets can be inspected side by side. The table shows the first
+six IDs in the inner analysis set, inner assessment set, and held-out
+outer assessment set. These are **independent excerpts of three sets**;
+IDs in the same displayed row are not paired observations.
+
+```{r inner-split-example}
+inner_example <- inner_splits[["R01_F01"]][["I1"]]
+outer_assessment_example <- outer_splits[["R01_F01"]]$assessment_ids
+
+data.frame(
+  Display_Row = seq_len(6L),
+  Inner_Analysis_ID = head(inner_example$analysis_ids, 6L),
+  Inner_Assessment_ID = head(inner_example$assessment_ids, 6L),
+  Held_Out_Outer_Assessment_ID = head(outer_assessment_example, 6L)
+) |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    caption = "Examples of IDs used and held out in inner split R01_F01 / I1"
+  )
+```
+
+The sets above are read from `inner_splits` and `outer_splits`, not
+reconstructed by another sampling procedure. Consequently, the examples
+do not consume random numbers or modify any saved fold assignments.
+
 ### 5.2 Inner split checks
+
+The existing checks evaluate all 100 inner splits. They verify the sizes of
+the inner analysis and assessment sets, that these sets do not overlap,
+that every outer-analysis individual is assessed once across the four inner
+folds, and that no outer-assessment individual enters an inner split.
 
 ```{r inner-checks}
 inner_sizes_list <- vector(
@@ -753,6 +829,24 @@ inner_contract |>
 stopifnot(
   all(inner_contract$Passed)
 )
+```
+
+The four inner splits belonging to `R01_F01` illustrate the expected
+117/39 division. This table reads the already computed `inner_sizes`
+summary; it does not add another integrity rule or rebuild the splits.
+
+```{r inner-size-example}
+inner_sizes[
+  inner_sizes$SplitID == "R01_F01",
+  c("SplitID", "InnerFold", "Analysis_N", "Assessment_N", "Overlap_N"),
+  drop = FALSE
+] |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    caption = "Sizes and overlap of the four inner splits within R01_F01"
+  )
 ```
 
 The inner assessment sets are used only for model selection within the
