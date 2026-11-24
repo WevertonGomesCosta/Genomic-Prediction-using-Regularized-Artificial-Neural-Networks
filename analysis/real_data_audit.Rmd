@@ -87,6 +87,15 @@ phenotypic mixed model for cercosporiosis (`Cer`), leaf-miner incidence (`BM`),
 and the production-related trait (`LP`). These BLUPs are aligned with
 individual genotype identifiers before cross-validation partitions are generated.
 
+### 3.1 Reading the input files and dimensions
+
+The Capture-Seq genotypes are read from `geno_real.rds` and retained in
+`G_raw` with their original individual row labels and SNP column order.
+The `real_phenotype_blups.rds` object comes from R01 and contains the
+three adjusted phenotypic targets for each experimental plant. The input
+table compares their dimensions before any individual matching or marker
+filtering.
+
 ```{r read-inputs}
 geno_raw <- readRDS(
   "data/dados_reais/geno_real.rds"
@@ -132,15 +141,71 @@ Capture-Seq produced `r format(ncol(G_raw), big.mark = ",")` SNPs for the
 `r nrow(G_raw)` genotyped individuals. The phenotype module supplies one BLUP
 for each of these individuals and each of the three prediction traits.
 
+### 3.2 Inspecting genomic and phenotypic records
+
+The genomic matrix contains one row per genotyped plant and one column per SNP.
+The example below shows the first six genomic row labels and four SNP columns;
+the full `G_raw` matrix remains unchanged. The genotype values are represented
+by the original `-1/0/1` coding, which is explained in Section 6.
+
+```{r genomic-input-example}
+genotype_example <- data.frame(
+  Genotype_ID = rownames(G_raw)[1:6],
+  G_raw[1:6, 1:4, drop = FALSE],
+  check.names = FALSE
+)
+
+genotype_example |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    caption = "Example of six raw Capture-Seq profiles at four SNP loci"
+  )
+```
+
+The phenotypic file has one row per target plant, rather than one row per
+plant-year observation. The `Phenotype_ID` identifies the saved BLUP record,
+`ID_Planta` is its permanent field identifier, and `Progenie`, `Planta`,
+and `Populacao` retain the experimental identity. The three final columns
+contain the previously estimated `Cer`, `BM`, and `LP` BLUPs.
+
+```{r phenotype-input-example}
+head(
+  blups[, c("Phenotype_ID", "ID_Planta", "Progenie", "Planta",
+            "Populacao", "Cer", "BM", "LP"), drop = FALSE],
+  6L
+) |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    digits = 4,
+    caption = "Example of six individual phenotypic BLUP records from R01"
+  )
+```
+
+These two samples display the source structures without changing the records.
+The following section establishes which genomic and phenotypic labels refer to
+the same individual before constructing the common genomic matrix.
+
 ## 4. Individual identification and alignment
+
+### 4.1 Matching individual identifiers
 
 The genomic rows use labels of the form `PROG 1_1`, where the first number
 identifies the progeny and the second identifies the plant within that progeny.
 The phenotype object stores these two components separately as `Progenie` and
-`Planta`.
+`Planta`. For example, the R01 record `PROG01_PL01` (`Progenie = 1`,
+`Planta = 1`) corresponds to the genomic row `PROG 1_1`.
 
-A genomic identifier is therefore constructed directly from those fields and
-used to match each BLUP with its genomic profile.
+The `Genotype_ID` is constructed from `Progenie` and `Planta`, while the
+permanent field identifier `ID_Planta` is preserved separately.
+`match()` locates each constructed label among the genomic row names.
+The alignment summary reports the numbers of identifiers on both sides,
+unmatched records, and successful matches. The existing checks require a
+unique one-to-one correspondence before `G_raw` is reordered with
+`genotype_match`. Its SNP column order and genotype values are preserved.
 
 ```{r individual-alignment}
 blups$Genotype_ID <- paste0(
@@ -224,6 +289,32 @@ rownames(G) <- individuals$Phenotype_ID
 
 The common genomic matrix is now ordered exactly as the phenotype table. The
 stable `Phenotype_ID` is used as the row name passed to all downstream modules.
+
+### 4.2 Inspecting the aligned individuals
+
+The `individuals` table retains both forms of the identifier alongside
+the original experimental fields. The example below shows the first six
+correspondences after matching, including the distinction between the
+phenotypic label, genomic label, and permanent plant identifier.
+
+```{r aligned-individual-example}
+head(individuals, 6L) |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    caption = "First six phenotype-to-genotype matches",
+    col.names = c(
+      "Phenotype ID", "Genotype ID", "Plant ID",
+      "Progeny", "Plant", "Population"
+    )
+  )
+```
+
+The alignment does not estimate new BLUPs or filter SNPs. It places the 195
+genomic profiles in the same order as the saved phenotype targets and labels
+the rows of `G` using `Phenotype_ID`. Sections 5–8 then describe this
+aligned population and prepare its marker panel.
 
 ## 5. Population and trait structure
 
