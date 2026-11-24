@@ -460,12 +460,13 @@ blup_boxplot_data$Trait <- factor(
 
 p_blup_targets <- ggplot(
   blup_boxplot_data,
-  aes(x = Trait, y = BLUP, fill = Trait)
+  aes(x = "", y = BLUP, fill = Trait)
 ) +
   geom_boxplot(width = 0.55, show.legend = FALSE) +
   facet_wrap(~ Trait, scales = "free_y") +
+  scale_x_discrete(breaks = NULL) +
   scale_fill_gdocs(limits = c("BM", "Cer", "LP")) +
-  labs(x = "Trait", y = "Individual BLUP") +
+  labs(x = NULL, y = "Individual BLUP") +
   theme_gdocs()
 
 print(p_blup_targets)
