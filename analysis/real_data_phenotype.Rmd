@@ -71,7 +71,6 @@ PHENOTYPE_INPUT <- "data/dados_reais/coffee_phenotypes.txt"
 OUTPUT_DIR <- "output/real/phenotype"
 FIGURE_DIR <- file.path(OUTPUT_DIR, "figures")
 
-dir.create(FIGURE_DIR, showWarnings = FALSE, recursive = TRUE)
 ```
 
 ## 2. Packages and fixed settings
@@ -580,7 +579,7 @@ The fitting code below can be followed in five stages:
 5. Store the fitted solutions, variance components, iteration history, and
    residual quantities in `fits`, which is read by the following sections.
 
-```{r fit-models}
+```{r fit-models, eval=FALSE}
 fits <- list()
 
 for (trait in traits) {
@@ -902,6 +901,15 @@ The code above exposes the complete path from the incidence matrices to the
 variance updates and BLUP solutions without hiding any step in project-specific
 helper functions.
 
+The code above documents the original model-fitting procedure without running
+it during site generation. The sections below use the existing RDS outputs.
+
+```{r load-saved-phenotypic-results, include=FALSE}
+variance_components <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_variance_components.rds"))
+model_effects <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_model_effects.rds"))
+blups <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_blups.rds"))
+```
+
 ## 8. Variance components and derived ratios
 
 For each trait,
@@ -944,7 +952,7 @@ arabica* by [Sousa et al. (2019)](https://doi.org/10.3389/fpls.2018.01934)
 and the distinction between genetic and phenotypic variance in plant-breeding
 models discussed by [Piepho and Möhring (2007)](https://doi.org/10.1534/genetics.107.074229).
 
-```{r variance-components}
+```{r variance-components, eval=FALSE}
 variance_components <- data.frame()
 
 for (trait in traits) {
@@ -1048,6 +1056,37 @@ parameter_table |>
   )
 ```
 
+The tables below display saved variance components and derived ratios rather
+than re-estimating them.
+
+```{r saved-variance-tables}
+variance_table <- variance_components[, c("Trait", "N", "Iterations",
+  "V_progeny", "V_plant", "V_population", "V_block",
+  "V_progeny_year", "V_residual", "V_phenotypic"), drop = FALSE]
+variance_table |>
+  format_table(
+    digits = 6,
+    caption = "Variance components from the phenotypic mixed model",
+    col.names = c("Trait", "N", "Iterations", "Progeny variance",
+      "Plant variance", "Population variance", "Block variance",
+      "Progeny-by-year variance", "Residual variance",
+      "Phenotypic variance")
+  )
+
+parameter_table <- variance_components[, c("Trait", "h2_progeny",
+  "c2_plant", "h2_population", "c2_block", "c2_progeny_year",
+  "Repeatability", "h2_total", "Overall_mean"), drop = FALSE]
+parameter_table |>
+  format_table(
+    digits = 6,
+    caption = "Model-implied variance proportions and within-plant repeatability",
+    col.names = c("Trait", "Progeny proportion", "Plant proportion",
+      "Population proportion", "Block proportion",
+      "Progeny-by-year proportion", "Plant repeatability",
+      "Progeny + population proportion", "Adjusted mean")
+  )
+```
+
 Separating the variance components from the derived parameters keeps both
 tables readable at the width of the tutorial page.
 
@@ -1056,7 +1095,7 @@ tables readable at the width of the tutorial page.
 The fixed solutions estimate the adjusted mean for each evaluation year after
 the random experimental and biological effects have been accounted for.
 
-```{r fixed-year-effects}
+```{r fixed-year-effects, eval=FALSE}
 fixed_year_effects <- data.frame()
 
 for (trait in traits) {
@@ -1093,6 +1132,26 @@ fixed_year_effects[
       "Trait", "Year", "Adjusted mean"
     )
   )
+```
+
+The adjusted year means are retrieved from the previously saved model effects.
+
+```{r saved-fixed-year-effects}
+fixed_year_effects <- data.frame()
+for (trait in traits) {
+  beta_year <- model_effects[[trait]]$fixed_year
+  fixed_year_effects <- rbind(fixed_year_effects, data.frame(
+    Trait = trait, Year = as.integer(names(beta_year)),
+    Adjusted_mean = as.numeric(beta_year), stringsAsFactors = FALSE
+  ))
+}
+fixed_year_effects[
+  order(match(fixed_year_effects$Trait, traits), fixed_year_effects$Year),
+  , drop = FALSE
+] |>
+  format_table(digits = 4,
+    caption = "Adjusted fixed means by evaluation year",
+    col.names = c("Trait", "Year", "Adjusted mean"))
 ```
 
 The table above contains one adjusted fixed-year mean for each trait-year
@@ -1168,7 +1227,7 @@ where \(\widehat{\mu}\) is the overall adjusted mean,
 The code keeps these components explicit so the construction of each BLUP can
 be followed directly.
 
-```{r individual-blups}
+```{r individual-blups, eval=FALSE}
 blup_tables <- list()
 
 for (trait in traits) {
@@ -1218,36 +1277,32 @@ For `Cer`, the first plants can be inspected together with the three fitted
 components that form their BLUP.
 
 ```{r blup-components-example}
-head(
-  blup_tables$Cer[
-    ,
-    c(
-      "Phenotype_ID",
-      "Progenie",
-      "Planta",
-      "Progeny_effect",
-      "Plant_effect",
-      "Population_effect",
-      "BLUP"
-    )
-  ],
-  15
-) |>
+# Inspect previously saved effects alongside their corresponding stored BLUPs.
+cer_components <- head(blups, 15)
+cer_components$Progeny_effect <- as.numeric(
+  model_effects$Cer$random$Progenie[as.character(cer_components$Progenie)]
+)
+cer_components$Plant_effect <- as.numeric(
+  model_effects$Cer$random$ID_Planta[as.character(cer_components$ID_Planta)]
+)
+cer_components$Population_effect <- as.numeric(
+  model_effects$Cer$random$Populacao[as.character(cer_components$Populacao)]
+)
+cer_components[, c("Phenotype_ID", "Progenie", "Planta",
+  "Progeny_effect", "Plant_effect", "Population_effect", "Cer"),
+  drop = FALSE] |>
   format_table(
     digits = 4,
     caption = "Components of the first 15 Cer BLUPs",
-    col.names = c(
-      "Phenotype ID", "Progeny", "Plant",
-      "Progeny effect", "Plant effect", "Population effect",
-      "BLUP"
-    )
+    col.names = c("Phenotype ID", "Progeny", "Plant",
+      "Progeny effect", "Plant effect", "Population effect", "BLUP")
   )
 ```
 
 The three trait-specific BLUP vectors are then placed in a single table with
 one row for each of the 195 target plants.
 
-```{r combine-individual-blups}
+```{r combine-individual-blups, eval=FALSE}
 blups <- target_map[
   ,
   c(
@@ -1289,6 +1344,19 @@ head(blups, 15) |>
       "Plant", "Population", "Cer",
       "BM", "LP"
     )
+  )
+```
+
+The previously obtained individual BLUPs are read from the RDS file and
+shown below without recomputing their values.
+
+```{r saved-individual-blups}
+head(blups, 15) |>
+  format_table(
+    digits = 4,
+    caption = "First 15 BLUPs prepared for genomic prediction",
+    col.names = c("Phenotype ID", "Plant ID", "Progeny",
+      "Plant", "Population", "Cer", "BM", "LP")
   )
 ```
 
@@ -1334,7 +1402,7 @@ p_blup_distribution <- ggplot(
 print(p_blup_distribution)
 ```
 
-```{r save-blup-distributions, include=FALSE}
+```{r save-blup-distributions, include=FALSE, eval=FALSE}
 ggsave(
   file.path(
     FIGURE_DIR,
@@ -1409,7 +1477,7 @@ The individual-BLUP RDS is the phenotypic input consumed by R02. The other
 files preserve the fitted effects, descriptive summaries, and execution
 metadata. The code below shows how these outputs are saved.
 
-```{r save-outputs}
+```{r save-outputs, eval=FALSE}
 utils::write.csv(
   blups,
   file.path(OUTPUT_DIR, "real_phenotype_blups.csv"),
