@@ -530,13 +530,17 @@ uses at most 500 iterations and starts from five random-effect proportions of
 0.10 and a residual proportion of 0.50. These settings are documented next to
 the algorithm in which they are used.
 
-```{r fitting-settings}
+```{r model-fitting-tolerances}
 tolerance <- c(
   Cer = 0.05,
   BM = 0.05,
   LP = 0.0001
 )
+```
 
+The table below summarizes the stored fitting controls for each trait.
+
+```{r fitting-settings}
 fitting_settings <- data.frame(
   Trait = traits,
   Tolerance = unname(tolerance[traits]),
