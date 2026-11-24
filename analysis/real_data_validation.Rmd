@@ -392,12 +392,28 @@ data.frame(
 
 ### 4.2 Outer split checks
 
-The original checks now inspect every one of the 25 stored splits. For
-each split, they count the IDs in the analysis and assessment sets and
-measure their overlap. A separate coverage check confirms that, within
-each repetition, all 195 individuals occur in exactly one assessment
-fold. These checks evaluate the saved split structure without changing
-its assignments.
+The original checks inspect all 25 stored outer splits. For each split,
+`Analysis_N` counts individuals available for model development,
+`Assessment_N` counts those held out for prediction, and `Overlap_N`
+counts IDs appearing in both sets. A zero overlap confirms the
+**separation of IDs within that split**.
+
+The additional `outer_coverage` check combines the five assessment folds
+of each repetition and verifies that every one of the 195 individual IDs
+appears **exactly once**. This is distinct from claiming that observations
+across different repetitions are independent: repetitions reshuffle the
+same population.
+
+| Property checked | Scope | Interpretation |
+|---|---|---|
+| Analysis and assessment sample sizes | Each outer split | 156 analysis IDs and 39 assessment IDs |
+| `Overlap_N == 0` | Each outer split | No individual belongs to both sets in that split |
+| `outer_coverage` | All five folds within each repetition | All 195 IDs are assessed exactly once per repetition |
+
+Table: Meaning and scope of the outer cross-validation integrity checks
+
+These are checks of the partition assignments, not tests of predictive
+performance or of independence in the earlier BLUP estimation.
 
 ```{r outer-checks}
 outer_split_ids <- names(
@@ -505,11 +521,40 @@ stopifnot(
 )
 ```
 
-Across all outer partitions, every individual is assessed once in each
-repetition and five times in total. Thus, within each repetition, the five
-assessment folds are disjoint and together cover the full population.
-The repeated assessments reuse individuals across repetitions; the 25 outer
-splits are not 25 independent external populations.
+### 4.3 Repeated assessment of the same individuals
+
+The following descriptive summary counts how often each individual ID
+appears in `outer_assignments` across all five repetitions. It reports
+the number of individuals with each assessment frequency, rather than
+creating additional folds or modifying the previously generated partitions.
+
+```{r outer-assessment-frequency}
+assessment_count_per_id <- table(outer_assignments$ID)
+
+assessment_frequency <- data.frame(
+  Assessment_Events_per_Individual = as.integer(
+    names(table(assessment_count_per_id))
+  ),
+  Number_of_Individuals = as.integer(
+    table(assessment_count_per_id)
+  )
+)
+
+assessment_frequency |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    caption = "Frequency of outer assessment per individual across repetitions"
+  )
+```
+
+Every individual is assessed once in each of five repetitions, hence
+five assessment events per individual. There are
+`r nrow(outer_assignments)` rows in the complete outer assignment table
+(195 individuals × 5 repetitions), but still only 195 distinct plants.
+Accordingly, the 25 outer splits provide repeated within-population
+assessment; they do **not** represent 25 independent external populations.
 
 ## 5. Nested inner cross-validation
 
@@ -709,10 +754,29 @@ do not consume random numbers or modify any saved fold assignments.
 
 ### 5.2 Inner split checks
 
-The existing checks evaluate all 100 inner splits. They verify the sizes of
-the inner analysis and assessment sets, that these sets do not overlap,
-that every outer-analysis individual is assessed once across the four inner
-folds, and that no outer-assessment individual enters an inner split.
+The existing checks evaluate all 100 inner splits. Within a given outer
+split, each of the four inner assessment sets contains 39 IDs and each
+complementary inner analysis set contains 117 IDs. Their intersection
+must be empty. Across those four inner folds, `inner_coverage` verifies
+that all 156 outer-analysis IDs are assessed once.
+
+A separate condition, recorded by `outer_leakage`, detects whether any
+of the 39 **outer-assessment IDs** appears in an inner analysis or
+assessment set. A value of `FALSE` for this flag is required: the
+inner folds must be subsets of the corresponding outer-analysis set.
+
+| Property checked | Scope | Interpretation |
+|---|---|---|
+| Inner analysis and assessment sizes | Each of the 100 inner splits | 117 IDs for analysis and 39 for assessment |
+| `Overlap_N == 0` | Each inner split | No ID is in both inner sets |
+| `inner_coverage` | Four inner folds of an outer split | All 156 outer-analysis IDs are assessed once |
+| `outer_leakage == FALSE` | Every inner split | No outer-assessment ID enters inner validation |
+
+Table: Meaning and scope of the nested validation integrity checks
+
+These conditions protect the **model-selection partitions**. They do not
+imply that the precomputed BLUP targets were estimated without using
+phenotypic observations from individuals later held out in these splits.
 
 ```{r inner-checks}
 inner_sizes_list <- vector(
@@ -849,17 +913,31 @@ inner_sizes[
   )
 ```
 
-The inner assessment sets are used only for model selection within the
-corresponding outer analysis sample. The outer assessment set remains untouched
-until final prediction for that split. In particular, the checks above concern
-separation of individual IDs during partitioning and model selection; they do
-not imply that the BLUP targets were estimated without information from the
-held-out individuals, as clarified in Section 3.
+The four displayed splits belong to the **same** outer-analysis population;
+they are alternative inner assessments for model selection, not four new
+independent datasets. The outer assessment set is excluded from all inner
+training and assessment operations and is reserved for the final prediction
+step in its outer split.
+
+The checks above verify separation of **individual IDs** within the
+nested validation scheme. They do not establish an independent
+phenotypic-validation experiment, because the BLUPs used as targets were
+estimated in R01 before any of these partitions were created (Section 3).
 
 ## 6. Information used to create partitions
 
-The fold-generation variables are separated explicitly from the information
-used later for genomic prediction.
+### 6.1 Variables that determine fold membership
+
+The outer and inner sampling procedures depend only on the individual
+identifier vectors and deterministic seeds. No `Cer`, `BM`, or `LP`
+BLUP is used to choose a fold, and no SNP value or genomic-prediction
+model changes the assignment. Thus, the same folds can be reused for all
+three traits and for the GBLUP and ANN model variants.
+
+The table records which information is used **to generate partitions**.
+Variables marked `Not used` may still be used later to fit a model,
+select its hyperparameters, or assess prediction performance; the
+classification below concerns fold generation only.
 
 ```{r partition-information}
 partition_information <- data.frame(
@@ -894,14 +972,38 @@ partition_information |>
   )
 ```
 
-The same stored partitions are therefore valid for all three prediction traits
-and all prediction methods. Fold assignment is random at the **individual**
-level: entire progenies, years, and environments are not withheld as groups.
-Consequently, this design estimates prediction performance within the
-represented population, rather than leave-progeny-out or new-environment
-generalization.
+### 6.2 Methodological scope of the validation
+
+The same stored partitions apply to all traits and model variants because
+fold membership is generated without reference to the trait values,
+marker values or model identity. However, **individual-level random
+assignment** does not hold out complete progenies, years or environments.
+The design therefore addresses prediction of held-out individual BLUP
+targets within the represented coffee population, not leave-progeny-out,
+future-year or new-environment generalization.
+
+There is also an important distinction between two information flows:
+
+- **Genomic model fitting and tuning:** the nested splits keep the
+  outer-assessment IDs out of the inner folds, and the outer analysis
+  and assessment IDs do not overlap within a split.
+- **Phenotypic target estimation:** the BLUP values were produced earlier
+  in R01 using the available phenotypic records, rather than being
+  re-estimated separately from each outer analysis set.
+
+Consequently, the integrity checks support the stated separation during
+genomic modeling, but do not demonstrate complete independence of
+phenotypic target estimation. Predictive results should be described as
+assessments against **precomputed BLUPs**, with this limitation stated
+alongside their interpretation.
 
 ## 7. Cross-validation summary
+
+The summary brings together the fixed settings and the observed numbers
+of outer and inner splits. Counts of **splits** should be distinguished
+from counts of **assignment records**: every individual appears once in
+each outer repetition, and each outer-analysis individual receives one
+inner-fold label for each outer split in which it is eligible.
 
 ```{r validation-summary}
 design_summary <- data.frame(
@@ -942,10 +1044,18 @@ design_summary |>
   )
 ```
 
-The design contains **5 × 5 = 25 outer splits**, each with a separate
-assessment set, and **25 × 4 = 100 inner splits** used for model selection.
-These are nested resampling partitions of the same 195 individuals, not
-separate biological populations.
+The design contains **5 × 5 = 25 outer splits**, each with an assessment
+set of 39 individuals, and **25 × 4 = 100 inner splits**, each formed
+within an outer analysis set of 156 individuals. The saved assignment
+tables contain `r nrow(outer_assignments)` outer records and
+`r nrow(inner_assignments)` inner records. Those rows describe repeated
+assignments of the same 195 individuals, not distinct biological
+samples.
+
+The checks of sample size, disjointness and coverage establish the
+integrity of the **ID-based resampling design**. The held-out assessments
+will be used to compare genomic prediction methods with common partitions,
+subject to the precomputed-BLUP limitation described in Sections 3 and 6.
 
 ## 8. Common validation object
 
