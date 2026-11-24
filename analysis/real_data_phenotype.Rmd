@@ -1405,12 +1405,14 @@ information has not been used to estimate or select these values.
 
 ## 11. Phenotypic results
 
-The phenotypic analysis produced individual BLUPs, variance components,
-model effects, descriptive summaries, and run metadata. This tutorial reads
-the stored scientific outputs without regenerating them.
+The original phenotypic analysis saved the fitted effects, individual BLUPs,
+variance components, descriptive summaries, and execution metadata for reuse.
+This tutorial reads the existing scientific results rather than fitting the
+model or rewriting its outputs.
 
-The analysis produces the following files under `output/real/phenotype/`.
-Each output has a specific role in inspection or in subsequent genomic analyses:
+The files listed below belong to `output/real/phenotype/`. Seven contain
+phenotypic results or metadata, and one is the high-resolution BLUP figure.
+The table identifies each file and the role it serves in the next stages.
 
 | Output file | Contents and intended use |
 |---|---|
@@ -1425,13 +1427,23 @@ Each output has a specific role in inspection or in subsequent genomic analyses:
 
 Table: Saved phenotypic outputs and their role in the genomic workflow
 
-The individual-BLUP RDS is the phenotypic input consumed by R02. The other
-files preserve the fitted effects, descriptive summaries, and execution
-metadata. The disabled code blocks document how the original scientific results were saved.
+The `real_phenotype_blups.rds` file is the direct phenotypic input to R02
+(`real_data_audit.Rmd`). It retains the 195 individual plant records, their
+identifiers, and the three `Cer`, `BM`, and `LP` BLUPs. The matching CSV
+makes the same tabular results easier to inspect. The other RDS files retain
+the variance estimates and fitted effects in their original R structures;
+the remaining CSV and metadata files document the phenotypic analysis.
 
-The original analysis exported the individual BLUPs in both formats.
+The following export blocks record how the original outputs were written.
+As in the simulated-data audit, they remain in the RMarkdown for
+reproducibility but are not evaluated or displayed during site rendering
+(`eval=FALSE, include=FALSE`). Consequently, rendering the tutorial does
+not overwrite any of the existing scientific results.
 
-```{r save-individual-blups, eval=FALSE}
+The individual BLUPs were exported as CSV for inspection and as RDS for
+direct reuse by the next module.
+
+```{r save-individual-blups, eval=FALSE, include=FALSE}
 utils::write.csv(
   blups,
   file.path(OUTPUT_DIR, "real_phenotype_blups.csv"),
@@ -1444,9 +1456,11 @@ saveRDS(
 )
 ```
 
-The estimated variance components were archived as CSV and RDS.
+The variance-component table, including derived proportions and
+repeatability, was saved in both CSV and RDS formats. Section 8 reads
+the previously saved RDS to display its results.
 
-```{r save-variance-components, eval=FALSE}
+```{r save-variance-components, eval=FALSE, include=FALSE}
 utils::write.csv(
   variance_components,
   file.path(OUTPUT_DIR, "real_phenotype_variance_components.csv"),
@@ -1459,9 +1473,12 @@ saveRDS(
 )
 ```
 
-The fixed and random effect solutions were stored separately.
+The fixed-year solutions and the random effects were stored together in
+`real_phenotype_model_effects.rds`, with one entry per trait. Sections 9
+and 10 use this saved object to explain adjusted year means and individual
+BLUP components.
 
-```{r save-model-effects, eval=FALSE}
+```{r save-model-effects, eval=FALSE, include=FALSE}
 model_effects <- list()
 
 for (trait in traits) {
@@ -1477,9 +1494,10 @@ saveRDS(
 )
 ```
 
-The phenotypic descriptive statistics were archived.
+The descriptive statistics calculated from the observed phenotype records
+were also written to a CSV file, independently of the fitted model outputs.
 
-```{r save-descriptive-summary, eval=FALSE}
+```{r save-descriptive-summary, eval=FALSE, include=FALSE}
 utils::write.csv(
   trait_summary,
   file.path(OUTPUT_DIR, "real_phenotype_summary.csv"),
@@ -1487,9 +1505,12 @@ utils::write.csv(
 )
 ```
 
-The run metadata identifies the original inputs and fitted settings.
+The run metadata preserves the input path, R version and execution date,
+experiment descriptors, model terms, and trait-specific tolerances. This
+record documents the scientific execution without constituting another
+phenotypic estimate.
 
-```{r save-run-metadata, eval=FALSE}
+```{r save-run-metadata, eval=FALSE, include=FALSE}
 run_metadata <- list(
   generated_at = Sys.time(),
   R_version = R.version.string,
@@ -1513,9 +1534,9 @@ saveRDS(
 )
 ```
 
-The central product is `real_phenotype_blups.rds`, containing exactly 195 target
-plants and the three trait BLUPs. Genotype matching and marker quality control
-are performed only in the next stage.
+The key output for genomic prediction remains `real_phenotype_blups.rds`.
+R02 matches these individual phenotypic targets with the genotypes and
+performs marker quality control; neither operation is carried out in R01.
 
 ## 12. Summary of the phenotypic analysis
 
