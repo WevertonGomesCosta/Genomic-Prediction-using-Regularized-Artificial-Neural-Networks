@@ -1059,7 +1059,7 @@ parameter_table |>
 The tables below display saved variance components and derived ratios rather
 than re-estimating them.
 
-```{r saved-variance-tables}
+```{r saved-variance-tables, echo=FALSE}
 variance_table <- variance_components[, c("Trait", "N", "Iterations",
   "V_progeny", "V_plant", "V_population", "V_block",
   "V_progeny_year", "V_residual", "V_phenotypic"), drop = FALSE]
@@ -1136,7 +1136,7 @@ fixed_year_effects[
 
 The adjusted year means are retrieved from the previously saved model effects.
 
-```{r saved-fixed-year-effects}
+```{r saved-fixed-year-effects, echo=FALSE}
 fixed_year_effects <- data.frame()
 for (trait in traits) {
   beta_year <- model_effects[[trait]]$fixed_year
@@ -1350,7 +1350,7 @@ head(blups, 15) |>
 The previously obtained individual BLUPs are read from the RDS file and
 shown below without recomputing their values.
 
-```{r saved-individual-blups}
+```{r saved-individual-blups, echo=FALSE}
 head(blups, 15) |>
   format_table(
     digits = 4,
