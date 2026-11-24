@@ -551,7 +551,8 @@ The fitting code below can be followed in five stages:
    proportions with their values from the preceding iteration, using the
    stopping rule defined above.
 5. Store the fitted solutions, variance components, iteration history, and
-   residual quantities in `fits`, which is read by the following sections.
+   residual quantities in `fits`. The subsequent sections instead read the
+   previously saved results without rerunning the fitting procedure.
 
 In Stage 1, `X` contains one indicator column per evaluation year. The five
 random-effect incidence matrices correspond to progeny, permanent plant,
