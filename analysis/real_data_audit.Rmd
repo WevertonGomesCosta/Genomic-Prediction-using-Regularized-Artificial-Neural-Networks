@@ -50,12 +50,6 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
-
-dir.create(
-  "output/real/audit/figures",
-  showWarnings = FALSE,
-  recursive = TRUE
-)
 ```
 
 ## 2. Software packages and quality-control settings
@@ -776,7 +770,17 @@ p_maf <- ggplot(
 print(p_maf)
 ```
 
-```{r save-maf-tiff, include=FALSE}
+The original high-resolution TIFF export is retained below for
+reproducibility, but is not evaluated or displayed during HTML rendering.
+Consequently, the existing figure is not rewritten by a tutorial build.
+
+```{r save-maf-tiff, eval=FALSE, include=FALSE}
+dir.create(
+  "output/real/audit/figures",
+  showWarnings = FALSE,
+  recursive = TRUE
+)
+
 ggsave(
   "output/real/audit/figures/marker_maf_distribution.tiff",
   plot = p_maf,
@@ -918,9 +922,30 @@ using the common panel defined here.
 
 ## 9. Shared object for genomic prediction
 
-The common object keeps the aligned individuals, the three prediction targets,
-the retained genotype matrix, progeny membership, marker-level quality
-statistics, and the fixed preprocessing settings.
+### 9.1 Assembling the shared data object
+
+The preceding sections match each plant-level BLUP with its Capture-Seq profile
+and select the shared SNP panel using fixed quality-control rules. The R02
+result is assembled as `real_common`, a list that retains the individual and
+marker order for pre-validation and genomic prediction.
+
+| Element | Contents and role |
+|---|---|
+| `genotype` | `G_qc`, with 195 plant rows and the retained SNP columns, in the original `-1/0/1` coding |
+| `phenotype` | `Phenotype_ID` and the saved `Cer`, `BM`, and `LP` plant-level BLUPs, ordered to match the genomic rows |
+| `individuals` | Mapping among `Phenotype_ID`, `Genotype_ID`, `ID_Planta`, `Progenie`, `Planta`, and `Populacao` |
+| `traits` | Names of the three prediction responses |
+| `family` | Progeny labels, named by `Phenotype_ID`, for the same 195 plants |
+| `marker_qc` | QC statistics and retention decisions for every marker in the **raw** Capture-Seq panel |
+| `metadata` | Source information, panel dimensions, genotype coding and fixed QC settings |
+
+Table: Contents of the shared R02 object used in subsequent analyses
+
+The `genotype` matrix contains only **retained** SNPs; `marker_qc` still
+documents the original panel, including excluded loci. The rows of `genotype`
+and `phenotype` refer to the same plants, in the same order. The chunk below
+assembles the shared object without fitting prediction models or altering the
+original marker-selection rules.
 
 ```{r build-common-object}
 phenotype_targets <- blups[
@@ -960,7 +985,39 @@ real_common <- list(
 )
 ```
 
-```{r save-common-outputs, include=FALSE}
+### 9.2 Saved outputs and their uses
+
+The original preprocessing stage produced one shared RDS object and five
+companion CSV files. The RDS retains the original R structures, whereas the
+CSV files permit inspection of the SNP filtering, the BLUP summaries, and
+individual identification. The additional TIFF is the high-resolution
+version of the MAF figure from Section 7.
+
+| Output file (relative to `output/real/audit/`) | Contents and intended use |
+|---|---|
+| `preprocessed_real_common.rds` | Complete `real_common` list; primary input to R03 |
+| `real_marker_qc.csv` | Per-marker allele frequency, MAF, call rate, heterozygosity, variance, and QC decisions |
+| `real_qc_summary.csv` | Counts of the original, excluded, and retained SNPs |
+| `real_trait_summary.csv` | Descriptive summaries of the three saved phenotypic BLUP targets |
+| `real_family_structure.csv` | Number of individuals in each progeny |
+| `real_individual_map.csv` | Mapping among phenotypic, genomic, and field identifiers |
+| `figures/marker_maf_distribution.tiff` | High-resolution MAF distribution figure |
+
+Table: Saved real-data preprocessing outputs and their downstream roles
+
+The pre-validation module R03 (`real_data_validation.Rmd`) reads
+`preprocessed_real_common.rds` and uses `common$genotype`,
+`common$phenotype`, and `common$traits`. It checks the alignment of 195
+individuals and the 20,887-marker panel before assigning cross-validation
+folds. The additional elements remain available for auditing and reuse.
+
+The export code below preserves the original scientific file names, object
+contents, and file-writing operations. It remains in the RMarkdown for
+reproducibility but is disabled during site rendering
+(`eval=FALSE, include=FALSE`). Thus, HTML generation does not overwrite the
+persisted RDS or CSV outputs.
+
+```{r save-common-outputs, eval=FALSE, include=FALSE}
 saveRDS(
   real_common,
   "output/real/audit/preprocessed_real_common.rds",
@@ -1000,13 +1057,32 @@ write.csv(
 
 ## 10. Prepared input for the next modules
 
-The real-data workflow proceeds with one common dataset:
+The real-data preprocessing establishes a single, aligned genomic-prediction
+input for the subsequent modules:
 
-- 195 individuals from 13 progenies;
-- individual BLUPs for `Cer`, `BM`, and `LP`;
-- `r format(ncol(G_qc), big.mark = ",")` SNPs after marker quality control;
-- genotype coding `-1/0/1`;
-- identical individuals, marker panel, and prediction targets for every
-  downstream method.
+- **Individuals:** 195 target plants from 13 experimental progenies, each
+  represented by one matched genotype profile and one set of phenotypic BLUPs.
+- **Prediction targets:** the previously estimated `Cer`, `BM`, and `LP`
+  BLUPs from R01, in the same individual order as the genomic matrix.
+- **Genomic markers:** `r format(ncol(G_qc), big.mark = ",")` retained SNPs
+  from `r format(ncol(G), big.mark = ",")` raw Capture-Seq loci.
+- **Genotype representation:** original `-1/0/1` codes, with retained
+  marker names and column order preserved.
+- **Reusable output:** `real_common` contains the common genotype and
+  phenotype inputs, individual correspondence, progeny membership,
+  marker-level QC information and preprocessing settings.
 
-The subsequent pre-validation stage defines common cross-validation partitions for the GBLUP and ANN models.
+The next stage, **R03 — Pre-validation**, reads the saved RDS object and
+constructs repeated nested cross-validation partitions from the aligned
+individual IDs. The partitioning step does not repeat the SNP filters or
+the genotype–phenotype matching. Its outputs are used by the GBLUP and
+regularized ANN model-fitting modules.
+
+R02 does not estimate genomic-prediction models or assess their performance;
+it establishes the data and quality-control decisions shared by those models.
+
+## 11. Navigation
+
+[Previous: Phenotypic analysis](real_data_phenotype.html) |
+[Home](index.html) |
+[Next: Pre-validation](real_data_validation.html)
