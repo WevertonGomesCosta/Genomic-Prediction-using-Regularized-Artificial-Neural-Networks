@@ -110,41 +110,21 @@ phenotype <- read.delim(
 
 The dictionary identifies the experimental variables and phenotypic traits.
 
-```{r phenotype-variable-dictionary}
-expected_columns <- c(
-  "Observacao", "Progenie", "Ano", "ID_Planta", "Populacao",
-  "Bloco", "Progenie_Ano", "Planta", "Cer", "BM", "LP"
-)
+*Table: Variables in the phenotypic data.*
 
-variable_dictionary <- data.frame(
-  Variable = expected_columns,
-  Interpretation = c(
-    "Observation index",
-    "Progeny; 1-13 experimental and 14-15 checks",
-    "Evaluation year",
-    "Permanent individual plant identifier",
-    "Population",
-    "Block",
-    "Progeny-by-year identifier",
-    "Plant number within progeny",
-    "Cercosporiosis score",
-    "Leaf-miner incidence score",
-    "Production-related phenotype"
-  ),
-  stringsAsFactors = FALSE
-)
-
-variable_dictionary |>
-  knitr::kable(
-    format = "html",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
-    caption = "Variables in the phenotypic data",
-    col.names = c(
-      "Variable", "Interpretation"
-    )
-  )
-```
+| Variable | Interpretation |
+|---|---|
+| `Observacao` | Observation index |
+| `Progenie` | Progeny; 1-13 experimental and 14-15 checks |
+| `Ano` | Evaluation year |
+| `ID_Planta` | Permanent individual plant identifier |
+| `Populacao` | Population |
+| `Bloco` | Block |
+| `Progenie_Ano` | Progeny-by-year identifier |
+| `Planta` | Plant number within progeny |
+| `Cer` | Cercosporiosis score |
+| `BM` | Leaf-miner incidence score |
+| `LP` | Production-related phenotype |
 
 ### 3.2 Experimental structure and augmented blocks
 
@@ -350,30 +330,17 @@ where:
 The model separates permanent differences among plants from annual and
 experimental sources of variation.
 
-```{r model-terms}
-model_terms <- data.frame(
-  Model_component = c(
-    "Fixed year", "Progeny", "Permanent individual plant", "Population",
-    "Block", "Progeny x year", "Residual"
-  ),
-  Data_field = c(
-    "Ano", "Progenie", "ID_Planta", "Populacao", "Bloco", "Progenie_Ano", "Not applicable"
-  ),
-  Type = c("Fixed", rep("Random", 5), "Residual"),
-  stringsAsFactors = FALSE
-)
+*Table: Terms in the phenotypic mixed model.*
 
-model_terms |>
-  knitr::kable(
-    format = "html",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
-    caption = "Terms in the phenotypic mixed model",
-    col.names = c(
-      "Model component", "Data field", "Type"
-    )
-  )
-```
+| Model component | Data field | Type |
+|---|---|---|
+| Fixed year | `Ano` | Fixed |
+| Progeny | `Progenie` | Random |
+| Permanent individual plant | `ID_Planta` | Random |
+| Population | `Populacao` | Random |
+| Block | `Bloco` | Random |
+| Progeny x year | `Progenie_Ano` | Random |
+| Residual | Not applicable | Residual |
 
 `Planta` is retained for identification but is not fitted as an additional
 random effect because `ID_Planta` already represents the permanent individual
@@ -522,25 +489,13 @@ tolerance <- c(
 
 The table below summarizes the stored fitting controls for each trait.
 
-```{r fitting-settings}
-fitting_settings <- data.frame(
-  Trait = traits,
-  Tolerance = unname(tolerance[traits]),
-  Zero_treated_as_non_observation = TRUE,
-  stringsAsFactors = FALSE
-)
+*Table: Trait-specific fitting settings.*
 
-fitting_settings |>
-  knitr::kable(
-    format = "html",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
-    caption = "Trait-specific fitting settings",
-    col.names = c(
-      "Trait", "Tolerance", "Zero-coded missing"
-    )
-  )
-```
+| Trait | Tolerance | Zero-coded missing |
+|---|---:|---|
+| `Cer` | 0.05 | TRUE |
+| `BM` | 0.05 | TRUE |
+| `LP` | 0.0001 | TRUE |
 
 ### 7.2 Mixed-model fitting procedure
 
@@ -1315,40 +1270,18 @@ the stored scientific outputs without regenerating them.
 The analysis produces the following files under `output/real/phenotype/`.
 Each output has a specific role in inspection or in subsequent genomic analyses:
 
-```{r phenotypic-output-files}
-phenotypic_output_files <- data.frame(
-  Output_file = c(
-    "real_phenotype_blups.rds",
-    "real_phenotype_blups.csv",
-    "real_phenotype_variance_components.rds",
-    "real_phenotype_variance_components.csv",
-    "real_phenotype_model_effects.rds",
-    "real_phenotype_summary.csv",
-    "real_phenotype_run_metadata.rds",
-    "figures/blup_distributions.tiff"
-  ),
-  Contents_and_use = c(
-    "The 195 individual BLUPs for Cer, BM, and LP; direct input to R02.",
-    "Tabular version of the individual BLUPs for inspection.",
-    "Fitted variance components and derived quantities retained in R format.",
-    "Tabular presentation of those quantities.",
-    "Stored fixed-year solutions and random effects for each trait.",
-    "Descriptive summaries of the original phenotypic observations.",
-    "Recorded information about the analysis execution and settings.",
-    "High-resolution version of the BLUP distribution figure from Section 10.3."
-  ),
-  stringsAsFactors = FALSE
-)
+*Table: Saved phenotypic outputs and their role in the genomic workflow.*
 
-phenotypic_output_files |>
-  knitr::kable(
-    format = "html",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
-    caption = "Saved phenotypic outputs and their role in the genomic workflow",
-    col.names = c("Output file", "Contents and intended use")
-  )
-```
+| Output file | Contents and intended use |
+|---|---|
+| `real_phenotype_blups.rds` | The 195 individual BLUPs for `Cer`, `BM`, and `LP`; direct input to R02. |
+| `real_phenotype_blups.csv` | Tabular version of the individual BLUPs for inspection. |
+| `real_phenotype_variance_components.rds` | Fitted variance components and derived quantities retained in R format. |
+| `real_phenotype_variance_components.csv` | Tabular presentation of those quantities. |
+| `real_phenotype_model_effects.rds` | Stored fixed-year solutions and random effects for each trait. |
+| `real_phenotype_summary.csv` | Descriptive summaries of the original phenotypic observations. |
+| `real_phenotype_run_metadata.rds` | Recorded information about the analysis execution and settings. |
+| `figures/blup_distributions.tiff` | High-resolution version of the BLUP distribution figure from Section 10.3. |
 
 The individual-BLUP RDS is the phenotypic input consumed by R02. The other
 files preserve the fitted effects, descriptive summaries, and execution
