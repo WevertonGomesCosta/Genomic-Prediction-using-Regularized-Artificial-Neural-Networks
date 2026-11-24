@@ -56,9 +56,7 @@ knitr::opts_chunk$set(
 options(stringsAsFactors = FALSE)
 ```
 
-## 2. Packages and phenotypic traits
-
-### 2.1 Packages
+## 2. Software packages
 
 The phenotypic analysis uses three packages:
 
@@ -73,17 +71,6 @@ rule are documented below; model fitting is not performed when rendering.
 library(knitr)
 library(ggplot2)
 library(ggthemes)
-```
-
-### 2.2 Phenotypic traits
-
-The three phenotypic responses are `Cer`, `BM`, and `LP`. Their names are
-defined here because they are used in the descriptive summaries before model
-fitting. In the field data, zero denotes a non-observation; only `LP` contains
-such records.
-
-```{r trait-names}
-traits <- c("Cer", "BM", "LP")
 ```
 
 ## 3. Experimental data
@@ -180,9 +167,9 @@ evaluation years.
 
 ## 4. Phenotypic traits
 
-The source-file phenotypes are summarized by trait and evaluation year before
-model fitting. Because zero denotes an absent observation, descriptive
-statistics use only observed values. The `Zero_count` field documents the
+The three phenotypic responses are `Cer`, `BM`, and `LP`. They are summarized
+by trait and evaluation year before model fitting. Because zero denotes an
+absent observation, descriptive statistics use only observed values. The `Zero_count` field documents the
 zero-coded records separately (seven for `LP`), consistently with the
 mixed-model analysis in Section 6.
 
@@ -192,6 +179,9 @@ The overall table displays the number of observed records, mean, dispersion,
 and range for each trait. Zero-coded non-observations are counted separately.
 
 ```{r trait-summary-overall}
+# Identify the phenotypic traits before calculating their summaries.
+traits <- c("Cer", "BM", "LP")
+
 trait_summary <- data.frame()
 
 for (trait in traits) {
