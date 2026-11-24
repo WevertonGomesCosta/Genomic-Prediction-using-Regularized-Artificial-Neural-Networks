@@ -110,8 +110,6 @@ phenotype <- read.delim(
 
 The dictionary identifies the experimental variables and phenotypic traits.
 
-*Table: Variables in the phenotypic data.*
-
 | Variable | Interpretation |
 |---|---|
 | `Observacao` | Observation index |
@@ -125,6 +123,8 @@ The dictionary identifies the experimental variables and phenotypic traits.
 | `Cer` | Cercosporiosis score |
 | `BM` | Leaf-miner incidence score |
 | `LP` | Production-related phenotype |
+
+Table: Variables in the phenotypic data
 
 ### 3.2 Experimental structure and augmented blocks
 
@@ -330,8 +330,6 @@ where:
 The model separates permanent differences among plants from annual and
 experimental sources of variation.
 
-*Table: Terms in the phenotypic mixed model.*
-
 | Model component | Data field | Type |
 |---|---|---|
 | Fixed year | `Ano` | Fixed |
@@ -341,6 +339,8 @@ experimental sources of variation.
 | Block | `Bloco` | Random |
 | Progeny x year | `Progenie_Ano` | Random |
 | Residual | Not applicable | Residual |
+
+Table: Terms in the phenotypic mixed model
 
 `Planta` is retained for identification but is not fitted as an additional
 random effect because `ID_Planta` already represents the permanent individual
@@ -489,13 +489,13 @@ tolerance <- c(
 
 The table below summarizes the stored fitting controls for each trait.
 
-*Table: Trait-specific fitting settings.*
-
 | Trait | Tolerance | Zero-coded missing |
 |---|---:|---|
 | `Cer` | 0.05 | TRUE |
 | `BM` | 0.05 | TRUE |
 | `LP` | 0.0001 | TRUE |
+
+Table: Trait-specific fitting settings
 
 ### 7.2 Mixed-model fitting procedure
 
@@ -1270,8 +1270,6 @@ the stored scientific outputs without regenerating them.
 The analysis produces the following files under `output/real/phenotype/`.
 Each output has a specific role in inspection or in subsequent genomic analyses:
 
-*Table: Saved phenotypic outputs and their role in the genomic workflow.*
-
 | Output file | Contents and intended use |
 |---|---|
 | `real_phenotype_blups.rds` | The 195 individual BLUPs for `Cer`, `BM`, and `LP`; direct input to R02. |
@@ -1282,6 +1280,8 @@ Each output has a specific role in inspection or in subsequent genomic analyses:
 | `real_phenotype_summary.csv` | Descriptive summaries of the original phenotypic observations. |
 | `real_phenotype_run_metadata.rds` | Recorded information about the analysis execution and settings. |
 | `figures/blup_distributions.tiff` | High-resolution version of the BLUP distribution figure from Section 10.3. |
+
+Table: Saved phenotypic outputs and their role in the genomic workflow
 
 The individual-BLUP RDS is the phenotypic input consumed by R02. The other
 files preserve the fitted effects, descriptive summaries, and execution
