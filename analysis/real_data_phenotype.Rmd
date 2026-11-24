@@ -377,9 +377,8 @@ year_summary |>
 The first table describes the available observations for each trait; the
 second retains the evaluation year so that differences in data availability
 are not hidden by an overall summary. The seven zero-coded `LP` records are
-reported as missing observations rather than phenotypic measurements. These
-tables describe the input to the previously fitted models; they do not modify
-the observations or the fitted BLUPs.
+reported as missing observations rather than phenotypic measurements. These tables describe the phenotypic input without changing the observations
+used by the mixed model.
 
 ## 5. Phenotypic mixed model
 
@@ -580,9 +579,6 @@ The fitting code below can be followed in five stages:
    stopping rule defined above.
 5. Store the fitted solutions, variance components, iteration history, and
    residual quantities in `fits`, which is read by the following sections.
-
-This explanation documents the existing implementation; no parameter,
-convergence criterion, or estimation instruction is changed here.
 
 ```{r fit-models}
 fits <- list()
@@ -1395,9 +1391,8 @@ for (trait in traits) {
 The module saves the 195 individual BLUPs, variance components, complete model
 effects, descriptive summaries, and run metadata.
 
-The following files are produced by the existing analysis under
-`output/real/phenotype/`. They have distinct roles in inspection and in the
-subsequent genomic workflow:
+The analysis produces the following files under `output/real/phenotype/`.
+Each output has a specific role in inspection or in subsequent genomic analyses:
 
 | Output file | Contents and intended use |
 |---|---|
@@ -1410,10 +1405,9 @@ subsequent genomic workflow:
 | `real_phenotype_run_metadata.rds` | Recorded information about the analysis execution and settings. |
 | `figures/blup_distributions.tiff` | High-resolution version of the BLUP distribution figure from Section 10.3. |
 
-The RDS containing the individual BLUPs is the input consumed by the next
-module; the other files document the already completed phenotypic analysis.
-The code block below is retained unchanged to show how these outputs were
-originally saved.
+The individual-BLUP RDS is the phenotypic input consumed by R02. The other
+files preserve the fitted effects, descriptive summaries, and execution
+metadata. The code below shows how these outputs are saved.
 
 ```{r save-outputs}
 utils::write.csv(
@@ -1501,12 +1495,11 @@ The phenotypic analysis comprises:
 The resulting BLUP table is the phenotypic input to the real-data genomic
 workflow.
 
-In **R02 (`real_data_audit.Rmd`)**, the phenotypic records are matched to the
-Capture-Seq genotype profiles using their progeny and plant identifiers.
-That module applies the previously defined SNP quality-control rules and
-prepares a common genotype-and-BLUP object for cross-validation and the GBLUP
-and ANN methods. It does not repeat the phenotypic mixed-model fitting shown
-here.
+In **R02 (`real_data_audit.Rmd`)**, the 195 individual BLUP records are matched
+to the Capture-Seq genotype profiles using progeny and plant identifiers.
+That module applies the specified SNP quality-control rules and prepares a
+common genotype-and-BLUP object for cross-validation and the GBLUP and ANN
+methods. Phenotypic mixed-model fitting is performed only in R01.
 
 ## 13. Scientific references
 
