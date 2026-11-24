@@ -11,7 +11,6 @@ output:
     toc_float: true
     code_download: true
     code_folding: show
-    pandoc_args: ["--lua-filter=real_data_phenotype_tables.lua"]
 editor_options:
   chunk_output_type: console
 ---
@@ -55,11 +54,6 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
-
-PHENOTYPE_INPUT <- "data/dados_reais/coffee_phenotypes.txt"
-OUTPUT_DIR <- "output/real/phenotype"
-FIGURE_DIR <- file.path(OUTPUT_DIR, "figures")
-
 ```
 
 ## 2. Packages and phenotypic traits
@@ -100,6 +94,9 @@ The phenotype file uses descriptive names so the experimental structure can be
 read directly from the analysis.
 
 ```{r read-phenotypes}
+# Read the canonical phenotypic observations from the original data file.
+PHENOTYPE_INPUT <- "data/dados_reais/coffee_phenotypes.txt"
+
 phenotype <- read.delim(
   PHENOTYPE_INPUT,
   header = TRUE,
@@ -842,9 +839,13 @@ variance updates and BLUP solutions without hiding any step in project-specific
 helper functions.
 
 The code above documents the original model-fitting procedure without running
-it during site generation. The sections below use the existing RDS outputs.
+it during site generation. The following code reads previously saved scientific
+results used in Sections 8–10; no model is refitted during site generation.
 
-```{r load-saved-phenotypic-results, include=FALSE}
+```{r load-saved-phenotypic-results}
+# Reuse the existing phenotypic results without recalculating the models.
+OUTPUT_DIR <- "output/real/phenotype"
+
 variance_components <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_variance_components.rds"))
 model_effects <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_model_effects.rds"))
 blups <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_blups.rds"))
@@ -1244,6 +1245,8 @@ print(p_blup_distribution)
 ```
 
 ```{r save-blup-distributions, include=FALSE, eval=FALSE}
+FIGURE_DIR <- file.path(OUTPUT_DIR, "figures")
+
 ggsave(
   file.path(
     FIGURE_DIR,
