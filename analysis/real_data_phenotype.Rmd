@@ -245,6 +245,11 @@ statistics use only observed values. The `Zero_count` field documents the
 zero-coded records separately (seven for `LP`), consistently with the
 mixed-model analysis in Section 6.
 
+### 4.1 Overall phenotypic summaries
+
+The overall table displays the number of observed records, mean, dispersion,
+and range for each trait. Zero-coded non-observations are counted separately.
+
 ```{r trait-summary-overall}
 trait_summary <- data.frame()
 
@@ -286,6 +291,11 @@ trait_summary |>
 ```
 
 The first table summarizes each characteristic; the next one preserves the evaluation-year breakdown.
+
+### 4.2 Phenotypic summaries by evaluation year
+
+The annual summaries preserve differences among the 2014, 2015, and 2016
+measurements without pooling their distributions.
 
 ```{r trait-summary-by-year}
 year_summary <- data.frame()
@@ -1143,8 +1153,6 @@ for (trait in traits) {
       as.character(out$Populacao)
     ]
   )
-
-  
 
   out$BLUP <- (
     overall_mean +
