@@ -75,10 +75,16 @@ library(ggthemes)
 
 ## 3. Experimental data
 
-### 3.1 Canonical variables
+The original tab-delimited file contains 684 phenotypic observations and 11
+variables. Each of the 228 permanent plant identifiers is recorded in 2014,
+2015, and 2016. The following steps inspect these records without changing
+their values or their order in the full data set.
 
-The phenotype file uses descriptive names so the experimental structure can be
-read directly from the analysis.
+### 3.1 Reading and inspecting phenotypic records
+
+The source file is read with its original column names. Rows represent
+observations of individual plants in a particular evaluation year; the same
+plant therefore appears in more than one row.
 
 ```{r read-phenotypes}
 # Read the canonical phenotypic observations from the original data file.
@@ -93,30 +99,78 @@ phenotype <- read.delim(
 )
 ```
 
-The dictionary identifies the experimental variables and phenotypic traits.
+To illustrate the repeated evaluations, the example below displays the first
+three distinct plant identifiers in the source file, including one check and
+two experimental plants. It selects only a small display sample; subsequent
+analyses continue to use the complete `phenotype` data frame.
 
-| Variable | Interpretation |
-|---|---|
-| `Observacao` | Observation index |
-| `Progenie` | Progeny; 1-13 experimental and 14-15 checks |
-| `Ano` | Evaluation year |
-| `ID_Planta` | Permanent individual plant identifier |
-| `Populacao` | Population |
-| `Bloco` | Block |
-| `Progenie_Ano` | Progeny-by-year identifier |
-| `Planta` | Plant number within progeny |
-| `Cer` | Cercosporiosis score |
-| `BM` | Leaf-miner incidence score |
-| `LP` | Production-related phenotype |
+```{r phenotype-record-sample}
+# Follow the first three plant identifiers across the three evaluation years.
+phenotype_example <- phenotype[
+  phenotype$ID_Planta %in% head(unique(phenotype$ID_Planta), 3L),
+  c("ID_Planta", "Ano", "Progenie", "Planta", "Bloco", "Cer", "BM", "LP"),
+  drop = FALSE
+]
 
-Table: Variables in the phenotypic data
+# Order the display by permanent plant identifier and evaluation year.
+phenotype_example <- phenotype_example[
+  order(phenotype_example$ID_Planta, phenotype_example$Ano),
+  ,
+  drop = FALSE
+]
 
-### 3.2 Experimental structure and augmented blocks
+rownames(phenotype_example) <- NULL
+
+phenotype_example |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    caption = "Original phenotypic records for three plants evaluated in 2014–2016"
+  )
+```
+
+The sample shows that `ID_Planta` stays constant while `Ano` and the observed
+phenotypic responses change. It also distinguishes the permanent plant
+identifier from the plant number within a progeny.
+
+### 3.2 Variable dictionary
+
+The source contains the following fields. Numerical identifiers are recorded as
+integers, but population, block, progeny, and year codes represent categories or
+experimental factors rather than continuous measurements.
+
+| Variable | Type and observed coding | Meaning and role |
+|---|---|---|
+| `Observacao` | Integer; 1–684 | Unique row identifier for each recorded observation. |
+| `Progenie` | Integer; 1–15 | Progeny: 1–13 experimental, 14–15 checks; random effect in the model. |
+| `Ano` | Integer; 2014, 2015, 2016 | Evaluation year; fixed effect in the model. |
+| `ID_Planta` | Integer; 228 distinct IDs | Permanent identifier of the same plant across years; random plant effect. |
+| `Populacao` | Integer codes; 1–4 | Population identifier; random effect in the model. |
+| `Bloco` | Integer codes; 1–7 | Experimental block identifier; random effect in the model. |
+| `Progenie_Ano` | Text; e.g., `14_2016` | Progeny-by-year combination (45 distinct levels); random interaction effect. |
+| `Planta` | Integer; 1–15 | Plant number within a progeny; not a unique identifier across the check plants. |
+| `Cer` | Integer scores; 1–5 | Cercosporiosis response. |
+| `BM` | Integer scores; 1–5 | Leaf-miner incidence response. |
+| `LP` | Numeric; 0–21.5 | Production-related response. The seven zeros indicate non-observations; positive observed values range from 0.1 to 21.5. |
+
+Table: Variables and observed coding in the phenotypic data
+
+No empty fields or explicit `NA` entries occur in the original file. The seven
+zero-coded `LP` records all occur in 2015; `Cer` and `BM` have no zeros.
+The source file does not specify measurement units or detailed scoring
+protocols, so those details are not inferred here.
+
+### 3.3 Experimental structure and augmented blocks
 
 The 684 records correspond to 228 permanent plant identifiers evaluated in
 2014, 2015, and 2016. Progenies 1-13 form the genomic-prediction population.
 Progenies 14 and 15 are checks in the augmented-block experiment and remain in
 the phenotypic mixed-model fit.
+
+The pair `ID_Planta` and `Ano` uniquely identifies every observation. By
+contrast, some check plants share the same `Progenie` and `Planta` codes;
+those fields must not be used on their own to identify individual plants.
 
 ```{r target-and-check-progenies}
 target <- phenotype[phenotype$Progenie %in% 1:13, , drop = FALSE]
