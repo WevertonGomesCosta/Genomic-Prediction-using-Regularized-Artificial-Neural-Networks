@@ -42,9 +42,9 @@ The module has four goals:
 
 - **Describe the experiment:** make the years, progenies, checks, blocks,
   populations, plants, and traits explicit.
-- **Fit the reference mixed model:** estimate fixed year means and the five
+- **Document the reference mixed model:** present fixed year means and the five
   random components in the phenotypic mixed model.
-- **Estimate variance components and BLUPs:** quantify progeny, permanent plant,
+- **Present saved variance components and BLUPs:** quantify progeny, permanent plant,
   population, block, progeny-by-year, and residual variation.
 - **Prepare the genomic-prediction targets:** retain one BLUP for each of the 195
   target plants and each trait.
@@ -86,8 +86,8 @@ The phenotypic analysis uses three packages:
 - **`ggplot2`** displays the distributions of the individual BLUPs.
 - **`ggthemes`** applies the same visual style used in the simulated workflow.
 
-The mixed model is fitted directly from its mixed-model equations. This makes
-the variance-component estimation and stopping rule explicit in the tutorial.
+The original mixed-model equations, variance-component updates, and stopping
+rule are documented below; model fitting is not performed when rendering.
 
 ```{r packages, warning=FALSE, message=FALSE}
 library(knitr)
@@ -121,7 +121,6 @@ fitting_settings |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     caption = "Trait-specific fitting settings",
     col.names = c(
       "Trait", "Tolerance", "Zero-coded missing"
@@ -144,7 +143,11 @@ phenotype <- read.delim(
   check.names = FALSE,
   stringsAsFactors = FALSE
 )
+```
 
+The dictionary identifies the experimental variables and phenotypic traits.
+
+```{r phenotype-variable-dictionary}
 expected_columns <- c(
   "Observacao", "Progenie", "Ano", "ID_Planta", "Populacao",
   "Bloco", "Progenie_Ano", "Planta", "Cer", "BM", "LP"
@@ -173,7 +176,6 @@ variable_dictionary |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     caption = "Variables in the phenotypic data",
     col.names = c(
       "Variable", "Interpretation"
@@ -188,10 +190,14 @@ The 684 records correspond to 228 permanent plant identifiers evaluated in
 Progenies 14 and 15 are checks in the augmented-block experiment and remain in
 the phenotypic mixed-model fit.
 
-```{r experimental-structure}
+```{r target-and-check-progenies}
 target <- phenotype[phenotype$Progenie %in% 1:13, , drop = FALSE]
 checks <- phenotype[phenotype$Progenie %in% 14:15, , drop = FALSE]
+```
 
+The following table describes the experimental design and study population.
+
+```{r experimental-structure}
 structure_summary <- data.frame(
   Quantity = c(
     "Phenotypic observations", "Evaluation years", "Progenies",
@@ -215,22 +221,11 @@ structure_summary |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     caption = "Experimental structure of the coffee phenotypic data",
     col.names = c(
       "Quantity", "Value"
     )
   )
-
-target_repetitions <- table(table(target$ID_Planta))
-target_year_table <- table(
-  target$ID_Planta,
-  target$Ano
-)
-target_years <- rowSums(
-  target_year_table > 0
-)
-
 ```
 
 For the experimental progenies,
@@ -250,7 +245,7 @@ statistics use only observed values. The `Zero_count` field documents the
 zero-coded records separately (seven for `LP`), consistently with the
 mixed-model analysis in Section 6.
 
-```{r trait-summary}
+```{r trait-summary-overall}
 trait_summary <- data.frame()
 
 for (trait in traits) {
@@ -280,7 +275,6 @@ trait_summary |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     digits = 3,
     caption = "Observed phenotypic summaries with separate zero-coded missing counts",
     col.names = c(
@@ -289,7 +283,11 @@ trait_summary |>
       "Zero-coded missing"
     )
   )
+```
 
+The first table summarizes each characteristic; the next one preserves the evaluation-year breakdown.
+
+```{r trait-summary-by-year}
 year_summary <- data.frame()
 
 for (trait in traits) {
@@ -326,7 +324,6 @@ year_summary |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     digits = 3,
     caption = "Observed phenotypic summaries by year with separate missing counts",
     col.names = c(
@@ -398,7 +395,6 @@ model_terms |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     caption = "Terms in the phenotypic mixed model",
     col.names = c(
       "Model component", "Data field", "Type"
@@ -450,7 +446,11 @@ analysis_data <- list(
   BM = bm_data,
   LP = lp_data
 )
+```
 
+The table below reports the observations entering the previously fitted trait models.
+
+```{r records-used-table}
 records_used <- data.frame(
   Trait = c("Cer", "BM", "LP"),
   Records_available = rep(nrow(phenotype), 3),
@@ -472,14 +472,12 @@ records_used |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     caption = "Records entering each trait-specific mixed model",
     col.names = c(
       "Trait", "Available", "Used",
       "Excluded"
     )
   )
-
 ```
 
 ### 6.2 Incidence matrices
@@ -553,6 +551,7 @@ for (trait in traits) {
 
   d <- analysis_data[[trait]]
 
+# Stage 1: incidence matrices and effect indices.
   year_levels <- unique(d$Ano)
   progeny_levels <- unique(d$Progenie)
   plant_levels <- unique(d$ID_Planta)
@@ -622,6 +621,7 @@ for (trait in traits) {
   idx_block <- start_block:end_block
   idx_progeny_year <- start_progeny_year:end_progeny_year
 
+# Stage 2: initial variance proportions.
   old_props <- c(
     Progenie = 0.10,
     ID_Planta = 0.10,
@@ -639,6 +639,7 @@ for (trait in traits) {
     stringsAsFactors = FALSE
   )
 
+# Stage 3: original mixed-model iteration.
   for (iteration in seq_len(500L)) {
 
     lambda_progeny <- old_props["Residual"] / old_props["Progenie"]
@@ -739,6 +740,7 @@ for (trait in traits) {
         ]))
     ) / length(idx_progeny_year)
 
+# Stage 4: variance-component update and stopping rule.
     components <- c(
       Progenie = V_progeny,
       ID_Planta = V_plant,
@@ -837,6 +839,7 @@ for (trait in traits) {
   names(u_block) <- as.character(block_levels)
   names(u_progeny_year) <- as.character(progeny_year_levels)
 
+# Stage 5: fitted effects and iteration history.
   fits[[trait]] <- list(
     trait = trait,
     data = d,
@@ -966,75 +969,12 @@ for (trait in traits) {
 }
 
 rownames(variance_components) <- NULL
-
-variance_table <- variance_components[
-  ,
-  c(
-    "Trait",
-    "N",
-    "Iterations",
-    "V_progeny",
-    "V_plant",
-    "V_population",
-    "V_block",
-    "V_progeny_year",
-    "V_residual",
-    "V_phenotypic"
-  )
-]
-
-variance_table |>
-  knitr::kable(
-    format = "html",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
-    digits = 6,
-    caption = "Variance components from the phenotypic mixed model",
-    col.names = c(
-      "Trait", "N", "Iterations",
-      "Progeny variance", "Plant variance", "Population variance",
-      "Block variance", "Progeny-by-year variance", "Residual variance",
-      "Phenotypic variance"
-    )
-  )
-
-parameter_table <- variance_components[
-  ,
-  c(
-    "Trait",
-    "h2_progeny",
-    "c2_plant",
-    "h2_population",
-    "c2_block",
-    "c2_progeny_year",
-    "Repeatability",
-    "h2_total",
-    "Overall_mean"
-  )
-]
-
-parameter_table |>
-  knitr::kable(
-    format = "html",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
-    digits = 6,
-    caption = "Model-implied variance proportions and within-plant repeatability",
-    col.names = c(
-      "Trait", "Progeny proportion", "Plant proportion",
-      "Population proportion", "Block proportion",
-      "Progeny-by-year proportion", "Plant repeatability",
-      "Progeny + population proportion", "Adjusted mean"
-    )
-  )
 ```
 
 The tables below display saved variance components and derived ratios rather
 than re-estimating them.
 
-```{r saved-variance-tables, echo=FALSE}
+```{r saved-variance-components}
 variance_table <- variance_components[, c("Trait", "N", "Iterations",
   "V_progeny", "V_plant", "V_population", "V_block",
   "V_progeny_year", "V_residual", "V_phenotypic"), drop = FALSE]
@@ -1043,7 +983,6 @@ variance_table |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     digits = 6,
     caption = "Variance components from the phenotypic mixed model",
     col.names = c("Trait", "N", "Iterations", "Progeny variance",
@@ -1051,7 +990,11 @@ variance_table |>
       "Progeny-by-year variance", "Residual variance",
       "Phenotypic variance")
   )
+```
 
+The second table reports model-implied proportions and repeatability from the saved variance components.
+
+```{r saved-variance-ratios}
 parameter_table <- variance_components[, c("Trait", "h2_progeny",
   "c2_plant", "h2_population", "c2_block", "c2_progeny_year",
   "Repeatability", "h2_total", "Overall_mean"), drop = FALSE]
@@ -1060,7 +1003,6 @@ parameter_table |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     digits = 6,
     caption = "Model-implied variance proportions and within-plant repeatability",
     col.names = c("Trait", "Progeny proportion", "Plant proportion",
@@ -1078,52 +1020,9 @@ tables readable at the width of the tutorial page.
 The fixed solutions estimate the adjusted mean for each evaluation year after
 the random experimental and biological effects have been accounted for.
 
-```{r fixed-year-effects, eval=FALSE}
-fixed_year_effects <- data.frame()
-
-for (trait in traits) {
-
-  fit <- fits[[trait]]
-
-  fixed_year_effects <- rbind(
-    fixed_year_effects,
-    data.frame(
-      Trait = trait,
-      Year = as.integer(
-        names(fit$final$beta)
-      ),
-      Adjusted_mean = as.numeric(
-        fit$final$beta
-      ),
-      stringsAsFactors = FALSE
-    )
-  )
-}
-
-rownames(fixed_year_effects) <- NULL
-
-# Sort the displayed years chronologically without changing model solutions.
-fixed_year_effects[
-  order(match(fixed_year_effects$Trait, traits), fixed_year_effects$Year),
-  ,
-  drop = FALSE
-] |>
-  knitr::kable(
-    format = "html",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
-    digits = 4,
-    caption = "Adjusted fixed means by evaluation year",
-    col.names = c(
-      "Trait", "Year", "Adjusted mean"
-    )
-  )
-```
-
 The adjusted year means are retrieved from the previously saved model effects.
 
-```{r saved-fixed-year-effects, echo=FALSE}
+```{r saved-fixed-year-effects}
 fixed_year_effects <- data.frame()
 for (trait in traits) {
   beta_year <- model_effects[[trait]]$fixed_year
@@ -1181,7 +1080,6 @@ head(target_map, 15) |>
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     caption = "First 15 target plants used for genomic prediction",
     col.names = c(
       "Plant ID", "Progeny", "Plant",
@@ -1281,7 +1179,6 @@ cer_components[, c("Phenotype_ID", "Progenie", "Planta",
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     digits = 4,
     caption = "Components of the first 15 Cer BLUPs",
     col.names = c("Phenotype ID", "Progeny", "Plant",
@@ -1318,33 +1215,17 @@ blups <- blups[
 ]
 
 rownames(blups) <- NULL
-
-head(blups, 15) |>
-  knitr::kable(
-    format = "html",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
-    digits = 4,
-    caption = "First 15 BLUPs prepared for genomic prediction",
-    col.names = c(
-      "Phenotype ID", "Plant ID", "Progeny",
-      "Plant", "Population", "Cer",
-      "BM", "LP"
-    )
-  )
 ```
 
 The previously obtained individual BLUPs are read from the RDS file and
 shown below without recomputing their values.
 
-```{r saved-individual-blups, echo=FALSE}
+```{r saved-individual-blups}
 head(blups, 15) |>
   knitr::kable(
     format = "html",
     row.names = FALSE,
     table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
-
     digits = 4,
     caption = "First 15 BLUPs prepared for genomic prediction",
     col.names = c("Phenotype ID", "Plant ID", "Progeny",
@@ -1415,8 +1296,9 @@ Marker information has not been used to estimate or select any of these values.
 
 ## 11. Phenotypic results
 
-The module saves the 195 individual BLUPs, variance components, complete model
-effects, descriptive summaries, and run metadata.
+The phenotypic analysis produced individual BLUPs, variance components,
+model effects, descriptive summaries, and run metadata. This tutorial reads
+the stored scientific outputs without regenerating them.
 
 The analysis produces the following files under `output/real/phenotype/`.
 Each output has a specific role in inspection or in subsequent genomic analyses:
@@ -1434,9 +1316,11 @@ Each output has a specific role in inspection or in subsequent genomic analyses:
 
 The individual-BLUP RDS is the phenotypic input consumed by R02. The other
 files preserve the fitted effects, descriptive summaries, and execution
-metadata. The code below shows how these outputs are saved.
+metadata. The disabled code blocks document how the original scientific results were saved.
 
-```{r save-outputs, eval=FALSE}
+The original analysis exported the individual BLUPs in both formats.
+
+```{r save-individual-blups, eval=FALSE}
 utils::write.csv(
   blups,
   file.path(OUTPUT_DIR, "real_phenotype_blups.csv"),
@@ -1447,7 +1331,11 @@ saveRDS(
   blups,
   file.path(OUTPUT_DIR, "real_phenotype_blups.rds")
 )
+```
 
+The estimated variance components were archived as CSV and RDS.
+
+```{r save-variance-components, eval=FALSE}
 utils::write.csv(
   variance_components,
   file.path(OUTPUT_DIR, "real_phenotype_variance_components.csv"),
@@ -1458,7 +1346,11 @@ saveRDS(
   variance_components,
   file.path(OUTPUT_DIR, "real_phenotype_variance_components.rds")
 )
+```
 
+The fixed and random effect solutions were stored separately.
+
+```{r save-model-effects, eval=FALSE}
 model_effects <- list()
 
 for (trait in traits) {
@@ -1472,13 +1364,21 @@ saveRDS(
   model_effects,
   file.path(OUTPUT_DIR, "real_phenotype_model_effects.rds")
 )
+```
 
+The phenotypic descriptive statistics were archived.
+
+```{r save-descriptive-summary, eval=FALSE}
 utils::write.csv(
   trait_summary,
   file.path(OUTPUT_DIR, "real_phenotype_summary.csv"),
   row.names = FALSE
 )
+```
 
+The run metadata identifies the original inputs and fitted settings.
+
+```{r save-run-metadata, eval=FALSE}
 run_metadata <- list(
   generated_at = Sys.time(),
   R_version = R.version.string,
