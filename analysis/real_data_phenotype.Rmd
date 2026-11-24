@@ -922,14 +922,19 @@ blups <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_blups.rds"))
 
 ## 8. Variance components and derived ratios
 
-For each trait,
+The previously saved `variance_components` object contains one set of fitted
+variance estimates for each trait. The estimates distinguish five sources
+of random variation and a residual component, following the model in
+Section 5. For each trait, the total fitted phenotypic variance is
 
 \[
 V_f=V_g+V_p+V_r+V_b+V_i+V_e.
 \]
 
-The following quantities describe the fitted variance components. The
-between-progeny and between-population proportions are calculated separately:
+Here, `V_g` denotes the progeny component, `V_p` the permanent-plant
+component, `V_r` the population component, `V_b` the block component,
+`V_i` the progeny-by-year component, and `V_e` the residual component.
+The two between-group proportions are calculated separately:
 
 \[
 p_{\mathrm{progeny}}=\frac{V_g}{V_f},\qquad
@@ -961,6 +966,12 @@ interpretation follows the variance-component model used for *Coffea
 arabica* by [Sousa et al. (2019)](https://doi.org/10.3389/fpls.2018.01934)
 and the distinction between genetic and phenotypic variance in plant-breeding
 models discussed by [Piepho and Möhring (2007)](https://doi.org/10.1534/genetics.107.074229).
+
+The following chunk shows how the original fitted components and effect
+proportions were assembled into one row per trait. It documents the
+calculations that produced the scientific results and remains `eval=FALSE`.
+The tables that follow instead use the `variance_components` RDS loaded at
+the end of Section 7; no variance component is re-estimated.
 
 ```{r variance-components, eval=FALSE}
 variance_components <- data.frame()
@@ -1011,8 +1022,9 @@ for (trait in traits) {
 rownames(variance_components) <- NULL
 ```
 
-The tables below display saved variance components and derived ratios rather
-than re-estimating them.
+The first table selects the six estimated variance components and their
+total, together with the number of observations used and the recorded
+iterations. Each row describes the existing fit for one trait.
 
 ```{r saved-variance-components}
 variance_table <- variance_components[, c("Trait", "N", "Iterations",
@@ -1032,7 +1044,11 @@ variance_table |>
   )
 ```
 
-The second table reports model-implied proportions and repeatability from the saved variance components.
+The second table presents the model-implied variance proportions and
+within-plant repeatability. It retains the original stored field names
+internally, while the displayed column labels describe their interpretation.
+The `Adjusted mean` column is the saved mean of the fixed-year solutions,
+not an individual plant BLUP.
 
 ```{r saved-variance-ratios}
 parameter_table <- variance_components[, c("Trait", "h2_progeny",
@@ -1052,8 +1068,10 @@ parameter_table |>
   )
 ```
 
-Separating the variance components from the derived parameters keeps both
-tables readable at the width of the tutorial page.
+The first table provides the component estimates; the second makes their
+relative contributions explicit. These quantities summarize the phenotypic
+mixed model and should not be confused with the fixed-year means or the
+individual BLUPs presented in Sections 9 and 10.
 
 ## 9. Fixed year effects
 
