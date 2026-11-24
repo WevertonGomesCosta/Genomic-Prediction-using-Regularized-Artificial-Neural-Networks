@@ -1124,10 +1124,25 @@ fixed means, are subsequently supplied to genomic prediction.
 
 ## 10. BLUPs for the 195 target plants
 
+The phenotypic model contains repeated annual observations, but genomic
+prediction requires one adjusted phenotypic target per plant and trait. This
+section documents how the original analysis identified the 195 experimental
+plants and combined their fitted effects into the saved `Cer`, `BM`, and
+`LP` BLUPs. No genomic markers are used in this step.
+
 ### 10.1 Individual identity
 
-For progenies 1-13, `ID_Planta` is in one-to-one correspondence with progeny
-and plant number and is repeated over the three years.
+The 13 experimental progenies each contain 15 target plants, observed in
+2014, 2015, and 2016. The field-data column `ID_Planta` identifies a
+permanent plant across the three annual records. Within these experimental
+progenies, the pair `Progenie` and `Planta` also identifies an individual;
+this is not generally true for the check progenies, as explained in Section 3.
+
+The `target-identity` chunk retains the distinct plant identities, orders
+them by progeny and plant number, and constructs a readable `Phenotype_ID`
+such as `PROG01_PL01`. This label combines progeny and plant number; it does
+not replace the original numeric `ID_Planta`. The table displays the first
+15 identities, while all 195 plants are retained for the subsequent analysis.
 
 ```{r target-identity}
 target_map <- unique(
@@ -1162,9 +1177,12 @@ head(target_map, 15) |>
 
 ### 10.2 One BLUP per plant
 
-For genomic prediction, one BLUP is retained for each target plant and trait.
+One BLUP per plant and trait is obtained from the original phenotypic mixed
+model. The retained plant-level value includes the adjusted mean and the
+fitted effects associated with progeny, permanent plant, and population.
 The year, block, and progeny-by-year terms describe evaluation-specific or
-experimental variation and are not carried forward as permanent plant values.
+experimental variation and are not included as separate permanent-plant
+contributions.
 
 For plant \(k\), the BLUP is calculated as
 
@@ -1179,13 +1197,18 @@ For plant \(k\), the BLUP is calculated as
 \widehat{r}_{m(k)},
 \]
 
-where \(\widehat{\mu}\) is the overall adjusted mean,
-\(\widehat{g}_{j(k)}\) is the progeny effect,
-\(\widehat{p}_k\) is the permanent individual-plant effect, and
-\(\widehat{r}_{m(k)}\) is the population effect.
+where \(\widehat{\mu}\) is the mean of the fitted year coefficients for
+the trait, \(\widehat{g}_{j(k)}\) is the effect of plant \(k\)'s progeny,
+\(\widehat{p}_k\) is its permanent individual-plant effect, and
+\(\widehat{r}_{m(k)}\) is its population effect. In the original algorithm,
+`overall_mean <- mean(fit$final$beta)` supplies \(\widehat{\mu}\), and
+the remaining contributions are selected by the named entries in
+`u$Progenie`, `u$ID_Planta`, and `u$Populacao`.
 
-The code keeps these components explicit so the construction of each BLUP can
-be followed directly.
+The next chunk documents the original calculation for all three traits,
+retaining the mapping between each plant and its fitted effects. As in the
+fitting procedure in Section 7, `eval=FALSE` prevents a new calculation
+during site rendering.
 
 ```{r individual-blups, eval=FALSE}
 blup_tables <- list()
@@ -1227,8 +1250,12 @@ for (trait in traits) {
 }
 ```
 
-For `Cer`, the first plants can be inspected together with the three fitted
-components that form their BLUP.
+The example below uses the existing `blups` and `model_effects` RDS objects
+loaded in Section 7. For the first 15 `Cer` records, the progeny, plant,
+and population effects are matched by their original identifier codes. The
+last column is the previously saved `Cer` BLUP. The adjusted mean also enters
+the defining equation above, but it is not displayed as a separate column
+in this example. This is an inspection of saved results, not a new BLUP fit.
 
 ```{r blup-components-example}
 # Inspect previously saved effects alongside their corresponding stored BLUPs.
@@ -1256,8 +1283,10 @@ cer_components[, c("Phenotype_ID", "Progenie", "Planta",
   )
 ```
 
-The three trait-specific BLUP vectors are then placed in a single table with
-one row for each of the 195 target plants.
+The original procedure then assembles the three trait-specific BLUP vectors
+into a single `blups` data frame, preserving the plant identifiers and
+ordering the rows by progeny and plant number. This assembly code is shown
+for reproducibility but remains disabled during rendering.
 
 ```{r combine-individual-blups, eval=FALSE}
 blups <- target_map[
@@ -1287,8 +1316,10 @@ blups <- blups[
 rownames(blups) <- NULL
 ```
 
-The previously obtained individual BLUPs are read from the RDS file and
-shown below without recomputing their values.
+The table below instead displays the first 15 rows of the previously saved
+`real_phenotype_blups.rds` object. The full object retains 195 plants, one
+row per plant, with their identifiers and the three `Cer`, `BM`, and
+`LP` BLUP columns. These saved values are not recomputed by the table.
 
 ```{r saved-individual-blups}
 head(blups, 15) |>
@@ -1305,9 +1336,12 @@ head(blups, 15) |>
 
 ### 10.3 BLUP distributions
 
-The 195 plant-level BLUPs are displayed as trait-specific density curves.
-Each facet uses its own numerical scale and summarizes the adjusted phenotypic
-targets entering the genomic-prediction workflow.
+The saved BLUP columns are reshaped into a plotting-only data frame and
+displayed as density curves for the 195 plants in each trait. The original
+`blups` object is not changed. Facets use independent horizontal scales
+(`scales = "free"`), so the shape and spread of each trait should be read
+on its own scale rather than compared as if all three responses had the same
+units or range.
 
 ```{r blup-distributions, fig.width=9, fig.height=5, fig.cap="Density distributions of the BLUPs for the 195 target coffee plants.", fig.alt="Three density plots of individual BLUPs for Cer, BM, and LP, displayed in separate panels with trait-specific scales."}
 blup_long <- rbind(
@@ -1363,8 +1397,11 @@ ggsave(
 )
 ```
 
-These 195 rows are the phenotypic targets passed to the next real-data module.
-Marker information has not been used to estimate or select any of these values.
+The high-resolution TIFF export is retained in the disabled
+`save-blup-distributions` chunk to document the original figure output,
+without rewriting it during site rendering. The 195 saved plant-level rows
+remain the phenotypic targets passed to the next real-data module; marker
+information has not been used to estimate or select these values.
 
 ## 11. Phenotypic results
 
