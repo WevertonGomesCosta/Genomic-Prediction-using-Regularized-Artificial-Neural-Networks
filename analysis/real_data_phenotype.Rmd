@@ -46,6 +46,12 @@ The module has four goals:
 - **Prepare the genomic-prediction targets:** retain one BLUP for each of the 195
   target plants and each trait.
 
+The tutorial proceeds in this order: **inspect the experimental records →
+describe the traits → specify the mixed model → document its existing estimation
+procedure → summarize the fitted effects → assemble the individual BLUPs →
+identify the outputs supplied to the genomic audit**. Each section introduces
+the objects used in the next step, while genotype matching is reserved for R02.
+
 No marker data are used in this module. Genomic information enters only after
 this phenotypic stage has been completed.
 
@@ -368,6 +374,13 @@ year_summary |>
   )
 ```
 
+The first table describes the available observations for each trait; the
+second retains the evaluation year so that differences in data availability
+are not hidden by an overall summary. The seven zero-coded `LP` records are
+reported as missing observations rather than phenotypic measurements. These
+tables describe the input to the previously fitted models; they do not modify
+the observations or the fitted BLUPs.
+
 ## 5. Phenotypic mixed model
 
 ### 5.1 Statistical formulation
@@ -553,6 +566,23 @@ while each random-effect variance is updated by
 
 The loop stops when the largest absolute change among the five random variance
 proportions is smaller than or equal to the trait-specific tolerance.
+
+The fitting code below can be followed in five stages:
+
+1. Construct the fixed-year matrix and the incidence matrices for the five
+   random effects, preserving the levels observed in each trait's data.
+2. Initialize the six variance proportions and form the corresponding
+   penalization terms in the mixed-model equations.
+3. Solve the equations to obtain fixed and random effect solutions, fitted
+   values, and residuals for the current iteration.
+4. Update the variance components and compare the five random-effect
+   proportions with their values from the preceding iteration, using the
+   stopping rule defined above.
+5. Store the fitted solutions, variance components, iteration history, and
+   residual quantities in `fits`, which is read by the following sections.
+
+This explanation documents the existing implementation; no parameter,
+convergence criterion, or estimation instruction is changed here.
 
 ```{r fit-models}
 fits <- list()
@@ -1069,6 +1099,12 @@ fixed_year_effects[
   )
 ```
 
+The table above contains one adjusted fixed-year mean for each trait-year
+combination. These are solutions for the fixed evaluation-year effects; they
+are not the plant-level BLUPs used as genomic-prediction targets. Section 10
+combines the relevant fitted components for each target plant into one value
+per characteristic.
+
 ## 10. BLUPs for the 195 target plants
 
 ### 10.1 Individual identity
@@ -1359,6 +1395,26 @@ for (trait in traits) {
 The module saves the 195 individual BLUPs, variance components, complete model
 effects, descriptive summaries, and run metadata.
 
+The following files are produced by the existing analysis under
+`output/real/phenotype/`. They have distinct roles in inspection and in the
+subsequent genomic workflow:
+
+| Output file | Contents and intended use |
+|---|---|
+| `real_phenotype_blups.rds` | The 195 individual BLUPs for `Cer`, `BM`, and `LP`; direct input to R02. |
+| `real_phenotype_blups.csv` | Tabular version of the individual BLUPs for inspection. |
+| `real_phenotype_variance_components.rds` | Fitted variance components and derived quantities retained in R format. |
+| `real_phenotype_variance_components.csv` | Tabular presentation of those quantities. |
+| `real_phenotype_model_effects.rds` | Stored fixed-year solutions and random effects for each trait. |
+| `real_phenotype_summary.csv` | Descriptive summaries of the original phenotypic observations. |
+| `real_phenotype_run_metadata.rds` | Recorded information about the analysis execution and settings. |
+| `figures/blup_distributions.tiff` | High-resolution version of the BLUP distribution figure from Section 10.3. |
+
+The RDS containing the individual BLUPs is the input consumed by the next
+module; the other files document the already completed phenotypic analysis.
+The code block below is retained unchanged to show how these outputs were
+originally saved.
+
 ```{r save-outputs}
 utils::write.csv(
   blups,
@@ -1445,6 +1501,13 @@ The phenotypic analysis comprises:
 The resulting BLUP table is the phenotypic input to the real-data genomic
 workflow.
 
+In **R02 (`real_data_audit.Rmd`)**, the phenotypic records are matched to the
+Capture-Seq genotype profiles using their progeny and plant identifiers.
+That module applies the previously defined SNP quality-control rules and
+prepares a common genotype-and-BLUP object for cross-validation and the GBLUP
+and ANN methods. It does not repeat the phenotypic mixed-model fitting shown
+here.
+
 ## 13. Scientific references
 
 - Sousa, T. V., et al. (2019). Early selection enabled by the implementation
@@ -1453,3 +1516,7 @@ workflow.
 - Piepho, H.-P., and Möhring, J. (2007). Computing heritability and selection
   response from unbalanced plant breeding trials. *Genetics*, **177**,
   1881–1888. https://doi.org/10.1534/genetics.107.074229
+
+## 14. Navigation
+
+[Home](index.html) | [Next: Genomic data audit](real_data_audit.html)
