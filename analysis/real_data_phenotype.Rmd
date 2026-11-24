@@ -337,7 +337,9 @@ used by the mixed model.
 
 ## 5. Phenotypic mixed model
 
-### 5.1 Statistical formulation
+The model includes fixed evaluation-year means and five random-effect terms.
+Its statistical formulation is the same for all three phenotypic traits; the
+response observations are prepared separately before estimation.
 
 Each trait is analyzed separately with
 
@@ -388,15 +390,17 @@ Table: Terms in the phenotypic mixed model
 random effect because `ID_Planta` already represents the permanent individual
 plant.
 
-## 6. Mixed-model equations
+## 6. Trait-specific data preparation
 
-### 6.1 Preparing each trait
+The response data must be prepared before constructing the mixed-model
+equations. In the field-data coding used here, zero denotes an absent
+observation. The fitted models therefore use all 684 `Cer` and `BM` records
+and exclude the seven zero-coded `LP` records, retaining 677 observations
+for `LP`.
 
-In the field-data coding used here, zero denotes an absent observation.
-The fitted models therefore use all 684 `Cer` and `BM` records and exclude
-the seven zero-coded `LP` records, retaining 677 observations for `LP`.
-
-Separate trait-specific data sets specify the observations used in each mixed model.
+The following chunk creates one data set per trait, places the corresponding
+phenotypic response in `y`, and retains only its observed values. The list
+`analysis_data` then supplies those three data sets to the fitting loop.
 
 ```{r prepare-traits}
 cer_data <- phenotype
@@ -462,15 +466,9 @@ records_used |>
   )
 ```
 
-### 6.2 Incidence matrices
-
-For each trait, the fixed-effect matrix contains one indicator column for each
-year. Five additional incidence matrices represent progeny, permanent plant,
-population, block, and progeny-by-year interaction.
-
-The matrices are created directly inside the fitting loop with `model.matrix()`.
-The factor levels follow their first appearance in the data so the mixed-model
-equations retain the same ordering throughout the analysis.
+The table above documents the numbers of records available, retained, and
+excluded for each phenotypic response. The full source data remain unchanged;
+only the trait-specific inputs to the original fitted models differ.
 
 ## 7. REML variance-component estimation
 
@@ -554,6 +552,16 @@ The fitting code below can be followed in five stages:
    stopping rule defined above.
 5. Store the fitted solutions, variance components, iteration history, and
    residual quantities in `fits`, which is read by the following sections.
+
+In Stage 1, `X` contains one indicator column per evaluation year. The five
+random-effect incidence matrices correspond to progeny, permanent plant,
+population, block, and progeny-by-year interaction. These matrices are
+constructed directly with `model.matrix()`, using the factor levels in their
+order of appearance in each trait's prepared data. They are combined in `W`
+before the mixed-model equations are solved in later stages.
+
+The fitting code is retained for methodological transparency and is not
+executed when this tutorial is rendered.
 
 ```{r fit-models, eval=FALSE}
 fits <- list()
