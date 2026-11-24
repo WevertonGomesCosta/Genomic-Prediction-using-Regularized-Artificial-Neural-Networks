@@ -1075,10 +1075,20 @@ individual BLUPs presented in Sections 9 and 10.
 
 ## 9. Fixed year effects
 
-The fixed solutions estimate the adjusted mean for each evaluation year after
-the random experimental and biological effects have been accounted for.
+Evaluation year is the fixed effect in the phenotypic mixed model (Section 5).
+The fitted solutions describe the adjusted mean for each evaluation year,
+separately for `Cer`, `BM`, and `LP`, after accounting for the random
+progeny, permanent-plant, population, block, and progeny-by-year effects.
 
-The adjusted year means are retrieved from the previously saved model effects.
+These solutions are read from the existing
+`real_phenotype_model_effects.rds` file in Section 7, rather than obtained
+from a new model fit. For each trait,
+`model_effects[[trait]]$fixed_year` is a named vector: its names identify
+the evaluation years, and its values are the corresponding adjusted means.
+
+The following chunk converts those saved vectors into a single table with
+one row for each trait-year combination. It orders the displayed years
+chronologically within each trait, without changing the fitted solutions.
 
 ```{r saved-fixed-year-effects}
 fixed_year_effects <- data.frame()
@@ -1102,11 +1112,15 @@ digits = 4,
     col.names = c("Trait", "Year", "Adjusted mean"))
 ```
 
-The table above contains one adjusted fixed-year mean for each trait-year
-combination. These are solutions for the fixed evaluation-year effects; they
-are not the plant-level BLUPs used as genomic-prediction targets. Section 10
-combines the relevant fitted components for each target plant into one value
-per characteristic.
+The table presents nine adjusted means: three traits evaluated in 2014, 2015,
+and 2016. Each value characterizes a trait in one evaluation year; it does not
+identify an individual plant and is not a genomic-prediction target.
+
+For the individual BLUP calculation documented in Section 10, the original
+procedure takes the mean of the three fitted year coefficients as the overall
+adjusted mean for each trait, then adds the relevant progeny, permanent-plant,
+and population effects. The saved plant-level BLUPs, not the year-specific
+fixed means, are subsequently supplied to genomic prediction.
 
 ## 10. BLUPs for the 195 target plants
 
