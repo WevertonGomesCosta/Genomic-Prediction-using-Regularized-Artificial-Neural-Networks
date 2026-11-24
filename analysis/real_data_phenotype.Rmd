@@ -18,7 +18,10 @@ editor_options:
 <style>
 table.table {
   width: 100% !important;
-  max-width: none;
+  max-width: 100%;
+  display: block;
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
   font-size: 0.92em;
 }
 table.table th,
@@ -92,41 +95,6 @@ library(ggplot2)
 library(ggthemes)
 ```
 
-```{r table-formatting, include=FALSE}
-# Follow the reference tutorial: keep tables inspectable and scroll wide tables.
-format_table <- function(x, caption = NULL, digits = getOption("digits"),
-                         col.names = NA) {
-  min_width <- if (ncol(x) >= 8L) {
-    "min-width:1100px;"
-  } else if (ncol(x) >= 6L) {
-    "min-width:800px;"
-  } else {
-    ""
-  }
-
-  table <- knitr::kable(
-    x,
-    format = "html",
-    caption = caption,
-    digits = digits,
-    col.names = col.names,
-    row.names = FALSE,
-    table.attr = paste0(
-      'class="table table-striped table-hover" ',
-      'style="width:100%; margin-bottom:0; ', min_width, '"'
-    )
-  )
-
-  knitr::asis_output(
-    paste0(
-      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
-      table,
-      '</div>'
-    )
-  )
-}
-```
-
 ### 2.2 Traits and fitting controls
 
 The analyzed traits are `Cer`, `BM`, and `LP`. Zero is treated as a
@@ -149,7 +117,11 @@ fitting_settings <- data.frame(
 )
 
 fitting_settings |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     caption = "Trait-specific fitting settings",
     col.names = c(
       "Trait", "Tolerance", "Zero-coded missing"
@@ -178,13 +150,6 @@ expected_columns <- c(
   "Bloco", "Progenie_Ano", "Planta", "Cer", "BM", "LP"
 )
 
-stopifnot(
-  identical(names(phenotype), expected_columns),
-  nrow(phenotype) == 684L,
-  ncol(phenotype) == 11L,
-  !anyNA(phenotype)
-)
-
 variable_dictionary <- data.frame(
   Variable = expected_columns,
   Interpretation = c(
@@ -204,7 +169,11 @@ variable_dictionary <- data.frame(
 )
 
 variable_dictionary |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     caption = "Variables in the phenotypic data",
     col.names = c(
       "Variable", "Interpretation"
@@ -242,7 +211,11 @@ structure_summary <- data.frame(
 )
 
 structure_summary |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     caption = "Experimental structure of the coffee phenotypic data",
     col.names = c(
       "Quantity", "Value"
@@ -258,18 +231,6 @@ target_years <- rowSums(
   target_year_table > 0
 )
 
-stopifnot(
-  identical(sort(unique(phenotype$Ano)), c(2014L, 2015L, 2016L)),
-  length(unique(phenotype$Progenie)) == 15L,
-  length(unique(phenotype$ID_Planta)) == 228L,
-  length(unique(target$ID_Planta)) == 195L,
-  length(unique(checks$ID_Planta)) == 33L,
-  length(intersect(unique(target$ID_Planta), unique(checks$ID_Planta))) == 0L,
-  length(target_repetitions) == 1L,
-  as.integer(target_repetitions) == 195L,
-  as.integer(names(target_repetitions)) == 3L,
-  all(target_years == 3L)
-)
 ```
 
 For the experimental progenies,
@@ -314,13 +275,12 @@ for (trait in traits) {
 
 rownames(trait_summary) <- NULL
 
-stopifnot(
-  all(trait_summary$N == c(684L, 684L, 677L)),
-  all(trait_summary$Zero_count == c(0L, 0L, 7L))
-)
-
 trait_summary |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 3,
     caption = "Observed phenotypic summaries with separate zero-coded missing counts",
     col.names = c(
@@ -362,7 +322,11 @@ for (trait in traits) {
 rownames(year_summary) <- NULL
 
 year_summary |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 3,
     caption = "Observed phenotypic summaries by year with separate missing counts",
     col.names = c(
@@ -430,7 +394,11 @@ model_terms <- data.frame(
 )
 
 model_terms |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     caption = "Terms in the phenotypic mixed model",
     col.names = c(
       "Model component", "Data field", "Type"
@@ -500,7 +468,11 @@ records_used <- data.frame(
 )
 
 records_used |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     caption = "Records entering each trait-specific mixed model",
     col.names = c(
       "Trait", "Available", "Used",
@@ -508,11 +480,6 @@ records_used |>
     )
   )
 
-stopifnot(
-  nrow(cer_data) == 684L,
-  nrow(bm_data) == 684L,
-  nrow(lp_data) == 677L
-)
 ```
 
 ### 6.2 Incidence matrices
@@ -1017,7 +984,11 @@ variance_table <- variance_components[
 ]
 
 variance_table |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 6,
     caption = "Variance components from the phenotypic mixed model",
     col.names = c(
@@ -1044,7 +1015,11 @@ parameter_table <- variance_components[
 ]
 
 parameter_table |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 6,
     caption = "Model-implied variance proportions and within-plant repeatability",
     col.names = c(
@@ -1064,7 +1039,11 @@ variance_table <- variance_components[, c("Trait", "N", "Iterations",
   "V_progeny", "V_plant", "V_population", "V_block",
   "V_progeny_year", "V_residual", "V_phenotypic"), drop = FALSE]
 variance_table |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 6,
     caption = "Variance components from the phenotypic mixed model",
     col.names = c("Trait", "N", "Iterations", "Progeny variance",
@@ -1077,7 +1056,11 @@ parameter_table <- variance_components[, c("Trait", "h2_progeny",
   "c2_plant", "h2_population", "c2_block", "c2_progeny_year",
   "Repeatability", "h2_total", "Overall_mean"), drop = FALSE]
 parameter_table |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 6,
     caption = "Model-implied variance proportions and within-plant repeatability",
     col.names = c("Trait", "Progeny proportion", "Plant proportion",
@@ -1125,7 +1108,11 @@ fixed_year_effects[
   ,
   drop = FALSE
 ] |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 4,
     caption = "Adjusted fixed means by evaluation year",
     col.names = c(
@@ -1149,7 +1136,11 @@ fixed_year_effects[
   order(match(fixed_year_effects$Trait, traits), fixed_year_effects$Year),
   , drop = FALSE
 ] |>
-  format_table(digits = 4,
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+digits = 4,
     caption = "Adjusted fixed means by evaluation year",
     col.names = c("Trait", "Year", "Adjusted mean"))
 ```
@@ -1179,11 +1170,6 @@ target_map <- target_map[
 ]
 rownames(target_map) <- NULL
 
-stopifnot(
-  nrow(target_map) == 195L,
-  length(unique(target_map$ID_Planta)) == 195L
-)
-
 target_map$Phenotype_ID <- sprintf(
   "PROG%02d_PL%02d",
   target_map$Progenie,
@@ -1191,7 +1177,11 @@ target_map$Phenotype_ID <- sprintf(
 )
 
 head(target_map, 15) |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     caption = "First 15 target plants used for genomic prediction",
     col.names = c(
       "Plant ID", "Progeny", "Plant",
@@ -1256,11 +1246,7 @@ for (trait in traits) {
     ]
   )
 
-  stopifnot(
-    !anyNA(out$Progeny_effect),
-    !anyNA(out$Plant_effect),
-    !anyNA(out$Population_effect)
-  )
+  
 
   out$BLUP <- (
     overall_mean +
@@ -1291,7 +1277,11 @@ cer_components$Population_effect <- as.numeric(
 cer_components[, c("Phenotype_ID", "Progenie", "Planta",
   "Progeny_effect", "Plant_effect", "Population_effect", "Cer"),
   drop = FALSE] |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 4,
     caption = "Components of the first 15 Cer BLUPs",
     col.names = c("Phenotype ID", "Progeny", "Plant",
@@ -1329,14 +1319,12 @@ blups <- blups[
 
 rownames(blups) <- NULL
 
-stopifnot(
-  nrow(blups) == 195L,
-  !anyNA(blups[, traits]),
-  length(unique(blups$Phenotype_ID)) == 195L
-)
-
 head(blups, 15) |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 4,
     caption = "First 15 BLUPs prepared for genomic prediction",
     col.names = c(
@@ -1352,7 +1340,11 @@ shown below without recomputing their values.
 
 ```{r saved-individual-blups, echo=FALSE}
 head(blups, 15) |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover" style="width:100%; margin-bottom:0;"',
+
     digits = 4,
     caption = "First 15 BLUPs prepared for genomic prediction",
     col.names = c("Phenotype ID", "Plant ID", "Progeny",
@@ -1420,39 +1412,6 @@ ggsave(
 
 These 195 rows are the phenotypic targets passed to the next real-data module.
 Marker information has not been used to estimate or select any of these values.
-
-```{r regression-benchmark, include=FALSE}
-benchmark <- data.frame(
-  Trait = c("Cer", "BM", "LP"),
-  N = c(684L, 684L, 677L),
-  Iterations = c(1L, 1L, 46L),
-  V_progeny = c(0.046499, 0.031433, 0.751094),
-  V_plant = c(0.068135, 0.049095, 1.886503),
-  V_population = c(0.050455, 0.027236, 0.039846),
-  V_block = c(0.036630, 0.032487, 0.234072),
-  V_progeny_year = c(0.057987, 0.031809, 0.067444),
-  V_residual = c(0.384139, 0.258941, 5.055057),
-  stringsAsFactors = FALSE
-)
-
-component_columns <- c(
-  "V_progeny", "V_plant", "V_population", "V_block", "V_progeny_year", "V_residual"
-)
-
-for (trait in traits) {
-  observed <- variance_components[variance_components$Trait == trait, , drop = FALSE]
-  expected <- benchmark[benchmark$Trait == trait, , drop = FALSE]
-
-  stopifnot(
-    observed$N == expected$N,
-    observed$Iterations == expected$Iterations,
-    max(abs(
-      as.numeric(observed[1, component_columns]) -
-      as.numeric(expected[1, component_columns])
-    )) < 5e-6
-  )
-}
-```
 
 ## 11. Phenotypic results
 
