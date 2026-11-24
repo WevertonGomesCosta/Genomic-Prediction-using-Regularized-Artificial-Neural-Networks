@@ -539,30 +539,42 @@ Table: Trait-specific fitting settings
 
 ### 7.2 Mixed-model fitting procedure
 
-The fitting code below can be followed in five stages:
+The original algorithm proceeds through five stages within a single fitting
+loop, repeated separately for `Cer`, `BM`, and `LP`:
 
-1. Construct the fixed-year matrix and the incidence matrices for the five
-   random effects, preserving the levels observed in each trait's data.
-2. Initialize the six variance proportions and form the corresponding
-   penalization terms in the mixed-model equations.
-3. Solve the equations to obtain fixed and random effect solutions, fitted
-   values, and residuals for the current iteration.
-4. Update the variance components and compare the five random-effect
-   proportions with their values from the preceding iteration, using the
-   stopping rule defined above.
-5. Store the fitted solutions, variance components, iteration history, and
-   residual quantities in `fits`. The subsequent sections instead read the
-   previously saved results without rerunning the fitting procedure.
+1. **Incidence matrices:** identify factor levels in each trait's prepared
+   data, build `X` and the five random-effect incidence matrices with
+   `model.matrix()`, combine them in `W`, and record the coefficient indices
+   for each random effect.
+2. **Initialization:** assign 0.10 to each of the five random-effect variance
+   proportions and 0.50 to the residual, then initialize the iteration history.
+3. **Mixed-model iteration:** calculate the current variance ratios
+   `lambda_*`, assemble the penalty matrix, solve the mixed-model equations,
+   obtain fitted values and residuals, and estimate residual and random-effect
+   variances.
+4. **Update and convergence:** combine the six estimated variances, normalize
+   them into `new_props`, calculate the stored deviance, and compare the
+   largest absolute change among the **five random-effect proportions** with
+   `tolerance[[trait]]`. The procedure stops on convergence or reports failure
+   if the tolerance is not reached within 500 iterations.
+5. **Fitted solutions:** label the fixed-year and random-effect coefficients
+   by their observed levels, then retain the estimates, residuals, diagnostics,
+   iteration history, and tolerance in `fits[[trait]]`.
 
-In Stage 1, `X` contains one indicator column per evaluation year. The five
-random-effect incidence matrices correspond to progeny, permanent plant,
-population, block, and progeny-by-year interaction. These matrices are
-constructed directly with `model.matrix()`, using the factor levels in their
-order of appearance in each trait's prepared data. They are combined in `W`
-before the mixed-model equations are solved in later stages.
+The mathematical quantities introduced above have direct counterparts in the
+code. The `lambda_*` values are the residual-to-random variance ratios, while
+`M <- crossprod(W) + penalty` is the penalized mixed-model system and
+`C <- solve(M)` is its inverse. The residual variance equation is implemented
+through `penalized_ss / df_reml`; the five random-effect variance updates use
+the estimated effects and the corresponding diagonal blocks of `C`. Here,
+`df_reml` equals the number of retained observations minus `ncol(X)`. Since
+the three evaluation-year columns in `X` are linearly independent, this
+matches the `n - rank(X)` denominator shown above.
 
-The fitting code is retained for methodological transparency and is not
-executed when this tutorial is rendered.
+The 320-line fitting procedure is preserved as one continuous algorithm to
+make the dependencies among its stages explicit. It remains `eval=FALSE`:
+the tables in the next sections come from the previously saved RDS files,
+not from a new model fit during site rendering.
 
 ```{r fit-models, eval=FALSE}
 fits <- list()
@@ -609,6 +621,7 @@ for (trait in traits) {
     data = d
   )
 
+  # Combine the fixed and random design matrices in coefficient order.
   W <- cbind(
     X,
     Z_progeny,
@@ -618,6 +631,7 @@ for (trait in traits) {
     Z_progeny_year
   )
 
+  # Locate each random-effect block within the joint matrix W.
   p <- ncol(X)
 
   start_progeny <- p + 1L
@@ -641,7 +655,7 @@ for (trait in traits) {
   idx_block <- start_block:end_block
   idx_progeny_year <- start_progeny_year:end_progeny_year
 
-# Stage 2: initial variance proportions.
+# Stage 2: initialize variance proportions and the iteration history.
   old_props <- c(
     Progenie = 0.10,
     ID_Planta = 0.10,
@@ -659,9 +673,10 @@ for (trait in traits) {
     stringsAsFactors = FALSE
   )
 
-# Stage 3: original mixed-model iteration.
+# Stage 3: iteratively solve equations and estimate variance components.
   for (iteration in seq_len(500L)) {
 
+    # Form the current residual-to-random variance ratios.
     lambda_progeny <- old_props["Residual"] / old_props["Progenie"]
     lambda_plant <- old_props["Residual"] / old_props["ID_Planta"]
     lambda_population <- old_props["Residual"] / old_props["Populacao"]
@@ -699,6 +714,7 @@ for (trait in traits) {
       length(idx_progeny_year)
     )
 
+    # Solve the penalized mixed-model equations and recover the residuals.
     M <- crossprod(W) + penalty
     rhs <- crossprod(W, d$y)
 
@@ -714,6 +730,7 @@ for (trait in traits) {
     u_block <- coefficients[idx_block]
     u_progeny_year <- coefficients[idx_progeny_year]
 
+    # Update the residual variance using the penalized sum of squares.
     penalized_ss <- (
       sum(residuals^2) +
       as.numeric(lambda_progeny) * sum(u_progeny^2) +
@@ -726,6 +743,7 @@ for (trait in traits) {
     df_reml <- nrow(d) - ncol(X)
     residual_variance <- penalized_ss / df_reml
 
+    # Update each random variance with its effects and C diagonal block.
     V_progeny <- (
       sum(u_progeny^2) +
       residual_variance *
@@ -760,7 +778,7 @@ for (trait in traits) {
         ]))
     ) / length(idx_progeny_year)
 
-# Stage 4: variance-component update and stopping rule.
+# Stage 4: normalize variances, evaluate convergence, and record history.
     components <- c(
       Progenie = V_progeny,
       ID_Planta = V_plant,
@@ -802,6 +820,7 @@ for (trait in traits) {
       )
     )
 
+    # Only the five random-effect proportions enter the stopping criterion.
     random_change <- max(
       abs(
         new_props[
@@ -859,7 +878,7 @@ for (trait in traits) {
   names(u_block) <- as.character(block_levels)
   names(u_progeny_year) <- as.character(progeny_year_levels)
 
-# Stage 5: fitted effects and iteration history.
+# Stage 5: retain fitted effects, variance estimates, and iteration history.
   fits[[trait]] <- list(
     trait = trait,
     data = d,
