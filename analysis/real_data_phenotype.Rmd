@@ -15,18 +15,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-<style>
-table.table {
-  width: 100% !important;
-  max-width: none;
-  font-size: 0.92em;
-}
-table.table th,
-table.table td {
-  white-space: normal !important;
-  vertical-align: top;
-}
-</style>
 
 ## 1. Purpose
 
@@ -39,12 +27,18 @@ The module has four goals:
 
 - **Describe the experiment:** make the years, progenies, checks, blocks,
   populations, plants, and traits explicit.
-- **Fit the reference mixed model:** estimate fixed year means and the five
+- **Document the reference mixed model:** present fixed year means and the five
   random components in the phenotypic mixed model.
-- **Estimate variance components and BLUPs:** quantify progeny, permanent plant,
+- **Present saved variance components and BLUPs:** quantify progeny, permanent plant,
   population, block, progeny-by-year, and residual variation.
 - **Prepare the genomic-prediction targets:** retain one BLUP for each of the 195
   target plants and each trait.
+
+The tutorial proceeds in this order: **inspect the experimental records →
+describe the traits → specify the mixed model → document its existing estimation
+procedure → summarize the fitted effects → assemble the individual BLUPs →
+identify the outputs supplied to the genomic audit**. Each section introduces
+the objects used in the next step, while genotype matching is reserved for R02.
 
 No marker data are used in this module. Genomic information enters only after
 this phenotypic stage has been completed.
@@ -60,17 +54,9 @@ knitr::opts_chunk$set(
 )
 
 options(stringsAsFactors = FALSE)
-
-PHENOTYPE_INPUT <- "data/dados_reais/coffee_phenotypes.txt"
-OUTPUT_DIR <- "output/real/phenotype"
-FIGURE_DIR <- file.path(OUTPUT_DIR, "figures")
-
-dir.create(FIGURE_DIR, showWarnings = FALSE, recursive = TRUE)
 ```
 
-## 2. Packages and fixed settings
-
-### 2.1 Packages
+## 2. Software packages
 
 The phenotypic analysis uses three packages:
 
@@ -78,8 +64,8 @@ The phenotypic analysis uses three packages:
 - **`ggplot2`** displays the distributions of the individual BLUPs.
 - **`ggthemes`** applies the same visual style used in the simulated workflow.
 
-The mixed model is fitted directly from its mixed-model equations. This makes
-the variance-component estimation and stopping rule explicit in the tutorial.
+The original mixed-model equations, variance-component updates, and stopping
+rule are documented below; model fitting is not performed when rendering.
 
 ```{r packages, warning=FALSE, message=FALSE}
 library(knitr)
@@ -87,79 +73,23 @@ library(ggplot2)
 library(ggthemes)
 ```
 
-```{r table-formatting, include=FALSE}
-# Follow the reference tutorial: keep tables inspectable and scroll wide tables.
-format_table <- function(x, caption = NULL, digits = getOption("digits"),
-                         col.names = NA) {
-  min_width <- if (ncol(x) >= 8L) {
-    "min-width:1100px;"
-  } else if (ncol(x) >= 6L) {
-    "min-width:800px;"
-  } else {
-    ""
-  }
-
-  table <- knitr::kable(
-    x,
-    format = "html",
-    caption = caption,
-    digits = digits,
-    col.names = col.names,
-    row.names = FALSE,
-    table.attr = paste0(
-      'class="table table-striped table-hover" ',
-      'style="width:100%; margin-bottom:0; ', min_width, '"'
-    )
-  )
-
-  knitr::asis_output(
-    paste0(
-      '<div style="width:100%; overflow-x:auto; margin-bottom:1.25rem;">',
-      table,
-      '</div>'
-    )
-  )
-}
-```
-
-### 2.2 Traits and fitting controls
-
-The analyzed traits are `Cer`, `BM`, and `LP`. Zero is treated as a
-non-observation during mixed-model fitting; this affects `LP` only.
-
-```{r fitting-settings}
-traits <- c("Cer", "BM", "LP")
-
-tolerance <- c(
-  Cer = 0.05,
-  BM = 0.05,
-  LP = 0.0001
-)
-
-fitting_settings <- data.frame(
-  Trait = traits,
-  Tolerance = unname(tolerance[traits]),
-  Zero_treated_as_non_observation = TRUE,
-  stringsAsFactors = FALSE
-)
-
-fitting_settings |>
-  format_table(
-    caption = "Trait-specific fitting settings",
-    col.names = c(
-      "Trait", "Tolerance", "Zero-coded missing"
-    )
-  )
-```
-
 ## 3. Experimental data
 
-### 3.1 Canonical variables
+The original tab-delimited file contains 684 phenotypic observations and 11
+variables. Each of the 228 permanent plant identifiers is recorded in 2014,
+2015, and 2016. The following steps inspect these records without changing
+their values or their order in the full data set.
 
-The phenotype file uses descriptive names so the experimental structure can be
-read directly from the analysis.
+### 3.1 Reading and inspecting phenotypic records
+
+The source file is read with its original column names. Rows represent
+observations of individual plants in a particular evaluation year; the same
+plant therefore appears in more than one row.
 
 ```{r read-phenotypes}
+# Read the canonical phenotypic observations from the original data file.
+PHENOTYPE_INPUT <- "data/dados_reais/coffee_phenotypes.txt"
+
 phenotype <- read.delim(
   PHENOTYPE_INPUT,
   header = TRUE,
@@ -167,57 +97,89 @@ phenotype <- read.delim(
   check.names = FALSE,
   stringsAsFactors = FALSE
 )
+```
 
-expected_columns <- c(
-  "Observacao", "Progenie", "Ano", "ID_Planta", "Populacao",
-  "Bloco", "Progenie_Ano", "Planta", "Cer", "BM", "LP"
-)
+To illustrate the repeated evaluations, the example below displays the first
+three distinct plant identifiers in the source file, including one check and
+two experimental plants. It selects only a small display sample; subsequent
+analyses continue to use the complete `phenotype` data frame.
 
-stopifnot(
-  identical(names(phenotype), expected_columns),
-  nrow(phenotype) == 684L,
-  ncol(phenotype) == 11L,
-  !anyNA(phenotype)
-)
+```{r phenotype-record-sample}
+# Follow the first three plant identifiers across the three evaluation years.
+phenotype_example <- phenotype[
+  phenotype$ID_Planta %in% head(unique(phenotype$ID_Planta), 3L),
+  c("ID_Planta", "Ano", "Progenie", "Planta", "Bloco", "Cer", "BM", "LP"),
+  drop = FALSE
+]
 
-variable_dictionary <- data.frame(
-  Variable = expected_columns,
-  Interpretation = c(
-    "Observation index",
-    "Progeny; 1-13 experimental and 14-15 checks",
-    "Evaluation year",
-    "Permanent individual plant identifier",
-    "Population",
-    "Block",
-    "Progeny-by-year identifier",
-    "Plant number within progeny",
-    "Cercosporiosis score",
-    "Leaf-miner incidence score",
-    "Production-related phenotype"
-  ),
-  stringsAsFactors = FALSE
-)
+# Order the display by permanent plant identifier and evaluation year.
+phenotype_example <- phenotype_example[
+  order(phenotype_example$ID_Planta, phenotype_example$Ano),
+  ,
+  drop = FALSE
+]
 
-variable_dictionary |>
-  format_table(
-    caption = "Variables in the phenotypic data",
-    col.names = c(
-      "Variable", "Interpretation"
-    )
+rownames(phenotype_example) <- NULL
+
+phenotype_example |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    caption = "Original phenotypic records for three plants evaluated in 2014–2016"
   )
 ```
 
-### 3.2 Experimental structure and augmented blocks
+The sample shows that `ID_Planta` stays constant while `Ano` and the observed
+phenotypic responses change. It also distinguishes the permanent plant
+identifier from the plant number within a progeny.
+
+### 3.2 Variable dictionary
+
+The source contains the following fields. Numerical identifiers are recorded as
+integers, but population, block, progeny, and year codes represent categories or
+experimental factors rather than continuous measurements.
+
+| Variable | Type and observed coding | Meaning and role |
+|---|---|---|
+| `Observacao` | Integer; 1–684 | Unique row identifier for each recorded observation. |
+| `Progenie` | Integer; 1–15 | Progeny: 1–13 experimental, 14–15 checks; random effect in the model. |
+| `Ano` | Integer; 2014, 2015, 2016 | Evaluation year; fixed effect in the model. |
+| `ID_Planta` | Integer; 228 distinct IDs | Permanent identifier of the same plant across years; random plant effect. |
+| `Populacao` | Integer codes; 1–4 | Population identifier; random effect in the model. |
+| `Bloco` | Integer codes; 1–7 | Experimental block identifier; random effect in the model. |
+| `Progenie_Ano` | Text; e.g., `14_2016` | Progeny-by-year combination (45 distinct levels); random interaction effect. |
+| `Planta` | Integer; 1–15 | Plant number within a progeny; not a unique identifier across the check plants. |
+| `Cer` | Integer scores; 1–5 | Cercosporiosis response. |
+| `BM` | Integer scores; 1–5 | Leaf-miner incidence response. |
+| `LP` | Numeric; 0–21.5 | Production-related response. The seven zeros indicate non-observations; positive observed values range from 0.1 to 21.5. |
+
+Table: Variables and observed coding in the phenotypic data
+
+No empty fields or explicit `NA` entries occur in the original file. The seven
+zero-coded `LP` records all occur in 2015; `Cer` and `BM` have no zeros.
+The source file does not specify measurement units or detailed scoring
+protocols, so those details are not inferred here.
+
+### 3.3 Experimental structure and augmented blocks
 
 The 684 records correspond to 228 permanent plant identifiers evaluated in
 2014, 2015, and 2016. Progenies 1-13 form the genomic-prediction population.
 Progenies 14 and 15 are checks in the augmented-block experiment and remain in
 the phenotypic mixed-model fit.
 
-```{r experimental-structure}
+The pair `ID_Planta` and `Ano` uniquely identifies every observation. By
+contrast, some check plants share the same `Progenie` and `Planta` codes;
+those fields must not be used on their own to identify individual plants.
+
+```{r target-and-check-progenies}
 target <- phenotype[phenotype$Progenie %in% 1:13, , drop = FALSE]
 checks <- phenotype[phenotype$Progenie %in% 14:15, , drop = FALSE]
+```
 
+The following table describes the experimental design and study population.
+
+```{r experimental-structure}
 structure_summary <- data.frame(
   Quantity = c(
     "Phenotypic observations", "Evaluation years", "Progenies",
@@ -237,34 +199,15 @@ structure_summary <- data.frame(
 )
 
 structure_summary |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     caption = "Experimental structure of the coffee phenotypic data",
     col.names = c(
       "Quantity", "Value"
     )
   )
-
-target_repetitions <- table(table(target$ID_Planta))
-target_year_table <- table(
-  target$ID_Planta,
-  target$Ano
-)
-target_years <- rowSums(
-  target_year_table > 0
-)
-
-stopifnot(
-  identical(sort(unique(phenotype$Ano)), c(2014L, 2015L, 2016L)),
-  length(unique(phenotype$Progenie)) == 15L,
-  length(unique(phenotype$ID_Planta)) == 228L,
-  length(unique(target$ID_Planta)) == 195L,
-  length(unique(checks$ID_Planta)) == 33L,
-  length(intersect(unique(target$ID_Planta), unique(checks$ID_Planta))) == 0L,
-  length(target_repetitions) == 1L,
-  as.integer(target_repetitions) == 195L,
-  as.integer(names(target_repetitions)) == 3L,
-  all(target_years == 3L)
-)
 ```
 
 For the experimental progenies,
@@ -278,13 +221,21 @@ evaluation years.
 
 ## 4. Phenotypic traits
 
-The source-file phenotypes are summarized by trait and evaluation year before
-model fitting. Because zero denotes an absent observation, descriptive
-statistics use only observed values. The `Zero_count` field documents the
+The three phenotypic responses are `Cer`, `BM`, and `LP`. They are summarized
+by trait and evaluation year before model fitting. Because zero denotes an
+absent observation, descriptive statistics use only observed values. The `Zero_count` field documents the
 zero-coded records separately (seven for `LP`), consistently with the
 mixed-model analysis in Section 6.
 
-```{r trait-summary}
+### 4.1 Overall phenotypic summaries
+
+The overall table displays the number of observed records, mean, dispersion,
+and range for each trait. Zero-coded non-observations are counted separately.
+
+```{r trait-summary-overall}
+# Identify the phenotypic traits before calculating their summaries.
+traits <- c("Cer", "BM", "LP")
+
 trait_summary <- data.frame()
 
 for (trait in traits) {
@@ -309,13 +260,11 @@ for (trait in traits) {
 
 rownames(trait_summary) <- NULL
 
-stopifnot(
-  all(trait_summary$N == c(684L, 684L, 677L)),
-  all(trait_summary$Zero_count == c(0L, 0L, 7L))
-)
-
 trait_summary |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 3,
     caption = "Observed phenotypic summaries with separate zero-coded missing counts",
     col.names = c(
@@ -324,7 +273,16 @@ trait_summary |>
       "Zero-coded missing"
     )
   )
+```
 
+The first table summarizes each characteristic; the next one preserves the evaluation-year breakdown.
+
+### 4.2 Phenotypic summaries by evaluation year
+
+The annual summaries preserve differences among the 2014, 2015, and 2016
+measurements without pooling their distributions.
+
+```{r trait-summary-by-year}
 year_summary <- data.frame()
 
 for (trait in traits) {
@@ -357,7 +315,10 @@ for (trait in traits) {
 rownames(year_summary) <- NULL
 
 year_summary |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 3,
     caption = "Observed phenotypic summaries by year with separate missing counts",
     col.names = c(
@@ -368,9 +329,17 @@ year_summary |>
   )
 ```
 
+The first table describes the available observations for each trait; the
+second retains the evaluation year so that differences in data availability
+are not hidden by an overall summary. The seven zero-coded `LP` records are
+reported as missing observations rather than phenotypic measurements. These tables describe the phenotypic input without changing the observations
+used by the mixed model.
+
 ## 5. Phenotypic mixed model
 
-### 5.1 Statistical formulation
+The model includes fixed evaluation-year means and five random-effect terms.
+Its statistical formulation is the same for all three phenotypic traits; the
+response observations are prepared separately before estimation.
 
 Each trait is analyzed separately with
 
@@ -405,41 +374,33 @@ where:
 The model separates permanent differences among plants from annual and
 experimental sources of variation.
 
-```{r model-terms}
-model_terms <- data.frame(
-  Model_component = c(
-    "Fixed year", "Progeny", "Permanent individual plant", "Population",
-    "Block", "Progeny x year", "Residual"
-  ),
-  Data_field = c(
-    "Ano", "Progenie", "ID_Planta", "Populacao", "Bloco", "Progenie_Ano", "Not applicable"
-  ),
-  Type = c("Fixed", rep("Random", 5), "Residual"),
-  stringsAsFactors = FALSE
-)
+| Model component | Data field | Type |
+|---|---|---|
+| Fixed year | `Ano` | Fixed |
+| Progeny | `Progenie` | Random |
+| Permanent individual plant | `ID_Planta` | Random |
+| Population | `Populacao` | Random |
+| Block | `Bloco` | Random |
+| Progeny x year | `Progenie_Ano` | Random |
+| Residual | Not applicable | Residual |
 
-model_terms |>
-  format_table(
-    caption = "Terms in the phenotypic mixed model",
-    col.names = c(
-      "Model component", "Data field", "Type"
-    )
-  )
-```
+Table: Terms in the phenotypic mixed model
 
 `Planta` is retained for identification but is not fitted as an additional
 random effect because `ID_Planta` already represents the permanent individual
 plant.
 
-## 6. Mixed-model equations
+## 6. Trait-specific data preparation
 
-### 6.1 Preparing each trait
+The response data must be prepared before constructing the mixed-model
+equations. In the field-data coding used here, zero denotes an absent
+observation. The fitted models therefore use all 684 `Cer` and `BM` records
+and exclude the seven zero-coded `LP` records, retaining 677 observations
+for `LP`.
 
-In the field-data coding used here, zero denotes an absent observation.
-The fitted models therefore use all 684 `Cer` and `BM` records and exclude
-the seven zero-coded `LP` records, retaining 677 observations for `LP`.
-
-Separate trait-specific data sets specify the observations used in each mixed model.
+The following chunk creates one data set per trait, places the corresponding
+phenotypic response in `y`, and retains only its observed values. The list
+`analysis_data` then supplies those three data sets to the fitting loop.
 
 ```{r prepare-traits}
 cer_data <- phenotype
@@ -471,7 +432,11 @@ analysis_data <- list(
   BM = bm_data,
   LP = lp_data
 )
+```
 
+The table below reports the observations entering the previously fitted trait models.
+
+```{r records-used-table}
 records_used <- data.frame(
   Trait = c("Cer", "BM", "LP"),
   Records_available = rep(nrow(phenotype), 3),
@@ -489,30 +454,21 @@ records_used <- data.frame(
 )
 
 records_used |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     caption = "Records entering each trait-specific mixed model",
     col.names = c(
       "Trait", "Available", "Used",
       "Excluded"
     )
   )
-
-stopifnot(
-  nrow(cer_data) == 684L,
-  nrow(bm_data) == 684L,
-  nrow(lp_data) == 677L
-)
 ```
 
-### 6.2 Incidence matrices
-
-For each trait, the fixed-effect matrix contains one indicator column for each
-year. Five additional incidence matrices represent progeny, permanent plant,
-population, block, and progeny-by-year interaction.
-
-The matrices are created directly inside the fitting loop with `model.matrix()`.
-The factor levels follow their first appearance in the data so the mixed-model
-equations retain the same ordering throughout the analysis.
+The table above documents the numbers of records available, retained, and
+excluded for each phenotypic response. The full source data remain unchanged;
+only the trait-specific inputs to the original fitted models differ.
 
 ## 7. REML variance-component estimation
 
@@ -554,13 +510,80 @@ while each random-effect variance is updated by
 The loop stops when the largest absolute change among the five random variance
 proportions is smaller than or equal to the trait-specific tolerance.
 
-```{r fit-models}
+### 7.1 Trait-specific fitting controls
+
+The numerical tolerances belong to the mixed-model fitting procedure, not to
+the definition of the phenotypic variables. For `Cer` and `BM`, the existing
+tolerance is 0.05; for `LP`, it is 0.0001. The original fitting procedure
+uses at most 500 iterations and starts from five random-effect proportions of
+0.10 and a residual proportion of 0.50. These settings are documented next to
+the algorithm in which they are used.
+
+```{r model-fitting-tolerances}
+tolerance <- c(
+  Cer = 0.05,
+  BM = 0.05,
+  LP = 0.0001
+)
+```
+
+The table below summarizes the stored fitting controls for each trait.
+
+| Trait | Tolerance | Zero-coded missing |
+|---|---:|---|
+| `Cer` | 0.05 | TRUE |
+| `BM` | 0.05 | TRUE |
+| `LP` | 0.0001 | TRUE |
+
+Table: Trait-specific fitting settings
+
+### 7.2 Mixed-model fitting procedure
+
+The original algorithm proceeds through five stages within a single fitting
+loop, repeated separately for `Cer`, `BM`, and `LP`:
+
+1. **Incidence matrices:** identify factor levels in each trait's prepared
+   data, build `X` and the five random-effect incidence matrices with
+   `model.matrix()`, combine them in `W`, and record the coefficient indices
+   for each random effect.
+2. **Initialization:** assign 0.10 to each of the five random-effect variance
+   proportions and 0.50 to the residual, then initialize the iteration history.
+3. **Mixed-model iteration:** calculate the current variance ratios
+   `lambda_*`, assemble the penalty matrix, solve the mixed-model equations,
+   obtain fitted values and residuals, and estimate residual and random-effect
+   variances.
+4. **Update and convergence:** combine the six estimated variances, normalize
+   them into `new_props`, calculate the stored deviance, and compare the
+   largest absolute change among the **five random-effect proportions** with
+   `tolerance[[trait]]`. The procedure stops on convergence or reports failure
+   if the tolerance is not reached within 500 iterations.
+5. **Fitted solutions:** label the fixed-year and random-effect coefficients
+   by their observed levels, then retain the estimates, residuals, diagnostics,
+   iteration history, and tolerance in `fits[[trait]]`.
+
+The mathematical quantities introduced above have direct counterparts in the
+code. The `lambda_*` values are the residual-to-random variance ratios, while
+`M <- crossprod(W) + penalty` is the penalized mixed-model system and
+`C <- solve(M)` is its inverse. The residual variance equation is implemented
+through `penalized_ss / df_reml`; the five random-effect variance updates use
+the estimated effects and the corresponding diagonal blocks of `C`. Here,
+`df_reml` equals the number of retained observations minus `ncol(X)`. Since
+the three evaluation-year columns in `X` are linearly independent, this
+matches the `n - rank(X)` denominator shown above.
+
+The original fitting procedure is preserved as one continuous algorithm to
+make the dependencies among its stages explicit. It remains `eval=FALSE`:
+the tables in the next sections come from the previously saved RDS files,
+not from a new model fit during site rendering.
+
+```{r fit-models, eval=FALSE}
 fits <- list()
 
 for (trait in traits) {
 
   d <- analysis_data[[trait]]
 
+# Stage 1: incidence matrices and effect indices.
   year_levels <- unique(d$Ano)
   progeny_levels <- unique(d$Progenie)
   plant_levels <- unique(d$ID_Planta)
@@ -598,6 +621,7 @@ for (trait in traits) {
     data = d
   )
 
+  # Combine the fixed and random design matrices in coefficient order.
   W <- cbind(
     X,
     Z_progeny,
@@ -607,6 +631,7 @@ for (trait in traits) {
     Z_progeny_year
   )
 
+  # Locate each random-effect block within the joint matrix W.
   p <- ncol(X)
 
   start_progeny <- p + 1L
@@ -630,6 +655,7 @@ for (trait in traits) {
   idx_block <- start_block:end_block
   idx_progeny_year <- start_progeny_year:end_progeny_year
 
+# Stage 2: initialize variance proportions and the iteration history.
   old_props <- c(
     Progenie = 0.10,
     ID_Planta = 0.10,
@@ -647,8 +673,10 @@ for (trait in traits) {
     stringsAsFactors = FALSE
   )
 
+# Stage 3: iteratively solve equations and estimate variance components.
   for (iteration in seq_len(500L)) {
 
+    # Form the current residual-to-random variance ratios.
     lambda_progeny <- old_props["Residual"] / old_props["Progenie"]
     lambda_plant <- old_props["Residual"] / old_props["ID_Planta"]
     lambda_population <- old_props["Residual"] / old_props["Populacao"]
@@ -686,6 +714,7 @@ for (trait in traits) {
       length(idx_progeny_year)
     )
 
+    # Solve the penalized mixed-model equations and recover the residuals.
     M <- crossprod(W) + penalty
     rhs <- crossprod(W, d$y)
 
@@ -701,6 +730,7 @@ for (trait in traits) {
     u_block <- coefficients[idx_block]
     u_progeny_year <- coefficients[idx_progeny_year]
 
+    # Update the residual variance using the penalized sum of squares.
     penalized_ss <- (
       sum(residuals^2) +
       as.numeric(lambda_progeny) * sum(u_progeny^2) +
@@ -713,6 +743,7 @@ for (trait in traits) {
     df_reml <- nrow(d) - ncol(X)
     residual_variance <- penalized_ss / df_reml
 
+    # Update each random variance with its effects and C diagonal block.
     V_progeny <- (
       sum(u_progeny^2) +
       residual_variance *
@@ -747,6 +778,7 @@ for (trait in traits) {
         ]))
     ) / length(idx_progeny_year)
 
+# Stage 4: normalize variances, evaluate convergence, and record history.
     components <- c(
       Progenie = V_progeny,
       ID_Planta = V_plant,
@@ -788,6 +820,7 @@ for (trait in traits) {
       )
     )
 
+    # Only the five random-effect proportions enter the stopping criterion.
     random_change <- max(
       abs(
         new_props[
@@ -845,6 +878,7 @@ for (trait in traits) {
   names(u_block) <- as.character(block_levels)
   names(u_progeny_year) <- as.character(progeny_year_levels)
 
+# Stage 5: retain fitted effects, variance estimates, and iteration history.
   fits[[trait]] <- list(
     trait = trait,
     data = d,
@@ -872,20 +906,35 @@ for (trait in traits) {
 }
 ```
 
-The code above exposes the complete path from the incidence matrices to the
-variance updates and BLUP solutions without hiding any step in project-specific
-helper functions.
+The code above documents the original pathway from incidence matrices to
+variance updates and fitted effects. It is not executed during site generation.
+The following chunk reads the existing RDS outputs used in Sections 8–10;
+none of those values are re-estimated in this tutorial build.
+
+```{r load-saved-phenotypic-results}
+# Reuse the existing phenotypic results without recalculating the models.
+OUTPUT_DIR <- "output/real/phenotype"
+
+variance_components <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_variance_components.rds"))
+model_effects <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_model_effects.rds"))
+blups <- readRDS(file.path(OUTPUT_DIR, "real_phenotype_blups.rds"))
+```
 
 ## 8. Variance components and derived ratios
 
-For each trait,
+The previously saved `variance_components` object contains one set of fitted
+variance estimates for each trait. The estimates distinguish five sources
+of random variation and a residual component, following the model in
+Section 5. For each trait, the total fitted phenotypic variance is
 
 \[
 V_f=V_g+V_p+V_r+V_b+V_i+V_e.
 \]
 
-The following quantities describe the fitted variance components. The
-between-progeny and between-population proportions are calculated separately:
+Here, `V_g` denotes the progeny component, `V_p` the permanent-plant
+component, `V_r` the population component, `V_b` the block component,
+`V_i` the progeny-by-year component, and `V_e` the residual component.
+The two between-group proportions are calculated separately:
 
 \[
 p_{\mathrm{progeny}}=\frac{V_g}{V_f},\qquad
@@ -918,7 +967,13 @@ arabica* by [Sousa et al. (2019)](https://doi.org/10.3389/fpls.2018.01934)
 and the distinction between genetic and phenotypic variance in plant-breeding
 models discussed by [Piepho and Möhring (2007)](https://doi.org/10.1534/genetics.107.074229).
 
-```{r variance-components}
+The following chunk shows how the original fitted components and effect
+proportions were assembled into one row per trait. It documents the
+calculations that produced the scientific results and remains `eval=FALSE`.
+The tables that follow instead use the `variance_components` RDS loaded at
+the end of Section 7; no variance component is re-estimated.
+
+```{r variance-components, eval=FALSE}
 variance_components <- data.frame()
 
 for (trait in traits) {
@@ -965,116 +1020,129 @@ for (trait in traits) {
 }
 
 rownames(variance_components) <- NULL
+```
 
-variance_table <- variance_components[
-  ,
-  c(
-    "Trait",
-    "N",
-    "Iterations",
-    "V_progeny",
-    "V_plant",
-    "V_population",
-    "V_block",
-    "V_progeny_year",
-    "V_residual",
-    "V_phenotypic"
-  )
-]
+The first table selects the six estimated variance components and their
+total, together with the number of observations used and the recorded
+iterations. Each row describes the existing fit for one trait.
 
+```{r saved-variance-components}
+variance_table <- variance_components[, c("Trait", "N", "Iterations",
+  "V_progeny", "V_plant", "V_population", "V_block",
+  "V_progeny_year", "V_residual", "V_phenotypic"), drop = FALSE]
 variance_table |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 6,
     caption = "Variance components from the phenotypic mixed model",
-    col.names = c(
-      "Trait", "N", "Iterations",
-      "Progeny variance", "Plant variance", "Population variance",
-      "Block variance", "Progeny-by-year variance", "Residual variance",
-      "Phenotypic variance"
-    )
-  )
-
-parameter_table <- variance_components[
-  ,
-  c(
-    "Trait",
-    "h2_progeny",
-    "c2_plant",
-    "h2_population",
-    "c2_block",
-    "c2_progeny_year",
-    "Repeatability",
-    "h2_total",
-    "Overall_mean"
-  )
-]
-
-parameter_table |>
-  format_table(
-    digits = 6,
-    caption = "Model-implied variance proportions and within-plant repeatability",
-    col.names = c(
-      "Trait", "Progeny proportion", "Plant proportion",
-      "Population proportion", "Block proportion",
-      "Progeny-by-year proportion", "Plant repeatability",
-      "Progeny + population proportion", "Adjusted mean"
-    )
+    col.names = c("Trait", "N", "Iterations", "Progeny variance",
+      "Plant variance", "Population variance", "Block variance",
+      "Progeny-by-year variance", "Residual variance",
+      "Phenotypic variance")
   )
 ```
 
-Separating the variance components from the derived parameters keeps both
-tables readable at the width of the tutorial page.
+The second table presents the model-implied variance proportions and
+within-plant repeatability. It retains the original stored field names
+internally, while the displayed column labels describe their interpretation.
+The `Adjusted mean` column is the saved mean of the fixed-year solutions,
+not an individual plant BLUP.
+
+```{r saved-variance-ratios}
+parameter_table <- variance_components[, c("Trait", "h2_progeny",
+  "c2_plant", "h2_population", "c2_block", "c2_progeny_year",
+  "Repeatability", "h2_total", "Overall_mean"), drop = FALSE]
+parameter_table |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+    digits = 6,
+    caption = "Model-implied variance proportions and within-plant repeatability",
+    col.names = c("Trait", "Progeny proportion", "Plant proportion",
+      "Population proportion", "Block proportion",
+      "Progeny-by-year proportion", "Plant repeatability",
+      "Progeny + population proportion", "Adjusted mean")
+  )
+```
+
+The first table provides the component estimates; the second makes their
+relative contributions explicit. These quantities summarize the phenotypic
+mixed model and should not be confused with the fixed-year means or the
+individual BLUPs presented in Sections 9 and 10.
 
 ## 9. Fixed year effects
 
-The fixed solutions estimate the adjusted mean for each evaluation year after
-the random experimental and biological effects have been accounted for.
+Evaluation year is the fixed effect in the phenotypic mixed model (Section 5).
+The fitted solutions describe the adjusted mean for each evaluation year,
+separately for `Cer`, `BM`, and `LP`, after accounting for the random
+progeny, permanent-plant, population, block, and progeny-by-year effects.
 
-```{r fixed-year-effects}
+These solutions are read from the existing
+`real_phenotype_model_effects.rds` file in Section 7, rather than obtained
+from a new model fit. For each trait,
+`model_effects[[trait]]$fixed_year` is a named vector: its names identify
+the evaluation years, and its values are the corresponding adjusted means.
+
+The following chunk converts those saved vectors into a single table with
+one row for each trait-year combination. It orders the displayed years
+chronologically within each trait, without changing the fitted solutions.
+
+```{r saved-fixed-year-effects}
 fixed_year_effects <- data.frame()
-
 for (trait in traits) {
-
-  fit <- fits[[trait]]
-
-  fixed_year_effects <- rbind(
-    fixed_year_effects,
-    data.frame(
-      Trait = trait,
-      Year = as.integer(
-        names(fit$final$beta)
-      ),
-      Adjusted_mean = as.numeric(
-        fit$final$beta
-      ),
-      stringsAsFactors = FALSE
-    )
-  )
+  beta_year <- model_effects[[trait]]$fixed_year
+  fixed_year_effects <- rbind(fixed_year_effects, data.frame(
+    Trait = trait, Year = as.integer(names(beta_year)),
+    Adjusted_mean = as.numeric(beta_year), stringsAsFactors = FALSE
+  ))
 }
-
-rownames(fixed_year_effects) <- NULL
-
-# Sort the displayed years chronologically without changing model solutions.
 fixed_year_effects[
   order(match(fixed_year_effects$Trait, traits), fixed_year_effects$Year),
-  ,
-  drop = FALSE
+  , drop = FALSE
 ] |>
-  format_table(
-    digits = 4,
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
+digits = 4,
     caption = "Adjusted fixed means by evaluation year",
-    col.names = c(
-      "Trait", "Year", "Adjusted mean"
-    )
-  )
+    col.names = c("Trait", "Year", "Adjusted mean"))
 ```
+
+The table presents nine adjusted means: three traits evaluated in 2014, 2015,
+and 2016. Each value characterizes a trait in one evaluation year; it does not
+identify an individual plant and is not a genomic-prediction target.
+
+For the individual BLUP calculation documented in Section 10, the original
+procedure takes the mean of the three fitted year coefficients as the overall
+adjusted mean for each trait, then adds the relevant progeny, permanent-plant,
+and population effects. The saved plant-level BLUPs, not the year-specific
+fixed means, are subsequently supplied to genomic prediction.
 
 ## 10. BLUPs for the 195 target plants
 
+The phenotypic model contains repeated annual observations, but genomic
+prediction requires one adjusted phenotypic target per plant and trait. This
+section documents how the original analysis identified the 195 experimental
+plants and combined their fitted effects into the saved `Cer`, `BM`, and
+`LP` BLUPs. No genomic markers are used in this step.
+
 ### 10.1 Individual identity
 
-For progenies 1-13, `ID_Planta` is in one-to-one correspondence with progeny
-and plant number and is repeated over the three years.
+The 13 experimental progenies each contain 15 target plants, observed in
+2014, 2015, and 2016. The field-data column `ID_Planta` identifies a
+permanent plant across the three annual records. Within these experimental
+progenies, the pair `Progenie` and `Planta` also identifies an individual;
+this is not generally true for the check progenies, as explained in Section 3.
+
+The `target-identity` chunk retains the distinct plant identities, orders
+them by progeny and plant number, and constructs a readable `Phenotype_ID`
+such as `PROG01_PL01`. This label combines progeny and plant number; it does
+not replace the original numeric `ID_Planta`. The table displays the first
+15 identities, while all 195 plants are retained for the subsequent analysis.
 
 ```{r target-identity}
 target_map <- unique(
@@ -1088,11 +1156,6 @@ target_map <- target_map[
 ]
 rownames(target_map) <- NULL
 
-stopifnot(
-  nrow(target_map) == 195L,
-  length(unique(target_map$ID_Planta)) == 195L
-)
-
 target_map$Phenotype_ID <- sprintf(
   "PROG%02d_PL%02d",
   target_map$Progenie,
@@ -1100,7 +1163,10 @@ target_map$Phenotype_ID <- sprintf(
 )
 
 head(target_map, 15) |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     caption = "First 15 target plants used for genomic prediction",
     col.names = c(
       "Plant ID", "Progeny", "Plant",
@@ -1111,9 +1177,12 @@ head(target_map, 15) |>
 
 ### 10.2 One BLUP per plant
 
-For genomic prediction, one BLUP is retained for each target plant and trait.
+One BLUP per plant and trait is obtained from the original phenotypic mixed
+model. The retained plant-level value includes the adjusted mean and the
+fitted effects associated with progeny, permanent plant, and population.
 The year, block, and progeny-by-year terms describe evaluation-specific or
-experimental variation and are not carried forward as permanent plant values.
+experimental variation and are not included as separate permanent-plant
+contributions.
 
 For plant \(k\), the BLUP is calculated as
 
@@ -1128,15 +1197,20 @@ For plant \(k\), the BLUP is calculated as
 \widehat{r}_{m(k)},
 \]
 
-where \(\widehat{\mu}\) is the overall adjusted mean,
-\(\widehat{g}_{j(k)}\) is the progeny effect,
-\(\widehat{p}_k\) is the permanent individual-plant effect, and
-\(\widehat{r}_{m(k)}\) is the population effect.
+where \(\widehat{\mu}\) is the mean of the fitted year coefficients for
+the trait, \(\widehat{g}_{j(k)}\) is the effect of plant \(k\)'s progeny,
+\(\widehat{p}_k\) is its permanent individual-plant effect, and
+\(\widehat{r}_{m(k)}\) is its population effect. In the original algorithm,
+`overall_mean <- mean(fit$final$beta)` supplies \(\widehat{\mu}\), and
+the remaining contributions are selected by the named entries in
+`u$Progenie`, `u$ID_Planta`, and `u$Populacao`.
 
-The code keeps these components explicit so the construction of each BLUP can
-be followed directly.
+The next chunk documents the original calculation for all three traits,
+retaining the mapping between each plant and its fitted effects. As in the
+fitting procedure in Section 7, `eval=FALSE` prevents a new calculation
+during site rendering.
 
-```{r individual-blups}
+```{r individual-blups, eval=FALSE}
 blup_tables <- list()
 
 for (trait in traits) {
@@ -1165,12 +1239,6 @@ for (trait in traits) {
     ]
   )
 
-  stopifnot(
-    !anyNA(out$Progeny_effect),
-    !anyNA(out$Plant_effect),
-    !anyNA(out$Population_effect)
-  )
-
   out$BLUP <- (
     overall_mean +
     out$Progeny_effect +
@@ -1182,40 +1250,45 @@ for (trait in traits) {
 }
 ```
 
-For `Cer`, the first plants can be inspected together with the three fitted
-components that form their BLUP.
+The example below uses the existing `blups` and `model_effects` RDS objects
+loaded in Section 7. For the first 15 `Cer` records, the progeny, plant,
+and population effects are matched by their original identifier codes. The
+last column is the previously saved `Cer` BLUP. The adjusted mean also enters
+the defining equation above, but it is not displayed as a separate column
+in this example. This is an inspection of saved results, not a new BLUP fit.
 
 ```{r blup-components-example}
-head(
-  blup_tables$Cer[
-    ,
-    c(
-      "Phenotype_ID",
-      "Progenie",
-      "Planta",
-      "Progeny_effect",
-      "Plant_effect",
-      "Population_effect",
-      "BLUP"
-    )
-  ],
-  15
-) |>
-  format_table(
+# Inspect previously saved effects alongside their corresponding stored BLUPs.
+cer_components <- head(blups, 15)
+cer_components$Progeny_effect <- as.numeric(
+  model_effects$Cer$random$Progenie[as.character(cer_components$Progenie)]
+)
+cer_components$Plant_effect <- as.numeric(
+  model_effects$Cer$random$ID_Planta[as.character(cer_components$ID_Planta)]
+)
+cer_components$Population_effect <- as.numeric(
+  model_effects$Cer$random$Populacao[as.character(cer_components$Populacao)]
+)
+cer_components[, c("Phenotype_ID", "Progenie", "Planta",
+  "Progeny_effect", "Plant_effect", "Population_effect", "Cer"),
+  drop = FALSE] |>
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 4,
     caption = "Components of the first 15 Cer BLUPs",
-    col.names = c(
-      "Phenotype ID", "Progeny", "Plant",
-      "Progeny effect", "Plant effect", "Population effect",
-      "BLUP"
-    )
+    col.names = c("Phenotype ID", "Progeny", "Plant",
+      "Progeny effect", "Plant effect", "Population effect", "BLUP")
   )
 ```
 
-The three trait-specific BLUP vectors are then placed in a single table with
-one row for each of the 195 target plants.
+The original procedure then assembles the three trait-specific BLUP vectors
+into a single `blups` data frame, preserving the plant identifiers and
+ordering the rows by progeny and plant number. This assembly code is shown
+for reproducibility but remains disabled during rendering.
 
-```{r combine-individual-blups}
+```{r combine-individual-blups, eval=FALSE}
 blups <- target_map[
   ,
   c(
@@ -1241,30 +1314,34 @@ blups <- blups[
 ]
 
 rownames(blups) <- NULL
+```
 
-stopifnot(
-  nrow(blups) == 195L,
-  !anyNA(blups[, traits]),
-  length(unique(blups$Phenotype_ID)) == 195L
-)
+The table below instead displays the first 15 rows of the previously saved
+`real_phenotype_blups.rds` object. The full object retains 195 plants, one
+row per plant, with their identifiers and the three `Cer`, `BM`, and
+`LP` BLUP columns. These saved values are not recomputed by the table.
 
+```{r saved-individual-blups}
 head(blups, 15) |>
-  format_table(
+  knitr::kable(
+    format = "html",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" width="100%"',
     digits = 4,
     caption = "First 15 BLUPs prepared for genomic prediction",
-    col.names = c(
-      "Phenotype ID", "Plant ID", "Progeny",
-      "Plant", "Population", "Cer",
-      "BM", "LP"
-    )
+    col.names = c("Phenotype ID", "Plant ID", "Progeny",
+      "Plant", "Population", "Cer", "BM", "LP")
   )
 ```
 
 ### 10.3 BLUP distributions
 
-The 195 plant-level BLUPs are displayed as trait-specific density curves.
-Each facet uses its own numerical scale and summarizes the adjusted phenotypic
-targets entering the genomic-prediction workflow.
+The saved BLUP columns are reshaped into a plotting-only data frame and
+displayed as density curves for the 195 plants in each trait. The original
+`blups` object is not changed. Facets use independent horizontal scales
+(`scales = "free"`), so the shape and spread of each trait should be read
+on its own scale rather than compared as if all three responses had the same
+units or range.
 
 ```{r blup-distributions, fig.width=9, fig.height=5, fig.cap="Density distributions of the BLUPs for the 195 target coffee plants.", fig.alt="Three density plots of individual BLUPs for Cer, BM, and LP, displayed in separate panels with trait-specific scales."}
 blup_long <- rbind(
@@ -1302,7 +1379,9 @@ p_blup_distribution <- ggplot(
 print(p_blup_distribution)
 ```
 
-```{r save-blup-distributions, include=FALSE}
+```{r save-blup-distributions, include=FALSE, eval=FALSE}
+FIGURE_DIR <- file.path(OUTPUT_DIR, "figures")
+
 ggsave(
   file.path(
     FIGURE_DIR,
@@ -1318,48 +1397,53 @@ ggsave(
 )
 ```
 
-These 195 rows are the phenotypic targets passed to the next real-data module.
-Marker information has not been used to estimate or select any of these values.
-
-```{r regression-benchmark, include=FALSE}
-benchmark <- data.frame(
-  Trait = c("Cer", "BM", "LP"),
-  N = c(684L, 684L, 677L),
-  Iterations = c(1L, 1L, 46L),
-  V_progeny = c(0.046499, 0.031433, 0.751094),
-  V_plant = c(0.068135, 0.049095, 1.886503),
-  V_population = c(0.050455, 0.027236, 0.039846),
-  V_block = c(0.036630, 0.032487, 0.234072),
-  V_progeny_year = c(0.057987, 0.031809, 0.067444),
-  V_residual = c(0.384139, 0.258941, 5.055057),
-  stringsAsFactors = FALSE
-)
-
-component_columns <- c(
-  "V_progeny", "V_plant", "V_population", "V_block", "V_progeny_year", "V_residual"
-)
-
-for (trait in traits) {
-  observed <- variance_components[variance_components$Trait == trait, , drop = FALSE]
-  expected <- benchmark[benchmark$Trait == trait, , drop = FALSE]
-
-  stopifnot(
-    observed$N == expected$N,
-    observed$Iterations == expected$Iterations,
-    max(abs(
-      as.numeric(observed[1, component_columns]) -
-      as.numeric(expected[1, component_columns])
-    )) < 5e-6
-  )
-}
-```
+The high-resolution TIFF export is retained in the disabled
+`save-blup-distributions` chunk to document the original figure output,
+without rewriting it during site rendering. The 195 saved plant-level rows
+remain the phenotypic targets passed to the next real-data module; marker
+information has not been used to estimate or select these values.
 
 ## 11. Phenotypic results
 
-The module saves the 195 individual BLUPs, variance components, complete model
-effects, descriptive summaries, and run metadata.
+The original phenotypic analysis saved the fitted effects, individual BLUPs,
+variance components, descriptive summaries, and execution metadata for reuse.
+This tutorial reads the existing scientific results rather than fitting the
+model or rewriting its outputs.
 
-```{r save-outputs}
+The files listed below belong to `output/real/phenotype/`. Seven contain
+phenotypic results or metadata, and one is the high-resolution BLUP figure.
+The table identifies each file and the role it serves in the next stages.
+
+| Output file | Contents and intended use |
+|---|---|
+| `real_phenotype_blups.rds` | The 195 individual BLUPs for `Cer`, `BM`, and `LP`; direct input to R02. |
+| `real_phenotype_blups.csv` | Tabular version of the individual BLUPs for inspection. |
+| `real_phenotype_variance_components.rds` | Fitted variance components and derived quantities retained in R format. |
+| `real_phenotype_variance_components.csv` | Tabular presentation of those quantities. |
+| `real_phenotype_model_effects.rds` | Stored fixed-year solutions and random effects for each trait. |
+| `real_phenotype_summary.csv` | Descriptive summaries of the original phenotypic observations. |
+| `real_phenotype_run_metadata.rds` | Recorded information about the analysis execution and settings. |
+| `figures/blup_distributions.tiff` | High-resolution version of the BLUP distribution figure from Section 10.3. |
+
+Table: Saved phenotypic outputs and their role in the genomic workflow
+
+The `real_phenotype_blups.rds` file is the direct phenotypic input to R02
+(`real_data_audit.Rmd`). It retains the 195 individual plant records, their
+identifiers, and the three `Cer`, `BM`, and `LP` BLUPs. The matching CSV
+makes the same tabular results easier to inspect. The other RDS files retain
+the variance estimates and fitted effects in their original R structures;
+the remaining CSV and metadata files document the phenotypic analysis.
+
+The following export blocks record how the original outputs were written.
+As in the simulated-data audit, they remain in the RMarkdown for
+reproducibility but are not evaluated or displayed during site rendering
+(`eval=FALSE, include=FALSE`). Consequently, rendering the tutorial does
+not overwrite any of the existing scientific results.
+
+The individual BLUPs were exported as CSV for inspection and as RDS for
+direct reuse by the next module.
+
+```{r save-individual-blups, eval=FALSE, include=FALSE}
 utils::write.csv(
   blups,
   file.path(OUTPUT_DIR, "real_phenotype_blups.csv"),
@@ -1370,7 +1454,13 @@ saveRDS(
   blups,
   file.path(OUTPUT_DIR, "real_phenotype_blups.rds")
 )
+```
 
+The variance-component table, including derived proportions and
+repeatability, was saved in both CSV and RDS formats. Section 8 reads
+the previously saved RDS to display its results.
+
+```{r save-variance-components, eval=FALSE, include=FALSE}
 utils::write.csv(
   variance_components,
   file.path(OUTPUT_DIR, "real_phenotype_variance_components.csv"),
@@ -1381,7 +1471,14 @@ saveRDS(
   variance_components,
   file.path(OUTPUT_DIR, "real_phenotype_variance_components.rds")
 )
+```
 
+The fixed-year solutions and the random effects were stored together in
+`real_phenotype_model_effects.rds`, with one entry per trait. Sections 9
+and 10 use this saved object to explain adjusted year means and individual
+BLUP components.
+
+```{r save-model-effects, eval=FALSE, include=FALSE}
 model_effects <- list()
 
 for (trait in traits) {
@@ -1395,13 +1492,25 @@ saveRDS(
   model_effects,
   file.path(OUTPUT_DIR, "real_phenotype_model_effects.rds")
 )
+```
 
+The descriptive statistics calculated from the observed phenotype records
+were also written to a CSV file, independently of the fitted model outputs.
+
+```{r save-descriptive-summary, eval=FALSE, include=FALSE}
 utils::write.csv(
   trait_summary,
   file.path(OUTPUT_DIR, "real_phenotype_summary.csv"),
   row.names = FALSE
 )
+```
 
+The run metadata preserves the input path, R version and execution date,
+experiment descriptors, model terms, and trait-specific tolerances. This
+record documents the scientific execution without constituting another
+phenotypic estimate.
+
+```{r save-run-metadata, eval=FALSE, include=FALSE}
 run_metadata <- list(
   generated_at = Sys.time(),
   R_version = R.version.string,
@@ -1425,9 +1534,9 @@ saveRDS(
 )
 ```
 
-The central product is `real_phenotype_blups.rds`, containing exactly 195 target
-plants and the three trait BLUPs. Genotype matching and marker quality control
-are performed only in the next stage.
+The key output for genomic prediction remains `real_phenotype_blups.rds`.
+R02 matches these individual phenotypic targets with the genotypes and
+performs marker quality control; neither operation is carried out in R01.
 
 ## 12. Summary of the phenotypic analysis
 
@@ -1445,6 +1554,12 @@ The phenotypic analysis comprises:
 The resulting BLUP table is the phenotypic input to the real-data genomic
 workflow.
 
+In **R02 (`real_data_audit.Rmd`)**, the 195 individual BLUP records are matched
+to the Capture-Seq genotype profiles using progeny and plant identifiers.
+That module applies the specified SNP quality-control rules and prepares a
+common genotype-and-BLUP object for cross-validation and the GBLUP and ANN
+methods. Phenotypic mixed-model fitting is performed only in R01.
+
 ## 13. Scientific references
 
 - Sousa, T. V., et al. (2019). Early selection enabled by the implementation
@@ -1453,3 +1568,7 @@ workflow.
 - Piepho, H.-P., and Möhring, J. (2007). Computing heritability and selection
   response from unbalanced plant breeding trials. *Genetics*, **177**,
   1881–1888. https://doi.org/10.1534/genetics.107.074229
+
+## 14. Navigation
+
+[Home](index.html) | [Next: Genomic data audit](real_data_audit.html)
