@@ -2576,40 +2576,28 @@ export without rerunning the training.
 
 ## 8. ANN results and held-out predictions
 
-The object `results` contains predictive metrics for the 300 combinations
-of trait, outer split, and ANN variant. `predictions` contains the 11,700
-held-out predictions (39 individuals per model and outer split).
-`epoch_selection` records the 300 epoch counts chosen from the corresponding
-outer-analysis data. The tables below examine these quantities separately.
+### 8.1 Stored final fitting results
 
-```{r final-output-status, include=FALSE}
-FINAL_OUTPUTS_AVAILABLE <- all(file.exists(c("output/real/ann/final/real_ann_results.rds",
-  "output/real/ann/final/real_ann_predictions.rds",
-  "output/real/ann/final/real_ann_epoch_selection.rds",
-  "output/real/ann/final/real_ann_run_metadata.rds"
-)
-)
-)
+The published analysis reads the existing final fitting results rather
+than training the networks again. The four saved objects describe
+complementary units of observation.
 
-final_status <- data.frame(Output = c("Model-task results", "Held-out predictions",
-  "Epoch selections",
-  "Run metadata"
-),
-  Available = c(file.exists("output/real/ann/final/real_ann_results.rds"), file.exists(
-  "output/real/ann/final/real_ann_predictions.rds"
-),
-  file.exists("output/real/ann/final/real_ann_epoch_selection.rds"),
-  file.exists("output/real/ann/final/real_ann_run_metadata.rds")
-),
-  stringsAsFactors = FALSE
-)
+| Object | Expected records | Scientific content |
+|:-------|-----------------:|:-------------------|
+| results | 300 | Final configuration, held-out metrics and fit diagnostics |
+| predictions | 11,700 | Observed and predicted BLUPs for outer-assessment individuals |
+| epoch_selection | 300 | Provisional fit and selected training duration |
+| final_meta | 1 list | Execution settings and refit rule |
 
-final_status |>
-  knitr::kable(format = "html", caption = "Stored final ANN outputs", row.names = FALSE,
-  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-)
-```
-```{r load-final-results, eval=FINAL_OUTPUTS_AVAILABLE}
+A task identifies one trait and outer split; each of the 75 tasks
+contains four ANN variants. The model-task key comprises `TaskID`
+and `Model`. The prediction key additionally includes the individual
+`ID`. The four RDS files retain the original task assignments and
+numerical values. The table compares recorded row counts with those
+expected from the validation design and reports the number of distinct
+tasks represented in each tabular object.
+
+```{r load-final-results}
 # Load the model results, held-out predictions, and selected epochs.
 results <- readRDS("output/real/ann/final/real_ann_results.rds")
 predictions <- readRDS("output/real/ann/final/real_ann_predictions.rds")
@@ -2627,12 +2615,222 @@ final_output_summary <- data.frame(Object = c("Model-task results", "Held-out pr
   stringsAsFactors = FALSE
 )
 
-final_output_summary |>
+# Keep the availability flag for the unchanged figure chunks in Section 11.
+FINAL_OUTPUTS_AVAILABLE <- TRUE
+
+cbind(
+  final_output_summary,
+  Unique_tasks = c(
+    length(unique(results$TaskID)),
+    length(unique(predictions$TaskID)),
+    length(unique(epoch_selection$TaskID))
+  )
+) |>
   knitr::kable(format = "html", caption = "Stored final ANN result structure",
   row.names = FALSE,
   table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
 ```
+
+### 8.2 Final ANN configurations
+
+The 12 rows in `final_network_settings` correspond to the three traits
+and four ANN variants in the first `SplitID` in `outer_map`. The table
+illustrates the configuration fields rather than a statistically
+representative sample of fits. Within each trait and split, architecture
+and learning rate are inherited from the reference ANN search, while
+penalties and selected refitting duration can differ across variants.
+Configurations in the other 24 splits need not match this example.
+
+```{r final-network-settings}
+# Show the 12 trait-by-model configurations for the first outer split.
+final_network_settings <- results[results$SplitID == outer_map$SplitID[1L],
+  c("Trait", "Model", "SplitID", "Architecture", "Learning_rate", "L1", "L2", "Best_epoch"),
+  drop = FALSE
+]
+rownames(final_network_settings) <- NULL
+
+knitr::kable(final_network_settings, format = "html", digits = 7, row.names = FALSE,
+  caption = "Final ANN configurations in the first outer split",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+### 8.3 Model results
+
+Each row of `results` describes one trait, outer split and ANN
+variant. `N_train` and `N_test` describe the final weight-fitting and
+assessment sample sizes (156 and 39). `BLUP_Correlation` and
+`BLUP_RMSE` are calculated on the 39 held-out BLUP pairs in their
+original scale. Section 9 defines all six predictive metrics.
+The following table displays the first six model-task records.
+
+```{r preview-ann-results}
+knitr::kable(head(results[, c("Trait", "SplitID", "Model", "N_train", "N_test",
+  "BLUP_Correlation", "BLUP_RMSE")]),
+  format = "html", digits = 4, row.names = FALSE,
+  caption = "First six rows of the final ANN results",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+### 8.4 Held-out predictions
+
+Each row of `predictions` links one outer-assessment individual to
+its trait, variant and split through `ID`, `Trait`, `Model` and
+`SplitID`. `Observed_BLUP` is the precomputed phenotypic reference;
+`Predicted_BLUP` is the prediction transformed back to that scale
+from the final ANN. The individual's assessment BLUP was not used
+for genomic fitting or selection in that task.
+
+The first six rows illustrate the prediction-level records. These
+records retain the repetition and fold identifiers needed to compute
+individual out-of-fold predictions in Section 10.
+
+```{r preview-ann-predictions}
+knitr::kable(head(predictions[, c("Trait", "SplitID", "Model", "ID",
+  "Observed_BLUP", "Predicted_BLUP")]),
+  format = "html", digits = 4, row.names = FALSE,
+  caption = "First six held-out ANN predictions",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+### 8.5 Selected training epochs
+
+The object `epoch_selection` records the selected training duration
+for each of the 300 model-task combinations. `Best_epoch` is the
+number of epochs used in the refit on all 156 outer-analysis
+individuals. `Validation_RMSE` and `Validation_Pearson` refer to
+the 23 early-validation individuals of the provisional fit, not to
+the 39 outer-assessment individuals. The validation metrics are on
+the original BLUP scale; the stopping criterion itself monitors
+unpenalized MSE on the standardized response.
+
+```{r preview-ann-epochs}
+knitr::kable(head(epoch_selection[, c("Trait", "SplitID", "Model", "Best_epoch",
+  "Validation_RMSE", "Validation_Pearson")]),
+  format = "html", digits = 4, row.names = FALSE,
+  caption = "Selected refitting epochs and their internal validation metrics",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+### 8.6 Numerical and optimization diagnostics
+
+The provisional epoch-selection fit and the final refit have different
+roles. The following summaries retain all 300 model-task records
+and describe their numerical behavior without excluding any task.
+
+| Diagnostic | Interpretation |
+|:-----------|:---------------|
+| Best_epoch | Retained provisional epoch and duration of the final refit |
+| Last_epoch | Last executed provisional epoch |
+| Stopped_by_patience | Provisional fit interrupted by the patience criterion |
+| Hit_epoch_ceiling | Provisional fit reached the 3,000-epoch limit without stopping by patience |
+| Validation_RMSE | Provisional prediction error on the early-validation subset |
+| Validation_Pearson | Provisional linear association on that subset |
+| N_pred_finite | Number of finite final assessment predictions |
+| Constant_prediction | Final assessment predictions all identical |
+
+The first table summarizes the selected epochs, last executed epochs,
+stopping outcomes and internal validation metrics across the 25
+model-task records for each trait and variant. Validation RMSE and
+Pearson means use available values; their finite counts are shown
+separately. Neither stopping by patience nor reaching the epoch limit
+establishes numerical convergence.
+
+```{r final-epoch-diagnostics}
+final_epoch_diagnostics <- data.frame()
+
+for (model_name in MODEL_LEVELS) {
+  for (trait in traits) {
+    x <- epoch_selection[
+      epoch_selection$Model == model_name &
+        epoch_selection$Trait == trait, , drop = FALSE
+    ]
+
+    final_epoch_diagnostics <- rbind(
+      final_epoch_diagnostics,
+      data.frame(
+        Model = model_name,
+        Trait = trait,
+        Fits = nrow(x),
+        Minimum_best_epoch = min(x$Best_epoch),
+        Median_best_epoch = median(x$Best_epoch),
+        Maximum_best_epoch = max(x$Best_epoch),
+        Median_last_epoch = median(x$Last_epoch),
+        Stopped_by_patience = sum(x$Stopped_by_patience),
+        Hit_epoch_ceiling = sum(x$Hit_epoch_ceiling),
+        Validation_RMSE_N = sum(is.finite(x$Validation_RMSE)),
+        Mean_validation_RMSE = mean(x$Validation_RMSE, na.rm = TRUE),
+        Validation_Pearson_N = sum(is.finite(x$Validation_Pearson)),
+        Mean_validation_Pearson = mean(x$Validation_Pearson, na.rm = TRUE),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+knitr::kable(
+  final_epoch_diagnostics, format = "html", digits = 4,
+  caption = "Provisional epoch-selection diagnostics across the 25 outer tasks",
+  row.names = FALSE
+) |>
+  kableExtra::kable_styling(
+    full_width = TRUE,
+    bootstrap_options = c("striped", "hover", "bordered")
+  ) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+The second table summarizes completeness and constancy of held-out
+predictions from the final refit. A complete task has all 39 expected
+predictions finite. A constant prediction vector cannot provide
+Pearson or Spearman association or a calibration slope in this
+implementation, although finite prediction errors remain evaluable.
+
+```{r final-prediction-diagnostics}
+final_prediction_diagnostics <- data.frame()
+
+for (model_name in MODEL_LEVELS) {
+  for (trait in traits) {
+    x <- results[
+      results$Model == model_name & results$Trait == trait,
+      , drop = FALSE
+    ]
+
+    final_prediction_diagnostics <- rbind(
+      final_prediction_diagnostics,
+      data.frame(
+        Model = model_name,
+        Trait = trait,
+        Fits = nrow(x),
+        Expected_predictions = sum(x$N_test),
+        Finite_predictions = sum(x$N_pred_finite),
+        Complete_fits = sum(x$N_pred_finite == x$N_test),
+        Constant_predictions = sum(x$Constant_prediction),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+knitr::kable(
+  final_prediction_diagnostics, format = "html", row.names = FALSE,
+  caption = "Completeness and constancy of final held-out predictions",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+### 8.7 Saving final fitting results
+
+The complete fitting workflow exports the model-task results,
+individual predictions and epoch-selection diagnostics in both CSV
+and RDS formats. CSV supports inspection in tabular software; RDS
+retains R object types and the complete run metadata. The export
+block below is displayed but not executed during ordinary rendering,
+so the stored scientific results remain unchanged.
 
 ```{r save-final-results, eval=FALSE}
 dir.create("output/real/ann/final", recursive = TRUE, showWarnings = FALSE)
@@ -2654,88 +2852,109 @@ write.csv(epoch_selection, "output/real/ann/final/real_ann_epoch_selection.csv",
 saveRDS(final_meta, "output/real/ann/final/real_ann_run_metadata.rds", compress = "gzip")
 ```
 
-### 8.1 Final ANN configurations
-
-The 12 rows in `final_network_settings` correspond to the three traits
-and four ANN variants within the first `SplitID` in `outer_map`. Each row
-reports the architecture, learning rate, L1/L2 penalties, and `Best_epoch`
-used for that task. The hyperparameters may differ across the remaining
-24 outer splits; the 300 task-specific configurations are recorded in
-`results`, with epoch details in `epoch_selection`.
-
-```{r final-network-settings, eval=FINAL_OUTPUTS_AVAILABLE}
-# Show the 12 trait-by-model configurations for the first outer split.
-final_network_settings <- results[results$SplitID == outer_map$SplitID[1L],
-  c("Trait", "Model", "SplitID", "Architecture", "Learning_rate", "L1", "L2", "Best_epoch"),
-  drop = FALSE
-]
-rownames(final_network_settings) <- NULL
-
-knitr::kable(final_network_settings, format = "html", digits = 7, row.names = FALSE,
-  caption = "Selected parameters and epoch count of representative final ANNs",
-  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-)
-```
-
-### 8.2 Model results
-
-Each row of `results` describes one trait–outer-split–ANN combination.
-`N_train` and `N_test` give the numbers of individuals used for fitting
-and assessment; `BLUP_Correlation` and `BLUP_RMSE` quantify prediction of
-the 39 outer-assessment BLUPs. The table displays six such combinations.
-
-```{r preview-ann-results, eval=FINAL_OUTPUTS_AVAILABLE}
-knitr::kable(head(results[, c("Trait", "SplitID", "Model", "N_train", "N_test",
-  "BLUP_Correlation", "BLUP_RMSE")]),
-  format = "html", digits = 4, row.names = FALSE,
-  caption = "First six rows of the final ANN results",
-  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-)
-```
-
-### 8.3 Held-out predictions
-
-Each row of `predictions` identifies one outer-assessment individual by
-`ID` and `SplitID`, together with `Trait` and `Model`. `Observed_BLUP` is
-the reference value, and `Predicted_BLUP` is the prediction from the ANN
-fitted without that individual's outer-assessment BLUP.
-
-```{r preview-ann-predictions, eval=FINAL_OUTPUTS_AVAILABLE}
-knitr::kable(head(predictions[, c("Trait", "SplitID", "Model", "ID",
-  "Observed_BLUP", "Predicted_BLUP")]),
-  format = "html", digits = 4, row.names = FALSE,
-  caption = "First six held-out ANN predictions",
-  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-)
-```
-
-### 8.4 Selected training epochs
-
-The object `epoch_selection` records `Best_epoch` for each trait,
-outer split, and ANN variant. `Validation_RMSE` and `Validation_Pearson`
-refer to the subset held out from the outer-analysis data to determine
-training duration. The final network is then refitted using all 156
-outer-analysis individuals for the selected number of epochs.
-
-```{r preview-ann-epochs, eval=FINAL_OUTPUTS_AVAILABLE}
-knitr::kable(head(epoch_selection[, c("Trait", "SplitID", "Model", "Best_epoch",
-  "Validation_RMSE", "Validation_Pearson")]),
-  format = "html", digits = 4, row.names = FALSE,
-  caption = "Selected refitting epochs and their internal validation metrics",
-  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-)
-```
-
 ## 9. Held-out predictive performance
 
-Within each outer split, Pearson and Spearman correlations measure
-agreement between predicted and observed BLUPs for the 39 assessment
-individuals. RMSE and MAE quantify prediction error; bias and calibration
-slope describe systematic differences. `performance_summary` aggregates
-these metrics across the 25 outer splits for each trait and ANN variant.
+### 9.1 Metrics within each outer assessment split
+
+Each model-task result compares 39 pairs of observed phenotypic BLUPs
+and held-out predictions. These metrics describe genomic prediction
+of precomputed BLUPs, not recovery of known true genetic values.
+
+| Metric | Interpretation | Reference direction |
+|:-------|:---------------|:--------------------|
+| Pearson correlation | Linear association between observed and predicted BLUPs | Higher |
+| Spearman correlation | Association between the ranks of observed and predicted BLUPs | Higher |
+| RMSE | Quadratic prediction error on the BLUP scale | Lower |
+| MAE | Absolute prediction error on the BLUP scale | Lower |
+| Bias | Mean signed prediction error | Close to zero |
+| Slope | Calibration slope of observed on predicted BLUPs | Close to one |
+
+Pearson measures linear association, not equality of predicted and
+observed BLUPs. Spearman measures agreement in ordering within the
+assessment split. A strong correlation can coexist with systematic
+bias or differences in scale.
+
+Let \(y_i\) and \(\widehat y_i\) denote the observed and predicted
+BLUPs of assessment individual \(i\), with \(n=39\). Pearson is the
+sample correlation of \(y\) and \(\widehat y\):
+
+$$
+r=\frac{\sum_{i=1}^{n}(y_i-\bar y)(\widehat y_i-\overline{\widehat y})}
+{\sqrt{\sum_{i=1}^{n}(y_i-\bar y)^2
+\sum_{i=1}^{n}(\widehat y_i-\overline{\widehat y})^2}}.
+$$
+
+Spearman is the Pearson correlation of the corresponding ranks,
+using average ranks for ties. The error metrics are
+
+$$
+\operatorname{RMSE}=
+\sqrt{\frac{1}{n}\sum_{i=1}^{n}(\widehat y_i-y_i)^2},
+$$
+
+$$
+\operatorname{MAE}=\frac{1}{n}\sum_{i=1}^{n}|\widehat y_i-y_i|,
+\qquad
+\operatorname{Bias}=\frac{1}{n}\sum_{i=1}^{n}(\widehat y_i-y_i).
+$$
+
+RMSE gives larger errors greater weight than MAE. Positive bias
+indicates average overprediction and negative bias indicates
+underprediction. A mean bias near zero need not imply small individual
+errors because positive and negative errors can cancel.
+
+Calibration slope is the coefficient of the predicted BLUP in an
+ordinary least-squares regression with an intercept:
+
+$$
+y_i=\alpha+\beta\widehat y_i+\varepsilon_i.
+$$
+
+When a meaningful positive linear association exists, slopes above
+one can indicate insufficient predicted dispersion and slopes below
+one can indicate excessive predicted dispersion. The slope can be
+unstable when predictions vary little. A slope near one alone does
+not establish calibration of location or low prediction error.
+
 No \(R^2\) metric is used.
 
-```{r performance-summary, eval=FINAL_OUTPUTS_AVAILABLE}
+### 9.2 Aggregation and metric availability
+
+For each trait and ANN variant, the 25 outer fitting tasks provide
+one value of each metric per split. The implementation stores
+Pearson, Spearman and slope as NA when either the observed or the
+predicted BLUPs are constant. The error metrics remain calculable
+when both vectors are finite.
+
+Let \(\mathcal{S}_M\) be the set of splits with a finite value for
+metric \(M\), and let \(K_M=|\mathcal{S}_M|\). When undefined values
+are represented by NA and no infinite values are present, the stored
+summary computes
+
+$$
+\overline M=\frac{1}{K_M}\sum_{k\in\mathcal{S}_M}M_k.
+$$
+
+The code counts finite values with `is.finite()` and uses
+`mean(..., na.rm = TRUE)` and, for the two correlations,
+`sd(..., na.rm = TRUE)`. Missing values are excluded by these
+summary functions; infinite values would not be excluded by
+`na.rm` alone. The availability counts in the following tables
+make the number of contributing split metrics explicit.
+
+These are averages of split-level metrics, not metrics calculated
+after pooling the 975 held-out predictions of each trait and
+variant. In particular, mean split RMSE is generally different from
+pooled RMSE. The Pearson and Spearman standard deviations describe
+variation between contributing splits, not standard errors or
+confidence intervals. Overlapping fitting samples in repeated
+cross-validation make the split-level results statistically dependent.
+
+The next block constructs the original complete performance summary,
+preserving the order, fields and calculations used in the saved
+analysis.
+
+```{r performance-summary}
 # Summarize held-out accuracy by trait and ANN variant.
 performance_summary <- data.frame(Model = character(0), Trait = character(0),
   Splits = integer(0),
@@ -2783,13 +3002,52 @@ for (model_name in MODEL_LEVELS) {
     ))
   }
 }
+```
 
-knitr::kable(performance_summary, format = "html", digits = 4,
-  caption = "Mean held-out ANN performance across the 25 outer splits", row.names = FALSE) |>
-  kableExtra::kable_styling(full_width = TRUE,
-  bootstrap_options = c("striped", "hover", "bordered")) |>
+### 9.3 Predictive performance by trait and ANN variant
+
+The association table presents Pearson and Spearman means, their
+standard deviations and the respective finite-metric counts. The
+second table presents the four error and calibration measures with
+their counts. Both are views of the same 17-column
+`performance_summary` object; they do not change the stored summary.
+
+```{r performance-association-table}
+knitr::kable(
+  performance_summary[, c(
+    "Model", "Trait", "Splits", "Correlation_N",
+    "BLUP_Correlation", "BLUP_Correlation_SD",
+    "Spearman_N", "BLUP_Spearman", "BLUP_Spearman_SD"
+  )],
+  format = "html", digits = 4, row.names = FALSE,
+  caption = "Held-out Pearson and Spearman correlations across outer splits"
+) |>
+  kableExtra::kable_styling(
+    full_width = TRUE,
+    bootstrap_options = c("striped", "hover", "bordered")
+  ) |>
   kableExtra::scroll_box(width = "100%")
 ```
+
+```{r performance-error-calibration-table}
+knitr::kable(
+  performance_summary[, c(
+    "Model", "Trait", "Splits", "RMSE_N", "BLUP_RMSE",
+    "MAE_N", "BLUP_MAE", "Bias_N", "BLUP_Bias",
+    "Slope_N", "BLUP_Slope"
+  )],
+  format = "html", digits = 4, row.names = FALSE,
+  caption = "Held-out prediction error and calibration across outer splits"
+) |>
+  kableExtra::kable_styling(
+    full_width = TRUE,
+    bootstrap_options = c("striped", "hover", "bordered")
+  ) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+The original full summary can be exported for the comparison module.
+The export is not run during routine rendering.
 
 ```{r save-performance-summary, eval=FALSE}
 dir.create("output/real/ann/final", recursive = TRUE, showWarnings = FALSE)
@@ -2797,19 +3055,134 @@ write.csv(performance_summary, "output/real/ann/final/real_ann_performance_summa
   row.names = FALSE)
 ```
 
+### 9.4 Interpretation of predictive performance
+
+In the saved results, all six metrics have 25 finite observations
+for every trait and variant. No final model-task record is omitted
+from these means. This differs from the inner candidate evaluation,
+where some fold correlations were undefined (Section 6.5).
+
+For Cer, ANN_L1_L2 has the largest mean Pearson (0.5812) and
+Spearman (0.5900), and the smallest mean RMSE (0.1711) and
+MAE (0.1386). For BM, ANN_L1_L2 has the largest mean Pearson
+(0.2925) and smallest mean RMSE (0.1467), whereas ANN_0 has the
+largest mean Spearman (0.2301) and ANN_L2 the smallest mean MAE
+(0.1208). For LP, ANN_L2 has the largest mean Pearson (0.1918)
+and Spearman (0.1969), while ANN_L1 has the smallest mean RMSE
+(1.2665) and MAE (0.9977). Values are reported at the precision
+of the displayed tables.
+
+These comparisons describe the stored repeated cross-validation
+results. The criterion and trait determine which variant has the
+most favorable mean; no universal improvement from regularization
+or statistically significant superiority is established. Bias and
+slope provide complementary calibration information, and error
+magnitudes must be interpreted on each trait's own scale. Pooling
+RMSE across traits would mix different measurement scales.
+
+The next section changes the unit of evaluation from outer
+assessment splits to the ranking of individuals. The joint
+comparison with GBLUP is reserved for R05.
+
 ## 10. Out-of-fold ranking and top-20% selection
 
-Each individual appears in the assessment set once per repetition,
-producing five out-of-fold predictions for every trait and ANN variant.
-`individual_ranking` averages these five predicted BLUPs before ranking
-the 195 individuals within each trait and model.
+### 10.1 Individual out-of-fold predictions
 
-For each trait and ANN variant, the top 20% comprises 39 of the
-195 individuals. `Observed_Rank` and `Predicted_Rank` compare the rankings
-based on the observed and averaged predicted BLUPs, respectively. When
-values are tied at the cutoff, `ID` determines their order.
+Each individual belongs to one outer assessment fold per repetition,
+giving five out-of-fold (OOF) predictions for each trait and ANN
+variant. The reference phenotypic BLUP is unchanged across the
+five repetitions. For individual \(i\), let \(\widehat y_{ir}\)
+denote the held-out prediction in repetition \(r\). The prediction
+used for ranking is
 
-```{r individual-ranking, eval=FINAL_OUTPUTS_AVAILABLE}
+$$
+\overline{\widehat y}_i=\frac{1}{5}\sum_{r=1}^{5}\widehat y_{ir}.
+$$
+
+The object `individual_ranking` also retains `Prediction_SD`,
+the sample standard deviation of the five predictions,
+
+$$
+s_i=\sqrt{\frac{1}{4}\sum_{r=1}^{5}
+(\widehat y_{ir}-\overline{\widehat y}_i)^2},
+$$
+
+and `N_OOF`, the number of contributing predictions. This
+standard deviation describes variation across repeated genomic
+fits, not a standard error or prediction interval. The analysis
+averages predicted BLUPs, not the ranks calculated in separate
+repetitions.
+
+| Unit | Expected records |
+|:-----|-----------------:|
+| OOF predictions per individual, trait and variant | 5 |
+| Individual records per trait and variant | 195 |
+| Trait-variant combinations | 12 |
+| Individual ranking records | 2,340 |
+| Original held-out predictions | 11,700 |
+
+### 10.2 Individual ranking and rank errors
+
+Observed and mean predicted BLUPs are ranked separately in decreasing
+order within each trait and variant. Rank 1 corresponds to the largest
+value. Ties receive their average rank through
+`ties.method = "average"`.
+
+Let \(R_i\) and \(\widehat R_i\) denote the observed and predicted
+ranks. The signed rank difference and absolute rank error are
+
+$$
+D_i=\widehat R_i-R_i,\qquad E_i=|D_i|.
+$$
+
+A positive difference places the individual farther down the
+predicted ranking than in the observed ranking, and a negative
+difference places it higher. The mean and median of \(E_i\)
+describe the magnitude of displacement in rank positions.
+
+Global ranking Spearman is calculated over the 195 observed and
+predicted ranks. It is not the mean of the 25 split-level Spearman
+correlations of Section 9, each computed on 39 individuals.
+
+### 10.3 Upper-20% agreement
+
+The fixed selection intensity is 20% of the 195 individuals:
+
+$$
+n_s=\lceil 0.20\times195\rceil=39.
+$$
+
+Let \(S_o\) and \(S_p\) be the sets containing the 39 largest
+observed and mean predicted BLUPs, respectively. Their agreement is
+
+$$
+\operatorname{Overlap}_N=|S_o\cap S_p|,
+\qquad
+\operatorname{Overlap}_{\mathrm{rate}}=\frac{|S_o\cap S_p|}{39}.
+$$
+
+The overlap rate is the fraction of the observed upper group
+recovered by the predicted upper group. It is neither a correlation
+nor a chance-corrected index or an estimate of genetic gain.
+The individual ID is the deterministic secondary ordering criterion
+when selecting the upper groups, so both groups contain exactly
+39 individuals even if values are tied at the cutoff. This rule
+does not alter the average ranks used for rank errors and global
+Spearman correlation.
+
+The original analysis ranks all traits in descending order. The
+upper group therefore denotes individuals with the largest BLUPs,
+not necessarily those most biologically desirable under every
+breeding objective. A trait for which lower values are desirable
+would require a different selection direction; the stored groups
+are not redefined here.
+
+The following code constructs the original individual ranking and
+summary from the held-out predictions, retaining the individual
+identifiers, signed and absolute rank errors and upper-group
+membership.
+
+```{r individual-ranking}
 # Average each individual's five OOF predictions before ranking.
 TOP20_N <- ceiling(0.20 * nrow(geno))
 
@@ -2919,11 +3292,42 @@ knitr::kable(ranking_summary, format = "html", digits = 4,
   kableExtra::scroll_box(width = "100%")
 ```
 
+The individual-level RDS and CSV and the summary CSV can be saved
+by the following export block. Routine rendering does not overwrite
+these files.
+
 ```{r save-individual-ranking, eval=FALSE}
 saveRDS(individual_ranking, "output/real/ann/final/real_ann_individual_ranking.rds", compress = "gzip")
 write.csv(individual_ranking, "output/real/ann/final/real_ann_individual_ranking.csv", row.names = FALSE)
 write.csv(ranking_summary, "output/real/ann/final/real_ann_ranking_summary.csv", row.names = FALSE)
 ```
+
+### 10.4 Interpretation of the ranking summary
+
+For Cer, ANN_L1 recovers 20 of the 39 individuals in the observed
+upper group (51.28%), compared with 17, 18 and 19 for ANN_0,
+ANN_L2 and ANN_L1_L2, respectively. ANN_L1_L2 nevertheless has
+the largest global ranking Spearman (0.6145) and the smallest
+mean absolute rank error (38.8359).
+
+For BM, ANN_0 recovers 12 individuals (30.77%) and has the
+largest global ranking Spearman (0.2686). The three regularized
+variants recover 10, 10 and 9 individuals, respectively.
+
+For LP, ANN_L1_L2 recovers 13 individuals (33.33%), compared
+with 11 for ANN_0 and 12 for each single-penalty variant.
+ANN_L2 has the largest global ranking Spearman (0.2308).
+
+For Cer, the mean split-level Spearman of ANN_L1_L2 is 0.5900,
+whereas its global OOF ranking Spearman is 0.6145. The values
+are not inconsistent: they summarize different evaluation units.
+Similarly, a variant can recover more members of the upper group
+without having the strongest association over the full population.
+
+The results describe agreement under the original descending
+ranking rule, not realized breeding gains or statistical differences
+among variants. Section 11 presents the corresponding split-level
+distributions and individual OOF predictions.
 
 ## 11. Predictive figures
 
