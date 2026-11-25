@@ -649,10 +649,26 @@ ANN_DEVICE <- torch::torch_device(ANN_DEVICE_LABEL)
 
 ### 6.1 Outer tuning tasks
 
-The object `task_table` combines the three traits (`Cer`, `BM`, `LP`)
-with the 25 outer `SplitID` values in `outer_map`, producing 75 tasks.
-Each task refers to the corresponding training and assessment individuals
-in `cv$outer_splits`. All four ANN variants are evaluated for each task.
+The unit of computation is a trait-by-outer-split task, not an individual
+network. For each of the three traits (Cer, BM and LP), the 25 saved
+outer partitions define independent computational tasks. Each task
+contains the complete inner search for all four ANN variants.
+
+| Quantity | Count |
+|:---------|------:|
+| Prediction traits | 3 |
+| Outer splits per trait | 25 |
+| Trait-by-outer-split tasks | 75 |
+| ANN variants selected per task | 4 |
+| Selected configurations across tasks | 300 |
+
+`TraitIndex` identifies a trait in the original trait vector;
+`Repetition` and `OuterFold` identify the external partition.
+`SplitID` retrieves the corresponding outer and inner partitions, while
+`TaskID` combines the trait and split identifiers. The same task key
+connects candidate evaluations, selected configurations, checkpoints and
+final predictions. The following code retains the established task order
+and displays its first six entries.
 
 ```{r tuning-task-table}
 # Combine each prediction trait with the 25 outer partitions.
@@ -686,34 +702,85 @@ knitr::kable(head(task_table, 6), format = "html", row.names = FALSE,
   table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
 ```
+
 ### 6.2 Hyperparameter optimization
 
-Each candidate network is trained for at most `MAX_EPOCHS = 2000` epochs.
-Early stopping ends training after `PATIENCE = 25` consecutive epochs without
-an improvement greater than `MIN_DELTA = 1e-6` in validation loss.
-`EARLY_VALIDATION_FRACTION = 0.15` reserves 15% of the individuals assigned
-to each inner analysis fold for selecting the stopping epoch. These are
-maximum training durations rather than fixed numbers of epochs.
+#### 6.2.1 Inner partitions and candidate preprocessing
 
+The four inner folds are retrieved from `cv$inner_splits` for the
+current task. Within each fold, 117 inner-analysis individuals are
+separated into 99 weight-fitting and 18 early-validation individuals.
+The 39 inner-assessment individuals remain separate from both sets.
 
-For every inner fold, the 117 inner-analysis individuals are divided once more
-for optimization. Fifteen percent form an early-validation subset; the
-remainder form the fitting subset. Marker centering and scaling and BLUP
-standardization are estimated only from that fitting subset and are then applied
-unchanged to the early-validation and inner-assessment observations.
+`validation_seed` depends on repetition, outer fold and inner fold,
+but not on trait or candidate. Thus the same partition receives the
+same early-validation individuals across traits and ANN variants.
+`fit_ids` contains the remaining inner-analysis identifiers;
+`fit_index`, `validation_index` and `assessment_index` align these
+subsets with the marker matrix and BLUP table.
 
-All candidate networks within an inner fold start from the same deterministic
-seed. This reduces avoidable initialization noise when architectures,
-learning rates, or regularization penalties are compared.
+The transformations defined in Section 3.4 are implemented through
+`x_center`, `x_scale`, `y_center` and `y_scale`, estimated on the 99
+fitting individuals only. The same fitted transformations are applied
+to early-validation and inner-assessment predictors. The four
+`bundles` retain the prepared tensors, inner-assessment BLUPs and
+response scaling parameters, so all candidates use the same prepared
+data within each inner fold. Inner-assessment BLUPs are used only to
+score the corresponding predictions.
 
-#### 6.2.1 Fitting and comparing ANN candidates
+| Subset | Individuals | Use |
+|:-------|------------:|:----|
+| Weight fitting | 99 | Minimize penalized training MSE |
+| Early validation | 18 | Monitor unpenalized standardized MSE |
+| Inner assessment | 39 | Compare candidates by prediction RMSE and Pearson correlation |
+| Outer assessment | 39 | Reserved for final held-out evaluation |
 
-The 75 combinations of `Trait` and `SplitID` are evaluated independently.
-For each task, the 36 `ANN_0` architecture–learning-rate candidates are
-assessed in the four inner folds. The selected architecture and learning rate
-are then used to compare 6 L1, 4 L2, and 24 combined L1/L2 penalty
-configurations. Each candidate is ranked by its mean inner-assessment RMSE,
-with the tie-breaking criteria specified in Section 4.
+#### 6.2.2 Fitting and comparing ANN candidates
+
+The complete training block is retained as a single executable unit to
+preserve worker scope and the order of nested loops. Its scientific
+phases are:
+
+1. Prepare the four inner-fold bundles for the current task.
+2. Evaluate the 36 architecture-and-learning-rate combinations with
+   ANN_0; retain its selected architecture and learning rate.
+3. Evaluate the six L1, four L2 and 24 joint L1/L2 candidates using
+   that shared structure. For every candidate and inner fold, update
+   weights using the penalized objective in Section 4.2 and monitor
+   unpenalized early-validation MSE.
+4. Restore the retained network state, predict the 39 inner-assessment
+   individuals on the original BLUP scale, aggregate metrics across
+   the four folds and apply the ranking hierarchy in Section 4.6.
+5. Retain four selected configurations and the candidate and fold
+   records for the task.
+
+The `initialization_seed` combines the global seed with trait,
+repetition, outer fold and inner fold indices, without a candidate
+identifier. Matching seeds support comparisons of candidates with the
+same architecture and reduce avoidable variation due to initialization.
+They do not imply identical weights across different architectures.
+
+The epoch loop tracks `best_validation_loss`, `best_epoch` and
+`stale_epochs`. Whenever the early-validation MSE improves by more
+than the minimum improvement in Section 5, the code clones the layer
+states, including weights and biases. Training stops by patience or at
+the epoch limit; the retained state is restored before inner-assessment
+prediction. The epoch minimizing early-validation loss under this
+rule is distinct from the final executed epoch.
+
+Each candidate is summarized by the mean of its four inner-assessment
+RMSE values on the original BLUP scale. Pearson correlation is undefined
+when the observed or predicted values are constant. The real-data
+implementation averages available fold correlations (`na.rm = TRUE`)
+and retains NA when the resulting mean is nonfinite. The mean Pearson
+is a tie-breaker after RMSE, not the training objective. A nonfinite
+candidate mean receives the lowest Pearson priority. This is the
+aggregation rule used for the stored real-data selections.
+
+The existing worker loop distributes tasks by their indices.
+Completed tasks can be reused when their stored configuration and
+task identifiers match. Ordinary rendering displays the training
+implementation without executing it.
 
 ```{r run-tuning, eval=FALSE}
 # Set the random seed and inner-training stopping criteria.
@@ -791,7 +858,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
       trait <- task$Trait
       trait_index <- task$TraitIndex
 
-      # Use the fixed inner folds to compare the candidate settings.
+      # Phase 1: prepare and reuse the four inner-fold data bundles.
       inner <- cv$inner_splits[[task$SplitID]]
       bundles <- vector("list", 4L)
 
@@ -861,7 +928,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
       selected_architecture <- NA_character_
       selected_learning_rate <- NA_real_
 
-      # First select network structure; then tune the regularization penalties.
+      # Phase 2: select ANN_0 structure, then tune the three penalty families.
       for (tuning_stage in seq_len(2L)) {
         if (tuning_stage == 1L) {
           current_grid <- structure_grid
@@ -911,6 +978,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
 
           for (inner_fold in seq_len(4L)) {
             bundle <- bundles[[inner_fold]]
+            # Match initialization seeds across candidates within this trait and fold.
             initialization_seed <- SEED_GLOBAL + trait_index * 10000000L + task$Repetition *
             100000L + task$OuterFold * 10000L + inner_fold * 100L
 
@@ -961,7 +1029,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
             for (state_name in names(output_state)) {
               best_output_state[[state_name]] <- output_state[[state_name]]$detach()$clone()
             }
-            # Stop when validation MSE ceases to improve by the specified amount.
+            # Phase 3: optimize weights and select the best early-validation epoch.
             for (epoch in seq_len(MAX_EPOCHS)) {
               last_epoch <- epoch
 
@@ -1051,6 +1119,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
                 break
               }
             }
+            # Restore the retained state before predicting the inner assessment set.
             layer1$load_state_dict(best_layer1_state)
 
             if (!is.null(layer2)) {
@@ -1126,6 +1195,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
             rm(layer1, layer2, output_layer, optimizer)
           }
           candidate_folds <- do.call(rbind, candidate_fold_rows)
+          # Average the available fold correlations; retain NA when none is finite.
           mean_pearson <- mean(candidate_folds$Pearson, na.rm = TRUE)
 
           if (!is.finite(mean_pearson)) {
@@ -1154,7 +1224,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
             stringsAsFactors = FALSE
           )
         }
-        # Rank candidates by mean inner RMSE, then the prespecified tie-breakers.
+        # Phase 4: rank candidates by mean inner RMSE and the ordered tie-breakers.
         stage_summary <- do.call(rbind, stage_summary_rows)
         stage_folds <- do.call(rbind, stage_fold_rows)
         task_candidate_summary <- rbind(task_candidate_summary, stage_summary)
@@ -1234,7 +1304,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
 
       task_seconds_current <- proc.time()[["elapsed"]] - task_start
 
-      # Record the selected settings and inner-fold results for this task.
+      # Phase 5: record the selected settings and inner-fold results for this task.
       checkpoint <- list(analysis = "real_ann_tuning_task", config_id = ANN_TUNING_CONFIG_ID,
         task_id = task$TaskID,
         selected = selected_table,
@@ -1267,14 +1337,22 @@ for (worker_id in seq_len(ANN_WORKERS)) {
 }
 ```
 
-#### 6.2.2 Consolidating the selected hyperparameters
+#### 6.2.3 Consolidating the selected hyperparameters
 
-The evaluations from the 75 tasks are combined in task order.
-`selected_configurations` records one choice for each `Trait`, `SplitID`,
-and `Model` (300 configurations). `candidate_summary` contains the 5,250
-candidate comparisons, and `fold_results` contains the corresponding 21,000
-inner-fold evaluations. These objects retain the trait and partition
-identifiers needed to examine model selection across the five repetitions.
+The worker results are collected in the established task order and the
+parallel plan returns to sequential execution. The resulting tables
+retain the trait, split, variant and candidate identifiers needed to
+trace every selection to its four inner-fold evaluations.
+
+| Object | Expected records | Unit of observation |
+|:-------|-----------------:|:--------------------|
+| selected_configurations | 300 | Trait, outer split and ANN variant |
+| candidate_summary | 5,250 | Candidate within an outer task |
+| fold_results | 21,000 | Candidate and inner fold |
+
+`tuning_meta` records the search configuration identifier, seed, grid
+workload, stopping controls, selection metrics, software version,
+device and execution times.
 
 ```{r collect-tuning-results, eval=FALSE}
 for (worker_id in seq_len(ANN_WORKERS)) {
@@ -1326,67 +1404,16 @@ tuning_meta <- list(dataset = "real", analysis = "real_regularized_ann_tuning",
   checkpoint_task_seconds = sum(task_seconds),
   timestamp = as.character(Sys.time()))
 ```
-### 6.3 Hyperparameter tuning results
 
-The object `selected_configurations` contains one architecture, learning
-rate, and pair of L1/L2 penalties for every trait, outer split, and ANN
-variant (300 selections). `candidate_summary` contains 5,250 candidate
-comparisons based on the mean of four inner-fold assessments; `fold_results`
-contains their 21,000 fold-level evaluations. The table compares these
-record counts with the number implied by the search grid and the 75 tasks.
+### 6.3 Tuning outputs
 
-```{r tuning-output-status, include=FALSE}
-TUNING_OUTPUTS_AVAILABLE <- all(file.exists(c(
-  "output/real/ann/tuning/real_ann_tuning_selected_configurations.rds",
-  "output/real/ann/tuning/real_ann_tuning_candidate_summary.rds",
-  "output/real/ann/tuning/real_ann_tuning_fold_results.rds",
-  "output/real/ann/tuning/real_ann_tuning_run_metadata.rds"
-)
-)
-)
+#### 6.3.1 Saving tuning results
 
-tuning_status <- data.frame(Output = c("Selected configurations", "Candidate summary",
-  "Inner-fold results",
-  "Run metadata"
-),
-  Available = c(file.exists("output/real/ann/tuning/real_ann_tuning_selected_configurations.rds"
-),
-  file.exists("output/real/ann/tuning/real_ann_tuning_candidate_summary.rds"),
-  file.exists("output/real/ann/tuning/real_ann_tuning_fold_results.rds"),
-  file.exists("output/real/ann/tuning/real_ann_tuning_run_metadata.rds")
-),
-  stringsAsFactors = FALSE
-)
-
-tuning_status |>
-  knitr::kable(format = "html", caption = "Stored ANN tuning outputs", row.names = FALSE,
-  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-)
-```
-```{r load-tuning-results, eval=TUNING_OUTPUTS_AVAILABLE}
-# Load the selected parameters and inner-fold evaluation results.
-selected_configurations <- readRDS("output/real/ann/tuning/real_ann_tuning_selected_configurations.rds")
-candidate_summary <- readRDS("output/real/ann/tuning/real_ann_tuning_candidate_summary.rds")
-fold_results <- readRDS("output/real/ann/tuning/real_ann_tuning_fold_results.rds")
-tuning_meta <- readRDS("output/real/ann/tuning/real_ann_tuning_run_metadata.rds")
-
-tuning_output_summary <- data.frame(Object = c("Selected configurations",
-  "Candidate configurations",
-  "Candidate-fold results"
-),
-  Rows = c(nrow(selected_configurations), nrow(candidate_summary), nrow(fold_results)),
-  Expected = c(nrow(task_table) * length(MODEL_LEVELS), nrow(task_table) * CANDIDATES_PER_TASK,
-  nrow(task_table) * INNER_FITS_PER_TASK
-),
-  stringsAsFactors = FALSE
-)
-
-tuning_output_summary |>
-  knitr::kable(format = "html", caption = "Nested ANN tuning output structure",
-  row.names = FALSE,
-  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-)
-```
+The complete tuning run stores the selected configurations, candidate
+summaries and inner-fold records in CSV and RDS formats. CSV allows
+inspection of tabular records; RDS retains the R objects and the run
+metadata. The following export code is disabled during routine
+rendering.
 
 ```{r save-tuning-results, eval=FALSE}
 dir.create("output/real/ann/tuning", recursive = TRUE, showWarnings = FALSE)
@@ -1421,15 +1448,49 @@ saveRDS(tuning_meta, "output/real/ann/tuning/real_ann_tuning_run_metadata.rds",
 )
 ```
 
+#### 6.3.2 Reading and summarizing stored results
+
+The published analysis reads the four existing RDS files rather than
+repeating the hyperparameter search. The observed row counts are
+compared with the workload derived from the number of outer tasks,
+variants, candidates and inner folds.
+
+```{r load-tuning-results}
+# Load the selected parameters and inner-fold evaluation results.
+selected_configurations <- readRDS("output/real/ann/tuning/real_ann_tuning_selected_configurations.rds")
+candidate_summary <- readRDS("output/real/ann/tuning/real_ann_tuning_candidate_summary.rds")
+fold_results <- readRDS("output/real/ann/tuning/real_ann_tuning_fold_results.rds")
+tuning_meta <- readRDS("output/real/ann/tuning/real_ann_tuning_run_metadata.rds")
+
+tuning_output_summary <- data.frame(Object = c("Selected configurations",
+  "Candidate configurations",
+  "Candidate-fold results"
+),
+  Rows = c(nrow(selected_configurations), nrow(candidate_summary), nrow(fold_results)),
+  Expected = c(nrow(task_table) * length(MODEL_LEVELS), nrow(task_table) * CANDIDATES_PER_TASK,
+  nrow(task_table) * INNER_FITS_PER_TASK
+),
+  stringsAsFactors = FALSE
+)
+
+tuning_output_summary |>
+  knitr::kable(format = "html", caption = "Nested ANN tuning output structure",
+  row.names = FALSE,
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
 ### 6.4 Selected ANN hyperparameters
 
-The table displays six rows of `selected_configurations`, identifying
-`Trait`, `SplitID`, `Model`, `Architecture`, `Learning_rate`, `L1`, and `L2`.
-`Inner_RMSE` and `Inner_Pearson` report the four-fold inner-assessment
-performance associated with each selection. These parameters can differ
-between outer splits for the same trait and ANN variant.
+#### 6.4.1 Selected configurations
 
-```{r tuning-selected-preview, eval=TUNING_OUTPUTS_AVAILABLE}
+The first six rows illustrate how a configuration is linked to its
+trait, outer split and ANN variant. `Inner_RMSE` and `Inner_Pearson`
+describe inner-assessment performance, not held-out outer performance.
+The selected architecture and learning rate are shared by the four
+variants within a task, while penalty coefficients can differ.
+
+```{r tuning-selected-preview}
 knitr::kable(head(selected_configurations[, c("Trait", "SplitID", "Model", "Architecture",
   "Learning_rate", "L1", "L2", "Inner_RMSE", "Inner_Pearson")]),
   format = "html", digits = 7, row.names = FALSE,
@@ -1440,14 +1501,142 @@ knitr::kable(head(selected_configurations[, c("Trait", "SplitID", "Model", "Arch
   kableExtra::scroll_box(width = "100%")
 ```
 
-For each trait and ANN variant, `most_selected` reports the most frequent
-combination of `Architecture`, `Learning_rate`, `L1`, and `L2` among the
-25 outer partitions. `Splits` counts how many partitions selected that exact
-combination. If two combinations have equal frequency, the display order follows
-architecture name, learning rate, L1, and L2. The summary does not replace
-the distinct configurations selected for individual outer splits.
+#### 6.4.2 Architecture and learning-rate frequencies
 
-```{r tuning-selected-frequencies, eval=TUNING_OUTPUTS_AVAILABLE}
+Architecture and learning rate are selected with ANN_0 and inherited
+by the regularized variants. They are therefore counted once per task
+using the ANN_0 records, rather than four times. Each trait contributes
+25 selections. The tables retain the complete prespecified grid,
+including values that were never selected.
+
+```{r tuning-architecture-frequency}
+task_structure <- selected_configurations[
+  selected_configurations$Model == "ANN_0",
+  c("TaskID", "Trait", "Architecture", "Learning_rate")
+]
+
+architecture_frequency <- data.frame(
+  Architecture = names(ARCHITECTURES),
+  as.data.frame.matrix(table(
+    factor(task_structure$Architecture, levels = names(ARCHITECTURES)),
+    factor(task_structure$Trait, levels = traits)
+  )),
+  row.names = NULL,
+  check.names = FALSE
+)
+
+knitr::kable(
+  architecture_frequency,
+  format = "html",
+  caption = "Selected shared architectures by trait (25 tasks per trait)",
+  row.names = FALSE,
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+Learning-rate frequencies use the same task-level records and retain
+all four learning-rate choices.
+
+```{r tuning-learning-rate-frequency}
+learning_rate_frequency <- data.frame(
+  Learning_rate = LEARNING_RATES,
+  as.data.frame.matrix(table(
+    factor(task_structure$Learning_rate, levels = LEARNING_RATES),
+    factor(task_structure$Trait, levels = traits)
+  )),
+  row.names = NULL,
+  check.names = FALSE
+)
+
+knitr::kable(
+  learning_rate_frequency,
+  format = "html", digits = 7,
+  caption = "Selected shared learning rates by trait (25 tasks per trait)",
+  row.names = FALSE,
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+Selection at the edge of the architecture or learning-rate grid
+describes the choices within the prespecified search. It does not
+establish that expanding the grid would improve predictions.
+
+#### 6.4.3 Regularization parameter frequencies
+
+L1 and L2 frequencies are calculated only for variants in which the
+corresponding penalty is tuned. For every trait and applicable
+variant, the counts sum to 25 outer tasks. Zero penalties fixed by
+the model definition are not counted as selected positive coefficients.
+For ANN_L1_L2, the marginal frequency of each coefficient does not
+describe the full joint distribution of the two coefficients.
+
+```{r tuning-l1-frequency}
+l1_frequency <- data.frame(L1 = L1_VALUES)
+
+for (trait_name in traits) {
+  for (model_name in c("ANN_L1", "ANN_L1_L2")) {
+    selected_l1 <- selected_configurations$L1[
+      selected_configurations$Trait == trait_name &
+        selected_configurations$Model == model_name
+    ]
+
+    l1_frequency[[paste(trait_name, model_name, sep = " / ")]] <-
+      tabulate(match(selected_l1, L1_VALUES), nbins = length(L1_VALUES))
+  }
+}
+
+knitr::kable(
+  l1_frequency,
+  format = "html", digits = 7, row.names = FALSE,
+  caption = "Selected L1 coefficients by trait and applicable ANN variant"
+) |>
+  kableExtra::kable_styling(
+    full_width = TRUE,
+    bootstrap_options = c("striped", "hover", "bordered")
+  ) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+The L2 table uses the same counting rule for ANN_L2 and ANN_L1_L2.
+
+```{r tuning-l2-frequency}
+l2_frequency <- data.frame(L2 = L2_VALUES)
+
+for (trait_name in traits) {
+  for (model_name in c("ANN_L2", "ANN_L1_L2")) {
+    selected_l2 <- selected_configurations$L2[
+      selected_configurations$Trait == trait_name &
+        selected_configurations$Model == model_name
+    ]
+
+    l2_frequency[[paste(trait_name, model_name, sep = " / ")]] <-
+      tabulate(match(selected_l2, L2_VALUES), nbins = length(L2_VALUES))
+  }
+}
+
+knitr::kable(
+  l2_frequency,
+  format = "html", digits = 7, row.names = FALSE,
+  caption = "Selected L2 coefficients by trait and applicable ANN variant"
+) |>
+  kableExtra::kable_styling(
+    full_width = TRUE,
+    bootstrap_options = c("striped", "hover", "bordered")
+  ) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+#### 6.4.4 Most frequent complete configurations
+
+The original joint summary retains the most frequent complete
+combination of architecture, learning rate, L1 and L2 for each trait
+and variant. `Splits` is the number of the 25 outer partitions that
+selected that exact combination. Ties in frequency are resolved by
+architecture name, learning rate, L1 and L2, in that order. The
+result is descriptive and does not replace the configuration selected
+for each individual task.
+
+```{r tuning-selected-frequencies}
 # Count each combination selected across outer splits.
 selected_parameters <- selected_configurations[, c(
   "Trait", "Model", "Architecture", "Learning_rate", "L1", "L2"
@@ -1475,34 +1664,199 @@ knitr::kable(most_selected, format = "html", digits = 7, row.names = FALSE,
   table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
 ```
+
+### 6.5 Tuning optimization diagnostics
+
+The stored fold-level results describe optimization across all
+candidate fits, not only the selected configurations. The following
+summary distinguishes the best retained epoch from the last executed
+epoch and counts stopping by patience, reaching the 2,000-epoch
+ceiling and undefined Pearson correlations by trait and variant.
+Neither early stopping nor reaching the epoch ceiling establishes
+numerical convergence.
+
+```{r tuning-optimization-diagnostics}
+tuning_diagnostics <- data.frame()
+
+for (trait_name in traits) {
+  for (model_name in MODEL_LEVELS) {
+    diagnostic_folds <- fold_results[
+      fold_results$Trait == trait_name & fold_results$Model == model_name,
+      , drop = FALSE
+    ]
+
+    tuning_diagnostics <- rbind(
+      tuning_diagnostics,
+      data.frame(
+        Trait = trait_name,
+        Model = model_name,
+        Fits = nrow(diagnostic_folds),
+        Median_best_epoch = median(diagnostic_folds$EarlyStop_epoch),
+        Median_last_epoch = median(diagnostic_folds$Last_epoch),
+        Stopped_by_patience = sum(diagnostic_folds$Stopped_by_patience),
+        Hit_epoch_ceiling = sum(diagnostic_folds$Hit_epoch_ceiling),
+        Undefined_Pearson = sum(!is.finite(diagnostic_folds$Pearson)),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+knitr::kable(
+  tuning_diagnostics,
+  format = "html", row.names = FALSE,
+  caption = "Inner-fold optimization diagnostics by trait and ANN variant"
+) |>
+  kableExtra::kable_styling(
+    full_width = TRUE,
+    bootstrap_options = c("striped", "hover", "bordered")
+  ) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+Because candidate Pearson means use available fold correlations,
+the number of finite correlations contributing to each candidate
+comparison is informative. The next table counts candidates by the
+number of finite inner-fold correlations, from zero to four. It also
+reports the number of nonfinite stored means and selected inner
+correlations. The archived metrics and rankings are not recomputed.
+
+```{r tuning-pearson-availability}
+pearson_fold_counts <- aggregate(
+  x = list(Valid_Pearson = as.integer(is.finite(fold_results$Pearson))),
+  by = fold_results[, c("Trait", "Model", "TaskID", "CandidateID")],
+  FUN = sum
+)
+
+pearson_availability <- data.frame(
+  Valid_inner_folds = 0:4,
+  Candidates = as.integer(table(
+    factor(pearson_fold_counts$Valid_Pearson, levels = 0:4)
+  ))
+)
+
+knitr::kable(
+  pearson_availability,
+  format = "html", row.names = FALSE,
+  caption = "Candidate comparisons by number of finite inner Pearson correlations",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+```{r tuning-pearson-summary}
+pearson_summary <- data.frame(
+  Quantity = c(
+    "Inner-fold correlations",
+    "Candidate mean correlations",
+    "Selected inner correlations"
+  ),
+  Records = c(
+    nrow(fold_results),
+    nrow(candidate_summary),
+    nrow(selected_configurations)
+  ),
+  Undefined = c(
+    sum(!is.finite(fold_results$Pearson)),
+    sum(!is.finite(candidate_summary$Mean_Pearson)),
+    sum(!is.finite(selected_configurations$Inner_Pearson))
+  )
+)
+
+knitr::kable(
+  pearson_summary,
+  format = "html", row.names = FALSE,
+  caption = "Availability of Pearson correlations in the stored tuning results",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+The preprocessing diagnostics are shared across candidates and traits
+within the same outer split and inner fold because the fitting
+identifiers are shared. To avoid counting these repeated values as
+different preprocessing events, the next summary uses distinct
+split-fold records. It reports the number of markers whose standard
+deviation is below the threshold in Section 3.4, not the number of
+markers removed from the network.
+
+```{r tuning-marker-scaling-diagnostics}
+scaling_fold_records <- unique(fold_results[
+  , c("SplitID", "InnerFold", "N_zero_variance_markers")
+])
+
+scaling_summary <- data.frame(
+  Quantity = c(
+    "Distinct split-fold records",
+    "Records with scale replaced for at least one marker",
+    "Minimum affected markers",
+    "Median affected markers",
+    "Maximum affected markers"
+  ),
+  Value = c(
+    nrow(scaling_fold_records),
+    sum(scaling_fold_records$N_zero_variance_markers > 0),
+    min(scaling_fold_records$N_zero_variance_markers),
+    median(scaling_fold_records$N_zero_variance_markers),
+    max(scaling_fold_records$N_zero_variance_markers)
+  )
+)
+
+knitr::kable(
+  scaling_summary,
+  format = "html", row.names = FALSE,
+  caption = "Fitting-subset marker scaling diagnostics across inner partitions",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
 ## 7. Final fitting
-
-For each trait and `SplitID`, the final ANN retains the architecture,
-learning rate, and penalties in `selected_configurations`. The number of
-epochs is determined from the 156 outer-analysis individuals, with an upper
-limit of `FINAL_EPOCH_MAX_EPOCHS = 3000`. The 39 outer-assessment individuals
-do not contribute to architecture selection, penalty tuning, or epoch
-selection.
-
-For each trait and outer split:
-
-1. 15% of the 156 outer-analysis individuals are used only to select the number
-   of training epochs;
-2. the network is reinitialized;
-3. marker and BLUP standardization are refitted using all 156 outer-analysis
-   individuals;
-4. the network is trained for exactly the selected number of epochs;
-5. the 39 untouched outer-assessment individuals are predicted;
-6. only then are their observed individual BLUPs used to compute performance.
 
 ### 7.1 Selecting training epochs and refitting the networks
 
-The architecture, learning rate, and L1/L2 penalties selected by the inner
-cross-validation are used to train each of the four ANN variants. The
-stopping epoch is determined from individuals in the corresponding outer
-analysis set, after which the network is reinitialized and refitted using
-all 156 analysis individuals. The final model predicts the 39 individuals
-in the outer assessment set, which are not used for model selection.
+#### 7.1.1 Final fitting design
+
+For each trait, outer split and ANN variant, final fitting retains the
+architecture, learning rate and penalties selected by nested
+cross-validation. It does not reopen the search or use the median
+inner-fold stopping epoch as the final training duration.
+
+A new provisional fit uses only the 156 outer-analysis individuals:
+133 to update weights and 23 to select the training duration under
+the 3,000-epoch cap. The retained provisional state is used for
+early-validation diagnostics, not as the starting point of the final
+network. The final network is reinitialized, standardized anew and
+trained on all 156 outer-analysis individuals for exactly `Best_epoch`.
+
+| Stage | Weight-fitting individuals | Early-validation individuals | Outer assessment |
+|:------|---------------------------:|-----------------------------:|:-----------------|
+| Select training duration | 133 | 23 | 39 reserved |
+| Refit selected configuration | 156 | 0 | 39 reserved |
+| Predict and evaluate | 0 | 0 | 39 predicted |
+
+The 39 outer-assessment BLUPs are not used for selecting the
+configuration, training duration or network weights.
+
+#### 7.1.2 Selected configurations and initialization
+
+The stored selections identify the four configurations for each outer
+task. The final stage uses the original task identifiers to retrieve
+these rows and the corresponding outer partition.
+
+The seed assignments distinguish the two stages of training:
+
+| Seed object | Depends on | Purpose |
+|:------------|:-----------|:--------|
+| epoch_validation_seed | Repetition and outer fold | Select the early-validation individuals |
+| epoch_seed | Trait, repetition and outer fold | Initialize the provisional network |
+| final_seed | Trait, repetition and outer fold | Initialize the final network with a distinct seed |
+
+The validation partition is shared across variants and traits for the
+same outer split. Within a trait and split, the variants use the same
+seed for each respective stage, while the provisional and final
+networks use distinct seeds. The global seed and offsets are unchanged.
+
+The following read is part of the documented fitting procedure. The
+tuning outputs have already been loaded in Section 6.3 during ordinary
+rendering.
 
 ```{r final-input-gate, eval=FALSE}
 # Use the hyperparameters selected for the corresponding outer task.
@@ -1510,6 +1864,39 @@ selected_configurations <- readRDS(
   "output/real/ann/tuning/real_ann_tuning_selected_configurations.rds"
 )
 ```
+
+#### 7.1.3 Epoch selection, refitting and held-out prediction
+
+The full training block retains its original worker and task scope.
+Read its implementation through the following phases:
+
+1. Retrieve the selected configuration for each variant.
+2. Split the outer-analysis individuals into the 133 fitting and 23
+   early-validation individuals.
+3. Estimate scaling from the provisional fitting subset, optimize the
+   penalized loss and select the best recorded early-validation epoch.
+   Restore the retained provisional state to compute its validation
+   RMSE and Pearson correlation.
+4. Estimate scaling again on all 156 outer-analysis individuals,
+   reinitialize the network and train for exactly the selected epoch
+   count, with the same architecture, learning rate and penalties.
+5. Predict the 39 outer-assessment individuals using their genotypes
+   and transform the predictions back to the original BLUP scale.
+   Only after the predictions are available, retrieve their observed
+   BLUPs and evaluate predictive performance.
+6. Record the performance, individual predictions and epoch-selection
+   diagnostics for all four variants.
+
+The provisional and final optimization loops use the same explicit
+weight-penalty objective as tuning. Their scaling parameters are
+estimated separately from the individuals used to fit each network.
+The final refit has no additional early-validation subset because its
+training duration has already been selected.
+
+Pearson and Spearman correlations, RMSE, MAE, bias and calibration
+slope refer to the held-out observed and predicted BLUPs. The
+provisional validation metrics are retained separately. Section 9
+summarizes held-out performance.
 
 ```{r run-final-ann, eval=FALSE}
 # Select training duration, then refit using the outer analysis set.
@@ -1583,7 +1970,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
       # The held-out outer partition is used only for prediction.
       outer <- cv$outer_splits[[task$SplitID]]
 
-      # Reuse the winning inner configuration for this outer split.
+      # Phase 1: recover the configurations selected by inner cross-validation.
       selected_for_task <- selected_configurations[selected_configurations$TaskID == task$TaskID, ,
         drop = FALSE]
 
@@ -1597,7 +1984,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
 
       n_validation <- as.integer(round(length(outer$analysis_ids) * EARLY_VALIDATION_FRACTION))
 
-      # Reserve part of outer analysis data to determine training duration.
+      # Phase 2: partition only outer-analysis individuals for epoch selection.
       validation_ids <- sort(sample(outer$analysis_ids, size = n_validation, replace = FALSE))
       fit_ids <- sort(setdiff(outer$analysis_ids, validation_ids))
       fit_index <- match(fit_ids, ids)
@@ -1665,7 +2052,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
           output_layer <- torch::nn_linear(hidden_units[1L], 1L)$to(device = ANN_DEVICE)
           optimizer_parameters <- c(layer1$parameters, output_layer$parameters)
         }
-        # Optimize a candidate final network and select the best stopping epoch.
+        # Phase 3: optimize the provisional network and select its training duration.
         optimizer <- torch::optim_adam(params = optimizer_parameters, lr = config$Learning_rate,
           weight_decay = 0
         )
@@ -1785,6 +2172,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
         }
         epoch_seconds <- proc.time()[["elapsed"]] - epoch_start
 
+        # Restore the provisional network to evaluate its early-validation fit.
         layer1$load_state_dict(best_layer1_state)
 
         if (!is.null(layer2)) {
@@ -1821,7 +2209,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
         }
         train_index <- match(outer$analysis_ids, ids)
 
-        # Refit scaling on all outer-analysis individuals, never on assessment data.
+        # Phase 4: refit scaling on all outer-analysis individuals.
         x_center <- colMeans(geno[train_index, , drop = FALSE])
         x_scale <- apply(geno[train_index, , drop = FALSE], 2, sd)
         zero_variance <- x_scale < 1e-8
@@ -1834,6 +2222,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
           "/")
 
         y_train <- (phenotype[[trait]][train_index] - y_center) / y_scale
+        # Reinitialize the final network independently of the provisional fit.
         final_seed <- SEED_GLOBAL + trait_index * 10000000L + task$Repetition * 100000L +
         task$OuterFold * 10000L + 9000L
 
@@ -1871,6 +2260,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
           weight_decay = 0
         )
 
+        # Train the reinitialized network for exactly the selected number of epochs.
         final_fit_start <- proc.time()[["elapsed"]]
 
         for (epoch in seq_len(as.integer(best_epoch))) {
@@ -1925,6 +2315,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
         })
         predict_seconds <- proc.time()[["elapsed"]] - prediction_start
         predicted_value <- predicted_scaled * y_scale + y_center
+        # Phase 5: access held-out BLUPs only after generating predictions.
         observed <- phenotype[[trait]][assessment_index]
         constant_prediction <- length(unique(predicted_value)) == 1L
 
@@ -2017,7 +2408,7 @@ for (worker_id in seq_len(ANN_WORKERS)) {
       }
       task_seconds_current <- proc.time()[["elapsed"]] - task_start
 
-      # Consolidate the four ANN variants for this outer task.
+      # Phase 6: consolidate the four ANN variants for this outer task.
       task_results <- do.call(rbind, result_rows)
       task_predictions <- do.call(rbind, prediction_rows)
       task_epochs <- do.call(rbind, epoch_rows)
@@ -2056,13 +2447,11 @@ for (worker_id in seq_len(ANN_WORKERS)) {
 
 ### 7.2 Consolidating predictions and prediction metrics
 
-For each `Trait`, `SplitID`, and `Model`, the ANN produces one record of
-predictive performance and 39 individual predictions. The task results are
-combined into `results` (300 fitted-model assessments), `predictions`
-(11,700 held-out predictions), and `epoch_selection` (300 selected training
-durations). Pearson and Spearman correlations, RMSE, MAE, bias, and
-calibration slope are calculated from the outer-assessment BLUPs only
-after the corresponding predictions have been obtained.
+The final worker outputs are collected in task order and the execution
+plan returns to sequential mode. The combined tables retain the
+original task keys and variant identifiers, and `final_meta` records
+the final configuration, its tuning configuration identifier, the
+selected-epoch refit rule, software and execution information.
 
 ```{r collect-final-ann-results, eval=FALSE}
 for (worker_id in seq_len(ANN_WORKERS)) {
@@ -2117,6 +2506,28 @@ final_meta <- list(dataset = "real", analysis = "real_regularized_ann_final",
   checkpoint_task_seconds = sum(final_task_seconds),
   timestamp = as.character(Sys.time()))
 ```
+
+### 7.3 Final fitting output structure
+
+The 75 tasks and four variants produce the following expected output
+structure. Each model-task record refers to a single final fit; the
+provisional epoch-selection fit is not an additional held-out model
+assessment.
+
+| Object | Expected records | Unit and purpose |
+|:-------|-----------------:|:-----------------|
+| results | 300 | Trait, outer split and ANN variant; predictive metrics and fit diagnostics |
+| predictions | 11,700 | Assessment individual, trait, outer split and ANN variant; observed and predicted BLUPs |
+| epoch_selection | 300 | Trait, outer split and ANN variant; selected duration and provisional validation diagnostics |
+| final_meta | 1 list | Fitting configuration, refit rule and execution metadata |
+
+The prediction table contains 39 records per model-task combination.
+The 195 genotyped individuals each appear in one assessment fold per
+repetition for each trait and ANN variant, so these rows do not
+represent 11,700 different individuals. Section 8 reads the stored
+final results, reports their actual dimensions and documents their
+export without rerunning the training.
+
 ## 8. ANN results and held-out predictions
 
 The object `results` contains predictive metrics for the 300 combinations
