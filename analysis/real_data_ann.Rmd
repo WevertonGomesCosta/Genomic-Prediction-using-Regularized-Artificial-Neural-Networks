@@ -145,13 +145,15 @@ rownames(outer_map) <- NULL
 ### 3.3 Input summary
 
 The first table identifies the imported objects and their scientific roles.
+Outer and inner splits correspond to `cv$outer_splits` and `cv$inner_splits`,
+respectively.
 The second reports the sample sizes of the first saved outer and inner
 partitions and the dimensions of the common genomic data.
 
 ```{r input-object-roles}
 input_object_summary <- data.frame(
   Object = c("geno", "phenotype", "traits", "ids",
-             "cv$outer_splits", "cv$inner_splits"),
+             "Outer splits", "Inner splits"),
   Structure = c(
     paste(dim(geno), collapse = " x "),
     paste(dim(phenotype), collapse = " x "),
