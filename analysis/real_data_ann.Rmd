@@ -3331,162 +3331,411 @@ distributions and individual OOF predictions.
 
 ## 11. Predictive figures
 
-The Pearson, Spearman, and RMSE figures show the distribution of
-outer-assessment metrics across the 25 splits for each trait and ANN
-variant. The observed-versus-predicted scatterplots compare each
-individual's reference BLUP with the mean of that individual's five
-out-of-fold ANN predictions.
+The figures use the stored split-level results and the individual
+out-of-fold predictions constructed in Sections 8–10. No network is
+trained to produce these figures.
 
-```{r performance-figures, eval=FINAL_OUTPUTS_AVAILABLE}
-# Summarize outer-fold metrics and individual OOF predictions in figures.
+For each trait and variant, the boxplots summarize the 25 outer-split
+metrics. The box spans the first and third quartiles, its central line
+marks the median, and the whiskers extend to the most extreme points
+within 1.5 interquartile ranges of the box. Every finite split value
+is shown once as a point, including values beyond the whiskers.
+White diamonds mark arithmetic means, not medians or confidence
+intervals. Horizontal jitter uses a fixed seed and does not change
+the metric values. The overlapping analysis sets preclude treating
+the 25 values as independent experiments.
+
+The plotting copy orders the variants and traits consistently without
+changing the stored model-task results. All four TIFFs are generated
+automatically from the displayed plot objects during rendering. Their
+export settings are given in Section 12.3.
+
+### 11.1 Pearson correlation
+
+Pearson correlations are dimensionless, so all three trait panels use
+the same theoretical scale from -1 to 1. The dashed horizontal line
+indicates zero correlation. Only finite correlations enter the plot;
+all 300 final model-task records have a defined correlation in the
+stored results (Section 9).
+
+```{r performance-figures}
+# Prepare a plotting copy of the split-level results.
 plot_results <- results
-
 plot_results$Model <- factor(plot_results$Model, levels = MODEL_LEVELS)
-
 plot_results$Trait <- factor(plot_results$Trait, levels = traits)
 
-p_pearson <- ggplot(plot_results[is.finite(plot_results$BLUP_Correlation), , drop = FALSE],
-  aes(x = Model, y = BLUP_Correlation)
-) +
-geom_boxplot(outlier.shape = NA) +
-geom_jitter(width = 0.12, height = 0, size = 1.5, alpha = 0.60) +
-facet_wrap(~ Trait, scales = "free_y") + labs(x = "ANN variant", y = "Pearson correlation",
-  title = "Held-out BLUP correlation across outer splits"
-) +
-ggthemes::theme_gdocs() + theme(axis.text.x = element_text(angle = 35, hjust = 1))
-
-p_spearman <- ggplot(plot_results[is.finite(plot_results$BLUP_Spearman), , drop = FALSE],
-  aes(x = Model, y = BLUP_Spearman)
-) +
-geom_boxplot(outlier.shape = NA) +
-geom_jitter(width = 0.12, height = 0, size = 1.5, alpha = 0.60) +
-facet_wrap(~ Trait, scales = "free_y") + labs(x = "ANN variant", y = "Spearman correlation",
-  title = "Held-out BLUP rank correlation across outer splits"
-) +
-ggthemes::theme_gdocs() + theme(axis.text.x = element_text(angle = 35, hjust = 1))
-
-p_rmse <- ggplot(plot_results, aes(x = Model, y = BLUP_RMSE)) +
-geom_boxplot(outlier.shape = NA) +
-geom_jitter(width = 0.12, height = 0, size = 1.5, alpha = 0.60) +
-facet_wrap(~ Trait, scales = "free_y") +
-labs(x = "ANN variant", y = "RMSE", title = "Held-out BLUP RMSE across outer splits") +
-ggthemes::theme_gdocs() + theme(axis.text.x = element_text(angle = 35, hjust = 1))
-
-individual_ranking$Model <- factor(individual_ranking$Model, levels = MODEL_LEVELS)
-
-individual_ranking$Trait <- factor(individual_ranking$Trait, levels = traits)
-
-p_observed_predicted <- ggplot(individual_ranking, aes(x = Observed_BLUP, y = Predicted_BLUP)) +
-geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
-geom_point(size = 1.4, alpha = 0.60) + facet_grid(Trait ~ Model, scales = "free") + labs(
-  x = "Observed individual BLUP",
-  y = "Mean out-of-fold predicted BLUP",
-  title = "Observed and predicted individual BLUPs"
-) +
-ggthemes::theme_gdocs()
+dir.create(
+  "output/real/ann/figures",
+  recursive = TRUE,
+  showWarnings = FALSE
+)
 ```
-```{r show-pearson, eval=FINAL_OUTPUTS_AVAILABLE, fig.cap="Held-out Pearson correlation by trait and ANN variant.", fig.alt="Boxplots of Pearson correlations across outer folds for four ANN models and three traits.", fig.width=10, fig.height=6}
+
+```{r show-pearson, fig.width=9, fig.height=5.5, fig.cap="Held-out Pearson correlations by trait and ANN variant. White diamonds indicate means; the dashed line marks zero.", fig.alt="Three panels of Pearson correlation boxplots, with 25 points per ANN variant, mean diamonds and a common correlation scale."}
+p_pearson <- ggplot(
+  plot_results[is.finite(plot_results$BLUP_Correlation), , drop = FALSE],
+  aes(x = Model, y = BLUP_Correlation, fill = Model)
+) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.4) +
+  geom_boxplot(width = 0.62, outlier.shape = NA, alpha = 0.70) +
+  geom_point(
+    position = position_jitter(width = 0.10, height = 0, seed = 20261105L),
+    alpha = 0.35, size = 1.4
+  ) +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 2.8,
+               fill = "white") +
+  facet_wrap(~ Trait, nrow = 1, scales = "fixed") +
+  scale_y_continuous(limits = c(-1, 1), breaks = seq(-1, 1, by = 0.5)) +
+  ggthemes::scale_fill_gdocs() +
+  labs(x = "ANN variant", y = "Pearson correlation",
+       title = "Held-out Pearson correlation across outer splits") +
+  ggthemes::theme_gdocs() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 35, hjust = 1))
+
 print(p_pearson)
 ```
 
-```{r save-show-pearson, eval=FALSE}
-dir.create("output/real/ann/figures", recursive = TRUE, showWarnings = FALSE)
-ggsave("output/real/ann/figures/real_ann_pearson_by_model_trait.tiff", plot = p_pearson,
-  device = "tiff",
-  width = 9,
-  height = 5.5,
-  units = "in",
-  dpi = 300,
-  compression = "lzw"
+Cer has higher mean correlations than BM and LP for every variant. The combined L1/L2 variant has the highest mean Pearson correlation for Cer and BM, whereas L2 has the highest mean for LP. The distributions overlap within traits; the figure does not establish statistical superiority.
+
+The corresponding TIFF uses the same plot object and dimensions as the
+displayed figure, at 300 dpi with LZW compression.
+
+```{r save-show-pearson, eval=TRUE, include=FALSE}
+ggsave(
+  filename = "output/real/ann/figures/real_ann_pearson_by_model_trait.tiff",
+  plot = p_pearson,
+  device = "tiff", width = 9, height = 5.5,
+  units = "in", dpi = 300, compression = "lzw"
 )
 ```
 
-```{r show-spearman, eval=FINAL_OUTPUTS_AVAILABLE, fig.cap="Held-out Spearman correlation by trait and ANN variant.", fig.alt="Boxplots of Spearman rank correlations across outer folds for ANN models and traits.", fig.width=10, fig.height=6}
+### 11.2 Spearman correlation
+
+The rank-based correlations use the same limits and zero reference as Pearson. Each value is computed on the 39 outer-assessment individuals of a split; it is not the global correlation of the 195 individual OOF ranks in Section 10. All 300 split-level values are finite.
+
+```{r show-spearman, fig.width=9, fig.height=5.5, fig.cap="Held-out Spearman correlations by trait and ANN variant. White diamonds indicate means; the dashed line marks zero.", fig.alt="Three panels of Spearman correlation boxplots, with 25 points per ANN variant, mean diamonds and a common correlation scale."}
+p_spearman <- ggplot(
+  plot_results[is.finite(plot_results$BLUP_Spearman), , drop = FALSE],
+  aes(x = Model, y = BLUP_Spearman, fill = Model)
+) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.4) +
+  geom_boxplot(width = 0.62, outlier.shape = NA, alpha = 0.70) +
+  geom_point(
+    position = position_jitter(width = 0.10, height = 0, seed = 20261105L),
+    alpha = 0.35, size = 1.4
+  ) +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 2.8,
+               fill = "white") +
+  facet_wrap(~ Trait, nrow = 1, scales = "fixed") +
+  scale_y_continuous(limits = c(-1, 1), breaks = seq(-1, 1, by = 0.5)) +
+  ggthemes::scale_fill_gdocs() +
+  labs(x = "ANN variant", y = "Spearman correlation",
+       title = "Held-out Spearman correlation across outer splits") +
+  ggthemes::theme_gdocs() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 35, hjust = 1))
+
 print(p_spearman)
 ```
 
-```{r save-show-spearman, eval=FALSE}
-dir.create("output/real/ann/figures", recursive = TRUE, showWarnings = FALSE)
-ggsave("output/real/ann/figures/real_ann_spearman_by_model_trait.tiff", plot = p_spearman,
-  device = "tiff",
-  width = 9,
-  height = 5.5,
-  units = "in",
-  dpi = 300,
-  compression = "lzw"
+Cer again has the strongest mean rank association. ANN_L1_L2 leads for Cer, ANN_0 for BM, and ANN_L2 for LP. These means need not follow the same ordering as the Pearson means.
+
+The corresponding TIFF uses the same plot object and dimensions as the
+displayed figure, at 300 dpi with LZW compression.
+
+```{r save-show-spearman, eval=TRUE, include=FALSE}
+ggsave(
+  filename = "output/real/ann/figures/real_ann_spearman_by_model_trait.tiff",
+  plot = p_spearman,
+  device = "tiff", width = 9, height = 5.5,
+  units = "in", dpi = 300, compression = "lzw"
 )
 ```
 
-```{r show-rmse, eval=FINAL_OUTPUTS_AVAILABLE, fig.cap="Held-out RMSE by trait and ANN variant.", fig.alt="Boxplots of held-out prediction errors across outer folds for four ANN models and three traits.", fig.width=10, fig.height=6}
+### 11.3 Root mean squared error
+
+RMSE measures prediction error on each trait's original BLUP scale. The vertical limits are therefore specific to each trait and shared among its four variants. All 300 finite RMSE values enter the figure. Compare error magnitudes within a trait, not across traits.
+
+```{r show-rmse, fig.width=9, fig.height=5.5, fig.cap="Held-out RMSE by trait and ANN variant. White diamonds indicate means; each trait has its own vertical scale.", fig.alt="Three panels of RMSE boxplots, with 25 points per ANN variant, mean diamonds and trait-specific vertical scales."}
+p_rmse <- ggplot(
+  plot_results[is.finite(plot_results$BLUP_RMSE), , drop = FALSE],
+  aes(x = Model, y = BLUP_RMSE, fill = Model)
+) +
+  geom_boxplot(width = 0.62, outlier.shape = NA, alpha = 0.70) +
+  geom_point(
+    position = position_jitter(width = 0.10, height = 0, seed = 20261105L),
+    alpha = 0.35, size = 1.4
+  ) +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 2.8,
+               fill = "white") +
+  facet_wrap(~ Trait, nrow = 1, scales = "free_y") +
+  ggthemes::scale_fill_gdocs() +
+  labs(x = "ANN variant", y = "RMSE (BLUP scale)",
+       title = "Held-out RMSE across outer splits") +
+  ggthemes::theme_gdocs() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 35, hjust = 1))
+
 print(p_rmse)
 ```
 
-```{r save-show-rmse, eval=FALSE}
-dir.create("output/real/ann/figures", recursive = TRUE, showWarnings = FALSE)
-ggsave("output/real/ann/figures/real_ann_rmse_by_model_trait.tiff", plot = p_rmse,
-  device = "tiff",
-  width = 9,
-  height = 5.5,
-  units = "in",
-  dpi = 300,
-  compression = "lzw"
+The lowest mean RMSE occurs for ANN_L1_L2 in Cer and BM, and ANN_L1 in LP. The boxplots show variability across the outer splits and complement the mean errors in Section 9; they are not inferential uncertainty intervals.
+
+The corresponding TIFF uses the same plot object and dimensions as the
+displayed figure, at 300 dpi with LZW compression.
+
+```{r save-show-rmse, eval=TRUE, include=FALSE}
+ggsave(
+  filename = "output/real/ann/figures/real_ann_rmse_by_model_trait.tiff",
+  plot = p_rmse,
+  device = "tiff", width = 9, height = 5.5,
+  units = "in", dpi = 300, compression = "lzw"
 )
 ```
 
-```{r show-observed-predicted, eval=FINAL_OUTPUTS_AVAILABLE, fig.cap="Observed individual BLUP versus mean out-of-fold ANN prediction.", fig.alt="Scatterplots of observed versus cross-validated predicted individual BLUPs by model and trait.", fig.width=10, fig.height=6}
+### 11.4 Observed versus predicted BLUPs
+
+Each point represents one individual: the horizontal coordinate is
+the precomputed phenotypic BLUP and the vertical coordinate is the
+mean of its five held-out predictions. There are 195 individuals per
+trait-variant panel and 2,340 points across the 12 panels.
+
+The four variants of each trait use identical horizontal and vertical
+limits. For each trait, take the minimum and maximum over both observed
+and predicted values in all four variants. Two invisible endpoint
+records per panel train both scales through `geom_blank()`. These
+records do not appear as points or contribute to any metric.
+Independent panel scales are obtained with `facet_wrap()` rather
+than `facet_grid()`, and both axes use the same 5% expansion and
+a square panel. The dashed identity line therefore represents
+equality at a visual angle of 45 degrees. No observed or predicted
+BLUP is changed or removed.
+
+```{r build-observed-predicted}
+# Use a separate plotting copy to retain the original ranking object.
+observed_predicted_data <- individual_ranking
+observed_predicted_data$Trait <- factor(
+  observed_predicted_data$Trait, levels = traits
+)
+observed_predicted_data$Model <- factor(
+  observed_predicted_data$Model, levels = MODEL_LEVELS
+)
+
+# Supply the same two scale endpoints to every model panel of a trait.
+observed_predicted_bounds <- data.frame(
+  Trait = character(0),
+  Model = character(0),
+  Observed_BLUP = numeric(0),
+  Predicted_BLUP = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (trait_name in traits) {
+  trait_data <- observed_predicted_data[
+    observed_predicted_data$Trait == trait_name, , drop = FALSE
+  ]
+
+  trait_range <- range(c(
+    trait_data$Observed_BLUP,
+    trait_data$Predicted_BLUP
+  ))
+
+  observed_predicted_bounds <- rbind(
+    observed_predicted_bounds,
+    data.frame(
+      Trait = rep(trait_name, 2L * length(MODEL_LEVELS)),
+      Model = rep(MODEL_LEVELS, each = 2L),
+      Observed_BLUP = rep(trait_range, length(MODEL_LEVELS)),
+      Predicted_BLUP = rep(trait_range, length(MODEL_LEVELS)),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+observed_predicted_bounds$Trait <- factor(
+  observed_predicted_bounds$Trait, levels = traits
+)
+observed_predicted_bounds$Model <- factor(
+  observed_predicted_bounds$Model, levels = MODEL_LEVELS
+)
+
+p_observed_predicted <- ggplot(
+  observed_predicted_data,
+  aes(x = Observed_BLUP, y = Predicted_BLUP)
+) +
+  geom_blank(data = observed_predicted_bounds) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  geom_point(size = 1.5, alpha = 0.65) +
+  facet_wrap(vars(Trait, Model), ncol = 4, scales = "free") +
+  scale_x_continuous(expand = expansion(mult = 0.05)) +
+  scale_y_continuous(expand = expansion(mult = 0.05)) +
+  labs(x = "Observed individual BLUP",
+       y = "Mean out-of-fold predicted BLUP",
+       title = "Observed and predicted individual BLUPs") +
+  ggthemes::theme_gdocs() +
+  theme(legend.position = "none", aspect.ratio = 1)
+```
+
+```{r show-observed-predicted, fig.width=14, fig.height=11, fig.cap="Observed phenotypic BLUPs versus mean out-of-fold ANN predictions. The four panels of each trait share identical x and y limits; the dashed identity line marks equality.", fig.alt="Twelve square scatterplot panels arranged in three trait rows and four ANN variant columns, with 195 individuals per panel and identical axis limits within each trait."}
 print(p_observed_predicted)
 ```
 
-```{r save-show-observed-predicted, eval=FALSE}
-dir.create("output/real/ann/figures", recursive = TRUE, showWarnings = FALSE)
-ggsave("output/real/ann/figures/real_ann_observed_vs_predicted_by_model_trait.tiff", plot =
-  p_observed_predicted,
-  device = "tiff",
-  width = 11,
-  height = 8,
-  units = "in",
-  dpi = 300,
-  compression = "lzw"
+Points above the identity line indicate overprediction relative to the
+reference BLUP, and points below it indicate underprediction. The shared
+axis limits within a trait allow dispersion and departures from equality
+to be assessed without stretching either axis independently. These
+plots concern averaged individual OOF predictions, not the calibration
+regression fitted separately within each outer split in Section 9.
+
+The larger export size accommodates four model columns and three trait
+rows while retaining square panels and readable axis labels.
+
+```{r save-show-observed-predicted, eval=TRUE, include=FALSE}
+ggsave(
+  filename = "output/real/ann/figures/real_ann_observed_vs_predicted_by_model_trait.tiff",
+  plot = p_observed_predicted,
+  device = "tiff", width = 14, height = 11,
+  units = "in", dpi = 300, compression = "lzw"
 )
 ```
 
 ## 12. Numbers of fitted models and predictions
 
-The number of selected configurations equals the 75 trait-by-split
-tasks multiplied by four ANN variants (300). The same 300 combinations
-produce 11,700 held-out predictions (39 assessment individuals per task
-and variant). Averaging five predictions per individual produces
-2,340 individual-ranking rows (195 individuals × three traits × four
-variants), with 12 trait-by-model ranking summaries.
+### 12.1 Synthesis of the ANN results
+
+The nested search contains 75 trait-by-split tasks, each with 70
+candidate configurations and four inner folds. The 5,250 candidate
+configurations thus yield 21,000 candidate-fold fits. The four
+selected configurations per task give 300 final model-task records:
+each uses a provisional epoch-selection fit and a fresh refit on all
+156 outer-analysis individuals. The 39 held-out predictions per
+final model-task yield 11,700 prediction records. Averaging five
+OOF predictions per individual yields 2,340 ranking records and 12
+trait-by-variant summaries.
+
+In the stored analysis, all 300 provisional fits stop by patience
+and all 11,700 final predictions are finite. No final assessment
+prediction vector is constant. These diagnostics describe the
+recorded fits without establishing numerical convergence.
+
+Cer has the highest mean Pearson and Spearman correlations of the
+three traits. ANN_L1_L2 leads the mean Pearson and RMSE criteria for
+Cer and BM, while ANN_L2 leads the mean Pearson criterion for LP
+and ANN_L1 has the smallest mean LP RMSE. Upper-group recovery
+favors ANN_L1 for Cer, ANN_0 for BM and ANN_L1_L2 for LP.
+Regularization does not uniformly improve every criterion.
+The comparisons are descriptive; they establish neither statistical
+superiority nor expected genetic gain.
+
+The evaluation predicts precomputed phenotypic BLUPs, not known true
+genetic values. The phenotypic analysis was not refitted in each
+genomic fold. The repeated genomic assessment splits are dependent,
+the historical inner preprocessing counts differ across traits as
+documented in Section 6.5, and descending ranks identify high BLUPs
+rather than necessarily favorable breeding directions.
+
+### 12.2 Numerical outputs and their downstream use
+
+The observed row counts below are computed from the analysis objects
+and compared with the expected workload from the common validation
+design. Run metadata are lists rather than tabular observations.
 
 ```{r output-inventory}
-output_inventory <- data.frame(Stage = c("Tuning", "Tuning", "Tuning", "Final", "Final",
-  "Final",
-  "Final",
-  "Final"
-),
-  Object = c("Selected configurations", "Candidate summary", "Candidate-fold results",
-  "Model-task results",
-  "Held-out predictions",
-  "Epoch selections",
-  "Individual ranking",
-  "Ranking summary"
-),
+output_inventory <- data.frame(
+  Stage = c(rep("Tuning", 3), rep("Final", 3), "Performance", "Ranking", "Ranking"),
+  Object = c("Selected configurations", "Candidate summary",
+             "Candidate-fold results", "Model-task results",
+             "Held-out predictions", "Epoch selections",
+             "Performance summary", "Individual ranking", "Ranking summary"),
   Rows = c(nrow(selected_configurations), nrow(candidate_summary),
-  nrow(fold_results), nrow(results), nrow(predictions),
-  nrow(epoch_selection), nrow(individual_ranking), nrow(ranking_summary)
-),
+           nrow(fold_results), nrow(results), nrow(predictions),
+           nrow(epoch_selection), nrow(performance_summary),
+           nrow(individual_ranking), nrow(ranking_summary)),
+  Expected = c(
+    nrow(task_table) * length(MODEL_LEVELS),
+    nrow(task_table) * CANDIDATES_PER_TASK,
+    nrow(task_table) * INNER_FITS_PER_TASK,
+    nrow(task_table) * length(MODEL_LEVELS),
+    nrow(task_table) * length(MODEL_LEVELS) *
+      length(cv$outer_splits[[1L]]$assessment_ids),
+    nrow(task_table) * length(MODEL_LEVELS),
+    length(traits) * length(MODEL_LEVELS),
+    length(ids) * length(traits) * length(MODEL_LEVELS),
+    length(traits) * length(MODEL_LEVELS)
+  ),
   stringsAsFactors = FALSE
 )
 
-output_inventory |>
-  knitr::kable(format = "html",
-  caption = "Numbers of ANN configurations, predictions, and ranking records",
-  row.names = FALSE,
+knitr::kable(
+  output_inventory, format = "html", row.names = FALSE,
+  caption = "Observed and expected numerical ANN output records",
+  format.args = list(big.mark = ","),
   table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
 ```
 
+The numerical files are organized below relative to `output/real/ann/`.
+CSV files retain inspectable tabular results and RDS files retain R
+objects and run metadata. The numerical export blocks in Sections 6,
+8, 9 and 10 remain disabled during ordinary rendering.
+
+| Directory | File stem and extension(s) | Scientific purpose |
+|:----------|:---------------------------|:-------------------|
+| tuning | real_ann_tuning_selected_configurations (.rds, .csv) | Selected architecture, rate and penalties |
+| tuning | real_ann_tuning_candidate_summary (.rds, .csv) | Candidate-level inner assessment metrics |
+| tuning | real_ann_tuning_fold_results (.rds, .csv) | Candidate-fold metrics and diagnostics |
+| tuning | real_ann_tuning_run_metadata.rds | Search settings and execution metadata |
+| final | real_ann_results (.rds, .csv) | Split metrics and fit diagnostics |
+| final | real_ann_predictions (.rds, .csv) | Held-out individual BLUP pairs |
+| final | real_ann_epoch_selection (.rds, .csv) | Provisional fit and selected refit duration |
+| final | real_ann_run_metadata.rds | Final fitting settings and execution metadata |
+| final | real_ann_performance_summary.csv | Mean split-level predictive metrics |
+| final | real_ann_individual_ranking (.rds, .csv) | Mean individual OOF predictions and ranks |
+| final | real_ann_ranking_summary.csv | Rank agreement and upper-group overlap |
+
+R05 reads the following three RDS files directly:
+
+- `output/real/ann/final/real_ann_results.rds`
+- `output/real/ann/final/real_ann_predictions.rds`
+- `output/real/ann/final/real_ann_individual_ranking.rds`
+
+The other numerical files document the tuning and final fitting
+procedures and the descriptive summaries. Repeated rendering does not
+rewrite any of these numerical results.
+
+### 12.3 Figure outputs
+
+The four exports use TIFF format, 300 dpi and LZW compression.
+All paths in the table are relative to `output/real/ann/figures/`.
+Each export is executed during routine rendering using the same plot
+object presented in Section 11. The TIFF files are refreshed without
+rerunning the fitting procedures.
+
+| Figure file | Width x height (inches) | Pixels at 300 dpi |
+|:------------|:------------------------|:------------------|
+| real_ann_pearson_by_model_trait.tiff | 9 x 5.5 | 2700 x 1650 |
+| real_ann_spearman_by_model_trait.tiff | 9 x 5.5 | 2700 x 1650 |
+| real_ann_rmse_by_model_trait.tiff | 9 x 5.5 | 2700 x 1650 |
+| real_ann_observed_vs_predicted_by_model_trait.tiff | 14 x 11 | 4200 x 3300 |
+
 ## 13. Navigation
 
-[Previous: GBLUP A/AD/ADE](real_data_gblup.html) | [Next: Model comparison](real_data_comparison.html)
+[R01 - Phenotypes](real_data_phenotype.html) estimates the individual
+phenotypic BLUPs. [R02 - Data preprocessing](real_data_audit.html)
+aligns these BLUPs with the quality-controlled genomic predictors,
+and [R03 - Pre-validation](real_data_validation.html) defines the
+shared outer and inner partitions.
+
+[R04A - GBLUP](real_data_gblup.html) and this ANN module use the same
+common inputs and outer assessment sets. R04B additionally uses the
+nested inner folds to select ANN configurations. Neither model family
+requires the other family's outputs to obtain its predictions.
+
+[R05 - Model comparison](real_data_comparison.html) brings together
+the stored GBLUP and ANN results through their common split and
+individual identifiers, distinguishing split-level metrics from
+individual OOF rankings.
+
+[Previous: GBLUP A/AD/ADE](real_data_gblup.html) |
+[Next: Model comparison](real_data_comparison.html)
