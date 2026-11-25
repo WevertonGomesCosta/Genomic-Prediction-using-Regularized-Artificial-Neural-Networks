@@ -17,34 +17,60 @@ editor_options:
 
 ## 1. Purpose
 
-This analysis compares the
-three GBLUP structures and the four artificial neural-network variants on the
-same repeated outer cross-validation procedure.
+This module compares three genomic best linear unbiased prediction
+(GBLUP) structures from [R04A](real_data_gblup.html) and four
+artificial neural-network (ANN) variants from
+[R04B](real_data_ann.html). All seven methods predict the same
+precomputed individual phenotypic BLUPs using the common outer
+cross-validation design established in
+[R03](real_data_validation.html). The stored results are read directly;
+no genomic prediction model is refitted in this module.
 
-The seven models are:
+| Model | Genomic structure or explicit weight penalty |
+|:------|:---------------------------------------------|
+| GBLUP_A | Additive genomic relationship |
+| GBLUP_AD | Additive and dominance genomic relationships |
+| GBLUP_ADE | Additive, dominance and additive-by-additive epistatic genomic relationships |
+| ANN_0 | No explicit L1 or L2 penalty |
+| ANN_L1 | L1 weight penalty |
+| ANN_L2 | L2 weight penalty |
+| ANN_L1_L2 | Simultaneous L1 and L2 weight penalties |
 
-- `GBLUP_A`: additive genomic relationship;
-- `GBLUP_AD`: additive and dominance genomic relationships;
-- `GBLUP_ADE`: additive, dominance, and additive-by-additive epistatic genomic
-  relationships;
-- `ANN_0`: unregularized neural network;
-- `ANN_L1`: L1-regularized neural network;
-- `ANN_L2`: L2-regularized neural network;
-- `ANN_L1_L2`: neural network with simultaneous L1 and L2 regularization.
+All four ANN variants use early stopping during the selection of
+training duration. ANN_0 therefore denotes the absence of explicit
+L1 and L2 penalties, not the absence of every form of regularization.
+The GBLUP structures use their respective genomic relationship matrices,
+whereas the ANN variants use genomic markers as network inputs.
 
-The individual BLUPs from the phenotypic analysis constitute the prediction targets. All genomic models are evaluated using the same individuals and outer cross-validation partitions.
+The population comprises 195 individuals evaluated for Cer, BM and LP.
+Five repetitions of five-fold outer cross-validation yield 25
+assessment splits per trait and model, each with 39 held-out individuals.
+The ANN hyperparameters were selected within the corresponding outer
+analysis samples in R04B; GBLUP uses the three prespecified structures
+in R04A.
 
-The primary split-level metrics are Pearson correlation, Spearman correlation,
-RMSE, and MAE between BLUP and GEBV. For the global ranking, the five
-predictions available for each individual, trait, and model are averaged to
-obtain its GEBV. Ranking agreement, absolute rank error, recovery of the
-BLUP top 20% by the GEBV ranking, and pairwise weighted kappa among ordered
-GEBV-ranking quintiles are then compared across the seven models.
+Unlike the simulated analysis, the real data do not provide known true
+genetic values. The evaluation target is the phenotypic BLUP, which was
+estimated before the genomic validation design and was not refitted
+within each genomic split. Agreement with these BLUPs therefore measures
+genomic prediction of the available phenotypic reference, not accuracy
+against known true genetic values. Throughout this module, GEBV denotes
+the stored genomic prediction on the BLUP scale; it does not imply
+that the full prediction is an additive breeding value for every model.
 
-Because repeated cross-validation splits overlap in their analysis and
-assessment samples, split-level contrasts are descriptive matched comparisons,
-not tests that treat the 25 outer splits as statistically independent
-replicates.
+The comparison distinguishes three scientific questions:
+
+- How well does each model predict the phenotypic BLUP within an outer
+  assessment split? Pearson, Spearman, RMSE and MAE are the primary
+  metrics; bias and calibration slope provide complementary information.
+- How do the models differ on matched outer splits?
+- How well do the mean out-of-fold (OOF) predictions recover individual
+  rankings and the upper 20% of the phenotypic BLUP distribution, and
+  how similar are the ranking strata produced by different models?
+
+Repeated cross-validation reuses individuals across analysis sets and
+assessment repetitions. The split-level summaries and contrasts are
+descriptive, not significance tests based on 25 independent replicates.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -67,9 +93,11 @@ dir.create(FIGURE_DIR, recursive = TRUE, showWarnings = FALSE)
 
 ## 2. Prediction data and cross-validation
 
-The objects `gblup_results` and `ann_results` contain one prediction-performance record for each model, trait, and outer split. The objects `gblup_predictions` and `ann_predictions` provide the corresponding observed BLUPs and GEBVs; `gblup_ranking` and `ann_ranking` supply individual-level rankings.
+### 2.1 Packages and dependencies
 
-### 2.1 GBLUP and ANN predictions
+The module uses `knitr` and `kableExtra` for tables and `ggplot2` with
+`ggthemes` for figures. The stored fitting outputs are sufficient for
+the comparison; neither BGLR nor torch is required here.
 
 ```{r packages}
 library(knitr)
@@ -77,10 +105,20 @@ library(ggplot2)
 library(ggthemes)
 ```
 
-The six inputs are read from the GBLUP and ANN analyses. The prediction
-records retain the same outer partition identifiers (`Repetition`, `Fold`,
-and `SplitID`) and individual identifiers (`ID`). These common identifiers permit
-matched comparisons within each external assessment partition.
+### 2.2 Saved prediction results and validation design
+
+The six fitting outputs have three different units of observation.
+The validation design from R03 supplies the assessment identifiers
+against which their coverage is examined.
+
+| Input object | Unit of observation | Expected rows |
+|:-------------|:--------------------|--------------:|
+| gblup_results | Trait, outer split and GBLUP structure | 225 |
+| ann_results | Trait, outer split and ANN variant | 300 |
+| gblup_predictions | Held-out individual, trait, outer split and GBLUP structure | 8,775 |
+| ann_predictions | Held-out individual, trait, outer split and ANN variant | 11,700 |
+| gblup_ranking | Individual, trait and GBLUP structure | 1,755 |
+| ann_ranking | Individual, trait and ANN variant | 2,340 |
 
 ```{r read-model-predictions}
 gblup_results <- readRDS("output/real/gblup/real_gblup_results.rds")
@@ -95,21 +133,29 @@ ann_predictions <- readRDS("output/real/ann/final/real_ann_predictions.rds")
 
 ann_ranking <- readRDS("output/real/ann/final/real_ann_individual_ranking.rds")
 ```
-The GBLUP and ANN outputs use the same evaluation metrics but retain the
-original column names from their respective modules. The following mappings
-standardize those names in `gblup_results`, `ann_results`,
-`gblup_predictions`, `ann_predictions`, `gblup_ranking`, and
-`ann_ranking`. Only column names change; prediction values remain unchanged.
+
+The common validation object is read without regenerating folds.
+
+```{r comparison-validation-design}
+comparison_cv <- readRDS("output/real/validation/real_cv_design.rds")
+
+comparison_assessment <- comparison_cv$outer_assignments[
+  , c("Repetition", "OuterFold", "SplitID", "ID"), drop = FALSE
+]
+names(comparison_assessment)[
+  names(comparison_assessment) == "OuterFold"
+] <- "Fold"
+```
+
+### 2.3 Harmonizing the result columns and model identifiers
+
+Both fitting modules use the same metrics and prediction targets.
+The following named vectors map the original column names to the
+short names used throughout this comparison. A loop applies each
+mapping to the corresponding pair of data frames. Only column names
+change; the stored values, row order and files remain unchanged.
 
 ```{r normalize-comparison-columns}
-# Apply the same name mapping to matching columns in both model families.
-rename_columns <- function(data, mapping) {
-  for (old_name in names(mapping)) {
-    names(data)[names(data) == old_name] <- mapping[[old_name]]
-  }
-  data
-}
-
 metric_names <- c(
   BLUP_Correlation = "Pearson", BLUP_Spearman = "Spearman",
   BLUP_RMSE = "RMSE", BLUP_MAE = "MAE",
@@ -122,14 +168,28 @@ ranking_names <- c(
   Observed_Top20 = "BLUP_Top20", Predicted_Top20 = "GEBV_Top20"
 )
 
-gblup_results <- rename_columns(gblup_results, metric_names)
-ann_results <- rename_columns(ann_results, metric_names)
-gblup_predictions <- rename_columns(gblup_predictions, prediction_names)
-ann_predictions <- rename_columns(ann_predictions, prediction_names)
-gblup_ranking <- rename_columns(gblup_ranking, ranking_names)
-ann_ranking <- rename_columns(ann_ranking, ranking_names)
+# Harmonize the metric, prediction and ranking columns separately.
+for (old_name in names(metric_names)) {
+  names(gblup_results)[names(gblup_results) == old_name] <- metric_names[[old_name]]
+  names(ann_results)[names(ann_results) == old_name] <- metric_names[[old_name]]
+}
+
+for (old_name in names(prediction_names)) {
+  names(gblup_predictions)[names(gblup_predictions) == old_name] <- prediction_names[[old_name]]
+  names(ann_predictions)[names(ann_predictions) == old_name] <- prediction_names[[old_name]]
+}
+
+for (old_name in names(ranking_names)) {
+  names(gblup_ranking)[names(gblup_ranking) == old_name] <- ranking_names[[old_name]]
+  names(ann_ranking)[names(ann_ranking) == old_name] <- ranking_names[[old_name]]
+}
 ```
-```{r model-contract}
+
+The scientific identifiers select the seven existing models. The
+display labels provide a common order for tables and figures;
+they do not define new model structures.
+
+```{r compared-models}
 traits <- c("Cer", "BM", "LP")
 
 gblup_models <- c("GBLUP_A", "GBLUP_AD", "GBLUP_ADE")
@@ -142,7 +202,12 @@ model_labels <- c("GBLUP-A", "GBLUP-AD", "GBLUP-ADE", "ANN-0", "ANN-L1", "ANN-L2
 
 ```
 
-The object `input_summary` counts the model–trait–split assessments and the individual predictions supplied by `gblup_results`, `ann_results`, `gblup_predictions`, and `ann_predictions`.
+### 2.4 Numbers of assessments and predictions
+
+Each model contributes 75 trait-by-split results, 2,925 held-out
+predictions and 585 individual OOF ranking records. The first table
+counts the two families' stored results and prediction records.
+The ranking table then counts the individual records separately.
 
 ```{r input-record-counts}
 input_summary <- data.frame(
@@ -162,21 +227,177 @@ input_summary |>
   )
 ```
 
-The GBLUP models contribute 225 model-by-trait-by-split results and 8,775
-GEBV records. The ANN models contribute 300 model-by-trait-by-split results
-and 11,700 GEBV records. The final comparison therefore contains 525
-model-by-trait-by-split results across seven models.
+```{r ranking-input-counts}
+ranking_input_summary <- data.frame(
+  Family = c("GBLUP", "ANN"),
+  Individuals_per_trait_model = length(comparison_cv$ids),
+  Ranking_records = c(nrow(gblup_ranking), nrow(ann_ranking)),
+  stringsAsFactors = FALSE
+)
 
-### 2.2 Matched BLUPs across models
+knitr::kable(
+  ranking_input_summary, format = "html", row.names = FALSE,
+  caption = "Stored individual OOF ranking records",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
 
-Each model must be evaluated for the same 39 individuals in every trait,
-repetition, and outer fold. The BLUP associated with each individual must also
-be identical across the seven genomic models.
+The expected combined dimensions are 525 split-level results,
+20,475 individual held-out predictions and 4,095 individual ranking
+records. These totals describe different units of observation and
+must not be interpreted as independent biological replicates.
 
-GBLUP-A is used only to verify this alignment and has no preferential status in
-the subsequent model comparison.
+### 2.5 Matched outer tasks and assessment individuals
 
-```{r matched-assessment-contract}
+Cross-model matching uses the model-independent keys
+`Trait`, `Repetition`, `Fold` and `SplitID`. The individual
+identifier `ID` is added when matching predictions. The original
+TaskID is not used because its definition differs across the fitting
+modules.
+
+The stored R03 outer assignment table is crossed with the three
+traits to obtain the expected assessment keys for one model. Its
+distinct split keys define the expected result records.
+
+```{r comparison-expected-keys}
+result_keys <- c("Trait", "Repetition", "Fold", "SplitID")
+comparison_keys <- c(result_keys, "ID")
+
+expected_prediction_keys <- merge(
+  data.frame(Trait = traits, stringsAsFactors = FALSE),
+  comparison_assessment,
+  by = NULL
+)
+expected_prediction_keys <- expected_prediction_keys[
+  , comparison_keys, drop = FALSE
+]
+
+expected_result_keys <- unique(expected_prediction_keys[
+  , result_keys, drop = FALSE
+])
+```
+
+The next tables distinguish duplicate keys, absent expected records
+and unexpected records. Matching is performed on distinct keys so
+that duplicates cannot inflate the number of matched records.
+The expected counts are 75 distinct result keys and 2,925 distinct
+prediction keys per model. Duplicate, missing and unexpected counts
+should all be zero.
+
+```{r comparison-key-coverage}
+result_key_coverage <- data.frame()
+prediction_key_coverage <- data.frame()
+assessment_coverage <- data.frame()
+
+for (model_name in model_order) {
+  if (model_name %in% gblup_models) {
+    model_results <- gblup_results[gblup_results$Model == model_name, , drop = FALSE]
+    model_predictions <- gblup_predictions[gblup_predictions$Model == model_name, , drop = FALSE]
+  } else {
+    model_results <- ann_results[ann_results$Model == model_name, , drop = FALSE]
+    model_predictions <- ann_predictions[ann_predictions$Model == model_name, , drop = FALSE]
+  }
+
+  observed_result_keys <- unique(model_results[, result_keys, drop = FALSE])
+  observed_prediction_keys <- unique(model_predictions[, comparison_keys, drop = FALSE])
+
+  matched_result_keys <- merge(
+    expected_result_keys, observed_result_keys, by = result_keys
+  )
+  matched_prediction_keys <- merge(
+    expected_prediction_keys, observed_prediction_keys, by = comparison_keys
+  )
+
+  result_key_coverage <- rbind(result_key_coverage, data.frame(
+    Model = model_name,
+    Records = nrow(model_results),
+    Distinct_keys = nrow(observed_result_keys),
+    Duplicate_keys = nrow(model_results) - nrow(observed_result_keys),
+    Missing_keys = nrow(expected_result_keys) - nrow(matched_result_keys),
+    Unexpected_keys = nrow(observed_result_keys) - nrow(matched_result_keys),
+    stringsAsFactors = FALSE
+  ))
+
+  prediction_key_coverage <- rbind(prediction_key_coverage, data.frame(
+    Model = model_name,
+    Records = nrow(model_predictions),
+    Distinct_keys = nrow(observed_prediction_keys),
+    Duplicate_keys = nrow(model_predictions) - nrow(observed_prediction_keys),
+    Missing_keys = nrow(expected_prediction_keys) - nrow(matched_prediction_keys),
+    Unexpected_keys = nrow(observed_prediction_keys) - nrow(matched_prediction_keys),
+    stringsAsFactors = FALSE
+  ))
+
+  # Count assessment records in each trait-by-split task.
+  task_sizes <- aggregate(
+    list(N = rep(1L, nrow(model_predictions))),
+    by = model_predictions[, result_keys, drop = FALSE], FUN = sum
+  )
+  # Count predictions per individual and repetition, separately by trait.
+  repetition_sizes <- aggregate(
+    list(N = rep(1L, nrow(model_predictions))),
+    by = model_predictions[, c("Trait", "ID", "Repetition")], FUN = sum
+  )
+  individual_sizes <- aggregate(
+    list(N = rep(1L, nrow(model_predictions))),
+    by = model_predictions[, c("Trait", "ID")], FUN = sum
+  )
+
+  assessment_coverage <- rbind(assessment_coverage, data.frame(
+    Model = model_name,
+    Tasks = nrow(task_sizes),
+    Min_assessment_N = min(task_sizes$N),
+    Max_assessment_N = max(task_sizes$N),
+    Trait_individuals = nrow(individual_sizes),
+    Min_OOF_N = min(individual_sizes$N),
+    Max_OOF_N = max(individual_sizes$N),
+    Repetition_groups = nrow(repetition_sizes),
+    Non_single_repetition_groups = sum(repetition_sizes$N != 1L),
+    stringsAsFactors = FALSE
+  ))
+}
+
+knitr::kable(
+  result_key_coverage, format = "html", row.names = FALSE,
+  caption = "Result-key coverage relative to the R03 design",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+```{r display-prediction-key-coverage}
+knitr::kable(
+  prediction_key_coverage, format = "html", row.names = FALSE,
+  caption = "Individual assessment-key coverage relative to the R03 design",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+The coverage counts should be read together with the next table:
+each model should have 75 tasks of 39 predictions, 585
+trait-individual groups with five OOF predictions each, and 2,925
+trait-individual-repetition groups with one prediction each.
+The key comparisons above also account for missing groups, which
+cannot be identified from observed group sizes alone.
+
+```{r display-assessment-coverage}
+knitr::kable(
+  assessment_coverage, format = "html", row.names = FALSE,
+  caption = "Assessment sample sizes and repeated OOF prediction coverage",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+### 2.6 Matched BLUP targets across models
+
+GBLUP-A is used only as a reference for checking the equality of
+phenotypic BLUP targets, not as a preferred prediction method.
+After matching on the individual assessment keys, the maximum
+absolute BLUP difference measures target agreement. Full agreement
+requires complete, unique keys (Section 2.5), finite targets and
+zero difference for every matched record.
+
+```{r matched-blup-targets}
 comparison_keys <- c("Trait", "Repetition", "Fold", "SplitID", "ID")
 
 blup_check <- gblup_predictions[
@@ -235,8 +456,6 @@ for (model_name in model_order) {
 
 ```
 
-The table `target_match` shows the number of individual BLUP values matched to GBLUP-A and their maximum absolute differences for each genomic model. A zero difference indicates identical observed BLUP targets for every matched record.
-
 ```{r display-blup-alignment}
 target_match$Model <- factor(target_match$Model, levels = model_order, labels = model_labels)
 
@@ -250,37 +469,163 @@ target_match |>
   )
 ```
 
-The BLUPs are identical for the same individuals across all seven models, so
-the GEBVs are evaluated against exactly the same targets.
+The target-alignment table reports the number of matched records
+and the maximum difference. Its values must be interpreted alongside
+the key-coverage tables rather than as evidence of completeness
+from an inner join alone.
 
 ## 3. Evaluation metrics
 
-Four split-level metrics compare GEBV with BLUP.
+### 3.1 Association and prediction error within an outer split
 
-- **Pearson correlation** measures linear association between GEBV and BLUP.
-- **Spearman correlation** measures within-split ranking agreement between GEBV
-  and BLUP.
-- **RMSE** measures the difference between GEBV and BLUP on the BLUP scale and
-  gives more weight to larger errors.
-- **MAE** measures the absolute difference between GEBV and BLUP on the BLUP
-  scale.
+Let \(y_i\) denote the phenotypic BLUP and \(\widehat y_i\) the
+stored genomic prediction for held-out individual \(i\). Each
+assessment split contains \(n=39\) individuals.
 
-Bias and calibration slope remain available in the stored model outputs as
-complementary measures, while the cross-model comparison focuses on the four
-prespecified primary metrics.
+| Metric | Interpretation | Reference direction |
+|:-------|:---------------|:--------------------|
+| Pearson | Linear association | Higher |
+| Spearman | Rank association | Higher |
+| RMSE | Quadratic prediction error | Lower |
+| MAE | Absolute prediction error | Lower |
+| Bias | Mean signed prediction error | Near zero |
+| Slope | Calibration of predicted scale | Near one |
 
-For the global ranking, the five predictions available for each
-individual are averaged to obtain its GEBV. The global analysis compares
-Spearman rank agreement, absolute rank error, and the overlap between the BLUP
-top 20% and the GEBV top 20%, each containing exactly 39 individuals.
+Pearson correlation measures linear association:
 
-Agreement among the GEBV rankings produced by different genomic models is also
-quantified with pairwise linearly weighted Cohen's kappa after the 195 ranked
-individuals are divided into five ordered quintiles of exactly 39 individuals.
-Quintile 1 contains ranks 1--39 and represents the highest GEBVs, whereas
-quintile 5 contains ranks 157--195. Linear weights preserve the ordinal
-structure by penalizing disagreement progressively as two methods place an
-individual farther apart across ranking quintiles.
+\[
+r=\frac{\sum_{i=1}^{n}(y_i-\bar y)(\widehat y_i-\overline{\widehat y})}
+{\sqrt{\sum_{i=1}^{n}(y_i-\bar y)^2
+\sum_{i=1}^{n}(\widehat y_i-\overline{\widehat y})^2}}.
+\]
+
+Spearman correlation is Pearson correlation applied to the ranks
+of observed and predicted values, using average ranks for ties.
+A high correlation does not establish equality of predictions and
+targets or absence of systematic error.
+
+The error metrics on the original BLUP scale are
+
+\[
+\operatorname{RMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(\widehat y_i-y_i)^2},
+\qquad
+\operatorname{MAE}=\frac{1}{n}\sum_{i=1}^{n}|\widehat y_i-y_i|.
+\]
+
+RMSE gives larger errors greater weight than MAE. Both are expressed
+on the scale of the trait, so error magnitudes should be compared
+within traits, not pooled across traits with different scales.
+
+The stored fitting procedures return undefined correlations when
+observed or predicted values are constant. Finite RMSE and MAE
+remain meaningful in these cases. Section 4 distinguishes the
+model-specific available splits from the common finite splits
+used in direct correlation comparisons.
+
+### 3.2 Complementary calibration metrics
+
+Mean signed prediction error is defined as
+
+\[
+\operatorname{Bias}=\frac{1}{n}\sum_{i=1}^{n}(\widehat y_i-y_i).
+\]
+
+Positive bias indicates average overprediction; negative bias
+indicates underprediction. Bias near zero can result from
+cancellation of positive and negative errors.
+
+The calibration slope is the prediction coefficient in a regression
+with an intercept:
+
+\[
+y_i=\alpha+\beta\widehat y_i+\varepsilon_i.
+\]
+
+The reference slope is one. With a meaningful positive association,
+a slope greater than one can indicate insufficient dispersion of
+predicted values, and a slope below one can indicate excessive
+dispersion. A slope near one alone does not demonstrate calibration
+of location or small errors. The upstream implementations treat the
+slope as undefined when either vector is constant.
+
+The following table summarizes the stored bias and slope across
+each trait and model. Only finite values enter the means and sample
+standard deviations; the counts show the number of contributing
+splits. The slope means are model-specific available-split summaries,
+not common-split contrasts. The four primary metrics and the
+original comparison objects in Section 4 remain unchanged.
+
+```{r complementary-calibration-summary}
+calibration_summary <- data.frame()
+
+for (trait in traits) {
+  for (model_name in model_order) {
+    if (model_name %in% gblup_models) {
+      calibration_data <- gblup_results[
+        gblup_results$Trait == trait & gblup_results$Model == model_name,
+        , drop = FALSE
+      ]
+    } else {
+      calibration_data <- ann_results[
+        ann_results$Trait == trait & ann_results$Model == model_name,
+        , drop = FALSE
+      ]
+    }
+
+    bias_values <- calibration_data$Bias[is.finite(calibration_data$Bias)]
+    slope_values <- calibration_data$Slope[is.finite(calibration_data$Slope)]
+
+    calibration_summary <- rbind(calibration_summary, data.frame(
+      Trait = trait,
+      Model = model_name,
+      Splits = nrow(calibration_data),
+      Bias_N = length(bias_values),
+      Bias = mean(bias_values),
+      Bias_SD = sd(bias_values),
+      Slope_N = length(slope_values),
+      Slope = mean(slope_values),
+      Slope_SD = sd(slope_values),
+      stringsAsFactors = FALSE
+    ))
+  }
+}
+
+knitr::kable(
+  calibration_summary, format = "html", digits = 4, row.names = FALSE,
+  caption = "Complementary bias and calibration slope on available outer splits",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+### 3.3 Aggregation and individual ranking
+
+The split-level metrics are calculated before aggregation.
+For metric \(M\), let \(\mathcal{S}_M\) denote the contributing
+outer splits. With finite values in those splits, the mean is
+
+\[
+\overline M=\frac{1}{|\mathcal{S}_M|}\sum_{k\in\mathcal{S}_M}M_k.
+\]
+
+The mean split correlation is not a correlation calculated after
+pooling all held-out predictions, and mean split RMSE is generally
+different from pooled RMSE. Standard deviations describe variability
+across dependent splits; they are not standard errors or confidence
+intervals. No \(R^2\) metric is used.
+
+For the individual ranking, the stored OOF predictions are averaged
+over the five repetitions. Global Spearman correlation, absolute
+rank error and recovery of the 39 highest observed BLUPs evaluate
+different aspects of individual ordering. Descending ordering does
+not necessarily correspond to the biologically favorable direction
+for every trait.
+
+Pairwise linearly weighted Cohen's kappa compares the ordered
+GEBV-ranking strata between two prediction models, rather than
+comparing predictions with BLUP targets. The intended quintile size
+is 39 individuals. The construction of the groups and the
+agreement measures are addressed in Section 6.
 
 ## 4. BLUP-GEBV performance across outer splits
 
