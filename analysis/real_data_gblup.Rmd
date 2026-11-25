@@ -163,19 +163,58 @@ and ADE are compared on identical training and held-out individuals.
 
 ## 4. Genomic relationship matrices
 
-The 20,887 markers retained after the preceding quality-control stage are used
-to construct three genomic covariance structures, each indexed by the same
-195 individuals:
+The genotype matrix received from R02 contains 195 individuals and
+20,887 markers retained after quality control. Genomic relationship matrices
+transform this individual-by-marker representation into individual-by-individual
+relationships.
 
-- **A (additive):** relates individuals through their additive marker effects;
-- **D (dominance):** describes marker-derived dominance relationships;
-- **E (additive-by-additive):** describes the second-order epistatic relationship
-  specified by `sommer::E.mat(type = "A#A")`.
+Each resulting matrix has dimension $195 \times 195$. Its rows and columns
+identify the same individuals, and its entries describe genomic relationships
+according to the genetic component represented by the matrix.
 
-The `min.MAF = 0` arguments do not introduce an additional MAF threshold in
-this module. All three matrices are built from the already-filtered panel.
-Their dimensions, symmetry, finite entries, and mean diagonals are summarized
-in the following table.
+### 4.1 Genetic components and relationship matrices
+
+| Matrix | Genetic component | Construction |
+|:-------|:------------------|:-------------|
+| $\mathbf{A}$ | Additive | `sommer::A.mat()` |
+| $\mathbf{D}$ | Dominance | `sommer::D.mat()` |
+| $\mathbf{E}$ | Additive-by-additive epistasis | `sommer::E.mat(type = "A#A")` |
+
+The additive matrix represents genomic relationships associated with
+additive genetic effects. The dominance matrix represents relationships
+associated with within-locus dominance effects. The epistatic matrix
+represents the additive-by-additive component of interactions between loci.
+
+These matrices define the covariance structures of the corresponding
+random genetic effects. They do not directly provide individual genetic
+predictions or estimated variance components; those quantities are obtained
+when the mixed models are fitted.
+
+### 4.2 Construction of the genomic relationship matrices
+
+The following code constructs the three matrices using the same
+quality-controlled marker panel. The argument `min.MAF = 0` does not impose
+an additional positive minor allele frequency threshold. The dominance
+and epistatic matrices retain the `nishio = TRUE` specification, and
+`type = "A#A"` identifies the additive-by-additive epistatic structure.
+
+The matrices are constructed using the genomic information of all 195
+individuals. Their construction does not use the phenotypic BLUPs.
+
+The elapsed time is recorded immediately before and after the three
+matrix-construction calls. It therefore measures the combined construction
+time of A, D, and E.
+
+The individual identifiers are assigned to the rows and columns of each
+matrix to maintain correspondence between genomic relationships and the
+individuals used in the mixed models.
+
+The code also summarizes matrix dimensions, symmetry, finite entries,
+mean diagonal values, and the combined construction time.
+
+Matrix construction is displayed without being repeated during routine
+rendering. The numerical summary is retrieved from the previously saved
+results.
 
 ```{r build-kernels, eval=FALSE}
 # Construct additive, dominance, and additive-by-additive kernels.
@@ -216,8 +255,15 @@ kernel_summary <- read.csv("output/real/gblup/real_gblup_kernel_summary.csv",
                            stringsAsFactors = FALSE)
 ```
 
-The following table presents the dimensions and numerical summaries of the
-additive, dominance, and additive-by-additive relationship matrices.
+### 4.3 Numerical properties of the relationship matrices
+
+The following table presents the previously saved numerical summaries
+of the additive, dominance, and additive-by-additive relationship matrices.
+
+The dimensions describe the number of individuals represented in each
+matrix. The symmetry and finite-entry columns provide basic numerical
+diagnostics, but these checks alone do not establish positive
+semidefiniteness.
 
 ```{r show-kernel-summary}
 knitr::kable(
@@ -230,6 +276,23 @@ knitr::kable(
 )
 ```
 
+All three matrices contain 195 rows and 195 columns, are symmetric
+within the numerical tolerance used in the code, and contain finite
+entries.
+
+The mean diagonal describes the scale of each relationship matrix.
+Differences among these values should not be interpreted as differences
+in the contribution of additive, dominance, or epistatic effects to
+phenotypic variation. The corresponding variance parameters are estimated
+during model fitting.
+
+The `Kernel_build_seconds` column contains the same combined construction
+time in all three rows. The recorded value of 1.54 seconds corresponds
+to the construction of the three matrices together, rather than to
+three separately measured execution times.
+
+The following code documents how the numerical summary was saved.
+
 ```{r save-kernel-summary, eval=FALSE}
 dir.create("output/real/gblup", recursive = TRUE, showWarnings = FALSE)
 write.csv(kernel_summary, "output/real/gblup/real_gblup_kernel_summary.csv",
@@ -239,8 +302,13 @@ write.csv(kernel_summary, "output/real/gblup/real_gblup_kernel_summary.csv",
 
 ## 5. Fixed candidate structures
 
-The fitted response is the **precomputed individual phenotypic BLUP**. For the
-three fixed GBLUP structures, the random effects are described by
+The fitted response is the **precomputed individual phenotypic BLUP**
+obtained in R01. The genomic mixed models use the relationship matrices
+constructed in Section 4 to specify the covariance of the genetic effects.
+
+### 5.1 Random effects and covariance structures
+
+For the three fixed GBLUP structures, the random effects are described by
 
 $$
 \begin{aligned}
@@ -251,11 +319,64 @@ aa &\sim \mathcal{N}(0,\sigma_{aa}^2\mathbf{E}),\\
 \end{aligned}
 $$
 
-Here, $\mu$ is the intercept, $a$ is the additive effect,
-$d$ is the dominance effect, $aa$ is the additive-by-additive effect,
-and $\varepsilon$ is the residual. Each structure includes only its
-specified components. The estimated intercept and applicable genomic effects
-are summed to obtain predictions on the BLUP scale.
+Here, $\mu$ is the intercept, $a$ is the vector of additive genetic
+effects, $d$ is the vector of dominance genetic effects, $aa$ is the
+vector of additive-by-additive epistatic effects, and $\varepsilon$
+is the residual vector.
+
+The matrices $\mathbf{A}$, $\mathbf{D}$, and $\mathbf{E}$ describe
+the covariance structure of the corresponding genetic effects, while
+$\sigma_a^2$, $\sigma_d^2$, and $\sigma_{aa}^2$ are the associated
+variance parameters. The residual covariance is specified by
+$\sigma_e^2\mathbf{I}$.
+
+Under the independent random-component specification used in these
+models, the marginal covariance matrices of the response are
+
+$$
+\begin{aligned}
+\mathbf{V}_{A}
+&= \sigma_a^2\mathbf{A}
+ + \sigma_e^2\mathbf{I},\\
+\mathbf{V}_{AD}
+&= \sigma_a^2\mathbf{A}
+ + \sigma_d^2\mathbf{D}
+ + \sigma_e^2\mathbf{I},\\
+\mathbf{V}_{ADE}
+&= \sigma_a^2\mathbf{A}
+ + \sigma_d^2\mathbf{D}
+ + \sigma_{aa}^2\mathbf{E}
+ + \sigma_e^2\mathbf{I}.
+\end{aligned}
+$$
+
+### 5.2 Predictions under each genomic structure
+
+The three models differ in the genetic components included in the
+prediction. The predicted response for individual $i$ is
+
+$$
+\begin{aligned}
+\widehat{y}_{i,A}
+&= \widehat{\mu}+\widehat{a}_i,\\
+\widehat{y}_{i,AD}
+&= \widehat{\mu}+\widehat{a}_i+\widehat{d}_i,\\
+\widehat{y}_{i,ADE}
+&= \widehat{\mu}+\widehat{a}_i+\widehat{d}_i
++\widehat{aa}_i.
+\end{aligned}
+$$
+
+The intercept and genetic effects are estimated separately for each
+model-fitting task. Their sum provides predictions on the scale of the
+individual phenotypic BLUPs. The residual is not included in the
+predicted value.
+
+The A model provides the additive reference structure. The AD model
+additionally represents dominance relationships, whereas the ADE model
+also accommodates additive-by-additive epistatic relationships.
+
+### 5.3 Candidate models used in cross-validation
 
 Each row in the next table identifies a model and the genomic effects
 included in its covariance specification. The labels are used unchanged in
@@ -290,21 +411,36 @@ knitr::kable(
 )
 ```
 
-The three structures remain fixed throughout the analysis. Their predictions
-are evaluated using the same validation partitions and predefined metrics.
+The three structures remain fixed throughout the analysis. Increasing
+the number of genetic components provides a more flexible covariance
+specification, but does not necessarily improve prediction in held-out
+individuals.
+
+Their predictive performance is evaluated using the same validation
+partitions, response variables, and predefined metrics.
+
+The next section combines these three genomic structures with the
+characteristics and outer cross-validation splits to define the complete
+set of model-fitting tasks.
 
 ## 6. Evaluation grid
 
-The common grid contains three traits, 25 outer splits, and three fixed GBLUP
-structures:
+The evaluation grid combines three traits, five repetitions of five outer
+folds, and three fixed genomic structures. Each row represents one fitting
+task, with 25 tasks per trait-model combination and 75 per trait or model.
 
 $$
-3\ \text{traits}\times25\ \text{outer splits}\times3\ \text{structures}
-=225\ \text{model-fitting tasks}.
+3\times5\times5\times3=225\ \text{model-fitting tasks}.
 $$
 
-These are distinct adjustments, not statistically independent observations,
-because the analysis sets overlap across repetitions.
+`SplitID` identifies the partition prepared in R03, whereas `TaskID`
+identifies the combination of trait, split, and genomic structure.
+The code below constructs these combinations and summarizes their counts.
+
+Each task predicts 39 assessment individuals, so the complete design
+contains $225\times39=8{,}775$ held-out prediction records. These tasks
+are not statistically independent because their analysis sets overlap
+across folds and repetitions.
 
 ```{r task-grid}
 # Cross each characteristic with the 25 splits and three fixed structures.
@@ -345,23 +481,80 @@ knitr::kable(task_summary, format = "html",
 
 ## 7. Fit A, AD, and ADE in every outer split
 
-For each task, 156 individuals supply response information for fitting. The
-remaining 39 assessment BLUPs are replaced by `NA` before `sommer::mmes()` is
-called. Their observed values are recovered only for evaluating the resulting
-predictions. The marker-derived genomic relationships are common to the full
-panel of genotyped candidates; assessment phenotypes do not enter this GBLUP
-fitting step.
+### 7.1 Analysis and assessment individuals
 
-The model-fitting chunk documents the full fitting procedure without running
-the 225 adjustments during routine rendering. The subsequent export chunk shows
-how to save the results and is likewise disabled; the tutorial then reads the
-persisted files for its numerical summaries and figures.
+For each trait and outer split, the partitions received from R03 define
+156 analysis individuals and 39 assessment individuals.
 
-For reproducibility, the common numerical settings are defined immediately before
-the model-fitting code: `SEED_GLOBAL = 20261105L` fixes the random seed,
-`N_ITERS_SOMMER = 50L` sets the maximum number of `sommer` iterations per fit,
-and `TOL_LLIK = 1e-4` is passed to the `tolParConvLL` convergence-tolerance
-argument. The same settings are used for all 225 tasks.
+| Set | Individuals | Response during genomic fitting |
+|:----|------------:|:--------------------------------|
+| Analysis | 156 | Available phenotypic BLUPs |
+| Assessment | 39 | Masked phenotypic BLUPs |
+| Total | 195 | Common genotyped population |
+
+The response vector contains the phenotypic BLUPs estimated in R01.
+The data supplied to the genomic model retain all 195 individual
+identifiers, but `dat$y[assessment_index] <- NA_real_` masks the 39
+assessment responses before fitting. The 156 available BLUPs supply
+response information for estimating the model parameters and effects.
+
+The genomic relationship matrices include all 195 genotyped individuals.
+Their relationships provide the basis for predicting genetic effects for
+individuals with masked responses. The original response vector is retained
+separately and its assessment values are recovered only for evaluation.
+
+This is out-of-sample prediction with respect to genomic fitting. The
+upstream phenotypic BLUP estimation is not repeated inside each fold.
+
+### 7.2 Model fitting and prediction
+
+The three structures defined in Section 5 are fitted with `sommer::mmes()`.
+The formula `y ~ 1` specifies the fixed intercept, and `rcov = ~ units`
+specifies the residual structure. The random-effect terms combine `vsm()`
+and `ism()` with the genomic covariance matrix supplied through `Gu`.
+
+| Genetic effect | Individual factor | Relationship matrix |
+|:---------------|:------------------|:--------------------|
+| Additive | `id` | `A_matrix` |
+| Dominance | `idd` | `D_matrix` |
+| Additive-by-additive | `ide` | `E_matrix` |
+
+The factors identify the same individuals but distinguish the random
+genetic components. The numerical settings are identical across tasks.
+
+| Setting | Value | Interpretation |
+|:--------|------:|:---------------|
+| `SEED_GLOBAL` | 20261105 | Random seed |
+| `N_ITERS_SOMMER` | 50 | Maximum number of fitting iterations |
+| `TOL_LLIK` | 0.0001 | Tolerance passed to `tolParConvLL` |
+
+After fitting, the code extracts the variance parameters from `fit$theta`
+according to the structure. Components absent from a model are stored
+as zero; these structural zeros differ from zero estimates of components
+that were fitted. The log-likelihood sequence in `fit$llik` and the
+convergence indicator in `fit$convergence` provide the numerical
+information discussed in Section 8.
+
+The random-effect solutions are recovered from `fit$uList`. The incidence
+matrices constructed with `model.matrix()` associate those solutions with
+the individual identifiers. For the complete ADE structure,
+
+$$
+\widehat{\mathbf{y}}=\mathbf{1}\widehat{\mu}
++\mathbf{Z}_a\widehat{\mathbf{a}}
++\mathbf{Z}_d\widehat{\mathbf{d}}
++\mathbf{Z}_{aa}\widehat{\mathbf{aa}}.
+$$
+
+The intercept is extracted from `fit$b`. Contributions absent from a model
+are represented by zero vectors. The sum of the genetic contributions is
+the genomic component; adding the intercept produces predictions on the
+phenotypic BLUP scale. The residual is not added to the prediction.
+
+Only the 39 assessment predictions and corresponding observed BLUPs are
+used to evaluate each task. The following chunk documents the complete
+fitting procedure without rerunning it during routine rendering. The
+persisted results are subsequently loaded for the summaries and figures.
 
 ```{r fit-all-gblup-models, eval=FALSE}
 # Use the same numerical settings for every trait, split, and GBLUP structure.
@@ -543,12 +736,13 @@ if (!exists("results", inherits = FALSE)) {
 }
 ```
 
-### 7.1 Model results
+### 7.3 Model results
 
-The first six rows illustrate one result per trait, outer split, and GBLUP
-structure. The preview focuses on partition sizes and predictive metrics;
-the saved `results` object retains all numerical diagnostics and variance
-components for the 225 fits.
+Each row of `results` represents one fitting task, identified by trait,
+outer split, and genomic structure. The object stores sample sizes,
+variance parameters, numerical diagnostics, predictive metrics, and
+elapsed times. The first six rows illustrate selected columns of the
+225 fitting records.
 
 ```{r preview-gblup-results}
 knitr::kable(
@@ -560,12 +754,18 @@ knitr::kable(
 )
 ```
 
-### 7.2 Held-out predictions
+### 7.4 Held-out predictions
 
-Each row in `predictions` corresponds to one assessment individual from a
-particular outer split. The first six records show the observed phenotypic
-BLUP alongside its out-of-fold predicted value. The full object preserves
-all 8,775 predictions and their separate genomic components.
+Each row of `predictions` represents an assessment individual in a
+particular task. `Observed_BLUP` is the held-out response, and
+`Predicted_BLUP` includes the intercept and the estimated genetic effects.
+`Genomic_Component` excludes the intercept. The additive, dominance,
+and epistatic contributions are also stored separately.
+
+There are 39 records per task and 8,775 records in the complete design.
+They do not represent 8,775 different individuals because each individual
+appears across repetitions, traits, and structures. The first six rows
+illustrate the stored predictions.
 
 ```{r preview-gblup-predictions}
 knitr::kable(
@@ -577,8 +777,17 @@ knitr::kable(
 )
 ```
 
-The following code documents how the complete fitting outputs and execution
-metadata are saved after fitting. It is disabled during routine rendering.
+### 7.5 Saving the fitting results
+
+The model summaries and individual predictions are saved in CSV and RDS
+formats. CSV allows inspection of the numerical records, while RDS retains
+the R objects. The run metadata record the software version, numerical
+settings, dimensions, and elapsed times. Routine rendering reads persisted
+results rather than repeating the 225 adjustments.
+
+The following export code is disabled during routine rendering.
+
+
 
 ```{r save-gblup-model-results, eval=FALSE}
 # Export the 225 model summaries and 8,775 assessment predictions.
@@ -605,11 +814,30 @@ saveRDS(run_metadata, "output/real/gblup/real_gblup_run_metadata.rds")
 
 ## 8. Numerical behavior
 
-For each model and trait, the numerical summary reports the number of fits,
-the convergence flag returned by `sommer`, the presence of negative estimated
-variance components, the final log-likelihood-change check, and constant
-assessment predictions. These quantities describe the behavior of the
-prespecified fits; no fitted structure is changed based on an assessment fold.
+The numerical behavior of each trait-model combination is summarized across
+its 25 outer fitting tasks before interpreting predictive performance.
+
+| Diagnostic | Interpretation |
+|:-----------|:---------------|
+| `Fits` | Number of fitting records |
+| `Converged` | Fits with a true `sommer` convergence indicator |
+| `Negative_components` | Fits with at least one negative variance estimate |
+| `Pass_LLik_gate` | Fits satisfying the additional log-likelihood check |
+| `Constant_predictions` | Fits with identical assessment predictions |
+
+The convergence indicator comes from `fit$convergence`. The stored iteration
+count is the length of `fit$llik`. When at least two log-likelihood values
+are available, the code calculates the final change
+
+$$
+\Delta\ell=\ell_t-\ell_{t-1}.
+$$
+
+The additional check requires a finite change satisfying
+$|\Delta\ell|\leq10^{-4}$. It is distinct from the convergence indicator.
+The negative-component diagnostic counts affected fits, not the total
+number of negative estimates. These diagnostics describe the original
+fits without changing structures or excluding tasks.
 
 ```{r numerical-summary}
 # Count convergence and other numerical diagnostics by structure and trait.
@@ -650,37 +878,107 @@ write.csv(numerical_summary,
           row.names = FALSE)
 ```
 
-Convergence as reported by the fitting routine and the additional
-log-likelihood-change check are separate diagnostics. Constant predictions
-prevent computation of correlation-based metrics, but still allow assessment
-of prediction errors. The numerical summary documents these cases without
-silently discarding their error metrics.
+In the persisted results, all 225 fits have a true convergence indicator,
+while 215 satisfy the additional final log-likelihood-change check.
+The ten remaining fits illustrate why these diagnostics must be
+interpreted separately.
+
+Five fits contain at least one negative variance estimate, warranting
+caution when interpreting their variance parameters. Four fits produce
+constant assessment predictions, for which correlations are undefined
+but prediction errors can still be evaluated.
+
+These occurrences remain documented in the original results. A true
+convergence indicator alone does not establish that every numerical
+check was satisfied. The next section examines held-out predictive
+performance.
 
 ## 9. Held-out predictive performance
 
-The held-out BLUPs are compared with the predictions from the corresponding
-outer assessment split. Pearson correlation measures linear agreement,
-Spearman correlation measures rank agreement, RMSE and MAE measure prediction
-error on the BLUP scale, and bias measures the mean prediction difference.
-The calibration slope is estimated from observed BLUPs regressed on predicted
-BLUPs. For the $n$ held-out individuals in a split, the main error measures are
+### 9.1 Metrics within each outer assessment split
+
+The observed phenotypic BLUPs and their corresponding predictions are
+compared within each outer assessment split. Each fitting task provides
+39 paired observations. The observed values were masked during genomic
+fitting and are used here as the reference response.
+
+| Metric | Interpretation | Reference direction |
+|:-------|:---------------|:--------------------|
+| Pearson correlation | Linear association between observed and predicted BLUPs | Higher |
+| Spearman correlation | Monotonic association based on ranks | Higher |
+| RMSE | Quadratic prediction error on the BLUP scale | Lower |
+| MAE | Absolute prediction error on the BLUP scale | Lower |
+| Bias | Mean signed difference between predicted and observed BLUPs | Close to zero |
+| Slope | Calibration slope of observed on predicted BLUPs | Close to one |
+
+Pearson correlation measures association, not equality of the observed
+and predicted values. A high correlation may coexist with systematic
+bias or differences in scale. Spearman correlation describes the
+agreement in ordering within the assessment split.
+
+Let $y_i$ and $\widehat y_i$ be the observed and predicted BLUPs for the
+$i$th assessment individual, with $n=39$ in each task. The error metrics
+are defined as
 
 $$
-\operatorname{RMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(\hat y_i-y_i)^2},
-\qquad
-\operatorname{MAE}=\frac{1}{n}\sum_{i=1}^{n}|\hat y_i-y_i|,
-\qquad
-\operatorname{Bias}=\frac{1}{n}\sum_{i=1}^{n}(\hat y_i-y_i).
+\begin{aligned}
+\operatorname{RMSE}&=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(\widehat y_i-y_i)^2},\\
+\operatorname{MAE}&=\frac{1}{n}\sum_{i=1}^{n}|\widehat y_i-y_i|,\\
+\operatorname{Bias}&=\frac{1}{n}\sum_{i=1}^{n}(\widehat y_i-y_i).
+\end{aligned}
 $$
 
-Here, $y_i$ and $\hat y_i$ are the observed and predicted individual BLUPs.
-Each reported summary is descriptive across the 25 matched outer tasks for
-that trait and model.
+RMSE gives greater weight to large errors than MAE. Positive bias
+indicates overprediction on average, whereas negative bias indicates
+underprediction. A bias near zero does not imply that individual errors
+are small, because positive and negative errors may cancel.
 
-Pearson and Spearman correlations and the calibration slope are undefined
-when all 39 held-out predictions from a task are constant. RMSE, MAE, and bias
-remain defined in those tasks. Each metric is therefore summarized from all
-tasks for which that specific metric is finite.
+The calibration slope is the estimated coefficient of predicted BLUPs in
+an ordinary least-squares regression with an intercept:
+
+$$
+y_i=\alpha+\beta\widehat y_i+\epsilon_i.
+$$
+
+A slope of one is the reference for calibration of scale, but does not
+alone establish calibration of location or individual prediction accuracy.
+When a meaningful linear association exists, slopes above one can indicate
+insufficient predicted dispersion and slopes below one can indicate
+excessive predicted dispersion. Slopes may be unstable when predictions
+have little variation.
+
+### 9.2 Aggregation and metric availability
+
+There are 25 outer fitting tasks per trait-model combination. Pearson and
+Spearman correlations require variation in both the observed and predicted
+values. When predictions are constant, these correlations and the
+calibration slope are undefined and stored as `NA`. RMSE, MAE, and bias
+remain computable for the finite observed and predicted values.
+
+The summary counts finite values with `is.finite()` and uses
+`mean(..., na.rm = TRUE)` and, for Pearson and Spearman, `sd(..., na.rm = TRUE)`.
+In the saved results, undefined metrics are missing and there are no
+infinite metric values. Thus the finite-value counts correspond to the
+numbers of observations contributing to the reported means.
+
+For a metric $M$, let $\mathcal{S}_M$ be the splits with a defined value and
+$K_M=|\mathcal{S}_M|$. Its mean in these results is
+
+$$
+\overline{M}=\frac{1}{K_M}\sum_{k\in\mathcal{S}_M}M_k.
+$$
+
+This is a mean of split-level metrics, not a metric calculated after pooling
+all predictions. In particular, the mean split RMSE is generally different
+from the RMSE of pooled prediction errors.
+
+The reported standard deviations for Pearson and Spearman describe
+variation across the contributing splits, not standard errors or confidence
+intervals. The repeated cross-validation tasks are dependent because the
+analysis sets overlap.
+
+The following code summarizes the stored metrics for each trait and model.
+The denominator columns identify how many splits contribute to each metric.
 
 ```{r performance-summary}
 # Summarize each metric across its finite outer-split observations.
@@ -743,27 +1041,114 @@ write.csv(performance_summary,
           row.names = FALSE)
 ```
 
-The comparison is intentionally descriptive at this stage. A more complete
-cross-model comparison, including the regularized ANN models, is performed in
-the final comparison module.
+### 9.3 Interpretation of predictive performance
+
+For Cer and BM, all six metrics are available in all 25 splits for each
+model. For LP, Pearson, Spearman and slope are available in 23 splits for
+A and 24 splits each for AD and ADE. The four remaining tasks have constant
+predictions. RMSE, MAE and bias remain available for all 25 splits in every
+trait-model combination. None of the 225 fitting tasks is discarded.
+
+The A structure has the largest mean Pearson correlation for all three
+traits in the saved results. The differences for Cer are particularly
+small. This pattern does not imply that A is best for every metric: AD,
+for example, has a slightly smaller mean MAE for BM.
+
+The structures share the same planned outer partitions, but the sets of
+splits contributing to a metric may differ when that metric is undefined.
+In particular, differences between the reported LP correlation means are
+not necessarily contrasts calculated on identical subsets of splits.
+No statistical significance or model superiority is established by these
+descriptive summaries. Comparisons of error magnitudes also need to respect
+the different scales of the traits.
+
+The final comparison module examines the GBLUP and regularized ANN results
+on the common validation design. The next section changes the unit of
+analysis from outer fitting tasks to individual rankings.
 
 ## 10. Out-of-fold ranking of the 195 individuals
 
-Each individual is assessed once in every repetition and therefore has five
-held-out predictions for each trait and GBLUP structure. These five out-of-fold
-predictions are averaged before the global ranking is constructed. This yields
-one predictive value per individual, model, and trait using only predictions
-obtained while that individual was outside the training set.
+### 10.1 Individual out-of-fold predictions
 
-Ranks are defined in decreasing order: rank 1 corresponds to the highest BLUP.
-The absolute rank error measures the displacement between the observed and
-predicted ordering.
+Within each repetition, every individual appears in exactly one outer
+assessment fold. Across the five repetitions, this produces five
+out-of-fold (OOF) predictions per individual, trait, and genomic structure.
+The observed phenotypic BLUP is the same reference value across those
+repetitions.
 
-Selection agreement is also evaluated for the upper 20% of the population.
-With 195 individuals, the selected group contains exactly 39 individuals.
-When BLUP values are tied at the selection boundary, `ID` is used only as a
-deterministic secondary ordering criterion so that both observed and predicted
-sets contain exactly 39 individuals.
+For individual $i$, let $\widehat y_{ir}$ denote the held-out prediction
+in repetition $r$. The individual prediction used in the ranking is
+
+$$
+\overline{\widehat y}_i=\frac{1}{5}\sum_{r=1}^{5}\widehat y_{ir}.
+$$
+
+The object also retains `Prediction_SD`, the sample standard deviation of
+the five predictions, and `N_OOF`, the number of contributing predictions.
+This standard deviation describes variation across the repeated genomic
+fits; it is not a standard error or a prediction interval.
+
+| Unit | Records |
+|:-----|--------:|
+| OOF predictions per individual, trait and model | 5 |
+| Individual ranking records per trait and model | 195 |
+| Trait-model combinations | 9 |
+| Individual ranking records across all combinations | 1,755 |
+| Original held-out prediction records | 8,775 |
+
+Each of the 1,755 records in the saved individual ranking has `N_OOF = 5`.
+The ranking uses the mean of the five predicted BLUPs, including the
+estimated intercept of each fit. It does not average fold-specific ranks
+or use only the genomic component. The five predictions were obtained
+while the corresponding individual was outside the genomic fitting sample.
+
+### 10.2 Ranking and upper-20% agreement
+
+The observed and predicted BLUPs are ranked separately in decreasing order
+within each trait-model combination. Rank 1 corresponds to the largest
+value, and tied values receive their average rank through
+`ties.method = "average"`.
+
+Let $R_i$ be the observed rank and $\widehat R_i$ the predicted rank.
+The rank difference and absolute rank error are
+
+$$
+D_i=\widehat R_i-R_i,\qquad E_i=|D_i|.
+$$
+
+A positive difference places the individual farther down the descending
+predicted ranking than in the observed ranking. The mean and median of
+$E_i$ describe displacement in rank positions across the 195 individuals.
+
+The global ranking Spearman correlation is calculated across the 195
+observed and predicted ranks. It differs from the mean split-level
+Spearman correlation in Section 9, which summarizes correlations calculated
+separately within the 39 assessment individuals of each split.
+
+Upper-20% agreement compares the sets of 39 individuals with the largest
+observed and predicted BLUPs. Let $S_o$ and $S_p$ denote those two sets.
+
+$$
+\operatorname{Overlap}_N=|S_o\cap S_p|,\qquad
+\operatorname{Overlap}_{\mathrm{rate}}=\frac{|S_o\cap S_p|}{39}.
+$$
+
+The rate is the fraction of the observed upper group recovered by the
+predicted upper group, not a correlation or a chance-corrected index.
+The individual ID is used as a deterministic secondary ordering criterion
+when selecting the upper group, so both sets contain exactly 39 individuals
+regardless of ties. This tie-breaking rule does not change the average
+ranks used for rank errors and global Spearman correlation.
+
+The descending order is the same for all traits in the implemented analysis.
+The upper group therefore means the largest BLUPs, not necessarily the most
+biologically desirable individuals. In a breeding objective favoring lower
+trait values, the desirable group would instead be at the lower end. The
+present analysis measures agreement under the original descending rule;
+it does not reverse trait directions or redefine the saved groups.
+
+The following code constructs the individual ranking and its summary using
+the persisted held-out predictions.
 
 ```{r individual-ranking}
 # Each individual has five OOF predictions for every model and trait.
@@ -869,20 +1254,46 @@ write.csv(ranking_summary,
           row.names = FALSE)
 ```
 
-The ranking table scrolls horizontally on narrower screens without shrinking
-the text or truncating metric names. It complements split-level Spearman
-correlation by evaluating the ordering obtained from the five out-of-fold
-predictions available for each individual. The top-20% overlap additionally measures how many of the 39
-individuals selected from observed BLUPs are recovered by the out-of-fold
-predicted ranking.
+### 10.3 Interpretation of the ranking summary
+
+For Cer, the three models recover 22 of the 39 individuals in the observed
+upper group (56.41%). For BM, A, AD and ADE recover 11, 10 and 9 individuals,
+respectively. For LP, they recover 5, 4 and 4 individuals, respectively.
+
+These overlap counts measure agreement at a fixed selection intensity.
+They do not establish agreement over the entire population. Global Spearman
+correlation and the mean and median absolute rank errors provide complementary
+information. For BM, for example, AD has a slightly higher global Spearman
+correlation than A, whereas A recovers more individuals in the observed upper
+group. The criteria should therefore be interpreted separately.
+
+The comparisons are descriptive and do not establish statistical differences
+among genomic structures or expected selection gains. The wide summary table
+can be inspected by horizontal scrolling. Section 11 presents the distributions
+of split-level performance and the individual out-of-fold predictions.
 
 ## 11. Predictive distributions across outer splits
 
-The following figures show the distribution of the available held-out metrics
-across outer splits, separately for Cer, BM, and LP. Each point corresponds to
-one outer split; boxplots summarize the same split-level measurements. A final
-figure compares the individual BLUP with the mean of that individual's five
-out-of-fold predictions.
+The following figures summarize predictive performance across the outer
+assessment splits for Cer, BM, and LP. The data come from the stored fitting
+results described in Sections 7 to 9, without repeating model fitting.
+
+In the boxplots, each point represents one outer fitting task for the
+corresponding trait and genomic structure. The box summarizes the median
+and interquartile range, and the whiskers follow the usual 1.5-IQR rule.
+The points are displaced horizontally for readability using a fixed jitter
+seed; the metric values on the vertical axis are unchanged.
+
+The individual-level scatterplot at the end of this section uses the mean
+of the five out-of-fold predictions described in Section 10.
+
+### 11.1 Pearson correlation
+
+Pearson correlation measures linear association between observed and predicted
+BLUPs within each assessment split. The following code retains only finite
+correlations and orders the models as A, AD, and ADE. All trait panels use
+the theoretical correlation scale from -1 to 1. The dashed horizontal line
+marks zero linear correlation.
 
 ```{r performance-figures}
 # Generate figure objects from persisted predictions and split metrics.
@@ -899,116 +1310,36 @@ correlation_plot <- ggplot(
     y = BLUP_Correlation
   )
 ) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    linewidth = 0.4
+  ) +
   geom_boxplot(
     outlier.shape = NA
   ) +
   geom_jitter(
-    width = 0.12,
-    height = 0,
+    position = position_jitter(
+      width = 0.12,
+      height = 0,
+      seed = 20261105L
+    ),
     size = 1.6,
     alpha = 0.65
   ) +
   facet_wrap(
     ~ Trait,
-    scales = "free_y"
+    scales = "fixed",
+    nrow = 1
+  ) +
+  scale_y_continuous(
+    limits = c(-1, 1),
+    breaks = seq(-1, 1, by = 0.5)
   ) +
   labs(
     x = "GBLUP structure",
-    y = "Correlation between observed and predicted BLUPs",
-    title = "Held-out BLUP correlation across outer splits"
-  ) +
-  ggthemes::theme_gdocs() +
-  theme(
-    legend.position = "none"
-  )
-
-
-
-spearman_plot <- ggplot(
-  plot_results[is.finite(plot_results$BLUP_Spearman), , drop = FALSE],
-  aes(
-    x = Structure,
-    y = BLUP_Spearman
-  )
-) +
-  geom_boxplot(
-    outlier.shape = NA
-  ) +
-  geom_jitter(
-    width = 0.12,
-    height = 0,
-    size = 1.6,
-    alpha = 0.65
-  ) +
-  facet_wrap(
-    ~ Trait,
-    scales = "free_y"
-  ) +
-  labs(
-    x = "GBLUP structure",
-    y = "Spearman correlation between observed and predicted BLUPs",
-    title = "Held-out BLUP Spearman correlation"
-  ) +
-  ggthemes::theme_gdocs() +
-  theme(
-    legend.position = "none"
-  )
-
-
-rmse_plot <- ggplot(
-  plot_results,
-  aes(
-    x = Structure,
-    y = BLUP_RMSE
-  )
-) +
-  geom_boxplot(
-    outlier.shape = NA
-  ) +
-  geom_jitter(
-    width = 0.12,
-    height = 0,
-    size = 1.6,
-    alpha = 0.65
-  ) +
-  facet_wrap(
-    ~ Trait,
-    scales = "free_y"
-  ) +
-  labs(
-    x = "GBLUP structure",
-    y = "RMSE",
-    title = "Held-out RMSE across outer splits"
-  ) +
-  ggthemes::theme_gdocs() +
-  theme(
-    legend.position = "none"
-  )
-
-observed_predicted_plot <- ggplot(
-  individual_ranking,
-  aes(
-    x = Observed_BLUP,
-    y = Predicted_BLUP
-  )
-) +
-  geom_abline(
-    slope = 1,
-    intercept = 0,
-    linetype = "dashed"
-  ) +
-  geom_point(
-    size = 1.5,
-    alpha = 0.65
-  ) +
-  facet_grid(
-    Trait ~ Structure,
-    scales = "free"
-  ) +
-  labs(
-    x = "Observed individual BLUP",
-    y = "Mean out-of-fold predicted BLUP",
-    title = "Observed and predicted individual BLUPs"
+    y = "Pearson correlation",
+    title = "Held-out Pearson correlation across outer splits"
   ) +
   ggthemes::theme_gdocs() +
   theme(
@@ -1016,9 +1347,17 @@ observed_predicted_plot <- ggplot(
   )
 ```
 
-```{r show-correlation-figure, fig.width=9, fig.height=5.5, fig.cap="Pearson correlation between observed BLUPs and held-out GBLUP predictions across outer splits, by trait and genomic structure.", fig.alt="Three faceted boxplots with individual split points showing held-out Pearson correlations for A, AD, and ADE, separately for Cer, BM, and LP."}
+```{r show-correlation-figure, fig.width=9, fig.height=5.5, fig.cap="Pearson correlation between observed BLUPs and held-out GBLUP predictions across outer splits, by trait and genomic structure. All panels use the same correlation scale; the dashed line marks zero.", fig.alt="Three faceted boxplots with individual split points showing held-out Pearson correlations for A, AD, and ADE, separately for Cer, BM, and LP, on a common scale from minus one to one with a dashed zero line."}
 print(correlation_plot)
 ```
+
+The 221 defined correlations comprise 75 points for Cer, 75 for BM,
+and 71 for LP. The four undefined LP correlations are not plotted.
+The common vertical scale makes differences in correlation among traits
+visible, while each boxplot summarizes the contributing splits.
+
+The following chunk documents the TIFF export settings without overwriting
+the saved figure during routine rendering.
 
 ```{r save-correlation-figure, eval=FALSE}
 dir.create("output/real/gblup/figures", recursive = TRUE, showWarnings = FALSE)
@@ -1033,9 +1372,70 @@ ggsave(
 )
 ```
 
-```{r show-spearman-figure, fig.width=9, fig.height=5.5, fig.cap="Spearman rank correlation between observed BLUPs and held-out GBLUP predictions across outer splits, by trait and genomic structure.", fig.alt="Three faceted boxplots with individual split points showing held-out Spearman correlations for A, AD, and ADE, separately for Cer, BM, and LP."}
+### 11.2 Spearman correlation
+
+Spearman correlation measures monotonic association based on ranks within
+each assessment split. The figure retains the finite values and uses the
+same vertical scale and zero reference as the Pearson figure, so both
+correlation distributions can be inspected on a comparable scale.
+
+```{r build-spearman-figure}
+spearman_plot <- ggplot(
+  plot_results[is.finite(plot_results$BLUP_Spearman), , drop = FALSE],
+  aes(
+    x = Structure,
+    y = BLUP_Spearman
+  )
+) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    linewidth = 0.4
+  ) +
+  geom_boxplot(
+    outlier.shape = NA
+  ) +
+  geom_jitter(
+    position = position_jitter(
+      width = 0.12,
+      height = 0,
+      seed = 20261105L
+    ),
+    size = 1.6,
+    alpha = 0.65
+  ) +
+  facet_wrap(
+    ~ Trait,
+    scales = "fixed",
+    nrow = 1
+  ) +
+  scale_y_continuous(
+    limits = c(-1, 1),
+    breaks = seq(-1, 1, by = 0.5)
+  ) +
+  labs(
+    x = "GBLUP structure",
+    y = "Spearman correlation",
+    title = "Held-out Spearman correlation across outer splits"
+  ) +
+  ggthemes::theme_gdocs() +
+  theme(
+    legend.position = "none"
+  )
+```
+
+```{r show-spearman-figure, fig.width=9, fig.height=5.5, fig.cap="Spearman rank correlation between observed BLUPs and held-out GBLUP predictions across outer splits, by trait and genomic structure. All panels use the same correlation scale; the dashed line marks zero.", fig.alt="Three faceted boxplots with individual split points showing held-out Spearman correlations for A, AD, and ADE, separately for Cer, BM, and LP, on a common scale from minus one to one with a dashed zero line."}
 print(spearman_plot)
 ```
+
+As with Pearson correlation, the figure contains 221 defined values.
+The four constant-prediction tasks for LP have undefined Spearman
+correlations and are not represented by points. These distributions describe
+variation across splits, rather than the global individual ranking in
+Section 10.
+
+The export code preserves the original TIFF filename, dimensions,
+resolution, and compression.
 
 ```{r save-spearman-figure, eval=FALSE}
 dir.create("output/real/gblup/figures", recursive = TRUE, showWarnings = FALSE)
@@ -1050,9 +1450,58 @@ ggsave(
 )
 ```
 
-```{r show-rmse-figure, fig.width=9, fig.height=5.5, fig.cap="Root mean squared error of held-out GBLUP predictions across outer splits, by trait and genomic structure.", fig.alt="Three faceted boxplots with individual split points showing held-out RMSE for A, AD, and ADE, separately for Cer, BM, and LP."}
+### 11.3 Root mean squared error
+
+RMSE measures prediction error on the BLUP scale. Unlike correlation, its
+magnitude depends on the scale of the trait. Each panel therefore retains
+its own vertical scale, shared by the three genomic structures within that
+trait. Comparisons of RMSE magnitude should be made within a trait.
+
+```{r build-rmse-figure}
+rmse_plot <- ggplot(
+  plot_results,
+  aes(
+    x = Structure,
+    y = BLUP_RMSE
+  )
+) +
+  geom_boxplot(
+    outlier.shape = NA
+  ) +
+  geom_jitter(
+    position = position_jitter(
+      width = 0.12,
+      height = 0,
+      seed = 20261105L
+    ),
+    size = 1.6,
+    alpha = 0.65
+  ) +
+  facet_wrap(
+    ~ Trait,
+    scales = "free_y",
+    nrow = 1
+  ) +
+  labs(
+    x = "GBLUP structure",
+    y = "RMSE (BLUP scale)",
+    title = "Held-out RMSE across outer splits"
+  ) +
+  ggthemes::theme_gdocs() +
+  theme(
+    legend.position = "none"
+  )
+```
+
+```{r show-rmse-figure, fig.width=9, fig.height=5.5, fig.cap="Root mean squared error of held-out GBLUP predictions across outer splits, by trait and genomic structure. Vertical scales are specific to each trait.", fig.alt="Three faceted boxplots with individual split points showing held-out RMSE for A, AD, and ADE, separately for Cer, BM, and LP, with trait-specific vertical scales."}
 print(rmse_plot)
 ```
+
+All 225 fitting tasks contribute to this figure, including the four LP
+tasks with constant predictions. The panels describe error variation across
+the assessment splits without implying statistical differences among models.
+
+The following export code retains the original TIFF settings.
 
 ```{r save-rmse-figure, eval=FALSE}
 dir.create("output/real/gblup/figures", recursive = TRUE, showWarnings = FALSE)
@@ -1067,35 +1516,197 @@ ggsave(
 )
 ```
 
-```{r show-observed-predicted-figure, fig.width=9, fig.height=8, fig.cap="Observed individual BLUPs versus mean out-of-fold predicted BLUPs for all 195 individuals, by trait and GBLUP structure. The dashed line indicates equality.", fig.alt="Nine scatterplot panels arranged by Cer, BM, and LP and by A, AD, and ADE, comparing observed BLUPs with mean out-of-fold predicted BLUPs and showing a dashed identity line."}
+### 11.4 Observed versus predicted BLUPs
+
+The following figure compares the individual phenotypic BLUPs with the mean
+of the five out-of-fold predictions described in Section 10. Each point
+represents one individual, with 195 points per trait-model panel and 1,755
+points across the nine panels.
+
+The observed BLUP is displayed on the horizontal axis and the mean
+out-of-fold predicted BLUP on the vertical axis. Traits occupy the rows
+(Cer, BM, and LP), and genomic structures occupy the columns (A, AD, and ADE).
+
+For each trait, the minimum and maximum of the observed and predicted BLUPs
+across all three structures define a common plotting range. Two invisible
+reference points at these endpoints are supplied to `geom_blank()` for each
+panel. They train the scales but do not appear in the scatterplot or enter
+any statistical calculation. Both axes receive the same 5% expansion at
+both ends, and each panel is square.
+
+Consequently, the three models for a trait share the same horizontal and
+vertical limits, while different traits retain their own ranges. The dashed
+identity line represents equality between observed and predicted values.
+The original individual ranking is not modified, and no BLUP is rescaled
+or excluded.
+
+```{r build-observed-predicted-figure}
+# Prepare a plotting copy, preserving the original individual ranking.
+observed_predicted_data <- individual_ranking
+observed_predicted_data$Trait <- factor(
+  observed_predicted_data$Trait,
+  levels = c("Cer", "BM", "LP")
+)
+observed_predicted_data$Structure <- factor(
+  observed_predicted_data$Structure,
+  levels = c("A", "AD", "ADE")
+)
+
+# Compute a common range of observed and predicted BLUPs for each trait.
+# Repeat the two endpoints for each of the three model panels.
+observed_predicted_bounds <- data.frame(
+  Trait = character(0),
+  Structure = character(0),
+  Observed_BLUP = numeric(0),
+  Predicted_BLUP = numeric(0),
+  stringsAsFactors = FALSE
+)
+
+for (trait in levels(observed_predicted_data$Trait)) {
+  trait_data <- observed_predicted_data[
+    observed_predicted_data$Trait == trait, , drop = FALSE
+  ]
+  trait_range <- range(c(trait_data$Observed_BLUP,
+                         trait_data$Predicted_BLUP))
+
+  observed_predicted_bounds <- rbind(
+    observed_predicted_bounds,
+    data.frame(
+      Trait = rep(trait, 6),
+      Structure = rep(c("A", "AD", "ADE"), each = 2),
+      Observed_BLUP = rep(trait_range, 3),
+      Predicted_BLUP = rep(trait_range, 3),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+observed_predicted_bounds$Trait <- factor(
+  observed_predicted_bounds$Trait,
+  levels = levels(observed_predicted_data$Trait)
+)
+observed_predicted_bounds$Structure <- factor(
+  observed_predicted_bounds$Structure,
+  levels = levels(observed_predicted_data$Structure)
+)
+
+observed_predicted_plot <- ggplot(
+  observed_predicted_data,
+  aes(
+    x = Observed_BLUP,
+    y = Predicted_BLUP
+  )
+) +
+  geom_blank(data = observed_predicted_bounds) +
+  geom_abline(
+    slope = 1,
+    intercept = 0,
+    linetype = "dashed"
+  ) +
+  geom_point(
+    size = 1.5,
+    alpha = 0.65
+  ) +
+  facet_wrap(
+    vars(Trait, Structure),
+    ncol = 3,
+    scales = "free"
+  ) +
+  scale_x_continuous(expand = expansion(mult = 0.05)) +
+  scale_y_continuous(expand = expansion(mult = 0.05)) +
+  labs(
+    x = "Observed individual BLUP",
+    y = "Mean out-of-fold predicted BLUP",
+    title = "Observed and predicted individual BLUPs"
+  ) +
+  ggthemes::theme_gdocs() +
+  theme(
+    legend.position = "none",
+    aspect.ratio = 1
+  )
+```
+
+```{r show-observed-predicted-figure, fig.width=12, fig.height=11, fig.cap="Observed individual BLUPs versus mean out-of-fold predicted BLUPs for all 195 individuals, by trait and GBLUP structure. Within each trait, all three model panels use identical horizontal and vertical scales. The dashed line indicates equality.", fig.alt="Nine scatterplot panels arranged by Cer, BM, and LP and by A, AD, and ADE, comparing observed BLUPs with mean out-of-fold predicted BLUPs and showing a dashed identity line in square panels with common axis limits within each trait."}
 print(observed_predicted_plot)
 ```
+
+Points above the identity line have predicted BLUPs greater than their
+observed BLUPs, whereas points below it have smaller predicted values.
+The predicted values are less dispersed than the observed values in the
+persisted results, especially for BM and LP. The common scales within each
+trait make this difference visible without independently stretching the
+prediction axis. These panels describe individual OOF predictions and
+complement the split-level correlations and error metrics in Section 9
+and the ranking summaries in Section 10.
+
+The following chunk documents the TIFF export with dimensions of 12 by
+11 inches, 300 dpi, and LZW compression. It remains disabled during routine
+rendering.
 
 ```{r save-observed-predicted-figure, eval=FALSE}
 dir.create("output/real/gblup/figures", recursive = TRUE, showWarnings = FALSE)
 ggsave(
   filename = "output/real/gblup/figures/real_gblup_observed_vs_predicted_by_model_trait.tiff",
   plot = observed_predicted_plot,
-  width = 9,
-  height = 8,
+  width = 12,
+  height = 11,
   units = "in",
   dpi = 300,
   compression = "lzw"
 )
 ```
 
-The trait-specific panels allow comparison of the three structures within a
-trait without treating different trait scales as directly comparable. Correlation
-panels include only splits with defined correlations; the RMSE panel retains
-splits with constant predictions.
-
 ## 12. Prediction results and saved outputs
 
-The persisted result table contains one row per trait, outer split, and GBLUP
-structure (225 rows). The prediction table contains 39 held-out individuals per
-task (8,775 rows), and the individual ranking table contains one record per
-trait, structure, and individual (1,755 rows). The table below lists the files saved at their respective analytical steps
-and identifies those used in the subsequent ANN comparison.
+### 12.1 Synthesis of the GBLUP results
+
+The three GBLUP structures were evaluated using the same 195 individuals,
+three traits, and 25 outer partitions. The 225 fitting tasks and 8,775
+held-out predictions provide a common reference for comparing additive,
+dominance, and additive-by-additive genomic structures. The five predictions
+for each individual, trait, and structure yield 1,755 individual ranking
+records.
+
+The results in Sections 8 to 11 support the following descriptive conclusions:
+
+- Mean Pearson correlation is highest for A in each trait, with particularly
+  small differences among the three structures for Cer. The inclusion of
+  additional genetic components does not consistently improve the evaluated
+  predictive metrics.
+- Cer has the highest mean correlations and global ranking agreement among
+  the three traits. All structures recover 22 of the 39 individuals in its
+  observed upper group. The agreement is lower for BM and LP.
+- For BM, AD has a slightly lower mean MAE and a higher global ranking
+  Spearman correlation than A, whereas A recovers more individuals in the
+  observed upper group. Different metrics therefore describe different
+  aspects of predictive performance.
+- All 225 fits report convergence, but only 215 satisfy the additional
+  final log-likelihood-change check. Five fits contain negative estimated
+  variance components and four have constant predictions. These diagnostics
+  remain documented without deleting fitting records.
+
+The results describe prediction of precomputed individual phenotypic BLUPs
+within the represented population. Phenotypic BLUP estimation was not
+repeated within each genomic assessment fold. The overlapping training sets
+make repeated cross-validation tasks dependent. For LP, correlations and
+calibration slopes are undefined in some splits, so means for different
+structures may summarize different subsets of the common planned partitions.
+The comparisons do not establish statistical superiority, external-population
+performance, or expected genetic gain. The descending rankings identify large
+BLUPs, not necessarily the biologically desirable direction for each trait.
+
+### 12.2 Numerical outputs and their downstream use
+
+The table generated below identifies the eight principal saved objects.
+The result table contains 225 fitting records; the prediction table contains
+8,775 held-out records; and the individual ranking contains 1,755 records.
+The kernel summary contains three rows, and the numerical, performance, and
+ranking summaries each contain nine rows. Run metadata are stored as an R
+object rather than as a table of fitting records.
+
+The table caption refers to the downstream comparison. Specifically, R05
+reads the three RDS files for results, predictions, and individual rankings;
+the other files support interpretation and reproducibility of R04A.
 
 ```{r output-inventory}
 output_inventory <- data.frame(
@@ -1141,8 +1752,65 @@ knitr::kable(
 )
 ```
 
-The R04A saved results preserve the shared outer partitions, split-level
-predictive metrics, individual out-of-fold rankings, and diagnostic summaries.
-These objects provide the GBLUP inputs for the subsequent comparison with the
-regularized ANN models. The interpretation is restricted to prediction of the
-precomputed individual BLUPs under the established validation design.
+The complete numerical inventory is listed below. Paths are relative to
+`output/real/gblup/`.
+
+| File(s) | Purpose |
+|:--------|:--------|
+| `real_gblup_results.rds`, `real_gblup_results.csv` | Split-level results and diagnostics; RDS read by R05 |
+| `real_gblup_predictions.rds`, `real_gblup_predictions.csv` | Held-out BLUP predictions and genetic contributions; RDS read by R05 |
+| `real_gblup_individual_ranking.rds`, `real_gblup_individual_ranking.csv` | Individual OOF predictions and rankings; RDS read by R05 |
+| `real_gblup_kernel_summary.csv` | Numerical properties of A, D, and E |
+| `real_gblup_numerical_summary.csv` | Model-fitting diagnostics |
+| `real_gblup_performance_summary.csv` | Split-level predictive metric summaries |
+| `real_gblup_ranking_summary.csv` | Global ranking agreement and upper-group overlap |
+| `real_gblup_run_metadata.rds` | Fitting settings, software and execution metadata |
+
+CSV files allow inspection of the numerical records, while RDS files retain
+R objects. The fitting and numerical export chunks are disabled during routine
+rendering; the tutorial uses the persisted fitting results and predictions to
+construct its summaries and figures.
+
+### 12.3 Figure outputs
+
+The four figure exports described in Section 11 use TIFF format, 300 dpi,
+and LZW compression. Paths below are relative to `output/real/gblup/figures/`.
+The dimensions refer to the export settings in the current code.
+
+| Figure file | Width x height (inches) | Pixels at 300 dpi |
+|:------------|:------------------------|:------------------|
+| `real_gblup_correlation_by_model_trait.tiff` | 9 x 5.5 | 2700 x 1650 |
+| `real_gblup_spearman_by_model_trait.tiff` | 9 x 5.5 | 2700 x 1650 |
+| `real_gblup_rmse_by_model_trait.tiff` | 9 x 5.5 | 2700 x 1650 |
+| `real_gblup_observed_vs_predicted_by_model_trait.tiff` | 12 x 11 | 3600 x 3300 |
+
+The export chunks use `eval=FALSE`. Routine rendering displays the current
+plot objects without overwriting the saved TIFF files. To update the TIFFs,
+execute the corresponding export chunks explicitly after constructing and
+checking the current plots. Existing TIFFs reflect the last explicit export,
+not necessarily the latest graphical settings in the source.
+
+### 12.4 Continuity of the real-data analysis
+
+[R01 - Phenotypes](real_data_phenotype.html) estimates the individual
+phenotypic BLUPs. [R02 - Data preprocessing](real_data_audit.html) prepares
+the common marker and phenotype data, and
+[R03 - Pre-validation](real_data_validation.html) defines the fixed outer
+and inner partitions. R04A uses those common inputs to fit A, AD, and ADE
+in the outer analysis sets and assess their predictions in the corresponding
+assessment sets.
+
+[R04B - Regularized ANN](real_data_ann.html) reads the same R02 and R03
+inputs independently of the GBLUP output files. The ANN analysis uses the
+inner folds for model selection within each outer analysis set and the outer
+assessment sets for evaluation.
+
+[R05 - Model comparison](real_data_comparison.html) reads the three GBLUP
+RDS objects identified above together with the corresponding ANN objects.
+It uses the common split and individual identifiers to compare the two model
+families, preserving the distinction between split-level metrics and
+individual OOF rankings.
+
+[Previous: Pre-validation](real_data_validation.html) |
+[Next: Regularized ANN](real_data_ann.html) |
+[Model comparison](real_data_comparison.html)
