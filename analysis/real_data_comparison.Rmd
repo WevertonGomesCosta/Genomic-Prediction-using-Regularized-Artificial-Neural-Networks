@@ -630,7 +630,25 @@ agreement measures are addressed in Section 6.
 
 ## 4. BLUP-GEBV performance across outer splits
 
-The object `all_results` concatenates the 225 GBLUP and 300 ANN assessments after the shared metric names have been aligned. No assessment predictions are pooled across different outer splits.
+The object `all_results` concatenates the 225 GBLUP and 300 ANN
+assessments after the metric names have been harmonized. Each row
+describes a model evaluated for one trait in one outer assessment
+split. No individual predictions are pooled across splits.
+
+Three distinct comparisons are made throughout Sections 4 and 5.
+
+| Comparison | Contributing splits | Scientific question |
+|:-----------|:--------------------|:--------------------|
+| Available-split summary | Finite metric values for each model separately | How does a model perform when its metric is defined? |
+| Seven-model common-split correlation | The same splits with finite correlation for all seven models | How do the seven models compare on an identical subset? |
+| Matched ANN-versus-GBLUP contrast | Splits with finite values for both members of a pair | What is the mean within-split difference between these two models? |
+
+These summaries answer different questions and may give different
+model orderings. The common-split comparison is conditional on the
+availability of all seven correlations; it does not replace the
+available-split summaries or quantify performance on excluded splits.
+RMSE and MAE are finite for all 25 splits of every model and trait
+in the stored analysis.
 
 ### 4.1 Combined result object
 
@@ -702,6 +720,12 @@ model_split_structure |>
 
 ### 4.2 Mean performance by trait and model
 
+For each of the 21 trait-by-model combinations, the next block summarizes
+only finite metric values. The mean, sample standard deviation and
+number of finite values are retained separately for each metric. The
+standard deviation describes variation across the outer assessment
+splits, not the standard error of an independent sample.
+
 ```{r performance-summary}
 # Record the mean, standard deviation, and finite-fold count for each metric.
 performance_summary <- data.frame(
@@ -736,17 +760,17 @@ for (model_name in model_order) {
         Trait = trait,
         Splits = nrow(x),
         Pearson_N = sum(is.finite(x$Pearson)),
-        Pearson = mean(x$Pearson, na.rm = TRUE),
-        Pearson_SD = sd(x$Pearson, na.rm = TRUE),
+        Pearson = mean(x$Pearson[is.finite(x$Pearson)]),
+        Pearson_SD = sd(x$Pearson[is.finite(x$Pearson)]),
         Spearman_N = sum(is.finite(x$Spearman)),
-        Spearman = mean(x$Spearman, na.rm = TRUE),
-        Spearman_SD = sd(x$Spearman, na.rm = TRUE),
+        Spearman = mean(x$Spearman[is.finite(x$Spearman)]),
+        Spearman_SD = sd(x$Spearman[is.finite(x$Spearman)]),
         RMSE_N = sum(is.finite(x$RMSE)),
-        RMSE = mean(x$RMSE, na.rm = TRUE),
-        RMSE_SD = sd(x$RMSE, na.rm = TRUE),
+        RMSE = mean(x$RMSE[is.finite(x$RMSE)]),
+        RMSE_SD = sd(x$RMSE[is.finite(x$RMSE)]),
         MAE_N = sum(is.finite(x$MAE)),
-        MAE = mean(x$MAE, na.rm = TRUE),
-        MAE_SD = sd(x$MAE, na.rm = TRUE),
+        MAE = mean(x$MAE[is.finite(x$MAE)]),
+        MAE_SD = sd(x$MAE[is.finite(x$MAE)]),
         stringsAsFactors = FALSE
       )
     )
@@ -755,7 +779,11 @@ for (model_name in model_order) {
 
 ```
 
-The object `performance_summary` aggregates Pearson, Spearman, RMSE, and MAE over the outer assessments. `Pearson_N` and `Spearman_N` identify how many splits yield finite correlation values for each model and trait.
+The object `performance_summary` retains the original column structure
+and all four primary metrics. It is sorted by trait and scientific
+model order before presentation. The association and error summaries
+are displayed separately to make the counts and standard deviations
+readable.
 
 ```{r display-performance-summary}
 performance_summary$Trait <- factor(performance_summary$Trait, levels = traits)
@@ -781,23 +809,58 @@ performance_display <- performance_summary[
 
 performance_display$Model <- factor(performance_display$Model, levels = model_order, labels = model_labels)
 
-performance_display |>
-  knitr::kable(
-    format = "html",
-    digits = 4,
-    caption = "Mean BLUP-GEBV performance across the 25 outer splits",
-    row.names = FALSE,
-    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
-  )
+association_display <- performance_summary[
+  , c("Model", "Trait", "Splits",
+      "Pearson_N", "Pearson", "Pearson_SD",
+      "Spearman_N", "Spearman", "Spearman_SD")
+]
+association_display$Model <- factor(
+  association_display$Model, levels = model_order, labels = model_labels
+)
+
+knitr::kable(
+  association_display, format = "html", digits = 4, row.names = FALSE,
+  caption = "Available-split Pearson and Spearman means, standard deviations and counts",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+The error table uses the original BLUP scale of each trait.
+All 25 RMSE and MAE values contribute to each mean.
+
+```{r display-error-summary}
+error_display <- performance_summary[
+  , c("Model", "Trait", "Splits",
+      "RMSE_N", "RMSE", "RMSE_SD", "MAE_N", "MAE", "MAE_SD")
+]
+error_display$Model <- factor(
+  error_display$Model, levels = model_order, labels = model_labels
+)
+
+knitr::kable(
+  error_display, format = "html", digits = 4, row.names = FALSE,
+  caption = "Available-split RMSE and MAE means, standard deviations and counts",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+) |>
+  kableExtra::scroll_box(width = "100%")
 ```
 
 ```{r save-performance-summary, eval=FALSE}
 write.csv(performance_summary, PERFORMANCE_SUMMARY_CSV, row.names = FALSE)
 ```
 
-Pearson and Spearman are summarized from all outer splits where the respective
-correlation is defined. RMSE and MAE remain defined for every model-trait-split
-combination.
+For Cer and BM, both correlations are available in all 25 splits for
+every model. For LP, GBLUP_A has 23 finite values, GBLUP_AD and
+GBLUP_ADE each have 24, and each ANN has 25. Thus 521 of the 525
+stored assessments contribute to each correlation summary. The four
+constant-prediction assessments in LP remain valid for the error
+metrics. The bias and slope summaries are presented in Section 3.2.
+
+For Cer and BM, GBLUP_A has the highest mean Pearson and Spearman
+among the seven methods. For LP, the available-split means use
+different sets of assessments and are not directly comparable as
+matched estimates.
 
 ### 4.3 Common finite splits for direct correlation comparison
 
@@ -806,15 +869,33 @@ Spearman are undefined for that split. The descriptive model summaries above
 retain every finite value available for each model. A direct cross-model
 comparison, however, should use the same outer splits for all seven models.
 
-For each trait and correlation metric, the following block therefore identifies
-the intersection of outer splits where that metric is finite for all seven
-models. Mean Pearson and Spearman values used to identify the best correlation
-model are calculated only on these common finite splits. No split is removed
-from RMSE or MAE comparisons because those metrics are defined in all 25 outer
-splits.
+For each trait, the expected split identifiers are obtained from
+the R03 result keys constructed in Section 2.5. A split is eligible
+only when its repetition and fold match the design and it has exactly
+one record from each of the seven models. Pearson and Spearman
+availability are evaluated separately.
+
+For correlation metric \(M\), let \(S_{t,m,M}\) be the set of
+eligible splits with a finite value for trait \(t\) and model \(m\).
+The common subset is
+
+\[
+C_{t,M}=\bigcap_{m=1}^{7} S_{t,m,M}.
+\]
+
+The comparable mean for model \(m\) is its arithmetic mean over
+\(C_{t,M}\). This excludes an entire trait-by-split comparison
+when any one model lacks a finite value for the given metric.
+No split is excluded from the error comparisons in the stored results.
+
+The next block records the eligibility and availability for each
+of the 75 expected trait-by-split combinations. It retains the
+original `common_correlation_summary` structure for the subsequent
+figures and exports.
 
 ```{r common-finite-correlation-splits}
-# Separate model-specific finite estimates from matched finite-split comparisons.
+# Record split eligibility separately from the correlation summaries.
+common_split_coverage <- data.frame()
 common_correlation_summary <- data.frame(
   Model = character(0),
   Trait = character(0),
@@ -829,7 +910,10 @@ for (trait in traits) {
 
   trait_results <- all_results[all_results$Trait == trait,, drop = FALSE]
 
-  split_ids <- sort(unique(trait_results$SplitID))
+  expected_splits <- expected_result_keys[
+    expected_result_keys$Trait == trait, , drop = FALSE
+  ]
+  split_ids <- sort(unique(expected_splits$SplitID))
 
   pearson_common_splits <- character(0)
   spearman_common_splits <- character(0)
@@ -838,11 +922,45 @@ for (trait in traits) {
 
     split_data <- trait_results[trait_results$SplitID == split_id,, drop = FALSE]
 
-    if (all(is.finite(split_data$Pearson))) {
+    expected_split <- expected_splits[
+      expected_splits$SplitID == split_id, , drop = FALSE
+    ]
+    model_complete <- nrow(split_data) == length(model_order) &&
+      !anyNA(split_data$Model) &&
+      !anyDuplicated(split_data$Model) &&
+      setequal(split_data$Model, model_order)
+    design_match <- nrow(expected_split) == 1L &&
+      nrow(split_data) > 0L &&
+      !anyNA(split_data[, c("Repetition", "Fold")]) &&
+      all(split_data$Repetition == expected_split$Repetition) &&
+      all(split_data$Fold == expected_split$Fold)
+
+    pearson_common <- model_complete && design_match &&
+      all(is.finite(split_data$Pearson))
+    spearman_common <- model_complete && design_match &&
+      all(is.finite(split_data$Spearman))
+
+    common_split_coverage <- rbind(
+      common_split_coverage,
+      data.frame(
+        Trait = trait, SplitID = split_id,
+        Records = nrow(split_data),
+        Distinct_models = length(unique(split_data$Model)),
+        Complete_models = model_complete,
+        Design_match = design_match,
+        Pearson_finite = sum(is.finite(split_data$Pearson)),
+        Spearman_finite = sum(is.finite(split_data$Spearman)),
+        Pearson_common = pearson_common,
+        Spearman_common = spearman_common,
+        stringsAsFactors = FALSE
+      )
+    )
+
+    if (pearson_common) {
       pearson_common_splits <- c(pearson_common_splits, split_id)
     }
 
-    if (all(is.finite(split_data$Spearman))) {
+    if (spearman_common) {
       spearman_common_splits <- c(spearman_common_splits, split_id)
     }
   }
@@ -874,7 +992,45 @@ for (trait in traits) {
 
 ```
 
-For each trait, `common_correlation_summary` reports Pearson and Spearman means calculated from the intersection of outer splits with finite correlations for all seven models. The counts can differ by trait.
+The eligibility summary counts complete model sets, design matches
+and common finite splits. The excluded-split table identifies any
+split not retained for at least one correlation.
+
+```{r display-common-split-coverage}
+common_split_counts <- aggregate(
+  cbind(Complete_models, Design_match, Pearson_common, Spearman_common) ~ Trait,
+  data = common_split_coverage,
+  FUN = sum
+)
+common_split_counts <- common_split_counts[
+  match(traits, common_split_counts$Trait), , drop = FALSE
+]
+rownames(common_split_counts) <- NULL
+
+knitr::kable(
+  common_split_counts, format = "html", row.names = FALSE,
+  caption = "Eligible and common finite outer splits by trait",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+```{r display-excluded-correlation-splits}
+excluded_correlation_splits <- common_split_coverage[
+  !common_split_coverage$Pearson_common |
+    !common_split_coverage$Spearman_common, , drop = FALSE
+]
+
+knitr::kable(
+  excluded_correlation_splits, format = "html", row.names = FALSE,
+  caption = "Outer splits excluded from at least one seven-model correlation comparison",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+For each trait, `common_correlation_summary` reports the mean
+correlations using the eligible common sets. Counts are reported
+separately for each metric.
 
 ```{r display-common-finite-correlations}
 COMMON_CORRELATION_SUMMARY_CSV <- file.path(COMPARISON_DIR, "real_model_common_split_correlation_summary.csv")
@@ -900,11 +1056,25 @@ common_correlation_display |>
 write.csv(common_correlation_summary, COMMON_CORRELATION_SUMMARY_CSV, row.names = FALSE)
 ```
 
-### 4.4 Predictive winners by trait
+For Cer and BM, all 25 splits contribute to both common sets.
+For LP, 23 splits contribute to each. On those common splits,
+GBLUP_A, GBLUP_AD and GBLUP_ADE have mean Pearson correlations
+of approximately 0.2073, 0.1990 and 0.1975, respectively, while
+ANN_L2 has 0.1762. In contrast, the available-split means of
+ANN_L2 (0.1918), GBLUP_AD (0.1742) and GBLUP_ADE (0.1728)
+give a different ordering. The common subset makes the compared
+means refer to identical assessments, but does not eliminate the
+scientific relevance of undefined correlations.
 
-The next table identifies the highest mean correlation and lowest mean
-BLUP-GEBV error separately. It is a descriptive summary rather than a rule for
-collapsing the seven models into a single winner.
+### 4.4 Best predictive metrics by trait
+
+The next table identifies the highest common-split mean correlation
+and lowest mean BLUP-GEBV error separately. All models with exactly
+the same optimal finite value at full stored precision are retained.
+If several models share an optimum, their identifiers are joined
+in the existing character column in model order. Equality after
+rounding alone is not a numerical tie; neither a unique optimum
+nor a tie establishes statistical superiority.
 
 ```{r predictive-winners}
 predictive_winners <- data.frame(
@@ -928,28 +1098,52 @@ for (trait in traits) {
 
   correlation_x <- common_correlation_summary[common_correlation_summary$Trait == trait,, drop = FALSE]
 
-  pearson_index <- which.max(correlation_x$Pearson_Common)
+  pearson_best <- if (any(is.finite(correlation_x$Pearson_Common))) {
+    max(correlation_x$Pearson_Common[is.finite(correlation_x$Pearson_Common)])
+  } else NA_real_
+  pearson_index <- which(is.finite(correlation_x$Pearson_Common) &
+    correlation_x$Pearson_Common == pearson_best)
 
-  spearman_index <- which.max(correlation_x$Spearman_Common)
+  spearman_best <- if (any(is.finite(correlation_x$Spearman_Common))) {
+    max(correlation_x$Spearman_Common[is.finite(correlation_x$Spearman_Common)])
+  } else NA_real_
+  spearman_index <- which(is.finite(correlation_x$Spearman_Common) &
+    correlation_x$Spearman_Common == spearman_best)
 
-  rmse_index <- which.min(x$RMSE)
+  rmse_best <- if (any(is.finite(x$RMSE))) {
+    min(x$RMSE[is.finite(x$RMSE)])
+  } else NA_real_
+  rmse_index <- which(is.finite(x$RMSE) &
+    x$RMSE == rmse_best)
 
-  mae_index <- which.min(x$MAE)
+  mae_best <- if (any(is.finite(x$MAE))) {
+    min(x$MAE[is.finite(x$MAE)])
+  } else NA_real_
+  mae_index <- which(is.finite(x$MAE) &
+    x$MAE == mae_best)
 
   predictive_winners <- rbind(
     predictive_winners,
     data.frame(
       Trait = trait,
       Pearson_Common_N = unique(correlation_x$Pearson_Common_N),
-      Best_Pearson_Model = correlation_x$Model[pearson_index],
-      Best_Pearson = correlation_x$Pearson_Common[pearson_index],
+      Best_Pearson_Model = if (length(pearson_index)) {
+        paste(model_order[model_order %in% correlation_x$Model[pearson_index]], collapse = ", ")
+      } else NA_character_,
+      Best_Pearson = pearson_best,
       Spearman_Common_N = unique(correlation_x$Spearman_Common_N),
-      Best_Spearman_Model = correlation_x$Model[spearman_index],
-      Best_Spearman = correlation_x$Spearman_Common[spearman_index],
-      Best_RMSE_Model = x$Model[rmse_index],
-      Best_RMSE = x$RMSE[rmse_index],
-      Best_MAE_Model = x$Model[mae_index],
-      Best_MAE = x$MAE[mae_index],
+      Best_Spearman_Model = if (length(spearman_index)) {
+        paste(model_order[model_order %in% correlation_x$Model[spearman_index]], collapse = ", ")
+      } else NA_character_,
+      Best_Spearman = spearman_best,
+      Best_RMSE_Model = if (length(rmse_index)) {
+        paste(model_order[model_order %in% x$Model[rmse_index]], collapse = ", ")
+      } else NA_character_,
+      Best_RMSE = rmse_best,
+      Best_MAE_Model = if (length(mae_index)) {
+        paste(model_order[model_order %in% x$Model[mae_index]], collapse = ", ")
+      } else NA_character_,
+      Best_MAE = mae_best,
       stringsAsFactors = FALSE
     )
   )
@@ -977,7 +1171,23 @@ predictive_winners |>
 write.csv(predictive_winners, PREDICTIVE_WINNERS_CSV, row.names = FALSE)
 ```
 
+For the archived results, GBLUP_A has the highest mean correlations
+on common splits and the smallest mean RMSE for all three traits.
+It also has the smallest mean MAE for Cer and LP; GBLUP_AD has
+the smallest mean MAE for BM. These are descriptive extrema, not
+a single universal ranking across criteria.
+
 ### 4.5 Distribution of split-level performance
+
+The boxplots show available split-level values. Boxes span the first
+and third quartiles, central lines represent medians, whiskers
+extend to the most extreme values within 1.5 interquartile ranges,
+and white diamonds represent arithmetic means. Individual points
+show split-level metric values rather than individual BLUPs.
+The Spearman heatmap instead displays common-split mean correlations
+from Section 4.3. Its cells therefore need not equal the available-split
+means when some correlations are undefined. RMSE and MAE use
+trait-specific scales and should be compared within each trait.
 
 ```{r prepare-performance-plots, include=FALSE}
 plot_results <- all_results
@@ -1181,14 +1391,47 @@ ggsave(
 
 ## 5. Matched ANN-versus-GBLUP outer-split contrasts
 
-The seven models share the same outer splits, so every ANN variant can be
-contrasted directly with every GBLUP structure within the same trait and split.
+### 5.1 Definition of the matched contrasts
 
-For Pearson and Spearman, positive values below indicate stronger BLUP-GEBV
-association for the ANN. For RMSE and MAE, the contrast is defined as
-`GBLUP - ANN`, so positive values indicate smaller BLUP-GEBV error for the ANN.
-Correlation contrasts use only splits where both models have a finite value for
-that metric.
+The common assessment keys validated in Section 2 permit comparisons
+of every ANN variant with every GBLUP structure within the same trait
+and outer split. There are 12 model pairs per trait and 36
+trait-by-pair combinations.
+
+For a fixed trait and model pair, let \(k\) denote the matched split,
+\(A\) denote the ANN variant and \(G\) denote the GBLUP structure.
+For either correlation \(r\) (Pearson or Spearman), define
+
+\[
+d_{r,k}=r_{A,k}-r_{G,k}.
+\]
+
+For the error metrics, reverse the direction:
+
+\[
+d_{\mathrm{RMSE},k}=\mathrm{RMSE}_{G,k}-\mathrm{RMSE}_{A,k},
+\qquad
+d_{\mathrm{MAE},k}=\mathrm{MAE}_{G,k}-\mathrm{MAE}_{A,k}.
+\]
+
+For each metric \(M\), let \(P_M\) be the set of matched splits
+where both models have finite values. The mean contrast is
+
+\[
+\overline d_M=\frac{1}{|P_M|}\sum_{k\in P_M}d_{M,k}.
+\]
+
+A positive value favors ANN, a negative value favors GBLUP, and
+zero indicates equal mean performance for that pair and metric
+on its contributing splits. These differences are on the original
+metric scale, not percentages. Pair-specific finite sets can be
+larger than the seven-model common set in Section 4.3.
+
+### 5.2 Calculation and presentation
+
+The original matched calculation is retained. Each pair is joined
+on repetition, fold and split identifier within a fixed trait.
+Finite-value filtering is applied separately to each metric.
 
 ```{r matched-family-contrasts}
 split_keys <- c("Repetition", "Fold", "SplitID")
@@ -1288,9 +1531,66 @@ paired_summary |>
 write.csv(paired_summary, PAIRED_SUMMARY_CSV, row.names = FALSE)
 ```
 
-These paired contrasts summarize the direction and magnitude of differences
-within the common outer cross-validation procedure. They are not interpreted as
-independent-replicate significance tests.
+### 5.3 Interpretation of the matched contrasts
+
+The next table describes the range of mean contrasts over the 12
+model pairs for each trait and metric. The positive, zero and
+negative counts refer to model pairs, not individual outer splits
+or independent experiments. The original pair-specific results
+remain in the preceding table.
+
+```{r matched-contrast-interpretation}
+contrast_ranges <- data.frame()
+
+for (trait in traits) {
+  trait_pairs <- paired_summary[paired_summary$Trait == trait, , drop = FALSE]
+  for (metric in c("Pearson", "Spearman", "RMSE", "MAE")) {
+    values <- trait_pairs[[paste0("Mean_", metric, "_Advantage")]]
+    finite_values <- values[is.finite(values)]
+    contrast_ranges <- rbind(
+      contrast_ranges,
+      data.frame(
+        Trait = trait,
+        Metric = metric,
+        Pairs = length(values),
+        Finite_pairs = length(finite_values),
+        Minimum = if (length(finite_values)) min(finite_values) else NA_real_,
+        Maximum = if (length(finite_values)) max(finite_values) else NA_real_,
+        Favors_ANN = sum(finite_values > 0),
+        Equal_mean = sum(finite_values == 0),
+        Favors_GBLUP = sum(finite_values < 0),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+}
+
+knitr::kable(
+  contrast_ranges, format = "html", digits = 4, row.names = FALSE,
+  caption = "Range and direction of matched mean contrasts across model pairs",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+For Cer and BM, all 12 pairs favor GBLUP in the mean contrast
+for each of the four primary metrics. For LP, some pairwise
+correlation contrasts favor ANN, although all RMSE and MAE
+contrasts favor GBLUP. The positive LP correlation contrasts
+are compatible with the seven-model common-split results: the
+matched pairwise summaries may use 23 or 24 finite splits,
+whereas the seven-model comparison uses 23. RMSE and MAE
+contrasts use all 25 splits for every pair.
+
+A positive mean contrast does not imply that ANN outperforms GBLUP
+in every split. Similarly, a negative mean contrast does not
+establish statistical superiority. The repeated outer splits share
+analysis individuals, and the pairwise comparisons reuse the same
+models and assessment data. No significance tests or independent
+replicate confidence intervals are inferred from these summaries.
+The individual ranking results in Section 6 address a different
+evaluation criterion.
+
 
 ## 6. Global ranking
 
