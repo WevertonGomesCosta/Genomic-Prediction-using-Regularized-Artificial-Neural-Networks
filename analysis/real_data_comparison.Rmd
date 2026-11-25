@@ -545,8 +545,9 @@ The reference slope is one. With a meaningful positive association,
 a slope greater than one can indicate insufficient dispersion of
 predicted values, and a slope below one can indicate excessive
 dispersion. A slope near one alone does not demonstrate calibration
-of location or small errors. The upstream implementations treat the
-slope as undefined when either vector is constant.
+of location or small errors. R04A stores an undefined slope when predictions are constant;
+R04B also requires variation in the observed values. The stored
+values are retained without recalculating calibration.
 
 The following table summarizes the stored bias and slope across
 each trait and model. Only finite values enter the means and sample
