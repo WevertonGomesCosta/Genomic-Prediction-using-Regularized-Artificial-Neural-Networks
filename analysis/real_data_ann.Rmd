@@ -231,21 +231,21 @@ former compare hyperparameter candidates, whereas the latter determine
 when to stop updating the weights of a candidate. The outer-assessment
 responses participate in neither decision.
 
-For a marker value `\(g_{ij}\)`, the standardized predictor is
+For a marker value $g_{ij}$, the standardized predictor is
 
 \[
 x_{ij}=\frac{g_{ij}-\bar g_{j,F}}{s_{j,F}},
 \]
 
-where `\(F\)` denotes the individuals used for weight fitting at the
+where $F$ denotes the individuals used for weight fitting at the
 corresponding stage. The implementation replaces marker standard
-deviations below `\(10^{-8}\)` with 1. For the BLUP response,
+deviations below $10^{-8}$ with 1. For the BLUP response,
 
 \[
 y_i^*=\frac{y_i-\bar y_F}{s_{y,F}},
 \]
 
-where `\(s_{y,F}=\max(\operatorname{sd}(y_F),10^{-8})\)`. The
+where $s_{y,F}=\max(\operatorname{sd}(y_F),10^{-8})$. The
 same transformation estimated on the fitting subset is applied to the
 validation and assessment predictors. During final refitting, scaling is
 estimated again using all outer-analysis individuals. Section 6 implements
@@ -294,11 +294,11 @@ knitr::kable(
 
 ### 4.2 Network architecture and mathematical formulation
 
-For individual `\(i\)`, let `\(\mathbf{x}_i\in\mathbb{R}^{p}\)` be
-the vector of standardized marker predictors, with `\(p=20{,}887\)`.
+For individual $i$, let $\mathbf{x}_i\in\mathbb{R}^{p}$ be
+the vector of standardized marker predictors, with $p=20{,}887$.
 The input to the first hidden layer is
-`\(\mathbf{h}_i^{(0)}=\mathbf{x}_i\)`. Each hidden layer
-`\(\ell=1,\ldots,L\)` performs
+$\mathbf{h}_i^{(0)}=\mathbf{x}_i$. Each hidden layer
+$\ell=1,\ldots,L$ performs
 
 \[
 \mathbf{h}_i^{(\ell)}
@@ -309,8 +309,8 @@ The input to the first hidden layer is
 \operatorname{ReLU}(z)=\max(0,z).
 \]
 
-Here, `\(\mathbf{W}_{\ell}\)` is the matrix of trainable connection
-weights, `\(\mathbf{b}_{\ell}\)` is the bias vector, and `\(L\)` is
+Here, $\mathbf{W}_{\ell}$ is the matrix of trainable connection
+weights, $\mathbf{b}_{\ell}$ is the bias vector, and $L$ is
 either one or two hidden layers. The ReLU transformation is applied
 elementwise. A single linear output is used for the continuous response:
 
@@ -371,13 +371,13 @@ ARCHITECTURES <- list(
 ```
 
 Including biases, the trainable parameter count for a network with one
-hidden layer of width `\(h\)` is
+hidden layer of width $h$ is
 
 \[
 P=(p+1)h+(h+1).
 \]
 
-For two hidden layers of widths `\(h_1,h_2\)`, the count becomes
+For two hidden layers of widths $h_1,h_2$, the count becomes
 
 \[
 P=(p+1)h_1+(h_1+1)h_2+(h_2+1).
@@ -566,7 +566,7 @@ and optimizer settings used in Sections 6 and 7.
 | Dropout | Not applied | No dropout regularization |
 | Maximum tuning epochs | 2,000 | Upper limit for each inner candidate fit |
 | Patience | 25 epochs | Stops after consecutive epochs without sufficient improvement |
-| Minimum improvement | `\(10^{-6}\)` | Threshold for improvement in validation MSE |
+| Minimum improvement | $10^{-6}$ | Threshold for improvement in validation MSE |
 | Early-validation fraction | 0.15 | Fraction reserved for selecting training duration |
 | Maximum final epoch-selection epochs | 3,000 | Upper limit for selecting final refitting duration |
 
@@ -579,7 +579,7 @@ across all four variants.
 During tuning, weight updates minimize the penalized training objective,
 whereas early stopping monitors unpenalized MSE on the early-validation
 subset. An epoch qualifies as an improvement when its validation MSE is
-strictly smaller than the best recorded value minus `\(10^{-6}\)`.
+strictly smaller than the best recorded value minus $10^{-6}$.
 The corresponding weights and biases are retained. After 25 consecutive
 epochs without such improvement, training stops, subject to the maximum
 of 2,000 epochs.
