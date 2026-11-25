@@ -16,79 +16,104 @@ editor_options:
   chunk_output_type: console
 ---
 
-# ANN models for the real-data analysis
-
-## 1. Objective
-
-This module fits four feed-forward artificial neural-network variants to the
-real *Coffea arabica* genomic-prediction data:
-
-- `ANN_0`: unregularized reference network;
-- `ANN_L1`: L1 weight regularization;
-- `ANN_L2`: L2 weight regularization;
-- `ANN_L1_L2`: simultaneous L1 and L2 weight regularization.
-
-All four variants use the same 195 individuals, 20,887-marker panel, three
-individual-BLUP prediction targets, and nested cross-validation procedure established in
-the preceding modules.
-
-Cross-validation and model selection follow these specifications:
-
-1. each outer task contains 156 analysis individuals and 39 untouched
-   assessment individuals;
-2. the four inner folds are used only for ANN model selection inside the outer
-   analysis set;
-3. architecture and learning rate are selected with `ANN_0`;
-4. the selected architecture and learning rate are then held fixed while the
-   applicable L1/L2 penalties are tuned;
-5. the outer assessment BLUPs are accessed only after the final network
-   prediction for that task already exists.
-
-This comparison isolates the effect of regularization under the network
-structure selected with `ANN_0`. The response is the individual BLUP
-estimated in the earlier phenotypic analysis. The outer assessment BLUPs
-are excluded from ANN training, but the original phenotypic model is not
-refitted inside each genomic fold. Consequently, the reported evaluation
-concerns prediction of *precomputed BLUPs*, not an independent end-to-end
-phenotype-to-genome validation.
-
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, cache = FALSE,
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
   fig.align = "center",
   out.width = "100%"
 )
 ```
+
+# ANN models for the real-data analysis
+
+## 1. Objective
+
+This module applies fully connected feed-forward artificial neural networks
+(ANNs) to predict the individual phenotypic BLUPs estimated for three traits
+of *Coffea arabica*. The four variants differ in their explicit weight
+regularization: `ANN_0`, `ANN_L1`, `ANN_L2`, and `ANN_L1_L2`.
+
+These labels identify four regularization variants, not four different
+network architectures. An architecture specifies the number and width of
+hidden layers. A selected configuration additionally identifies the learning
+rate and the L1 and L2 coefficients for a particular trait and outer split.
+
+All variants use the same 195 individuals, 20,887 quality-controlled
+markers, three prediction targets and nested cross-validation partitions
+established in R02 and R03. The 156 outer-analysis individuals provide the
+response information used for tuning, epoch selection and final fitting.
+The genotypes of the 39 outer-assessment individuals are inputs for
+prediction; their reference BLUPs are used to evaluate those predictions
+only after they have been generated.
+
+Architecture and learning rate are first selected with `ANN_0`. The
+regularized variants retain those choices and tune only their applicable
+penalties. This compares regularization conditional on the structure
+selected by the reference ANN; it does not imply that each regularized
+variant would select the same structure in an independent architecture
+search.
+
+The response is an individual BLUP estimated in the preceding phenotypic
+analysis. Although assessment BLUPs are excluded from ANN fitting and
+selection, the original phenotypic model is not refitted within each
+genomic fold. The evaluation therefore concerns the genomic prediction of
+precomputed BLUPs, rather than independent end-to-end validation from raw
+phenotypes to genomic predictions.
+
+The functional workflow is:
+
+**receive aligned genotypes, BLUPs and validation partitions → define ANN
+variants and their candidate architectures → select hyperparameters by
+nested cross-validation → select training duration and refit each network →
+obtain held-out predictions → summarize predictive metrics and individual
+rankings → deliver results for comparison with GBLUP in R05.**
+
 ## 2. Packages and dependencies
 
-`knitr` and `kableExtra` format the numerical tables. `ggplot2` and
-`ggthemes` construct the predictive figures. `future` distributes independent
-outer-fold training tasks across workers, while `torch` implements the neural
-networks and their optimization.
+The packages support distinct stages of the analysis. `knitr` formats
+numerical tables; `kableExtra` formats wide tables and provides horizontal
+scrolling; `ggplot2` and `ggthemes` construct predictive figures and their
+graphical theme. `future` distributes independent trait-by-outer-split
+training tasks across R sessions.
+
+The `torch` package implements the linear layers, ReLU activation, loss,
+automatic differentiation and Adam optimization. It is initialized in the
+computational training procedure rather than during routine rendering of
+previously saved results.
 
 ```{r packages}
-library(knitr)
-library(ggplot2)
-library(ggthemes)
-library(future)
-library(kableExtra)
+library(knitr)      # Format numerical tables.
+library(ggplot2)    # Create predictive figures.
+library(ggthemes)   # Apply a consistent graphical theme.
+library(future)     # Distribute independent training tasks.
+library(kableExtra) # Format wide result tables.
 ```
+
 ## 3. Genomic data and cross-validation
 
-The object `common`, produced in R02 and loaded from
-`output/real/audit/preprocessed_real_common.rds`, provides the marker matrix
-(`common$genotype`), phenotypic data (`common$phenotype`) and target traits
-(`common$traits`). The response for each trait is an individual BLUP estimated
-in the phenotypic analysis. The object `cv`, produced in R03 and loaded from
-`output/real/validation/real_cv_design.rds`, provides the 25 outer partitions
-(`cv$outer_splits`), their inner folds (`cv$inner_splits`), and the individual
-assignments (`cv$outer_assignments`).
+The analysis receives the quality-controlled genotype matrix and aligned
+individual phenotypic BLUPs from R02, together with the nested validation
+design established in R03. Individual identifiers connect the marker rows,
+responses and predictions throughout the analysis.
 
 ### 3.1 Input objects
 
-```{r inputs}
-common <- readRDS("output/real/audit/preprocessed_real_common.rds")
+The first `readRDS()` retrieves the common dataset; the second retrieves the
+fixed validation partitions. The marker data are converted to an R matrix
+and the response table, trait names and individual identifiers are
+extracted without reconstructing the input data.
 
-cv <- readRDS("output/real/validation/real_cv_design.rds")
+```{r inputs}
+common <- readRDS(
+  "output/real/audit/preprocessed_real_common.rds"
+)
+
+cv <- readRDS(
+  "output/real/validation/real_cv_design.rds"
+)
 
 geno <- as.matrix(common$genotype)
 
@@ -97,27 +122,63 @@ traits <- common$traits
 ids <- rownames(geno)
 ```
 
-### 3.2 Outer validation design
+### 3.2 Outer cross-validation partitions
 
-The object `outer_map` extracts the distinct `Repetition`, `OuterFold`, and
-`SplitID` combinations from `cv$outer_assignments`. Rows are ordered first
-by repetition and then by outer-fold number. This changes only the order of
-tasks; the individual indices in `cv$outer_splits` and `cv$inner_splits`
-are not modified.
+The validation design contains five repetitions of five outer folds.
+`Repetition` and `OuterFold` identify a partition, and `SplitID` links it
+to the corresponding analysis and assessment identifiers and nested inner
+folds. Sorting these metadata changes the order of tasks only; it does not
+change the individuals assigned to any fold.
 
 ```{r outer-partitions}
-outer_map <- unique(cv$outer_assignments[, c("Repetition", "OuterFold", "SplitID")])
+outer_map <- unique(
+  cv$outer_assignments[, c("Repetition", "OuterFold", "SplitID")]
+)
 
-outer_map <- outer_map[order(outer_map$Repetition, outer_map$OuterFold), , drop = FALSE]
+outer_map <- outer_map[
+  order(outer_map$Repetition, outer_map$OuterFold), , drop = FALSE
+]
 
 rownames(outer_map) <- NULL
 ```
 
 ### 3.3 Input summary
 
-The table reports the number of individuals and markers in `geno`, the
-prediction traits in `traits`, and the sample sizes and numbers of folds
-specified by `cv$outer_splits` and `cv$inner_splits`.
+The first table identifies the imported objects and their scientific roles.
+The second reports the sample sizes of the first saved outer and inner
+partitions and the dimensions of the common genomic data.
+
+```{r input-object-roles}
+input_object_summary <- data.frame(
+  Object = c("geno", "phenotype", "traits", "ids",
+             "cv$outer_splits", "cv$inner_splits"),
+  Structure = c(
+    paste(dim(geno), collapse = " x "),
+    paste(dim(phenotype), collapse = " x "),
+    length(traits),
+    length(ids),
+    length(cv$outer_splits),
+    sum(vapply(cv$inner_splits, length, integer(1)))
+  ),
+  Role = c(
+    "Marker predictors for all ANN variants.",
+    "Aligned individual phenotypic BLUPs and associated data.",
+    "Names of the quantitative prediction targets.",
+    "Individual identifiers connecting genotypes and BLUPs.",
+    "Held-out outer evaluation partitions.",
+    "Inner partitions used to select hyperparameters."
+  ),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(
+  input_object_summary,
+  format = "html",
+  caption = "Objects entering the real-data ANN analysis",
+  row.names = FALSE,
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
 
 ```{r input-summary}
 input_summary <- data.frame(
@@ -139,54 +200,257 @@ input_summary <- data.frame(
 )
 
 input_summary |>
-  knitr::kable(format = "html", caption = "Common inputs used by the real-data ANN workflow",
+  knitr::kable(
+    format = "html",
+    caption = "Common inputs used by the real-data ANN workflow",
+    row.names = FALSE,
+    table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+  )
+```
+
+### 3.4 Nested cross-validation and preprocessing
+
+Within each outer split, the 156 analysis individuals are divided into
+four inner folds. Each inner fold contains 117 analysis individuals and
+39 assessment individuals. A further subdivision of the inner-analysis
+set reserves `round(117 * 0.15) = 18` individuals for early stopping; the
+other 99 individuals are used to update network weights.
+
+| Subset | Individuals | Purpose |
+|:-------|------------:|:--------|
+| Outer analysis | 156 | Hyperparameter selection, epoch selection and final fitting |
+| Outer assessment | 39 | Held-out prediction and evaluation |
+| Inner analysis | 117 | Fitting and early stopping for each candidate |
+| Inner assessment | 39 | Comparing candidate predictions |
+| Inner weight-fitting subset | 99 | Estimating scaling parameters and updating weights |
+| Inner early-validation subset | 18 | Selecting the stopping epoch |
+
+The inner subsets belong entirely to the outer-analysis set. Inner
+assessment and early-validation observations play distinct roles: the
+former compare hyperparameter candidates, whereas the latter determine
+when to stop updating the weights of a candidate. The outer-assessment
+responses participate in neither decision.
+
+For a marker value `\(g_{ij}\)`, the standardized predictor is
+
+\[
+x_{ij}=\frac{g_{ij}-\bar g_{j,F}}{s_{j,F}},
+\]
+
+where `\(F\)` denotes the individuals used for weight fitting at the
+corresponding stage. The implementation replaces marker standard
+deviations below `\(10^{-8}\)` with 1. For the BLUP response,
+
+\[
+y_i^*=\frac{y_i-\bar y_F}{s_{y,F}},
+\]
+
+where `\(s_{y,F}=\max(\operatorname{sd}(y_F),10^{-8})\)`. The
+same transformation estimated on the fitting subset is applied to the
+validation and assessment predictors. During final refitting, scaling is
+estimated again using all outer-analysis individuals. Section 6 implements
+the inner-fold transformations and Section 7 implements final refitting.
+
+The ANN receives marker values directly, not genomic relationship matrices.
+All four variants consume the same R03 partitions; overlapping analysis
+sets across folds and repetitions mean that their evaluation tasks are not
+statistically independent.
+
+## 4. ANN variants and search space
+
+### 4.1 Regularization variants
+
+The four variants use the same fully connected multilayer perceptron (MLP)
+structure within each trait and outer split after architecture selection.
+L1 penalizes absolute weights and can favor sparse connections; L2
+penalizes squared weights and discourages large magnitudes. Their
+combination applies both penalties. Biases are not penalized.
+
+```{r ann-variants}
+# Four models share the network architecture; regularization differs.
+MODEL_LEVELS <- c("ANN_0", "ANN_L1", "ANN_L2", "ANN_L1_L2")
+
+ann_variants <- data.frame(
+  Model = MODEL_LEVELS,
+  L1 = c("Zero", "Positive", "Zero", "Positive"),
+  L2 = c("Zero", "Zero", "Positive", "Positive"),
+  Interpretation = c(
+    "Reference ANN without explicit weight penalties.",
+    "L1 weight regularization.",
+    "L2 weight regularization.",
+    "Simultaneous L1 and L2 weight regularization."
+  ),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(
+  ann_variants,
+  format = "html",
+  caption = "ANN regularization variants",
   row.names = FALSE,
   table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
 ```
-The four ANN variants use the same `cv$outer_splits` and
-`cv$inner_splits` for each `SplitID`.
 
-## 4. ANN variants and search space
+### 4.2 Network architecture and mathematical formulation
 
-A feed-forward network maps the marker genotypes to an individual BLUP.
-Each architecture lists the number of neurons in successive hidden layers:
-for example, `16` denotes one hidden layer with 16 neurons, while `16-8`
-denotes two hidden layers with 16 and 8 neurons. All networks use ReLU
-activations in hidden layers and a linear output for the continuous target.
-
-The unregularized `ANN_0` selects the architecture and learning rate. The
-regularized variants reuse these choices, differing only in the searched
-L1 and/or L2 penalty. Bias terms are excluded from regularization.
-
-For a network with weights \(w_j\), the penalized objective is
+For individual `\(i\)`, let `\(\mathbf{x}_i\in\mathbb{R}^{p}\)` be
+the vector of standardized marker predictors, with `\(p=20{,}887\)`.
+The input to the first hidden layer is
+`\(\mathbf{h}_i^{(0)}=\mathbf{x}_i\)`. Each hidden layer
+`\(\ell=1,\ldots,L\)` performs
 
 \[
-\operatorname{MSE}(y,\hat y)
-+
-\lambda_1\sum_j |w_j|
-+
-\frac{\lambda_2}{2}\sum_j w_j^2.
+\mathbf{h}_i^{(\ell)}
+=\operatorname{ReLU}\left(
+\mathbf{W}_{\ell}\mathbf{h}_i^{(\ell-1)}+\mathbf{b}_{\ell}
+\right),
+\qquad
+\operatorname{ReLU}(z)=\max(0,z).
 \]
 
-```{r search-space}
-# Four models share the network architecture; regularization differs.
-MODEL_LEVELS <- c("ANN_0", "ANN_L1", "ANN_L2", "ANN_L1_L2")
+Here, `\(\mathbf{W}_{\ell}\)` is the matrix of trainable connection
+weights, `\(\mathbf{b}_{\ell}\)` is the bias vector, and `\(L\)` is
+either one or two hidden layers. The ReLU transformation is applied
+elementwise. A single linear output is used for the continuous response:
 
+\[
+\widehat y_i^*=
+\mathbf{w}_{o}^{\mathsf{T}}\mathbf{h}_i^{(L)}+b_o.
+\]
+
+The predicted standardized BLUP is transformed back to its original
+scale using the response mean and scale from the corresponding fitting set:
+
+\[
+\widehat y_i=\bar y_F+s_{y,F}\widehat y_i^*.
+\]
+
+The training objective combines the mean squared error of the standardized
+response with explicit weight penalties:
+
+\[
+\mathcal{L}=
+\frac{1}{n_F}\sum_{i\in F}(y_i^*-\widehat y_i^*)^2
++\lambda_1\sum_j |w_j|
++\frac{\lambda_2}{2}\sum_j w_j^2.
+\]
+
+The sums include the weights of all hidden layers and the linear output
+layer, but exclude their biases. Adam is used with `weight_decay = 0`,
+so L2 is introduced only through the explicit loss term. No dropout is
+applied. The training code in Sections 6 and 7 constructs the layers
+directly with `torch::nn_linear()` and applies `torch::nnf_relu()` to
+the hidden layers.
+
+The nonlinear transformation permits flexible marker-response
+relationships, but does not explicitly partition additive, dominance
+or epistatic genetic effects. Similarly, small or zero connection weights
+do not by themselves identify causal loci or establish marker selection.
+
+### 4.3 Candidate architectures and model complexity
+
+Five one-hidden-layer architectures contain 2, 4, 8, 16 or 32 neurons.
+Four two-hidden-layer architectures contain 8-4, 16-8, 32-16 or 64-32
+neurons. For example, `16-8` represents 20,887 marker inputs, 16 ReLU
+neurons, 8 ReLU neurons and one linear output.
+
+```{r candidate-architectures}
 # Hidden-neuron counts for one- and two-layer networks.
-ARCHITECTURES <- list(`2` = c(2L), `4` = c(4L), `8` = c(8L), `16` = c(16L), `32` = c(32L),
-  `8-4` = c(8L, 4L), `16-8` = c(16L, 8L),
-  `32-16` = c(32L, 16L), `64-32` = c(64L, 32L)
+ARCHITECTURES <- list(
+  `2` = c(2L),
+  `4` = c(4L),
+  `8` = c(8L),
+  `16` = c(16L),
+  `32` = c(32L),
+  `8-4` = c(8L, 4L),
+  `16-8` = c(16L, 8L),
+  `32-16` = c(32L, 16L),
+  `64-32` = c(64L, 32L)
+)
+```
+
+Including biases, the trainable parameter count for a network with one
+hidden layer of width `\(h\)` is
+
+\[
+P=(p+1)h+(h+1).
+\]
+
+For two hidden layers of widths `\(h_1,h_2\)`, the count becomes
+
+\[
+P=(p+1)h_1+(h_1+1)h_2+(h_2+1).
+\]
+
+The following calculation uses the number of marker columns and the
+candidate architecture definitions, counting the weights and biases of
+each layer, including the output. These are the same parameter counts
+used as a tie-breaking criterion during tuning.
+
+```{r architecture-complexity}
+architecture_summary <- data.frame(
+  Architecture = names(ARCHITECTURES),
+  Hidden_layers = lengths(ARCHITECTURES),
+  Parameters = integer(length(ARCHITECTURES)),
+  stringsAsFactors = FALSE
 )
 
+for (architecture_index in seq_along(ARCHITECTURES)) {
+  architecture_widths <- c(
+    ncol(geno), ARCHITECTURES[[architecture_index]], 1L
+  )
+  architecture_summary$Parameters[architecture_index] <- sum(
+    (head(architecture_widths, -1L) + 1L) *
+      tail(architecture_widths, -1L)
+  )
+}
+
+knitr::kable(
+  architecture_summary,
+  format = "html",
+  caption = "Candidate ANN architectures and trainable parameter counts",
+  row.names = FALSE,
+  format.args = list(big.mark = ","),
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+Even the smallest candidate has considerably more trainable parameters
+than the number of individuals used to update network weights in an
+inner fold. This motivates the study of explicit regularization and early
+stopping in this high-dimensional prediction problem. It does not imply
+that regularization must improve held-out performance.
+
+### 4.4 Prespecified hyperparameter search space
+
+The learning rate controls the step size of Adam. The candidate grid
+contains four learning rates, six positive L1 coefficients and four
+positive L2 coefficients. The joint search contains all 24 combinations
+of the positive L1 and L2 coefficients.
+
+```{r search-space}
 # Candidate learning rates and penalty strengths for nested tuning.
 LEARNING_RATES <- c(1.25e-4, 2.5e-4, 5e-4, 1e-3)
 L1_VALUES <- c(1e-5, 1e-4, 1e-3, 1e-2, 3e-2, 1e-1)
 L2_VALUES <- c(1e-5, 1e-4, 1e-3, 1e-2)
-L1_L2_GRID <- expand.grid(L1 = L1_VALUES, L2 = L2_VALUES,
-  KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
+L1_L2_GRID <- expand.grid(
+  L1 = L1_VALUES,
+  L2 = L2_VALUES,
+  KEEP.OUT.ATTRS = FALSE,
+  stringsAsFactors = FALSE
 )
+```
 
+### 4.5 Candidate configurations and tuning workload
+
+First, the nine architectures and four learning rates are crossed for
+`ANN_0`, with both penalties set to zero. The selected architecture and
+learning rate are then held fixed while `ANN_L1`, `ANN_L2` and
+`ANN_L1_L2` tune their respective penalties. The grids and counts below
+define the candidate workload; they do not train networks.
+
+```{r structure-grid}
 # First select architecture and learning rate using ANN_0.
 structure_grid <- expand.grid(
   Architecture = names(ARCHITECTURES), Learning_rate = LEARNING_RATES,
@@ -196,7 +460,12 @@ structure_grid$Model <- "ANN_0"
 structure_grid$L1 <- 0
 structure_grid$L2 <- 0
 structure_grid <- structure_grid[, c("Model", "Architecture", "Learning_rate", "L1", "L2")]
+```
 
+The number of candidates and corresponding inner-fold evaluations are
+summarized separately for each variant.
+
+```{r candidate-search-summary}
 # Then search the applicable penalties without changing that structure.
 search_summary <- data.frame(
   Stage = c("Architecture + learning rate with ANN_0", "ANN_L1 penalty",
@@ -205,43 +474,155 @@ search_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 search_summary$Inner_fits_per_outer_task <-
-length(cv$inner_splits[[1L]]) * search_summary$Candidates
+  length(cv$inner_splits[[1L]]) * search_summary$Candidates
 
 knitr::kable(search_summary, format = "html", row.names = FALSE,
   caption = "Prespecified ANN hyperparameter search",
   table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
+```
 
+The total planned workload is calculated from the candidate counts,
+the saved inner partitions and the trait-by-outer-split task count.
+
+```{r candidate-search-totals}
 # Calculate total candidate counts from the search grid and outer tasks.
 CANDIDATES_PER_TASK <- sum(search_summary$Candidates)
 INNER_FITS_PER_TASK <- sum(search_summary$Inner_fits_per_outer_task)
 OUTER_TASKS <- length(traits) * nrow(outer_map)
 TOTAL_INNER_FITS <- OUTER_TASKS * INNER_FITS_PER_TASK
+
+search_totals <- data.frame(
+  Quantity = c(
+    "Candidates per outer task",
+    "Inner fits per outer task",
+    "Trait-by-outer-split tasks",
+    "Candidate configurations across tasks",
+    "Total inner fits"
+  ),
+  Count = c(
+    CANDIDATES_PER_TASK,
+    INNER_FITS_PER_TASK,
+    OUTER_TASKS,
+    CANDIDATES_PER_TASK * OUTER_TASKS,
+    TOTAL_INNER_FITS
+  )
+)
+
+knitr::kable(
+  search_totals,
+  format = "html",
+  caption = "Planned nested ANN tuning workload",
+  row.names = FALSE,
+  format.args = list(big.mark = ","),
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
 ```
 
-Within each outer split, candidates are ordered by increasing mean
-inner-assessment RMSE. Ties are resolved by decreasing mean Pearson
-correlation, followed by fewer network parameters, smaller total penalty
-(`L1 + L2`), lower learning rate, and the candidate identifier. Thus,
-architecture and penalty selection uses the predictions from the four inner
-assessment folds, without consulting the outer assessment individuals.
+Each outer task evaluates 70 candidate configurations: 36 for `ANN_0`,
+6 for `ANN_L1`, 4 for `ANN_L2` and 24 for `ANN_L1_L2`. Four inner
+folds give 280 candidate-fold evaluations per task. Across three traits
+and 25 outer splits, the planned workload is 5,250 candidate configurations
+and 21,000 inner fits, excluding final fitting. A selected boundary
+value describes occupancy of the prespecified grid; it does not establish
+that a larger search would improve prediction.
 
-For each trait and outer split, `ANN_0` selects the architecture and
-learning rate. `ANN_L1`, `ANN_L2`, and `ANN_L1_L2` retain those two values
-and optimize only their respective penalty coefficients.
+### 4.6 Hyperparameter selection criteria
 
-## 5. Computational resources
+For each candidate, predictive RMSE and Pearson correlation are calculated
+on the inner-assessment individuals. The four fold-level RMSE values are
+averaged, and the mean Pearson correlation uses available values. The
+candidate ranking follows the implemented order below.
 
-The networks are fitted using `torch` with the Adam optimizer. The
-`ANN_DEVICE` object selects a CPU or CUDA-compatible GPU, and
-`future::multisession` can distribute distinct trait-by-outer-split tasks
-across workers. Each task uses the same predefined training and assessment
-individuals regardless of the device or number of workers.
+| Priority | Criterion | Preferred value |
+|---------:|:----------|:----------------|
+| 1 | Mean inner-assessment RMSE | Smaller |
+| 2 | Mean inner-assessment Pearson correlation | Larger |
+| 3 | Number of trainable parameters | Smaller |
+| 4 | Sum of L1 and L2 coefficients | Smaller |
+| 5 | Learning rate | Smaller |
+| 6 | Candidate identifier | Increasing order |
+
+Nonfinite mean Pearson correlations receive the lowest priority for that
+tie-breaker. The ranking is applied to the initial `ANN_0` search and
+subsequently within each regularized variant. No outer-assessment response
+is consulted in selecting these hyperparameters.
+
+## 5. Optimization controls and computational resources
+
+### 5.1 Fixed optimization controls
+
+The fixed controls define the training procedure rather than the
+candidate hyperparameter grid. The values below describe the assignments
+and optimizer settings used in Sections 6 and 7.
+
+| Control | Value | Scientific role |
+|:--------|:------|:----------------|
+| Global seed | 20261105 | Basis for deterministic task-specific seeds |
+| Hidden activation | ReLU | Nonlinear hidden-layer transformation |
+| Output activation | Linear | Continuous standardized BLUP prediction |
+| Optimizer | Adam | Gradient-based updates of weights and biases |
+| Adam weight decay | 0 | Avoids a second implicit L2 penalty |
+| Dropout | Not applied | No dropout regularization |
+| Maximum tuning epochs | 2,000 | Upper limit for each inner candidate fit |
+| Patience | 25 epochs | Stops after consecutive epochs without sufficient improvement |
+| Minimum improvement | `\(10^{-6}\)` | Threshold for improvement in validation MSE |
+| Early-validation fraction | 0.15 | Fraction reserved for selecting training duration |
+| Maximum final epoch-selection epochs | 3,000 | Upper limit for selecting final refitting duration |
+
+The learning rate and applicable weight penalties vary according to the
+candidate search in Section 4. The controls in this table remain fixed
+across all four variants.
+
+### 5.2 Early stopping and training duration
+
+During tuning, weight updates minimize the penalized training objective,
+whereas early stopping monitors unpenalized MSE on the early-validation
+subset. An epoch qualifies as an improvement when its validation MSE is
+strictly smaller than the best recorded value minus `\(10^{-6}\)`.
+The corresponding weights and biases are retained. After 25 consecutive
+epochs without such improvement, training stops, subject to the maximum
+of 2,000 epochs.
+
+For final fitting, the selected configuration is used to determine the
+training duration within the outer-analysis set. Of the 156 individuals,
+`round(156 * 0.15) = 23` are reserved for early validation, leaving 133
+for weight fitting during epoch selection. The upper limit for this
+stage is 3,000 epochs. The network is then reinitialized and refitted
+on all 156 outer-analysis individuals for the selected number of epochs.
+
+These limits constrain computation; neither attaining a limit nor stopping
+by patience proves numerical convergence. The 39 outer-assessment
+individuals remain excluded from epoch selection and weight fitting.
+
+### 5.3 Computing device and parallel processing
+
+Independent trait-by-outer-split tasks are distributed using
+`future::multisession`. The device and worker count are computational
+settings, not scientific hyperparameters. By default, `ANN_WORKERS` is
+one; `ANN_DEVICE` selects an available CUDA device or the CPU, and
+`ANN_FORCE` is false, allowing compatible existing checkpoints to be
+reused by the training procedures. The maximum size of exported future
+globals is set to 2 GiB.
+
+The following chunk documents the device initialization used for
+training. Ordinary rendering does not execute it or initialize the
+neural-network backend. CPU and GPU execution may differ in floating-point
+behavior; changing the device or parallel configuration does not redefine
+the validation partitions or candidate search.
 
 ```{r runtime-device, eval=FALSE}
 # Select the device and number of workers for independent outer tasks.
-ANN_WORKERS_REQUESTED <- suppressWarnings(as.integer(Sys.getenv("ANN_WORKERS", "1")))
-ANN_WORKERS <- if (is.finite(ANN_WORKERS_REQUESTED) && ANN_WORKERS_REQUESTED >= 1L) ANN_WORKERS_REQUESTED else 1L
+ANN_WORKERS_REQUESTED <- suppressWarnings(
+  as.integer(Sys.getenv("ANN_WORKERS", "1"))
+)
+ANN_WORKERS <- if (
+  is.finite(ANN_WORKERS_REQUESTED) && ANN_WORKERS_REQUESTED >= 1L
+) {
+  ANN_WORKERS_REQUESTED
+} else {
+  1L
+}
 ANN_FORCE <- identical(Sys.getenv("ANN_FORCE", "0"), "1")
 options(future.globals.maxSize = 2 * 1024^3)
 library(torch)
