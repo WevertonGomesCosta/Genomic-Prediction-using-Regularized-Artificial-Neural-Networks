@@ -713,8 +713,12 @@ separated into 99 weight-fitting and 18 early-validation individuals.
 The 39 inner-assessment individuals remain separate from both sets.
 
 `validation_seed` depends on repetition, outer fold and inner fold,
-but not on trait or candidate. Thus the same partition receives the
-same early-validation individuals across traits and ANN variants.
+but not on trait or candidate. With identical input identifiers, their
+order and random-number generator settings, this seed reproduces the
+same early-validation subset across traits. Within a task, all ANN
+candidates reuse the prepared subset. The archived scaling counts do
+not agree across traits in every partition (Section 6.5); the seed
+formula alone does not establish identical historical fitting subsets.
 `fit_ids` contains the remaining inner-analysis identifiers;
 `fit_index`, `validation_index` and `assessment_index` align these
 subsets with the marker matrix and BLUP table.
@@ -1770,43 +1774,85 @@ knitr::kable(
 )
 ```
 
-The preprocessing diagnostics are shared across candidates and traits
-within the same outer split and inner fold because the fitting
-identifiers are shared. To avoid counting these repeated values as
-different preprocessing events, the next summary uses distinct
-split-fold records. It reports the number of markers whose standard
-deviation is below the threshold in Section 3.4, not the number of
-markers removed from the network.
+The stored marker-scaling counts agree across candidates within each
+trait-by-outer-split task and inner fold. They do not always agree
+across traits for the same partition. The descriptive unit is
+therefore a trait, outer split and inner fold (100 records per
+trait), not a partition pooled across traits. The counts refer to
+markers whose fitting-subset standard deviation falls below the
+threshold in Section 3.4, not markers removed from the network.
 
 ```{r tuning-marker-scaling-diagnostics}
 scaling_fold_records <- unique(fold_results[
-  , c("SplitID", "InnerFold", "N_zero_variance_markers")
+  , c("Trait", "TaskID", "SplitID", "InnerFold",
+      "N_zero_variance_markers")
 ])
 
-scaling_summary <- data.frame(
-  Quantity = c(
-    "Distinct split-fold records",
-    "Records with scale replaced for at least one marker",
-    "Minimum affected markers",
-    "Median affected markers",
-    "Maximum affected markers"
-  ),
-  Value = c(
-    nrow(scaling_fold_records),
-    sum(scaling_fold_records$N_zero_variance_markers > 0),
-    min(scaling_fold_records$N_zero_variance_markers),
-    median(scaling_fold_records$N_zero_variance_markers),
-    max(scaling_fold_records$N_zero_variance_markers)
+scaling_summary <- data.frame()
+
+for (trait_name in traits) {
+  scaling_values <- scaling_fold_records$N_zero_variance_markers[
+    scaling_fold_records$Trait == trait_name
+  ]
+
+  scaling_summary <- rbind(
+    scaling_summary,
+    data.frame(
+      Trait = trait_name,
+      Records = length(scaling_values),
+      Affected_partitions = sum(scaling_values > 0),
+      Minimum = min(scaling_values),
+      Median = median(scaling_values),
+      Mean = mean(scaling_values),
+      Maximum = max(scaling_values),
+      stringsAsFactors = FALSE
+    )
   )
-)
+}
 
 knitr::kable(
   scaling_summary,
-  format = "html", row.names = FALSE,
-  caption = "Fitting-subset marker scaling diagnostics across inner partitions",
+  format = "html", digits = 1, row.names = FALSE,
+  caption = "Stored fitting-subset marker scaling diagnostics by trait",
   table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
 )
 ```
+
+The next table counts distinct archived scaling counts for each
+outer-split and inner-fold combination. Agreement in the count does
+not establish identity of the affected markers or fitting individuals.
+Disagreement shows that the stored counts cannot be pooled across
+traits as one common preprocessing record. The archived records and
+selected configurations are retained as stored; the source of the
+cross-trait differences cannot be determined from these counts alone.
+
+```{r tuning-marker-scaling-agreement}
+scaling_split_counts <- unique(scaling_fold_records[
+  , c("SplitID", "InnerFold", "N_zero_variance_markers")
+])
+
+scaling_count_agreement <- aggregate(
+  x = list(Distinct_counts = rep(1L, nrow(scaling_split_counts))),
+  by = scaling_split_counts[, c("SplitID", "InnerFold")],
+  FUN = sum
+)
+
+scaling_agreement_summary <- data.frame(
+  Distinct_counts = seq_along(traits),
+  Inner_partitions = as.integer(table(
+    factor(scaling_count_agreement$Distinct_counts,
+           levels = seq_along(traits))
+  ))
+)
+
+knitr::kable(
+  scaling_agreement_summary,
+  format = "html", row.names = FALSE,
+  caption = "Agreement of stored marker scaling counts across traits",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
 
 ## 7. Final fitting
 
