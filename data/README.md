@@ -152,6 +152,67 @@ Source datasets and third-party materials remain subject to their own
 licensing, access, citation and provenance conditions, as described in
 [`LICENSE.md`](../LICENSE.md).
 
+### Canonical file identities (SHA-256)
+
+The following SHA-256 values describe the exact Git blob contents (not the
+Git object identifiers) at commit
+[`9576541`](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/commit/9576541d37a77100eb77fc43bc73d48c6deac0ac),
+the completed analytical version. Paths are relative to `data/`.
+
+| Canonical file | Bytes in Git | SHA-256 of Git content |
+|:--|--:|:--|
+| `dados_simulados/DG#gen_F2_Vfen.txt` | 54123 | `07cbb8b2904a8033f49df0d2b066464187dd93f150d2431704ec2d8d11d0b587` |
+| `dados_simulados/DG#gen_F2_Vgen.dat` | 54138 | `7a173cb2e691cd8edfa35cff0f2ac14f134d750401f358d3c9879d7e36e16cc7` |
+| `dados_simulados/genoma_mapa.txt` | 12034010 | `ba8ec419b2fbcfa4b36bf5513f580537cf09a29fc28d74e8f4ce57d288101ea8` |
+| `dados_simulados/genoma.txt` | 251965 | `fc1789b0efc22e8acbdfa9078a3f4eb6dca0f643733b2f1fb062e4ffc2ff1bfe` |
+| `dados_simulados/controlegenetico#1.dat` | 5360 | `7240975f8a5176b1d11aaca081001d5758181a7439ee7fee70d954a205a002d2` |
+| `dados_simulados/genoma_pais.txt` | 16401 | `43d46c2fabbf6ee56a33b249fdcf02c1b2e6d2c90c7dd9f7ddf5a7b368821c74` |
+| `dados_reais/coffee_phenotypes.txt` | 24171 | `e6e966a663a120641a6030d62e514135ac74ce84dc7319abeed899ca503573f8` |
+
+The seven local text files were checked on 2026-11-26. All matched their
+reference Git objects after application of Git clean filters. Their raw
+local byte counts and hashes differed, consistently with Windows CRLF
+line endings. To verify a versioned file against the table, hash the
+Git content rather than the working-tree bytes. For example, from the
+repository root in Git Bash or a compatible shell:
+
+```bash
+git show '9576541:data/dados_simulados/DG#gen_F2_Vfen.txt' | sha256sum
+git hash-object --path='data/dados_simulados/DG#gen_F2_Vfen.txt' 'data/dados_simulados/DG#gen_F2_Vfen.txt'
+git rev-parse '9576541:data/dados_simulados/DG#gen_F2_Vfen.txt'
+```
+
+The first command checks the recorded SHA-256; the last two should
+return the same Git object identifier for a matching local copy.
+Apply the same procedure to the other versioned canonical files.
+
+### Local real genotype input
+
+The raw genotype is excluded by [`data/dados_reais/.gitignore`](dados_reais/.gitignore).
+It must be obtained separately under the applicable access conditions
+and placed at `data/dados_reais/geno_real.rds`.
+
+| Local file checked on 2026-11-26 | Bytes | SHA-256 of local content |
+|:--|--:|:--|
+| `dados_reais/geno_real.rds` | 974922 | `a8effc492ec01ea4f5fe68b1aefb052c6216cb79f1fa280645277dddba4034de` |
+
+The hash identifies the available local copy on that date. It is not
+independent evidence that the binary file is identical to the original
+input of the historical model fits. Verify an obtained copy from the
+repository root using:
+
+```bash
+sha256sum data/dados_reais/geno_real.rds
+```
+
+The prepared real-data object remains a separate, versioned product.
+
+### Additional versioned files
+
+`dados_simulados/genoma_mapa_tr.txt` and `dados_simulados/map.rds` are
+also tracked in Git. Neither is referenced by the current M01 source;
+they are not required canonical inputs for the documented reconstruction.
+
 ## Data and analysis directories
 
 - `data/` — canonical source data;
