@@ -1671,9 +1671,19 @@ p_matched_contrasts <- ggplot(
   geom_point(size = 2.6) +
   facet_wrap(vars(Trait, Metric), ncol = 4, scales = "free_x") +
   scale_color_manual(values = model_colors) +
+  scale_x_continuous(
+    n.breaks = 4,
+    guide = guide_axis(check.overlap = TRUE)
+  ) +
+  guides(color = guide_legend(nrow = 1)) +
   labs(x = "Mean matched difference", y = NULL, color = "ANN variant") +
   theme_gdocs() +
-  theme(legend.position = "bottom")
+  theme(
+    legend.position = "bottom",
+    panel.spacing.x = grid::unit(1.0, "cm"),
+    panel.spacing.y = grid::unit(0.6, "cm"),
+    plot.margin = margin(10, 15, 10, 10)
+  )
 
 print(p_matched_contrasts)
 ```
