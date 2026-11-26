@@ -263,6 +263,72 @@ and accidental interactive outputs under `analysis/output/`.
 Locally retained historical scripts under `code/legacy/` are outside
 the canonical workflow.
 
+### Versioned analytical objects
+
+At the completed analytical commit
+[`9576541`](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/commit/9576541d37a77100eb77fc43bc73d48c6deac0ac),
+the `output/` tree contains the following tracked RDS and CSV files
+(excluding documentation and figures).
+
+| Directory relative to `output/` | RDS | CSV |
+|:--|--:|--:|
+| `simulated/audit/` | 1 | 3 |
+| `simulated/validation/` | 1 | 3 |
+| `simulated/gblup/` | 2 | 3 |
+| `simulated/ann/tuning/` | 5 | 4 |
+| `simulated/ann/final/` | 4 | 3 |
+| `simulated/comparison/` | 0 | 6 |
+| **Simulated subtotal** | **13** | **22** |
+| `real/phenotype/` | 4 | 3 |
+| `real/audit/` | 1 | 5 |
+| `real/validation/` | 1 | 3 |
+| `real/gblup/` | 4 | 7 |
+| `real/ann/tuning/` | 4 | 3 |
+| `real/ann/final/` | 5 | 6 |
+| `real/comparison/` | 0 | 7 |
+| **Real subtotal** | **19** | **34** |
+| **Total** | **32** | **56** |
+
+The inventory includes prepared data, fixed validation designs, phenotypic
+BLUPs, tuning records, fit-level results, held-out predictions, individual
+rankings and comparison summaries. File presence in Git does not by itself
+establish successful deserialization or numerical reproduction in another
+environment.
+
+### Scope of the simulated comparison results
+
+The canonical machine-readable M05 comparison summary is
+[`simulated_model_scenario_summary.csv`](simulated/comparison/simulated_model_scenario_summary.csv).
+The other five CSVs tracked in `simulated/comparison/` are not referenced by
+the current M05 source:
+
+- `simulated_ann_vs_gblup_paired_by_scenario.csv`;
+- `simulated_ann_vs_gblup_paired_summary.csv`;
+- `simulated_model_overall_summary.csv`;
+- `simulated_model_pairwise_by_scenario.csv`;
+- `simulated_model_pairwise_summary.csv`.
+
+They are retained in the repository but do not constitute the canonical
+comparison summaries for the current tutorial. In particular, the current
+M05 does not rank models by pooling performance across C1–C6. All seven
+R05 comparison CSVs listed above belong to the current real-data comparison.
+
+### Reuse of persisted results
+
+The versioned prepared datasets and validation designs support downstream
+analyses without reconstructing the original inputs. In particular, M05
+uses the four saved GBLUP and ANN result and prediction RDS objects listed
+above. R05 uses the saved GBLUP and ANN results, predictions and individual
+rankings together with the real validation design. Neither comparison
+module requires a new model fit.
+
+This intermediate reproduction route requires a compatible R environment
+and the appropriate saved inputs. It is distinct from reconstructing
+the complete workflow. Routine rendering is not a read-only operation:
+some preparation and export blocks may write outputs. Use a separate
+working copy if executing analysis code, and retain the original
+versioned results for comparison.
+
 The published tutorial can be inspected without new model fitting.
 Computational reconstruction requires the relevant canonical inputs,
 recorded software dependencies and deliberate execution of the documented
