@@ -107,17 +107,107 @@ Additional information on source data and analytical results is available in [`d
 
 ### Software and reproducibility
 
-The analyses use R and R Markdown. The scientific website is produced with `workflowr`, and R package versions are specified with `renv`.
+The analyses use R and R Markdown. The recorded R environment
+([`renv.lock`](renv.lock)) specifies R 4.5.1 and 94 packages.
+The principal dependencies are:
+
+| Purpose | Recorded versions |
+|:--|:--|
+| Environment and website | renv 1.1.8; workflowr 1.7.2; rmarkdown 2.30; knitr 1.50 |
+| Genomic mixed models | sommer 4.4.4; Matrix 1.7-4 |
+| Neural networks | torch 0.16.3 |
+| Parallel processing | future 1.82.0; parallelly 1.50.0; foreach 1.5.2; doParallel 1.0.17 |
+| Figures and tables | ggplot2 4.0.3; ggthemes 6.0.0; kableExtra 1.4.1 |
+
+The project-wide seed is 20260821 and the knitting root is the project
+root, as specified in [`_workflowr.yml`](_workflowr.yml). The analytical
+modules also define their own task-specific seeds and numerical settings.
 
 #### Inspect the published analysis
 
-The rendered website tracked in `docs/` provides access to the tutorial, methodological code, tables and rendered figures without requiring a new model fit. The comparison modules use previously computed predictions and results; machine-readable summaries are documented in [output/README.md](output/README.md). High-resolution TIFF exports are kept locally rather than versioned.
+The rendered website tracked in `docs/` provides access to the tutorial,
+methodological code, tables and rendered figures without requiring R or
+a new model fit. Machine-readable summaries are documented in
+[output/README.md](output/README.md). High-resolution TIFF exports are
+kept locally rather than versioned.
+
+#### Reproduce downstream analyses from persisted objects
+
+The repository includes the prepared datasets, fixed cross-validation
+designs, phenotypic BLUPs, ANN tuning records, fitting results, held-out
+predictions and real-data individual rankings. With a compatible R
+environment, these objects support downstream analyses without
+reconstructing their upstream inputs. The comparison modules M05 and R05
+read saved results and predictions; R05 additionally reads the saved
+rankings and validation design. They do not refit the models.
+
+To prepare the computational environment, clone the repository, open
+the project from its root using R 4.5.1, and run:
+
+```r
+renv::restore()
+renv::status()
+```
+
+Restoring the lockfile does not install R itself or guarantee the
+availability of all system dependencies. R Markdown rendering requires
+a compatible Pandoc installation; ANN training additionally requires the
+native libraries used by torch and a compatible CPU or GPU runtime.
+Check these requirements before executing training code. The recorded
+package versions and seeds support reproducibility but do not guarantee
+bitwise identical numerical results across operating systems, devices,
+native libraries or parallel execution environments.
+
+Routine rendering is not equivalent to read-only inspection: some
+preparation and export blocks can write results. Use a separate working
+copy for computational reproduction and preserve the published results.
 
 #### Reconstruct the analytical workflow
 
-Full reconstruction requires access to the canonical inputs documented in [data/README.md](data/README.md), the R environment recorded in `renv.lock`, and the deliberate execution of the analytical stages listed above. Restore the recorded R dependencies with `renv::restore()` and inspect the environment with `renv::status()`. The computationally intensive model-fitting and ANN tuning blocks are not run automatically by routine website rendering. Reading the published website and reconstructing the analyses are distinct tasks.
+Full reconstruction requires the canonical inputs described in
+[data/README.md](data/README.md), including the SHA-256 identities of
+the seven versioned source files. The raw real genotype file
+`data/dados_reais/geno_real.rds` is deliberately excluded from Git and
+must be obtained separately under applicable access conditions. A fresh
+clone alone cannot reconstruct R02 from raw genotypes. The versioned
+`output/real/audit/preprocessed_real_common.rds` permits downstream
+genomic analyses without that raw file.
 
-The real-data workflow reads the canonical genotype input from `data/dados_reais/geno_real.rds` and integrates it with phenotypic BLUPs. The processed object `output/real/audit/preprocessed_real_common.rds` contains the marker panel and aligned prediction targets used by the downstream models.
+After verifying the inputs and restoring the environment, follow the
+analytical sequence above. The two workflows are independent.
+
+| Stage | Simulated data | Real data |
+|:--|:--|:--|
+| Phenotypic adjustment | Not applicable | R01: estimate and save BLUPs |
+| Data preparation | M01: prepare and save the common dataset | R02: integrate genotypes and BLUPs, apply marker QC and save the common dataset |
+| Validation design | M02: construct and export partitions | R03: construct and save partitions |
+| GBLUP | M03: construct kernels, fit and save results | R04A: construct kernels, fit and save results |
+| ANN | M04: tune, select epochs, fit and save results | R04B: tune, select epochs, fit and save results |
+| Comparison | M05: compare persisted results | R05: compare persisted results and rankings |
+
+M01 and M02 have disabled persistence blocks that must be deliberately
+executed when recreating their saved objects. M03 and R04A have disabled
+kernel, fitting and export blocks. R01–R03 execute their respective
+preparation stages. The comparison modules document their optional
+exports.
+
+M04 uses `RUN_ANN_TUNING` and `RUN_ANN` (default `0`; `1` enables the
+respective tuning or final-fitting stages). Complete tuning before final
+fitting; `ANN_FORCE` defaults to `0` and controls forced reexecution.
+M03 provides `GBLUP_WORKERS` for worker selection. M04 and R04B provide
+`ANN_WORKERS`, `ANN_DEVICE` and `ANN_FORCE` for execution settings,
+but R04B uses explicit `eval=FALSE` training and export blocks rather
+than the M04 execution switches. Follow each module's documented
+execution mechanism and choose resources appropriate to the machine.
+Do not indiscriminately enable every chunk or apply the M04 switches
+to R04B.
+
+For reconstruction, execute the required disabled computational and
+persistence blocks in dependency order in the separate working copy.
+The source pages contain the complete scientific procedures; ordinary
+website rendering is not a one-command reconstruction of the project.
+The [output documentation](output/README.md) identifies the saved
+objects needed by subsequent stages.
 
 ### Citation and license
 
@@ -224,17 +314,115 @@ Informações adicionais sobre dados-fonte e resultados analíticos estão dispo
 
 ### Recursos computacionais e reprodutibilidade
 
-As análises utilizam R e R Markdown. O site científico é produzido com `workflowr`, e as versões dos pacotes R são especificadas com `renv`.
+As análises utilizam R e R Markdown. O ambiente R registrado
+([`renv.lock`](renv.lock)) especifica R 4.5.1 e 94 pacotes.
+As principais dependências são:
+
+| Finalidade | Versões registradas |
+|:--|:--|
+| Ambiente e website | renv 1.1.8; workflowr 1.7.2; rmarkdown 2.30; knitr 1.50 |
+| Modelos mistos genômicos | sommer 4.4.4; Matrix 1.7-4 |
+| Redes neurais | torch 0.16.3 |
+| Processamento paralelo | future 1.82.0; parallelly 1.50.0; foreach 1.5.2; doParallel 1.0.17 |
+| Figuras e tabelas | ggplot2 4.0.3; ggthemes 6.0.0; kableExtra 1.4.1 |
+
+A semente global é 20260821 e a raiz de renderização é a raiz do
+projeto, conforme [`_workflowr.yml`](_workflowr.yml). Os módulos
+analíticos também definem sementes específicas das tarefas e
+configurações numéricas.
 
 #### Inspecionar a análise publicada
 
-O website renderizado e versionado em `docs/` permite consultar o tutorial, o código metodológico, as tabelas e as figuras renderizadas sem exigir novo ajuste de modelos. Os módulos de comparação utilizam predições e resultados previamente calculados; os resumos legíveis por máquina estão documentados em [output/README.md](output/README.md). As exportações TIFF de alta resolução são mantidas localmente, sem versionamento.
+O website renderizado e versionado em `docs/` permite consultar o
+tutorial, o código metodológico, as tabelas e as figuras renderizadas
+sem exigir R ou novo ajuste de modelos. Os resumos legíveis por máquina
+estão documentados em [output/README.md](output/README.md). As
+exportações TIFF de alta resolução são mantidas localmente, sem
+versionamento.
+
+#### Reproduzir análises posteriores a partir dos objetos persistidos
+
+O repositório inclui os dados preparados, os desenhos fixos de validação
+cruzada, os BLUPs fenotípicos, os registros de tuning das ANN, os
+resultados dos ajustes, as predições fora do fold e as classificações
+individuais dos dados reais. Com um ambiente R compatível, esses objetos
+permitem executar etapas posteriores sem reconstruir suas entradas.
+Os módulos comparativos M05 e R05 leem resultados e predições salvos;
+R05 também lê as classificações e o desenho de validação persistidos.
+Não realizam novos ajustes dos modelos.
+
+Para preparar o ambiente computacional, clone o repositório, abra o
+projeto a partir de sua raiz utilizando R 4.5.1 e execute:
+
+```r
+renv::restore()
+renv::status()
+```
+
+Restaurar o lockfile não instala o próprio R nem garante a
+disponibilidade de todas as dependências do sistema. A renderização
+R Markdown requer uma instalação compatível do Pandoc; o treinamento
+das ANN também requer as bibliotecas nativas utilizadas pelo torch e
+um ambiente de execução CPU ou GPU compatível. Verifique esses
+requisitos antes de executar o treinamento. As versões e sementes
+registradas favorecem a reprodutibilidade, mas não garantem identidade
+numérica bit a bit entre sistemas operacionais, dispositivos,
+bibliotecas nativas ou ambientes de processamento paralelo.
+
+A renderização rotineira não equivale à consulta somente de leitura:
+alguns blocos de preparação e exportação podem gravar resultados.
+Utilize uma cópia de trabalho separada para a reprodução computacional
+e preserve os resultados publicados.
 
 #### Reconstruir o fluxo analítico
 
-A reconstrução completa exige acesso aos dados canônicos documentados em [data/README.md](data/README.md), ao ambiente R registrado em `renv.lock` e a execução deliberada das etapas analíticas listadas acima. Restaure as dependências R registradas com `renv::restore()` e inspecione o ambiente com `renv::status()`. Os blocos computacionalmente intensivos de ajuste dos modelos e seleção de hiperparâmetros das ANN não são executados automaticamente durante a renderização rotineira do site. Consultar o website publicado e reconstruir as análises são tarefas distintas.
+A reconstrução completa exige os dados canônicos documentados em
+[data/README.md](data/README.md), incluindo as identidades SHA-256 dos
+sete arquivos-fonte versionados. O arquivo genotípico bruto
+`data/dados_reais/geno_real.rds` é deliberadamente excluído do Git e
+deve ser obtido separadamente, respeitando as condições de acesso
+aplicáveis. Apenas clonar o repositório não permite reconstruir o R02
+a partir dos genótipos brutos. O objeto versionado
+`output/real/audit/preprocessed_real_common.rds` permite executar
+as análises genômicas posteriores sem esse arquivo bruto.
 
-O fluxo de dados reais lê o arquivo genotípico canônico `data/dados_reais/geno_real.rds` e o integra aos BLUPs fenotípicos. O objeto processado `output/real/audit/preprocessed_real_common.rds` contém o painel de marcadores e os alvos preditivos alinhados utilizados pelos modelos seguintes.
+Após verificar as entradas e restaurar o ambiente, siga a sequência
+analítica apresentada acima. Os dois fluxos são independentes.
+
+| Etapa | Dados simulados | Dados reais |
+|:--|:--|:--|
+| Ajuste fenotípico | Não aplicável | R01: estimar e salvar os BLUPs |
+| Preparação | M01: preparar e salvar os dados comuns | R02: integrar genótipos e BLUPs, aplicar controle de qualidade dos marcadores e salvar os dados comuns |
+| Desenho de validação | M02: construir e exportar as partições | R03: construir e salvar as partições |
+| GBLUP | M03: construir kernels, ajustar e salvar resultados | R04A: construir kernels, ajustar e salvar resultados |
+| ANN | M04: selecionar hiperparâmetros e épocas, ajustar e salvar resultados | R04B: selecionar hiperparâmetros e épocas, ajustar e salvar resultados |
+| Comparação | M05: comparar os resultados persistidos | R05: comparar os resultados e classificações persistidos |
+
+M01 e M02 possuem blocos de persistência desativados que devem ser
+executados deliberadamente para recriar seus objetos salvos. M03 e R04A
+possuem blocos desativados de construção de kernels, ajuste e exportação.
+R01–R03 executam suas respectivas etapas de preparação. Os módulos
+comparativos documentam suas exportações opcionais.
+
+M04 utiliza `RUN_ANN_TUNING` e `RUN_ANN` (padrão `0`; `1` habilita
+a respectiva etapa de tuning ou ajuste final). Conclua o tuning antes
+do ajuste final; `ANN_FORCE` tem padrão `0` e controla a reexecução
+forçada. M03 disponibiliza `GBLUP_WORKERS` para seleção do número de
+processos. M04 e R04B disponibilizam `ANN_WORKERS`, `ANN_DEVICE` e
+`ANN_FORCE` para configurações de execução, mas R04B utiliza blocos
+explícitos com `eval=FALSE` para treinamento e exportação, em vez dos
+controles de execução de M04. Siga o mecanismo documentado em cada
+módulo e escolha recursos apropriados à máquina. Não habilite
+indiscriminadamente todos os chunks nem aplique os controles de M04
+ao R04B.
+
+Para reconstruir o fluxo, execute os blocos computacionais e de
+persistência desativados que forem necessários, respeitando a ordem
+das dependências na cópia de trabalho separada. As páginas-fonte
+contêm os procedimentos científicos completos; a renderização
+rotineira do website não constitui uma reconstrução do projeto por
+um único comando. A [documentação dos resultados](output/README.md)
+identifica os objetos salvos exigidos pelas etapas posteriores.
 
 ### Citação e licença
 
