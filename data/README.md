@@ -98,9 +98,9 @@ for the real-data genomic models, not known true genetic values.
 ### Genomic marker data and quality control
 
 `data/dados_reais/geno_real.rds` is the canonical local genotype input
-required by [R02 — Data preparation](../analysis/real_data_audit.Rmd).
-This raw genotype file is not available in the versioned repository at
-that path.
+used by [R02 — Data preparation](../analysis/real_data_audit.Rmd).
+See the scientific references and access instructions below to obtain
+the original genotype data.
 
 The population comprises 195 individuals from 13 progenies. Capture-Seq
 genotyping produced the original panel of 21,620 SNPs. The common
@@ -122,35 +122,44 @@ The resulting prepared object,
 `output/real/audit/preprocessed_real_common.rds`, is versioned in Git.
 It contains the retained genotypes and aligned prediction targets and is
 the input to the downstream genomic validation and model-fitting stages.
-It is a derived analytical object, not a replacement for the original
-genotype file when reconstructing R02 from raw inputs.
+Use this object to start the downstream genomic analyses directly.
 
-### Scientific reference
+### Scientific references and data access
 
 Sousa, T. V., et al. (2019). Early selection enabled by the implementation
 of genomic selection in *Coffea arabica* breeding. *Frontiers in Plant Science*,
 9, 1934. <https://doi.org/10.3389/fpls.2018.01934>.
 
-## Data availability and reproducibility
+Sousa, T. V., et al. (2017). Population structure and genetic diversity of
+coffee progenies derived from Catuaí and Híbrido de Timor revealed by
+genome-wide SNP marker. *Tree Genetics & Genomes*, 13, 124.
+[Article record — Embrapa](https://www.alice.cnptia.embrapa.br/alice/handle/doc/1081931).
 
-| Input or product | Availability |
+Suela, M. M., et al. (2025). Structural Equation Modeling and Genome-Wide
+Selection for Multiple Traits to Enhance Arabica Coffee Breeding Programs.
+*Agronomy*, 15(7), 1686. <https://doi.org/10.3390/agronomy15071686>.
+
+For access to the original genotype data, consult these publications
+describing the population and marker data. The data availability
+statement in Suela et al. (2025), which analyzes the same population
+of 195 plants, directs data requests to coauthor Eveline Teixeira
+Caixeta. Request the original marker matrix with individual identifiers
+and prepare the RDS input in the format read by R02 at
+`data/dados_reais/geno_real.rds`.
+
+## Data availability and reproduction
+
+| Input or product | Source or location |
 |:--|:--|
-| Six simulated source files | Versioned in Git |
-| Real phenotypic source file | Versioned in Git |
-| Raw real genotype file (`geno_real.rds`) | Required locally; not available at the canonical repository path |
+| Six simulated source files | `data/dados_simulados/` |
+| Real phenotypic source file | `data/dados_reais/coffee_phenotypes.txt` |
+| Original real genotype data | Scientific references and access guidance above |
 | Prepared simulated and real datasets | Versioned under `output/` |
 | Rendered tutorial | Versioned under `docs/` |
 
-The published tutorial can be inspected without reconstructing the
-analyses. The prepared datasets provide inputs for the downstream stages,
-subject to the availability of the other required objects and software
-dependencies. Full reconstruction from raw inputs additionally requires
-access to the canonical real genotype file. A fresh clone alone does not
-provide that file.
-
-Source datasets and third-party materials remain subject to their own
-licensing, access, citation and provenance conditions, as described in
-[`LICENSE.md`](../LICENSE.md).
+Use the original data for the preparation modules or the saved prepared
+datasets to start the downstream analyses. Cite the source publications
+and consult the applicable data-use terms in [`LICENSE.md`](../LICENSE.md).
 
 ### Canonical file identities (SHA-256)
 
@@ -188,24 +197,18 @@ Apply the same procedure to the other versioned canonical files.
 
 ### Local real genotype input
 
-The raw genotype is excluded by [`data/dados_reais/.gitignore`](dados_reais/.gitignore).
-It must be obtained separately under the applicable access conditions
-and placed at `data/dados_reais/geno_real.rds`.
+Place the obtained RDS input at `data/dados_reais/geno_real.rds` for
+R02. The following record identifies the local reference copy:
 
 | Local file checked on 2026-11-26 | Bytes | SHA-256 of local content |
 |:--|--:|:--|
 | `dados_reais/geno_real.rds` | 974922 | `a8effc492ec01ea4f5fe68b1aefb052c6216cb79f1fa280645277dddba4034de` |
 
-The hash identifies the available local copy on that date. It is not
-independent evidence that the binary file is identical to the original
-input of the historical model fits. Verify an obtained copy from the
-repository root using:
+Compare the SHA-256 of the RDS with the recorded reference copy using:
 
 ```bash
 sha256sum data/dados_reais/geno_real.rds
 ```
-
-The prepared real-data object remains a separate, versioned product.
 
 ### Additional versioned files
 
