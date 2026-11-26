@@ -85,6 +85,16 @@ Genomic predictions are obtained out of fold for each assessment individual, usi
 
 The [About](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/about.html) page explains the scientific scope, model definitions and limits of interpretation. The [simulated](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/simulated_data_comparison.html) and [real-data](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/real_data_comparison.html) comparison pages present the scenario-specific and trait-specific findings. Repeated splits are dependent, and neither descriptive contrasts nor high agreement between models establish statistical significance or predictive superiority.
 
+### Main scientific findings
+
+- In the six simulated genetic scenarios, GBLUP models lead the four primary metrics against known true genetic values. GBLUP-ADE leads in C1 and C2, while GBLUP-AD leads most criteria from C3 to C6.
+- For the three real coffee traits, GBLUP-A has the highest mean Pearson and Spearman correlations on common finite outer splits and the smallest mean RMSE. The ranking and upper-group recovery criteria after averaging repeated out-of-fold predictions instead favor ANN configurations for BM and LP.
+- The benefits of explicit L1 and L2 weight penalties depend on the scenario, trait and evaluation criterion. No single ANN configuration is consistently best. The comparison is conditional on the shared architecture and learning-rate selection procedure and early stopping in all ANN variants.
+
+These descriptive findings distinguish genetic-signal recovery, prediction of observed targets, prediction error, calibration, individual ordering and agreement between models. They do not establish universal model superiority, isolated causal effects of regularization or realized genetic gain.
+
+See the integrated scientific synthesis in [About](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/about.html) and the detailed results in [M05](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/simulated_data_comparison.html) and [R05](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/real_data_comparison.html).
+
 ### Repository structure
 
 - `analysis/`: `workflowr` source pages defining the analytical modules;
@@ -191,6 +201,16 @@ Nos dados simulados, os valores genéticos verdadeiros são utilizados somente c
 As predições genômicas são obtidas fora do fold para cada indivíduo de avaliação, utilizando modelos ajustados sem sua resposta. As matrizes de parentesco dos GBLUP utilizam o painel genotípico completo disponível. Os BLUPs dos dados reais são estimados a partir das observações de campo antes da definição das partições genômicas; portanto, a separação das respostas de treinamento e avaliação aplica-se ao ajuste genômico, e não à estimação prévia dos BLUPs. O desenho avalia a predição dentro das populações representadas.
 
 A página [Sobre](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/about.html) explica o escopo científico, as definições dos modelos e os limites de interpretação. As páginas de comparação dos [dados simulados](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/simulated_data_comparison.html) e [dados reais](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/real_data_comparison.html) apresentam os resultados específicos por cenário e característica. As partições repetidas são dependentes, e contrastes descritivos ou alta concordância entre modelos não estabelecem significância estatística ou superioridade preditiva.
+
+### Principais resultados científicos
+
+- Nos seis cenários genéticos simulados, os modelos GBLUP lideram as quatro métricas principais em relação aos valores genéticos verdadeiros. O GBLUP-ADE lidera em C1 e C2, enquanto o GBLUP-AD lidera a maioria dos critérios de C3 a C6.
+- Para as três características reais do cafeeiro, o GBLUP-A apresenta as maiores correlações médias de Pearson e Spearman nas partições externas finitas comuns e o menor RMSE médio. Já os critérios de classificação e recuperação do grupo superior após a média das predições repetidas fora do fold favorecem configurações ANN para BM e LP.
+- Os benefícios das penalizações explícitas L1 e L2 dos pesos dependem do cenário, da característica e do critério de avaliação. Nenhuma configuração ANN é consistentemente a melhor. A comparação está condicionada ao procedimento compartilhado de seleção da arquitetura e da taxa de aprendizado e ao early stopping em todas as variantes ANN.
+
+Esses resultados descritivos distinguem a recuperação do sinal genético, a predição dos alvos observados, o erro de predição, a calibração, a ordenação individual e a concordância entre modelos. Não estabelecem superioridade universal de modelos, efeitos causais isolados da regularização ou ganho genético realizado.
+
+Consulte a síntese científica integrada em [Sobre](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/about.html) e os resultados detalhados no [M05](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/simulated_data_comparison.html) e no [R05](https://wevertongomescosta.github.io/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/real_data_comparison.html).
 
 ### Estrutura do repositório
 
