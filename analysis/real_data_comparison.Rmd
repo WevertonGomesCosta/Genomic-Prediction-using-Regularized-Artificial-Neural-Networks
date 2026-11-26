@@ -1594,9 +1594,79 @@ evaluation criterion.
 
 ## 6. Global ranking
 
-The object `all_ranking` contains 4,095 model–trait–individual records. Each model contributes 195 individuals for each of the three traits.
+The ranking analysis compares individuals rather than individual
+outer assessment splits. For each trait and model, the five held-out
+predictions for individual \(i\) are averaged before ranking:
+
+\[
+\overline{\widehat y}_i=\frac{1}{5}\sum_{r=1}^{5}\widehat y_{ir},
+\qquad
+s_i=\sqrt{\frac{1}{4}\sum_{r=1}^{5}
+(\widehat y_{ir}-\overline{\widehat y}_i)^2}.
+\]
+
+The mean and sample standard deviation are stored in the R04A
+and R04B ranking files. The standard deviation describes variation
+among repeated OOF predictions, not a prediction interval or standard
+error. The ranks are calculated from the mean predictions, not
+from averages of fold-specific ranks.
+
+The 20,475 held-out predictions correspond to 4,095 individual
+records: 195 individuals for each of the 21 trait-by-model
+combinations. This section retains the stored individual means,
+standard deviations, ranks and selection indicators.
 
 ### 6.1 Combined individual ranking object
+
+Before selecting the shared columns, examine the stored `N_OOF`
+values and the individual identifiers against the R03 population.
+The expected result is 195 distinct individuals, five predictions
+per individual, and 39 observed and predicted upper-group members
+in every combination.
+
+```{r ranking-oof-coverage}
+ranking_coverage <- data.frame()
+ranking_expected_ids <- as.character(comparison_cv$ids)
+
+for (trait in traits) {
+  for (model_name in model_order) {
+    if (model_name %in% gblup_models) {
+      ranking_input <- gblup_ranking[
+        gblup_ranking$Trait == trait & gblup_ranking$Model == model_name,
+        , drop = FALSE
+      ]
+    } else {
+      ranking_input <- ann_ranking[
+        ann_ranking$Trait == trait & ann_ranking$Model == model_name,
+        , drop = FALSE
+      ]
+    }
+    ranking_coverage <- rbind(ranking_coverage, data.frame(
+      Trait = trait, Model = model_name,
+      Individuals = nrow(ranking_input),
+      Distinct_IDs = length(unique(ranking_input$ID)),
+      Missing_IDs = length(setdiff(ranking_expected_ids, ranking_input$ID)),
+      Unexpected_IDs = length(setdiff(ranking_input$ID, ranking_expected_ids)),
+      OOF_Min = min(ranking_input$N_OOF),
+      OOF_Max = max(ranking_input$N_OOF),
+      OOF_not_five = sum(is.na(ranking_input$N_OOF) | ranking_input$N_OOF != 5L),
+      Observed_Top20_N = sum(ranking_input$BLUP_Top20),
+      Predicted_Top20_N = sum(ranking_input$GEBV_Top20),
+      stringsAsFactors = FALSE
+    ))
+  }
+}
+
+knitr::kable(
+  ranking_coverage, format = "html", row.names = FALSE,
+  caption = "Individual ranking coverage and stored OOF prediction counts",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+The shared object combines the original ranking columns without
+altering their values or the underlying RDS files.
 
 ```{r combined-ranking}
 ranking_columns <- c(
@@ -1626,6 +1696,51 @@ R04B. The object `all_ranking` combines those individual records without
 recalculating their means.
 
 ### 6.2 Ranking summary
+
+Within each trait-model combination, the observed BLUP and mean
+predicted BLUP are ranked in decreasing order. Rank 1 is the
+largest value, and tied values receive their average rank.
+Let \(R_i\) and \(\widehat R_i\) be the observed and predicted
+ranks, respectively. Define
+
+\[
+D_i=\widehat R_i-R_i,\qquad E_i=|D_i|.
+\]
+
+A positive difference places the individual farther down the predicted
+ranking. The mean and median absolute rank errors describe displacement
+across the 195 individuals. Global Spearman is
+
+\[
+\rho_{\mathrm{global}}=\operatorname{cor}_{S}
+(R_i,\widehat R_i),\qquad
+\operatorname{MARE}=\frac{1}{195}\sum_{i=1}^{195}E_i.
+\]
+
+This is a correlation across the population's individual OOF
+rankings, not the mean of the split-level correlations.
+
+The upper-group size is \(n_s=\lceil0.20\times195\rceil=39\).
+Let \(S_o\) and \(S_p\) be the sets of the 39 highest observed and
+mean predicted BLUPs, respectively. The stored selection indicators
+use decreasing values with individual ID as the deterministic
+secondary ordering criterion. This rule does not change average
+ranks used in rank errors and correlation.
+
+\[
+N_{\mathrm{overlap}}=|S_o\cap S_p|,
+\qquad
+p_{\mathrm{overlap}}=\frac{|S_o\cap S_p|}{39}.
+\]
+
+The overlap rate is a recovery fraction, not a correlation,
+chance-corrected index or estimate of genetic gain. The descending
+order is retained for all three traits; the upper group is not
+necessarily the biologically desirable group for every breeding
+objective.
+
+The following block summarizes the original individual ranks and
+selection indicators without redefining them.
 
 ```{r ranking-summary}
 # Compare the 195-individual rankings after aggregating five held-out predictions.
@@ -1711,6 +1826,13 @@ individual is obtained from its five predictions.
 
 ### 6.3 Ranking winners by trait
 
+The three criteria are considered separately. All models with the
+same optimal finite value at full precision are retained in model
+order. For top-20% recovery, the integer overlap count determines
+the optimum because the denominator is fixed at 39. A tied optimum
+does not imply that the selected sets of individuals are identical,
+nor does a unique optimum establish statistical superiority.
+
 ```{r ranking-winners}
 ranking_winners <- data.frame(
   Trait = character(0),
@@ -1728,23 +1850,38 @@ for (trait in traits) {
 
   x <- ranking_summary[ranking_summary$Trait == trait,, drop = FALSE]
 
-  ranking_index <- which.max(x$Ranking_Spearman)
+  ranking_best <- if (any(is.finite(x$Ranking_Spearman))) {
+    max(x$Ranking_Spearman[is.finite(x$Ranking_Spearman)])
+  } else NA_real_
+  ranking_index <- which(is.finite(x$Ranking_Spearman) & x$Ranking_Spearman == ranking_best)
 
-  rank_error_index <- which.min(x$Mean_Absolute_Rank_Error)
+  rank_error_best <- if (any(is.finite(x$Mean_Absolute_Rank_Error))) {
+    min(x$Mean_Absolute_Rank_Error[is.finite(x$Mean_Absolute_Rank_Error)])
+  } else NA_real_
+  rank_error_index <- which(is.finite(x$Mean_Absolute_Rank_Error) & x$Mean_Absolute_Rank_Error == rank_error_best)
 
-  top20_index <- which.max(x$Top20_Overlap_Rate)
+  top20_best <- if (any(is.finite(x$Top20_Overlap_N))) {
+    max(x$Top20_Overlap_N[is.finite(x$Top20_Overlap_N)])
+  } else NA_integer_
+  top20_index <- which(is.finite(x$Top20_Overlap_N) & x$Top20_Overlap_N == top20_best)
 
   ranking_winners <- rbind(
     ranking_winners,
     data.frame(
       Trait = trait,
-      Best_Ranking_Spearman_Model = x$Model[ranking_index],
-      Best_Ranking_Spearman = x$Ranking_Spearman[ranking_index],
-      Best_Mean_Rank_Error_Model = x$Model[rank_error_index],
-      Best_Mean_Rank_Error = x$Mean_Absolute_Rank_Error[rank_error_index],
-      Best_Top20_Model = x$Model[top20_index],
-      Best_Top20_Overlap_N = x$Top20_Overlap_N[top20_index],
-      Best_Top20_Overlap_Rate = x$Top20_Overlap_Rate[top20_index],
+      Best_Ranking_Spearman_Model = if (length(ranking_index)) {
+        paste(model_order[model_order %in% x$Model[ranking_index]], collapse = ", ")
+      } else NA_character_,
+      Best_Ranking_Spearman = ranking_best,
+      Best_Mean_Rank_Error_Model = if (length(rank_error_index)) {
+        paste(model_order[model_order %in% x$Model[rank_error_index]], collapse = ", ")
+      } else NA_character_,
+      Best_Mean_Rank_Error = rank_error_best,
+      Best_Top20_Model = if (length(top20_index)) {
+        paste(model_order[model_order %in% x$Model[top20_index]], collapse = ", ")
+      } else NA_character_,
+      Best_Top20_Overlap_N = top20_best,
+      Best_Top20_Overlap_Rate = top20_best / 39L,
       stringsAsFactors = FALSE
     )
   )
@@ -1772,7 +1909,20 @@ ranking_winners |>
 write.csv(ranking_winners, RANKING_WINNERS_CSV, row.names = FALSE)
 ```
 
+In the stored results, GBLUP_A has the highest global Spearman
+and lowest mean absolute rank error for Cer; ANN_0 has those
+descriptive optima for BM, and ANN_L2 for LP. The three GBLUP
+structures tie for the largest Cer upper-group recovery (22 of 39).
+ANN_0 recovers 12 of 39 for BM and ANN_L1_L2 recovers 13 of 39
+for LP. The ranking criteria therefore need not favor the model
+with the highest mean split-level association or lowest mean
+prediction error in Section 4.
+
 ### 6.4 Ranking comparison figures
+
+The heatmap reports global Spearman for each of the seven models
+and three traits. The bar chart reports the number of observed
+upper-group individuals recovered by each model, out of 39.
 
 ```{r ranking-spearman-figure, fig.width=10.5, fig.height=5.8, fig.cap="Global Spearman correlation between the BLUP ranking and the GEBV ranking for the seven genomic models."}
 ranking_plot <- ranking_summary
@@ -1875,8 +2025,8 @@ Spearman correlation compares the ordering of BLUPs and GEBVs within each
 model. A separate question is whether different genomic models assign the same
 individuals to similar **selection strata** based on their GEBV rankings.
 
-For each trait and model, the 195 individuals are ordered from the highest to
-the lowest GEBV and divided into five ordered groups of exactly 39 individuals:
+For each trait and model, the intended five strata consist of
+39 individuals each, ordered from the highest to the lowest GEBV:
 
 - quintile 1: ranks 1--39;
 - quintile 2: ranks 40--78;
@@ -1893,8 +2043,24 @@ receives progressively smaller weight as the distance between quintiles
 increases. This provides a chance-corrected measure of agreement in selection
 strata rather than a second measure of exact rank-position displacement.
 
+The stored predicted ranks are used to reproduce the original
+quintile assignments,
+
+\[
+Q_i=1+\left\lfloor\frac{\widehat R_i-1}{39}\right\rfloor.
+\]
+
+Average ranks can produce unequal groups if a tie crosses a
+quintile boundary. Consequently, the next block also compares
+the rank-based assignments with the positions obtained by
+ordering GEBV in decreasing order and ID as the secondary
+criterion. The historical allocation is retained because the
+stored predicted ranks are untied and both assignments coincide.
+The observed BLUP ranks can contain ties; they are not used to
+construct these GEBV quintiles.
+
 ```{r pairwise-quintile-weighted-kappa}
-# Allocate 195 individuals to five equal GEBV-ranking quintiles for each method.
+# Reproduce the original GEBV quintile assignments.
 all_ranking$GEBV_Quintile <- (
   (
     all_ranking$GEBV_Rank - 1L
@@ -1902,20 +2068,65 @@ all_ranking$GEBV_Quintile <- (
     39L
 ) + 1L
 
+quintile_counts <- data.frame()
+quintile_diagnostics <- data.frame()
+
 for (trait in traits) {
-
   for (model_name in model_order) {
+    quintile_data <- all_ranking[
+      all_ranking$Trait == trait & all_ranking$Model == model_name,
+      , drop = FALSE
+    ]
+    counts <- table(factor(quintile_data$GEBV_Quintile, levels = 1:5))
+    position_order <- order(-quintile_data$GEBV, quintile_data$ID)
+    position_quintile <- integer(nrow(quintile_data))
+    position_quintile[position_order] <- (seq_len(nrow(quintile_data)) - 1L) %/% 39L + 1L
 
-    quintile_counts <- table(
-      all_ranking$GEBV_Quintile[all_ranking$Trait == trait & all_ranking$Model == model_name]
-    )
-
+    quintile_counts <- rbind(quintile_counts, data.frame(
+      Trait = trait, Model = model_name,
+      Quintile = 1:5, Individuals = as.integer(counts),
+      stringsAsFactors = FALSE
+    ))
+    quintile_diagnostics <- rbind(quintile_diagnostics, data.frame(
+      Trait = trait, Model = model_name,
+      Tied_rank_records = sum(duplicated(quintile_data$GEBV_Rank) |
+        duplicated(quintile_data$GEBV_Rank, fromLast = TRUE)),
+      Q1 = as.integer(counts[1]), Q2 = as.integer(counts[2]),
+      Q3 = as.integer(counts[3]), Q4 = as.integer(counts[4]),
+      Q5 = as.integer(counts[5]),
+      Position_disagreements = sum(quintile_data$GEBV_Quintile != position_quintile),
+      Top20_disagreements = sum((quintile_data$GEBV_Quintile == 1L) != quintile_data$GEBV_Top20),
+      stringsAsFactors = FALSE
+    ))
   }
 }
 
 ```
 
-Linear weights decrease from 1 for identical quintiles to 0 for quintiles four categories apart. The matrix `quintile_weights` assigns these values to all 25 pairs of quintile categories.
+The table displays the five group sizes, tied predicted rank records,
+disagreements with the position-based allocation and disagreements
+between quintile 1 and the stored predicted upper group.
+
+```{r display-quintile-diagnostics}
+knitr::kable(
+  quintile_diagnostics, format = "html", row.names = FALSE,
+  caption = "GEBV quintile sizes and agreement with ordered positions and top-20% membership",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+) |>
+  kableExtra::scroll_box(width = "100%")
+```
+
+### 6.6 Linearly weighted Cohen's kappa
+
+For quintiles \(a,b\in\{1,\ldots,5\}\), the linear weight is
+
+\[
+w_{ab}=1-\frac{|a-b|}{4}.
+\]
+
+Linear weights decrease from one for identical quintiles to zero
+for quintiles four categories apart. The matrix `quintile_weights`
+assigns these values to all 25 pairs of quintile categories.
 
 ```{r compute-linear-quintile-weights}
 quintile_levels <- seq_len(5L)
@@ -1934,10 +2145,46 @@ for (row_index in quintile_levels) {
 
 ```
 
-For each trait, `kappa_summary` calculates linearly weighted Cohen's kappa, exact quintile agreement, and mean absolute quintile difference for each of the 21 unordered pairs of genomic models.
+Let \(n_{ab}\) be the number of matched individuals classified
+in quintile \(a\) by one model and quintile \(b\) by the other.
+With \(n=195\), define \(p_{ab}=n_{ab}/n\) and marginal
+proportions \(p_{a+}\) and \(p_{+b}\). The observed and
+independence-based expected weighted agreements are
+
+\[
+P_o^w=\sum_{a=1}^{5}\sum_{b=1}^{5}w_{ab}p_{ab},
+\qquad
+P_e^w=\sum_{a=1}^{5}\sum_{b=1}^{5}w_{ab}p_{a+}p_{+b}.
+\]
+
+The coefficient is
+
+\[
+\kappa_w=\frac{P_o^w-P_e^w}{1-P_e^w}.
+\]
+
+A value of one indicates perfect agreement, zero indicates the
+weighted agreement expected under independence, and negative
+values indicate agreement below that reference. Two complementary
+descriptive statistics are the exact agreement rate and mean
+absolute quintile difference:
+
+\[
+A=\sum_{a=1}^{5}p_{aa},\qquad
+D_Q=\sum_{a=1}^{5}\sum_{b=1}^{5}|a-b|p_{ab}.
+\]
+
+The comparisons pair individuals explicitly by ID, rather than
+assuming that separate sorts necessarily represent the same
+population. The expected ID set, uniqueness and completeness of
+both models are examined for each pair. An invalid or incomplete
+pair has undefined agreement statistics rather than an estimate
+based on mismatched individuals. All 21 pairs per trait are
+retained in `kappa_summary`.
 
 ```{r compare-ranking-quintiles}
 # Compare every pair of genomic models separately within each trait.
+pairwise_id_coverage <- data.frame()
 kappa_summary <- data.frame(
   Trait = character(0),
   Model_1 = character(0),
@@ -1970,34 +2217,52 @@ for (trait in traits) {
         drop = FALSE
       ]
 
+      complete_pair <- !anyNA(x$ID) && !anyNA(y$ID) &&
+        !anyDuplicated(x$ID) && !anyDuplicated(y$ID) &&
+        setequal(x$ID, ranking_expected_ids) &&
+        setequal(y$ID, ranking_expected_ids) &&
+        all(x$GEBV_Quintile %in% quintile_levels) &&
+        all(y$GEBV_Quintile %in% quintile_levels)
+
+      pairwise_id_coverage <- rbind(pairwise_id_coverage, data.frame(
+        Trait = trait, Model_1 = model_1, Model_2 = model_2,
+        Matched_IDs = length(intersect(x$ID, y$ID)),
+        Complete_pair = complete_pair,
+        stringsAsFactors = FALSE
+      ))
+
       x <- x[order(x$ID),, drop = FALSE]
+      y <- y[match(x$ID, y$ID),, drop = FALSE]
 
-      y <- y[order(y$ID),, drop = FALSE]
+      weighted_kappa <- exact_quintile_agreement_rate <-
+        mean_absolute_quintile_difference <- NA_real_
 
-      agreement_table <- table(
-        factor(x$GEBV_Quintile, levels = quintile_levels),
-        factor(y$GEBV_Quintile, levels = quintile_levels)
-      )
+      if (complete_pair) {
+        agreement_table <- table(
+          factor(x$GEBV_Quintile, levels = quintile_levels),
+          factor(y$GEBV_Quintile, levels = quintile_levels)
+        )
 
-      observed_proportion <- agreement_table / sum(agreement_table)
+        observed_proportion <- agreement_table / sum(agreement_table)
 
-      row_marginal <- rowSums(observed_proportion)
+        row_marginal <- rowSums(observed_proportion)
 
-      column_marginal <- colSums(observed_proportion)
+        column_marginal <- colSums(observed_proportion)
 
-      expected_proportion <- outer(row_marginal, column_marginal)
+        expected_proportion <- outer(row_marginal, column_marginal)
 
-      observed_weighted_agreement <- sum(quintile_weights * observed_proportion)
+        observed_weighted_agreement <- sum(quintile_weights * observed_proportion)
 
-      expected_weighted_agreement <- sum(quintile_weights * expected_proportion)
+        expected_weighted_agreement <- sum(quintile_weights * expected_proportion)
 
-      weighted_kappa <- (
-          observed_weighted_agreement - expected_weighted_agreement
-        ) / (1 - expected_weighted_agreement)
+        weighted_kappa <- (
+            observed_weighted_agreement - expected_weighted_agreement
+          ) / (1 - expected_weighted_agreement)
 
-      exact_quintile_agreement_rate <- mean(x$GEBV_Quintile == y$GEBV_Quintile)
+        exact_quintile_agreement_rate <- mean(x$GEBV_Quintile == y$GEBV_Quintile)
 
-      mean_absolute_quintile_difference <- mean(abs(x$GEBV_Quintile - y$GEBV_Quintile))
+        mean_absolute_quintile_difference <- mean(abs(x$GEBV_Quintile - y$GEBV_Quintile))
+      }
 
       kappa_summary <- rbind(
         kappa_summary,
@@ -2028,9 +2293,47 @@ kappa_summary |>
   kableExtra::scroll_box(width = "100%")
 ```
 
+The matching summary reports how many of the 21 pairs per trait
+have the complete R03 population and valid quintile assignments.
+
+```{r display-pairwise-id-coverage}
+pairwise_coverage_summary <- data.frame()
+
+for (trait in traits) {
+  pair_data <- pairwise_id_coverage[pairwise_id_coverage$Trait == trait, , drop = FALSE]
+  pairwise_coverage_summary <- rbind(pairwise_coverage_summary, data.frame(
+    Trait = trait,
+    Pairs = nrow(pair_data),
+    Complete_pairs = sum(pair_data$Complete_pair),
+    Min_matched_IDs = min(pair_data$Matched_IDs),
+    Max_matched_IDs = max(pair_data$Matched_IDs),
+    stringsAsFactors = FALSE
+  ))
+}
+
+knitr::kable(
+  pairwise_coverage_summary, format = "html", row.names = FALSE,
+  caption = "Completeness of individual pairing for quintile agreement",
+  table.attr = 'class="table table-striped table-hover table-bordered" style="width:100%;"'
+)
+```
+
+The coefficient describes agreement between genomic models, not
+agreement with observed BLUPs or predictive superiority.
+The 63 coefficients are not independent because they reuse the
+same individuals and models. In the stored results, agreement
+between GBLUP_AD and GBLUP_ADE is particularly high; the largest
+disagreements occur between some GBLUP and ANN pairs, especially
+for LP. Identical or similar quintile classifications need not
+imply identical predicted values or rank positions.
+
 ```{r save-quintile-kappa-summary, eval=FALSE}
 write.csv(kappa_summary, KAPPA_SUMMARY_CSV, row.names = FALSE)
 ```
+
+The heatmap displays each of the 21 unordered pairs twice in
+a symmetric matrix, with self-agreement on the diagonal.
+The three traits are shown separately.
 
 ```{r pairwise-quintile-weighted-kappa-heatmap, fig.width=13, fig.height=8.5, fig.cap="Linearly weighted Cohen's kappa for every pair of the seven genomic methods based on GEBV-ranking quintiles. Each panel is a complete 7 by 7 pairwise matrix for one trait; no aggregation by model family is applied. Larger values indicate stronger agreement in selection strata."}
 kappa_heatmap <- data.frame(
