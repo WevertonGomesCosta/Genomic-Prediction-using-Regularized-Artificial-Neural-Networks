@@ -122,7 +122,7 @@ All seven procedures use the same outer-assessment individuals within each datas
 
 ANN candidates are ranked by mean inner-assessment RMSE (smaller is better), followed by mean inner-assessment Pearson correlation (larger is better). Remaining ties are resolved by the ordered criteria documented in the ANN modules: number of trainable parameters, sum of penalty coefficients, learning rate and candidate identifier, in increasing order.
 
-Early stopping during tuning monitors unpenalized validation MSE on a subset of the inner-analysis sample. After hyperparameter selection, training duration is selected within the outer-analysis sample using a separate early-validation subset. The network is reinitialized and fitted to all outer-analysis individuals for the selected number of epochs before predicting the outer-assessment individuals. The external responses are not used in either selection stage. This procedure does not establish numerical convergence merely because an epoch limit or patience rule is reached.
+Early stopping during tuning monitors unpenalized validation MSE on a subset of the inner-analysis sample. After hyperparameter selection, training duration is selected within the outer-analysis sample using a separate early-validation subset. The network is reinitialized and fitted to all outer-analysis individuals for the selected number of epochs before predicting the outer-assessment individuals. The external responses are not used in either selection stage.
 
 ### Predictive evaluation
 
@@ -284,19 +284,35 @@ regularization or realized genetic gain. The full results and figures
 are presented in [M05](simulated_data_comparison.html) and
 [R05](real_data_comparison.html).
 
-### Interpretation boundaries and limitations
+### Interpretation of the evaluation criteria
 
-In the simulations, association with true genetic values describes recovery of the known genetic signal under the specified scenarios. Because QTL number and nominal heritability vary across scenarios, differences should not be attributed to either factor in isolation.
+In the simulations, association with true genetic values measures recovery
+of the known genetic signal for each combination of QTL number and nominal
+heritability.
 
-In the real data, predictive performance describes recovery of adjusted phenotypic signals within the studied population. The separation of training and assessment individuals applies to genomic prediction models, not to estimation of the BLUP targets. The OOF predictions are cross-fitted scores, not final breeding values from a model refitted to all responses.
+In the real data, the genomic models predict the adjusted phenotypic
+signals represented by the BLUPs estimated in R01. Training and assessment
+are separated at the genomic-prediction stage. The aggregated OOF
+predictions describe individual rankings across the repeated outer splits.
 
-Repeated cross-validation reuses individuals. Split-level standard deviations and matched mean contrasts are descriptive, not independent-replicate standard errors, confidence intervals or significance tests. High agreement between models does not establish predictive validity. Upper-group recovery uses descending BLUPs and need not reflect the biologically favorable direction of selection for each trait; it does not demonstrate realized genetic gain. No universal superiority of explicit regularization or of a model family is assumed. The scenario-specific and trait-specific conclusions are presented in [M05](simulated_data_comparison.html) and [R05](real_data_comparison.html).
+The repeated cross-validation design reuses individuals. Split-level
+standard deviations summarize variation between partitions, and matched
+mean contrasts describe differences between prediction procedures.
+Agreement measures summarize similarity between predicted rankings.
+Upper-group recovery measures overlap with the 39 highest BLUPs.
+The scenario-specific and trait-specific evaluations are presented in
+[M05](simulated_data_comparison.html) and [R05](real_data_comparison.html).
 
 ### Reproducibility and provenance
 
-The versioned website in `docs/` documents the analyses and can be inspected independently of a full computational reconstruction. Source pages in `analysis/` contain the methodological code and explanations; computationally intensive fitting and tuning blocks are not executed automatically during routine rendering. The recorded R environment uses `renv`, and the website uses `workflowr`.
-
-Full reconstruction depends on access to the canonical inputs, the documented analytical sequence and the computational requirements of fitting. The [README](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme), [data documentation](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/data/README.md) and [output documentation](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/output/README.md) describe the repository and the inputs and outputs of each stage.
+Follow the analytical sequence in the tutorial, using the source pages
+in `analysis/` and the saved scientific objects for each stage. The
+[README](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme) explains how to prepare the R, renv, Pandoc and
+torch environments. The [data documentation](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/data/README.md)
+identifies the scientific references, input files and data-access
+instructions; the [output documentation](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/output/README.md)
+identifies the objects used in subsequent modules. The website in
+`docs/` is generated with workflowr.
 
 ### Contact
 
@@ -401,7 +417,7 @@ Os sete procedimentos utilizam os mesmos indivíduos de avaliação externa em c
 
 Os candidatos ANN são ordenados pelo RMSE médio na avaliação interna (menor é melhor), seguido da correlação média de Pearson na avaliação interna (maior é melhor). Empates remanescentes são resolvidos pelos critérios ordenados documentados nos módulos ANN: número de parâmetros treináveis, soma dos coeficientes de penalização, taxa de aprendizado e identificador do candidato, em ordem crescente.
 
-Durante a seleção de hiperparâmetros, o early stopping monitora o erro quadrático médio não penalizado em um subconjunto de validação reservado dentro da amostra de análise interna. Após a seleção dos hiperparâmetros, a duração do treinamento é determinada dentro da amostra de análise externa utilizando um subconjunto separado de validação para early stopping. A rede é reinicializada e ajustada com todos os indivíduos da análise externa pelo número de épocas selecionado, antes da predição dos indivíduos de avaliação externa. As respostas externas não participam de nenhuma das duas etapas de seleção. Atingir o limite de épocas ou o critério de paciência não comprova, por si só, a convergência numérica.
+Durante a seleção de hiperparâmetros, o early stopping monitora o erro quadrático médio não penalizado em um subconjunto de validação reservado dentro da amostra de análise interna. Após a seleção dos hiperparâmetros, a duração do treinamento é determinada dentro da amostra de análise externa utilizando um subconjunto separado de validação para early stopping. A rede é reinicializada e ajustada com todos os indivíduos da análise externa pelo número de épocas selecionado, antes da predição dos indivíduos de avaliação externa. As respostas externas não participam de nenhuma das duas etapas de seleção.
 
 ### Avaliação preditiva
 
@@ -574,19 +590,36 @@ da regularização ou ganho genético realizado. Os resultados completos
 e as figuras são apresentados no [M05](simulated_data_comparison.html)
 e no [R05](real_data_comparison.html).
 
-### Limites de interpretação
+### Interpretação dos critérios de avaliação
 
-Nas simulações, a associação com os valores genéticos verdadeiros descreve a recuperação do sinal genético conhecido sob os cenários especificados. Como o número de QTL e a herdabilidade nominal variam entre cenários, as diferenças não devem ser atribuídas a um desses fatores isoladamente.
+Nas simulações, a associação com os valores genéticos verdadeiros mede a
+recuperação do sinal genético conhecido para cada combinação de número
+de QTL e herdabilidade nominal.
 
-Nos dados reais, o desempenho preditivo descreve a recuperação dos sinais fenotípicos ajustados dentro da população estudada. A separação entre indivíduos de treinamento e avaliação aplica-se aos modelos de predição genômica, e não à estimação dos BLUPs de referência. As predições OOF são escores obtidos por ajuste fora do fold, e não valores genéticos finais provenientes de um reajuste com todas as respostas.
+Nos dados reais, os modelos genômicos predizem os sinais fenotípicos
+ajustados representados pelos BLUPs estimados no R01. A separação entre
+treinamento e avaliação ocorre na etapa de predição genômica. As predições
+OOF agregadas descrevem a classificação individual nas partições externas
+repetidas.
 
-A validação cruzada repetida reutiliza indivíduos. Os desvios-padrão entre partições e as diferenças médias pareadas são descritivos, e não erros-padrão de repetições independentes, intervalos de confiança ou testes de significância. Alta concordância entre modelos não demonstra validade preditiva. A recuperação do grupo superior utiliza BLUPs em ordem decrescente e não corresponde necessariamente à direção biologicamente favorável de seleção para cada característica; não demonstra ganho genético realizado. Não se pressupõe superioridade universal da regularização explícita ou de uma família de modelos. As conclusões específicas por cenário e característica são apresentadas em [M05](simulated_data_comparison.html) e [R05](real_data_comparison.html).
+O desenho de validação cruzada repetida reutiliza indivíduos. Os desvios-padrão
+entre partições resumem a variação entre elas, e os contrastes médios pareados
+descrevem as diferenças entre procedimentos de predição. As medidas de
+concordância resumem a semelhança entre as classificações preditas.
+A recuperação do grupo superior mede a coincidência com os 39 maiores BLUPs.
+As avaliações por cenário e característica são apresentadas no
+[M05](simulated_data_comparison.html) e no [R05](real_data_comparison.html).
 
 ### Reprodutibilidade e proveniência
 
-O website versionado em `docs/` documenta as análises e pode ser inspecionado independentemente de uma reconstrução computacional completa. As páginas-fonte em `analysis/` contêm o código metodológico e as explicações; os blocos computacionalmente intensivos de ajuste e seleção de hiperparâmetros não são executados automaticamente durante a renderização rotineira. O ambiente R registrado utiliza `renv` e o website utiliza `workflowr`.
-
-A reconstrução completa depende do acesso aos dados canônicos, da sequência analítica documentada e dos requisitos computacionais do ajuste. O [README](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme), a [documentação dos dados](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/data/README.md) e a [documentação dos resultados](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/output/README.md) descrevem o repositório e as entradas e saídas de cada etapa.
+Siga a sequência analítica do tutorial, utilizando as páginas-fonte em
+`analysis/` e os objetos científicos salvos em cada etapa.
+O [README](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme) explica como preparar os ambientes R, renv,
+Pandoc e torch. A [documentação dos dados](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/data/README.md)
+identifica as referências científicas, os arquivos de entrada e as
+orientações de acesso; a [documentação dos resultados](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/output/README.md)
+identifica os objetos utilizados nos módulos seguintes. O website em
+`docs/` é gerado com workflowr.
 
 ### Contato
 
