@@ -248,20 +248,11 @@ The figures incorporated in the rendered website are available under
 `docs/figure/`; high-resolution local exports are distinct from the
 website figures.
 
-## Versioned and locally generated outputs
+## Scientific outputs
 
-The repository preserves analytical source pages, the rendered website
-and persisted scientific outputs, including the prepared data objects and
-the comparison CSVs identified above. The file tables describe the
-analytical products and their roles; they are not a claim that every
-documented export is tracked in Git.
-
-The repository [`.gitignore`](../.gitignore) excludes high-resolution
-`*.tif` and `*.tiff` files, machine-local runtime artifacts under
-`.local/` (including checkpoints, logs and temporary execution files),
-and accidental interactive outputs under `analysis/output/`.
-Locally retained historical scripts under `code/legacy/` are outside
-the canonical workflow.
+The repository preserves the prepared datasets, analytical objects,
+prediction results and comparison summaries used throughout the
+tutorial. The file tables above identify their roles in each module.
 
 ### Versioned analytical objects
 
@@ -291,9 +282,7 @@ the `output/` tree contains the following tracked RDS and CSV files
 
 The inventory includes prepared data, fixed validation designs, phenotypic
 BLUPs, tuning records, fit-level results, held-out predictions, individual
-rankings and comparison summaries. File presence in Git does not by itself
-establish successful deserialization or numerical reproduction in another
-environment.
+rankings and comparison summaries.
 
 ### Scope of the simulated comparison results
 
@@ -322,15 +311,7 @@ above. R05 uses the saved GBLUP and ANN results, predictions and individual
 rankings together with the real validation design. Neither comparison
 module requires a new model fit.
 
-This intermediate reproduction route requires a compatible R environment
-and the appropriate saved inputs. It is distinct from reconstructing
-the complete workflow. Routine rendering is not a read-only operation:
-some preparation and export blocks may write outputs. Use a separate
-working copy if executing analysis code, and retain the original
-versioned results for comparison.
-
-The published tutorial can be inspected without new model fitting.
-Computational reconstruction requires the relevant canonical inputs,
-recorded software dependencies and deliberate execution of the documented
-stages. See the [repository README](../README.md) and
-[data documentation](../data/README.md) for these distinctions.
+Prepare the R environment following the [repository README](../README.md)
+and load the saved objects identified in each tutorial with `readRDS()`.
+The [data documentation](../data/README.md) identifies the source and
+prepared datasets for the preparation and downstream stages.
