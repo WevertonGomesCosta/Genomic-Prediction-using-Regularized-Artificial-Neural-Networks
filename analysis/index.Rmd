@@ -29,104 +29,142 @@ knitr::opts_chunk$set(
 
 ## English
 
-### Study overview
+### Start here
 
-This website documents a reproducible study of genomic prediction comparing three GBLUP genomic mixed models with four artificial neural-network (ANN) configurations: one unregularized baseline and three variants with L1 and/or L2 weight penalties.
+This website is a step-by-step tutorial for genomic prediction using three GBLUP models and four artificial neural network (ANN) configurations. It combines controlled simulated genomic data with real phenotypic and genomic *Coffea arabica* data. The central question is how these procedures compare under matched validation designs and whether explicit L1 and L2 weight penalties improve prediction relative to ANN-0.
 
-The project combines controlled simulated genomic data with real phenotypic and genomic *Coffea arabica* data. Its central comparison includes GBLUP-A, GBLUP-AD, GBLUP-ADE, and four ANN configurations evaluated under matched cross-validation procedures, with specific interest in the effect of L1 and L2 weight regularization relative to the unregularized ANN.
+The tutorial is intended for graduate students, researchers and practitioners in quantitative genetics, plant breeding, genomic prediction and statistical learning. Basic familiarity with R, mixed models and cross-validation is recommended. The analytical pages introduce the reasoning, R code, results and interpretation in sequence.
 
-### Project at a glance
+### Datasets at a glance
 
-The genomic-prediction comparison includes:
+| Feature | Simulated data | Real data |
+|:--|:--|:--|
+| Individuals | 1,000 | 195 |
+| Markers used | 4,010 | 20,887 SNPs after quality control |
+| Population | F2 | 13 coffee progenies |
+| Scenarios or traits | Six genetic scenarios (C1–C6) | Cer, BM and LP |
+| Response for fitting | Simulated phenotype | Individual phenotypic BLUP |
+| Primary assessment target | Known true genetic value | Individual phenotypic BLUP |
+| Complementary target | Simulated phenotype | — |
+| Outer validation | 5 repetitions × 5 folds | 5 repetitions × 5 folds |
+| Inner validation (ANN) | 4 folds | 4 folds |
 
-- GBLUP-A;
-- GBLUP-AD;
-- GBLUP-ADE;
-- ANN without L1/L2 regularization;
-- ANN-L1;
-- ANN-L2;
-- ANN-L1+L2.
+### Genomic prediction models
 
-### Model selection and performance metrics
+| Model | Genomic effects or explicit penalties |
+|:--|:--|
+| GBLUP-A | Additive |
+| GBLUP-AD | Additive and dominance |
+| GBLUP-ADE | Additive, dominance and additive-by-additive epistasis |
+| ANN-0 | No explicit L1/L2 weight penalties |
+| ANN-L1 | L1 |
+| ANN-L2 | L2 |
+| ANN-L1+L2 | L1 and L2 |
 
-ANN hyperparameters are selected by mean inner-assessment RMSE, with mean Pearson correlation used to resolve ties. Predictive performance is evaluated using Pearson and Spearman correlations, RMSE, and MAE. Bias and calibration slope provide complementary measures.
+All four ANN variants use early stopping to select the training duration; ANN-0 is not a reference without any regularizing mechanism.
 
-True genetic values from simulations are used only for independent predictive assessment. For real data, individual BLUPs are estimated from phenotypic observations before integration with genomic markers.
+### Recommended reading path
 
-### Analytical sequence
+Read each sequence in order: the preparation and validation modules establish the shared inputs for the model-fitting modules, whose results are used in the corresponding comparison.
 
 #### Simulated data
 
-1. [Data preprocessing](simulated_data_audit.html) — preparation of phenotypes, genotypes, genetic maps, QTL information, and simulation scenarios.
-2. [Pre-validation](simulated_data_validation.html) — common outer and inner cross-validation partitions.
-3. Genomic prediction models: [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) and [ANN configurations](simulated_data_ann.html).
-4. [Model comparison](simulated_data_comparison.html) — predictive performance in matched assessment partitions.
+1. [M01 — Data preparation](simulated_data_audit.html) — phenotypes, true genetic values, genotypes, genetic maps, QTL and simulation scenarios.
+2. [M02 — Pre-validation](simulated_data_validation.html) — shared outer folds and nested inner partitions.
+3. [M03 — GBLUP](simulated_data_gblup.html) — additive, dominance and epistatic genomic structures and held-out prediction.
+4. [M04 — Regularized ANN](simulated_data_ann.html) — network architecture, hyperparameter selection, training duration and held-out prediction.
+5. [M05 — Model comparison](simulated_data_comparison.html) — scenario-specific evaluation of true genetic values and simulated phenotypes.
 
 #### Real data
 
-1. [Phenotypes](real_data_phenotype.html) — descriptive analyses, phenotypic mixed-model fitting by REML, variance components, and individual BLUPs.
-2. [Data preprocessing](real_data_audit.html) — integration with `geno_real.rds`, individual correspondence, and marker quality control.
-3. [Pre-validation](real_data_validation.html) — shared outer and inner cross-validation partitions.
-4. Genomic prediction models: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) and [ANN configurations](real_data_ann.html).
-5. [Model comparison](real_data_comparison.html) — evaluation of genomic predictions and rankings.
+1. [R01 — Phenotypes](real_data_phenotype.html) — phenotypic description, REML mixed-model analysis, variance components and individual BLUPs.
+2. [R02 — Data preparation](real_data_audit.html) — integration with `geno_real.rds`, alignment and marker quality control.
+3. [R03 — Pre-validation](real_data_validation.html) — common outer and inner cross-validation partitions.
+4. [R04A — GBLUP](real_data_gblup.html) — three genomic covariance structures, predictions and diagnostics.
+5. [R04B — Regularized ANN](real_data_ann.html) — nested tuning, training duration, fitting and prediction.
+6. [R05 — Model comparison](real_data_comparison.html) — predictive performance, matched contrasts, individual rankings and agreement between models.
 
-### Cross-validation
+### Validation scope and evaluation
 
-Outer-assessment responses are excluded from model fitting and model selection. ANN hyperparameter and epoch selection are restricted to the corresponding outer-analysis sample, and all competing methods are evaluated on matched held-out individuals.
+All seven models share the 25 outer splits in each dataset. Each simulated split has 800 analysis and 200 assessment individuals; each real split has 156 and 39, respectively. ANN hyperparameters are selected by mean inner-assessment RMSE, with mean Pearson correlation as the performance tie-breaker. Training duration is selected within the outer-analysis set. The outer-assessment responses are excluded from genomic fitting and model selection.
 
-For simulated data, true genetic values are excluded from fitting and selection and are used only for independent predictive assessment.
+The genomic relationship matrices use the available genotypes of the complete candidate panel. The real-data BLUPs are estimated before genomic cross-validation; the resulting predictions evaluate recovery of these adjusted signals within the studied population, not direct recovery of known true genetic values.
 
-For real data, the phenotypic mixed model first estimates individual BLUPs, which are then used as genomic-prediction targets. Seeded, random individual-level cross-validation provides out-of-fold genomic predictions.
+Pearson, Spearman, RMSE and MAE are the primary metrics; prediction bias and calibration slope are complementary. R05 also compares matched ANN–GBLUP contrasts, global rankings after averaging repeated out-of-fold (OOF) predictions, top-20% recovery and agreement between predicted quintiles, including linearly weighted Cohen's kappa. These measures address different evaluation questions. See [About / Sobre](about.html) for the full methodology and interpretation boundaries.
 
+### Reproducibility and project information
 
+The versioned website in `docs/` can be inspected without repeating the computationally intensive fits. The methodological code is available in the analytical pages; full reconstruction requires the canonical inputs, the recorded R environment and deliberate execution of the documented computational stages.
+
+See the repository [README](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme), [data documentation](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/data/README.md) and [output documentation](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/output/README.md) for the source files, derived objects and reproducibility information.
 
 ## Português
 
-### Visão geral do estudo
+### Comece aqui
 
-Este site documenta um estudo reprodutível de predição genômica comparando três modelos mistos genômicos GBLUP com quatro configurações de redes neurais artificiais (ANN): uma sem regularização e três com penalizações L1 e/ou L2 dos pesos.
+Este website é um tutorial passo a passo de predição genômica utilizando três modelos GBLUP e quatro configurações de redes neurais artificiais (ANN). Combina dados genômicos simulados controlados com dados fenotípicos e genômicos reais de *Coffea arabica*. A questão central é como esses procedimentos se comparam sob desenhos equivalentes de validação e se as penalizações explícitas L1 e L2 dos pesos melhoram a predição em relação à ANN-0.
 
-O projeto combina dados genômicos simulados controlados com dados fenotípicos e genômicos reais de *Coffea arabica*. A comparação central inclui GBLUP-A, GBLUP-AD, GBLUP-ADE e quatro configurações de ANN sob procedimentos equivalentes de validação cruzada, com interesse específico no efeito das regularizações L1 e L2 em relação à ANN não regularizada.
+O tutorial é destinado a estudantes de pós-graduação, pesquisadores e profissionais de genética quantitativa, melhoramento de plantas, predição genômica e aprendizagem estatística. Recomenda-se familiaridade básica com R, modelos mistos e validação cruzada. As páginas analíticas apresentam em sequência o raciocínio, o código R, os resultados e a interpretação.
 
-### Projeto em resumo
+### Conjuntos de dados em resumo
 
-A comparação de predição genômica inclui:
+| Característica | Dados simulados | Dados reais |
+|:--|:--|:--|
+| Indivíduos | 1.000 | 195 |
+| Marcadores utilizados | 4.010 | 20.887 SNPs após controle de qualidade |
+| População | F2 | 13 progênies de cafeeiro |
+| Cenários ou características | Seis cenários genéticos (C1–C6) | Cer, BM e LP |
+| Resposta para ajuste | Fenótipo simulado | BLUP fenotípico individual |
+| Alvo principal de avaliação | Valor genético verdadeiro conhecido | BLUP fenotípico individual |
+| Alvo complementar | Fenótipo simulado | — |
+| Validação externa | 5 repetições × 5 folds | 5 repetições × 5 folds |
+| Validação interna (ANN) | 4 folds | 4 folds |
 
-- GBLUP-A;
-- GBLUP-AD;
-- GBLUP-ADE;
-- ANN sem regularização L1/L2;
-- ANN-L1;
-- ANN-L2;
-- ANN-L1+L2.
+### Modelos de predição genômica
 
-### Seleção dos modelos e métricas de avaliação
+| Modelo | Efeitos genômicos ou penalizações explícitas |
+|:--|:--|
+| GBLUP-A | Aditivo |
+| GBLUP-AD | Aditivo e dominância |
+| GBLUP-ADE | Aditivo, dominância e epistasia aditivo por aditivo |
+| ANN-0 | Sem penalizações explícitas L1/L2 dos pesos |
+| ANN-L1 | L1 |
+| ANN-L2 | L2 |
+| ANN-L1+L2 | L1 e L2 |
 
-Os hiperparâmetros das ANN são selecionados pelo RMSE médio nas partições internas de avaliação, com a correlação média de Pearson como critério de desempate. O desempenho preditivo é avaliado pelas correlações de Pearson e Spearman, RMSE e MAE. O viés e a inclinação de calibração são medidas complementares.
+As quatro variantes ANN utilizam early stopping para selecionar a duração do treinamento; a ANN-0 não é uma referência desprovida de qualquer mecanismo de regularização.
 
-Nos dados simulados, os valores genéticos verdadeiros são utilizados exclusivamente na avaliação preditiva independente. Nos dados reais, os BLUPs individuais são estimados a partir das observações fenotípicas antes da integração com os marcadores genômicos.
+### Ordem recomendada de leitura
 
-### Sequência analítica
+Leia cada sequência na ordem apresentada: os módulos de preparação e validação estabelecem os insumos compartilhados pelos módulos de ajuste, cujos resultados são utilizados na respectiva comparação.
 
 #### Dados simulados
 
-1. [Pré-processamento dos dados](simulated_data_audit.html) — preparação dos fenótipos, genótipos, mapas genéticos, informações de QTL e cenários de simulação.
-2. [Pré-validação](simulated_data_validation.html) — partições externas e internas compartilhadas de validação cruzada.
-3. Modelos de predição genômica: [GBLUP-A / GBLUP-AD / GBLUP-ADE](simulated_data_gblup.html) e [configurações de ANN](simulated_data_ann.html).
-4. [Comparação dos modelos](simulated_data_comparison.html) — desempenho preditivo nas mesmas partições de avaliação.
+1. [M01 — Preparação dos dados](simulated_data_audit.html) — fenótipos, valores genéticos verdadeiros, genótipos, mapas genéticos, QTL e cenários de simulação.
+2. [M02 — Pré-validação](simulated_data_validation.html) — folds externos compartilhados e partições internas aninhadas.
+3. [M03 — GBLUP](simulated_data_gblup.html) — estruturas genômicas aditiva, de dominância e epistática e predição fora da amostra.
+4. [M04 — ANN regularizadas](simulated_data_ann.html) — arquitetura das redes, seleção de hiperparâmetros, duração do treinamento e predição fora da amostra.
+5. [M05 — Comparação dos modelos](simulated_data_comparison.html) — avaliação dos valores genéticos verdadeiros e dos fenótipos simulados por cenário.
 
 #### Dados reais
 
-1. [Fenótipos](real_data_phenotype.html) — análises descritivas, ajuste do modelo misto fenotípico por REML, componentes de variância e BLUPs individuais.
-2. [Pré-processamento dos dados](real_data_audit.html) — integração com `geno_real.rds`, correspondência entre indivíduos e controle de qualidade dos marcadores.
-3. [Pré-validação](real_data_validation.html) — partições externas e internas compartilhadas de validação cruzada.
-4. Modelos de predição genômica: [GBLUP-A / GBLUP-AD / GBLUP-ADE](real_data_gblup.html) e [configurações de ANN](real_data_ann.html).
-5. [Comparação dos modelos](real_data_comparison.html) — avaliação das predições genômicas e das classificações.
+1. [R01 — Fenótipos](real_data_phenotype.html) — descrição fenotípica, análise por modelos mistos e REML, componentes de variância e BLUPs individuais.
+2. [R02 — Preparação dos dados](real_data_audit.html) — integração com `geno_real.rds`, alinhamento e controle de qualidade dos marcadores.
+3. [R03 — Pré-validação](real_data_validation.html) — partições externas e internas compartilhadas.
+4. [R04A — GBLUP](real_data_gblup.html) — três estruturas de covariância genômica, predições e diagnósticos.
+5. [R04B — ANN regularizadas](real_data_ann.html) — seleção aninhada de hiperparâmetros, duração do treinamento, ajuste e predição.
+6. [R05 — Comparação dos modelos](real_data_comparison.html) — desempenho preditivo, contrastes pareados, classificações individuais e concordância entre modelos.
 
-### Validação cruzada
+### Escopo da validação e avaliação
 
-As respostas dos indivíduos de avaliação externa são excluídas do ajuste e da seleção dos modelos. A seleção de hiperparâmetros e de épocas das ANN é restrita à respectiva amostra de análise externa, e todos os métodos concorrentes são avaliados nos mesmos indivíduos mantidos fora do ajuste.
+Os sete modelos compartilham as 25 partições externas de cada conjunto. Cada partição simulada contém 800 indivíduos de análise e 200 de avaliação; cada partição real contém 156 e 39, respectivamente. Os hiperparâmetros das ANN são selecionados pelo RMSE médio na avaliação interna, com a correlação média de Pearson como desempate de desempenho. A duração do treinamento é selecionada dentro da amostra de análise externa. As respostas de avaliação externa são excluídas do ajuste genômico e da seleção dos modelos.
 
-Nos dados simulados, os valores genéticos verdadeiros são excluídos do ajuste e da seleção e são utilizados apenas na avaliação preditiva independente.
+As matrizes de parentesco genômico utilizam os genótipos disponíveis do painel completo de candidatos. Os BLUPs dos dados reais são estimados antes da validação cruzada genômica; as predições resultantes avaliam a recuperação desses sinais ajustados dentro da população estudada, e não a recuperação direta de valores genéticos verdadeiros conhecidos.
 
-Nos dados reais, o modelo misto fenotípico estima primeiro os BLUPs individuais, utilizados em seguida como alvos da predição genômica. A validação cruzada com sorteios aleatórios de indivíduos e sementes fixadas fornece predições fora da amostra.
+Pearson, Spearman, RMSE e MAE são as métricas principais; o viés das predições e a inclinação de calibração são complementares. O R05 também compara contrastes pareados ANN–GBLUP, classificações globais após a média das predições repetidas fora do fold (OOF), recuperação dos 20% superiores e concordância entre quintis preditos, incluindo o kappa de Cohen com ponderação linear. Essas medidas respondem a diferentes questões de avaliação. Consulte [About / Sobre](about.html) para a metodologia completa e os limites de interpretação.
+
+### Reprodutibilidade e informações do projeto
+
+O website versionado em `docs/` pode ser inspecionado sem repetir os ajustes computacionalmente intensivos. O código metodológico está disponível nas páginas analíticas; a reconstrução completa exige os dados canônicos, o ambiente R registrado e a execução deliberada das etapas computacionais documentadas.
+
+Consulte o [README](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks#readme), a [documentação dos dados](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/data/README.md) e a [documentação dos resultados](https://github.com/WevertonGomesCosta/Genomic-Prediction-using-Regularized-Artificial-Neural-Networks/blob/main/output/README.md) para informações sobre arquivos-fonte, objetos derivados e reprodutibilidade.
