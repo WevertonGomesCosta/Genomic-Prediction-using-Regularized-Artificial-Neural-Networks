@@ -128,8 +128,7 @@ modules also define their own task-specific seeds and numerical settings.
 The rendered website tracked in `docs/` provides access to the tutorial,
 methodological code, tables and rendered figures without requiring R or
 a new model fit. Machine-readable summaries are documented in
-[output/README.md](output/README.md). High-resolution TIFF exports are
-kept locally rather than versioned.
+[output/README.md](output/README.md).
 
 #### Reproduce downstream analyses from persisted objects
 
@@ -141,37 +140,41 @@ reconstructing their upstream inputs. The comparison modules M05 and R05
 read saved results and predictions; R05 additionally reads the saved
 rankings and validation design. They do not refit the models.
 
-To prepare the computational environment, clone the repository, open
-the project from its root using R 4.5.1, and run:
+#### Prepare the computational environment
+
+Install [R 4.5.1](https://cran.r-project.org/) and
+[Pandoc](https://pandoc.org/installing.html) (also included with RStudio).
+Clone the repository, open the project from its root in R, and restore
+the recorded package versions:
 
 ```r
 renv::restore()
 renv::status()
 ```
 
-Restoring the lockfile does not install R itself or guarantee the
-availability of all system dependencies. R Markdown rendering requires
-a compatible Pandoc installation; ANN training additionally requires the
-native libraries used by torch and a compatible CPU or GPU runtime.
-Check these requirements before executing training code. The recorded
-package versions and seeds support reproducibility but do not guarantee
-bitwise identical numerical results across operating systems, devices,
-native libraries or parallel execution environments.
+For ANN training, install LibTorch and LibLantern if needed, using the
+[torch installation guide](https://torch.mlverse.org/docs/articles/installation.html)
+for the selected CPU or GPU environment:
 
-Routine rendering is not equivalent to read-only inspection: some
-preparation and export blocks can write results. Use a separate working
-copy for computational reproduction and preserve the published results.
+```r
+torch::install_torch()
+```
+
+Check the rendering and ANN environments:
+
+```r
+rmarkdown::pandoc_available()
+torch::torch_is_installed()
+```
 
 #### Reconstruct the analytical workflow
 
-Full reconstruction requires the canonical inputs described in
-[data/README.md](data/README.md), including the SHA-256 identities of
-the seven versioned source files. The raw real genotype file
-`data/dados_reais/geno_real.rds` is deliberately excluded from Git and
-must be obtained separately under applicable access conditions. A fresh
-clone alone cannot reconstruct R02 from raw genotypes. The versioned
-`output/real/audit/preprocessed_real_common.rds` permits downstream
-genomic analyses without that raw file.
+Use the canonical inputs described in [data/README.md](data/README.md).
+For R02, consult the scientific references and data-access instructions
+provided there to obtain the original real genotype data and prepare
+`data/dados_reais/geno_real.rds`. To start the downstream genomic
+analyses directly, use the versioned
+`output/real/audit/preprocessed_real_common.rds`.
 
 After verifying the inputs and restoring the environment, follow the
 analytical sequence above. The two workflows are independent.
@@ -199,15 +202,11 @@ M03 provides `GBLUP_WORKERS` for worker selection. M04 and R04B provide
 but R04B uses explicit `eval=FALSE` training and export blocks rather
 than the M04 execution switches. Follow each module's documented
 execution mechanism and choose resources appropriate to the machine.
-Do not indiscriminately enable every chunk or apply the M04 switches
-to R04B.
 
-For reconstruction, execute the required disabled computational and
-persistence blocks in dependency order in the separate working copy.
-The source pages contain the complete scientific procedures; ordinary
-website rendering is not a one-command reconstruction of the project.
+Execute the computational and persistence blocks for each stage in
+dependency order, using the execution settings described in its tutorial.
 The [output documentation](output/README.md) identifies the saved
-objects needed by subsequent stages.
+objects used in subsequent stages.
 
 ### Citation and license
 
@@ -336,9 +335,7 @@ configurações numéricas.
 O website renderizado e versionado em `docs/` permite consultar o
 tutorial, o código metodológico, as tabelas e as figuras renderizadas
 sem exigir R ou novo ajuste de modelos. Os resumos legíveis por máquina
-estão documentados em [output/README.md](output/README.md). As
-exportações TIFF de alta resolução são mantidas localmente, sem
-versionamento.
+estão documentados em [output/README.md](output/README.md).
 
 #### Reproduzir análises posteriores a partir dos objetos persistidos
 
@@ -351,40 +348,41 @@ Os módulos comparativos M05 e R05 leem resultados e predições salvos;
 R05 também lê as classificações e o desenho de validação persistidos.
 Não realizam novos ajustes dos modelos.
 
-Para preparar o ambiente computacional, clone o repositório, abra o
-projeto a partir de sua raiz utilizando R 4.5.1 e execute:
+#### Preparar o ambiente computacional
+
+Instale o [R 4.5.1](https://cran.r-project.org/) e o
+[Pandoc](https://pandoc.org/installing.html) (também incluído no RStudio).
+Clone o repositório, abra o projeto a partir de sua raiz no R e restaure
+as versões registradas dos pacotes:
 
 ```r
 renv::restore()
 renv::status()
 ```
 
-Restaurar o lockfile não instala o próprio R nem garante a
-disponibilidade de todas as dependências do sistema. A renderização
-R Markdown requer uma instalação compatível do Pandoc; o treinamento
-das ANN também requer as bibliotecas nativas utilizadas pelo torch e
-um ambiente de execução CPU ou GPU compatível. Verifique esses
-requisitos antes de executar o treinamento. As versões e sementes
-registradas favorecem a reprodutibilidade, mas não garantem identidade
-numérica bit a bit entre sistemas operacionais, dispositivos,
-bibliotecas nativas ou ambientes de processamento paralelo.
+Para o treinamento das ANN, instale LibTorch e LibLantern, caso necessário,
+seguindo o [guia de instalação do torch](https://torch.mlverse.org/docs/articles/installation.html)
+para o ambiente CPU ou GPU escolhido:
 
-A renderização rotineira não equivale à consulta somente de leitura:
-alguns blocos de preparação e exportação podem gravar resultados.
-Utilize uma cópia de trabalho separada para a reprodução computacional
-e preserve os resultados publicados.
+```r
+torch::install_torch()
+```
+
+Verifique os ambientes de renderização e treinamento das ANN:
+
+```r
+rmarkdown::pandoc_available()
+torch::torch_is_installed()
+```
 
 #### Reconstruir o fluxo analítico
 
-A reconstrução completa exige os dados canônicos documentados em
-[data/README.md](data/README.md), incluindo as identidades SHA-256 dos
-sete arquivos-fonte versionados. O arquivo genotípico bruto
-`data/dados_reais/geno_real.rds` é deliberadamente excluído do Git e
-deve ser obtido separadamente, respeitando as condições de acesso
-aplicáveis. Apenas clonar o repositório não permite reconstruir o R02
-a partir dos genótipos brutos. O objeto versionado
-`output/real/audit/preprocessed_real_common.rds` permite executar
-as análises genômicas posteriores sem esse arquivo bruto.
+Utilize os dados canônicos descritos em [data/README.md](data/README.md).
+Para o R02, consulte as referências científicas e as orientações de
+acesso apresentadas nessa documentação para obter os dados genotípicos
+reais originais e preparar `data/dados_reais/geno_real.rds`.
+Para iniciar diretamente as análises genômicas posteriores, utilize o
+objeto versionado `output/real/audit/preprocessed_real_common.rds`.
 
 Após verificar as entradas e restaurar o ambiente, siga a sequência
 analítica apresentada acima. Os dois fluxos são independentes.
@@ -412,17 +410,12 @@ processos. M04 e R04B disponibilizam `ANN_WORKERS`, `ANN_DEVICE` e
 `ANN_FORCE` para configurações de execução, mas R04B utiliza blocos
 explícitos com `eval=FALSE` para treinamento e exportação, em vez dos
 controles de execução de M04. Siga o mecanismo documentado em cada
-módulo e escolha recursos apropriados à máquina. Não habilite
-indiscriminadamente todos os chunks nem aplique os controles de M04
-ao R04B.
+módulo e escolha recursos apropriados à máquina.
 
-Para reconstruir o fluxo, execute os blocos computacionais e de
-persistência desativados que forem necessários, respeitando a ordem
-das dependências na cópia de trabalho separada. As páginas-fonte
-contêm os procedimentos científicos completos; a renderização
-rotineira do website não constitui uma reconstrução do projeto por
-um único comando. A [documentação dos resultados](output/README.md)
-identifica os objetos salvos exigidos pelas etapas posteriores.
+Execute os blocos computacionais e de persistência de cada etapa na
+ordem das dependências, utilizando as configurações de execução
+descritas em seu tutorial. A [documentação dos resultados](output/README.md)
+identifica os objetos salvos utilizados nas etapas posteriores.
 
 ### Citação e licença
 
