@@ -147,6 +147,143 @@ For each real-data trait and model, the five out-of-fold (OOF) predictions per i
 
 Model agreement is a separate question: predicted ranks are grouped into five quintiles of 39 individuals. Exact quintile agreement, mean absolute quintile difference and linearly weighted Cohen's kappa compare the 21 unordered model pairs within each trait, independently of the observed BLUP ranking. See [R05](real_data_comparison.html) for definitions, summaries and figures.
 
+### Main scientific findings
+
+#### Simulated genomic data
+
+In [M05 — Model comparison](simulated_data_comparison.html), GBLUP models
+achieved the most favorable means for all four primary metrics against
+known true genetic values in each of the six genetic scenarios. The table
+reports the descriptive leaders and their means across the 25 outer tasks
+within each scenario.
+
+| Scenario | Leading model | Pearson | Spearman | RMSE | MAE |
+|:--|:--|--:|--:|--:|--:|
+| C1 | GBLUP-ADE | 0.732 | 0.737 | 1.326 | 1.078 |
+| C2 | GBLUP-ADE | 0.770 | 0.771 | 0.610 | 0.489 |
+| C3 | GBLUP-AD / ADE* | 0.813 | 0.806 | 0.407 | 0.323 |
+| C4 | GBLUP-AD | 0.859 | 0.850 | 0.302 | 0.240 |
+| C5 | GBLUP-AD | 0.869 | 0.857 | 0.233 | 0.189 |
+| C6 | GBLUP-AD | 0.914 | 0.907 | 0.168 | 0.136 |
+
+*In C3, GBLUP-AD leads Pearson, Spearman and RMSE, whereas GBLUP-ADE
+has the smallest MAE. The two MAE values round to the same value at
+three decimal places; the leader is identified using the stored precision.*
+
+GBLUP-ADE leads in C1 and C2, whereas GBLUP-AD leads most criteria
+from C3 to C6. Adding the additive-by-additive epistatic component
+does not consistently improve the descriptive predictive means relative
+to GBLUP-AD.
+
+For observed simulated phenotypes, the highest mean Pearson and lowest
+mean RMSE are obtained by GBLUP-ADE in C1 and C2, GBLUP-AD in C3,
+C4 and C6, and GBLUP-A in C5. Recovery of the true genetic signal and
+prediction of the observed phenotype are distinct objectives: the latter
+also reflects residual variation. These scenario-specific comparisons
+do not isolate the effects of QTL number, nominal heritability or genetic
+architecture, and no performance average across C1–C6 is used.
+
+#### Real Coffea arabica data
+
+In [R05 — Model comparison](real_data_comparison.html), GBLUP-A achieves
+the highest mean Pearson and Spearman correlations on common finite
+outer splits and the smallest mean RMSE for all three traits. It also
+has the smallest mean MAE for Cer and LP; GBLUP-AD leads MAE for BM.
+
+| Trait | Common correlation splits | Pearson | Spearman | RMSE | MAE |
+|:--|--:|--:|--:|--:|--:|
+| Cer | 25 | 0.6303 | 0.6297 | 0.1615 | 0.1306 |
+| BM | 25 | 0.3062 | 0.2607 | 0.1445 | 0.1190 |
+| LP | 23 | 0.2073 | 0.2137 | 1.2385 | 0.9756 |
+
+The table reports the descriptive leaders just identified. Error metrics
+use all 25 splits for each trait; for LP, the common finite correlation
+subset contains 23 splits. Constant predictions remain in the error
+evaluation. RMSE and MAE are expressed on the original trait scales and
+should not be compared directly across traits.
+
+The matched ANN–GBLUP mean contrasts favor GBLUP for every pair and
+primary metric in Cer and BM. For LP, six correlation contrasts favor
+ANN relative to GBLUP-AD or GBLUP-ADE on 24 finite splits, while all
+matched error contrasts favor GBLUP. These pair-specific results use
+different eligible subsets from the seven-model common-split comparison.
+
+Individual rankings after averaging the five OOF predictions per plant
+give a complementary result:
+
+| Trait | Highest global Spearman (model; value) | Smallest mean absolute rank error (model; positions) | Largest upper-group recovery (model; individuals) |
+|:--|:--|:--|:--|
+| Cer | GBLUP-A; 0.6425 | GBLUP-A; 36.40 | GBLUP-A, AD and ADE (tie); 22/39 |
+| BM | ANN-0; 0.2686 | ANN-0; 54.24 | ANN-0; 12/39 |
+| LP | ANN-L2; 0.2308 | ANN-L2; 54.27 | ANN-L1+L2; 13/39 |
+
+The ordering and upper-group recovery criteria favor ANN configurations
+for BM and LP, despite the higher common-split correlations and lower
+mean RMSE of GBLUP-A. The two evaluations use different units: outer
+splits and individuals after OOF aggregation, respectively.
+
+Linearly weighted kappa ranges from 0.7821 to 1.0000 for Cer,
+0.6603 to 0.9615 for BM, and 0.4359 to 0.9872 for LP. GBLUP-AD and
+GBLUP-ADE have the highest pairwise agreement in each trait, including
+identical quintile assignments in Cer. Agreement concerns predicted
+strata, not predictive accuracy against BLUPs.
+
+#### Explicit weight regularization
+
+In the simulations, L1 and L1+L2 improve the four primary genetic
+metrics relative to ANN-0 in C1. Differences between ANN variants are
+small in C2. In C3, L2 gives the highest ANN genetic correlations,
+whereas L1+L2 gives the lowest ANN genetic errors. L1 leads genetic
+error metrics in C4, L2 leads all four primary genetic metrics among
+ANNs in C5, and L1+L2 leads them in C6.
+
+For the real traits, the descriptive leaders among ANN variants are:
+
+| Criterion | Cer | BM | LP |
+|:--|:--|:--|:--|
+| Mean Pearson (common splits) | ANN-L1+L2 | ANN-L1+L2 | ANN-L2 |
+| Mean Spearman (common splits) | ANN-L1+L2 | ANN-0 | ANN-L2 |
+| Mean RMSE | ANN-L1+L2 | ANN-L1+L2 | ANN-L1 |
+| Mean MAE | ANN-L1+L2 | ANN-L2 | ANN-L1 |
+| Global Spearman | ANN-L1+L2 | ANN-0 | ANN-L2 |
+| Upper-group recovery | ANN-L1 | ANN-0 | ANN-L1+L2 |
+
+The calibration results add another perspective. In the real data,
+GBLUP has the smallest absolute mean bias for each trait, whereas
+ANN-L1 for Cer and LP and ANN-L1+L2 for BM have mean slopes closest
+to one. A mean slope close to one does not imply good calibration
+on every split.
+
+The benefits of explicit penalties depend on scenario, trait and
+evaluation metric. These comparisons are conditional on selecting
+architecture and learning rate with ANN-0 and sharing them among the
+variants within each outer task. The applicable penalty coefficients
+are selected for each penalized variant. All four variants use early
+stopping; ANN-0 is the reference without explicit L1/L2 penalties.
+
+#### Integrated scientific conclusions
+
+Under the evaluated cross-validation designs, GBLUP models provide the
+most favorable descriptive means for the four primary genetic metrics
+in each simulated scenario. GBLUP-A leads the common-split association
+metrics and mean RMSE for all three real traits, whereas individual
+ranking and upper-group recovery reveal complementary advantages of
+ANN configurations for BM and LP.
+
+No single explicit penalty configuration consistently leads all
+scenarios, traits and criteria. The results emphasize the distinction
+between predictive association, prediction error, calibration,
+individual ranking and agreement between models. The appropriate
+procedure depends on the evaluation objective and the population
+represented by the data.
+
+These findings are descriptive and conditional on the evaluated datasets,
+scenarios, validation designs and fitted procedures. They do not
+establish universal model superiority, isolated causal effects of
+regularization or realized genetic gain. The full results and figures
+are presented in [M05](simulated_data_comparison.html) and
+[R05](real_data_comparison.html).
+
 ### Interpretation boundaries and limitations
 
 In the simulations, association with true genetic values describes recovery of the known genetic signal under the specified scenarios. Because QTL number and nominal heritability vary across scenarios, differences should not be attributed to either factor in isolation.
@@ -288,6 +425,154 @@ A comparação simulada é descritiva e específica por cenário. O desempenho n
 Para cada característica e modelo dos dados reais, as cinco predições fora do fold (out-of-fold, OOF) por indivíduo são promediadas antes do cálculo dos postos. A correlação global de Spearman, o erro absoluto de classificação e a recuperação dos 39 maiores BLUPs descrevem diferentes aspectos da ordenação individual. A correlação média por partição não é a correlação global das predições agregadas.
 
 A concordância entre modelos é uma questão distinta: os postos preditos são agrupados em cinco quintis de 39 indivíduos. A concordância exata entre quintis, a diferença absoluta média entre quintis e o kappa de Cohen com ponderação linear comparam os 21 pares não ordenados de modelos em cada característica, independentemente da classificação dos BLUPs observados. Consulte [R05](real_data_comparison.html) para as definições, resumos e figuras.
+
+### Principais resultados científicos
+
+#### Dados genômicos simulados
+
+No [M05 — Comparação dos modelos](simulated_data_comparison.html), os
+modelos GBLUP apresentaram as médias mais favoráveis nas quatro métricas
+principais em relação aos valores genéticos verdadeiros em cada um dos
+seis cenários genéticos. A tabela apresenta os líderes descritivos e
+suas médias nas 25 tarefas externas de cada cenário.
+
+| Cenário | Modelo líder | Pearson | Spearman | RMSE | MAE |
+|:--|:--|--:|--:|--:|--:|
+| C1 | GBLUP-ADE | 0,732 | 0,737 | 1,326 | 1,078 |
+| C2 | GBLUP-ADE | 0,770 | 0,771 | 0,610 | 0,489 |
+| C3 | GBLUP-AD / ADE* | 0,813 | 0,806 | 0,407 | 0,323 |
+| C4 | GBLUP-AD | 0,859 | 0,850 | 0,302 | 0,240 |
+| C5 | GBLUP-AD | 0,869 | 0,857 | 0,233 | 0,189 |
+| C6 | GBLUP-AD | 0,914 | 0,907 | 0,168 | 0,136 |
+
+*Em C3, o GBLUP-AD lidera Pearson, Spearman e RMSE, enquanto o
+GBLUP-ADE apresenta o menor MAE. Os dois valores de MAE coincidem
+quando arredondados a três casas decimais; o líder é identificado
+com a precisão armazenada.*
+
+O GBLUP-ADE lidera em C1 e C2, enquanto o GBLUP-AD lidera a maioria
+dos critérios de C3 a C6. A inclusão do componente epistático aditivo
+por aditivo não melhora consistentemente as médias preditivas descritivas
+em relação ao GBLUP-AD.
+
+Para os fenótipos simulados observados, a maior média de Pearson e o
+menor RMSE médio são obtidos pelo GBLUP-ADE em C1 e C2, pelo GBLUP-AD
+em C3, C4 e C6 e pelo GBLUP-A em C5. A recuperação do sinal genético
+verdadeiro e a predição do fenótipo observado são objetivos distintos:
+o segundo também reflete a variação residual. Essas comparações
+específicas por cenário não isolam os efeitos do número de QTL, da
+herdabilidade nominal ou da arquitetura genética, e não se utiliza
+uma média de desempenho entre C1–C6.
+
+#### Dados reais de Coffea arabica
+
+No [R05 — Comparação dos modelos](real_data_comparison.html), o GBLUP-A
+apresenta as maiores correlações médias de Pearson e Spearman nas
+partições externas finitas comuns e o menor RMSE médio para as três
+características. Também apresenta o menor MAE médio para Cer e LP;
+o GBLUP-AD lidera o MAE para BM.
+
+| Característica | Partições comuns para correlações | Pearson | Spearman | RMSE | MAE |
+|:--|--:|--:|--:|--:|--:|
+| Cer | 25 | 0,6303 | 0,6297 | 0,1615 | 0,1306 |
+| BM | 25 | 0,3062 | 0,2607 | 0,1445 | 0,1190 |
+| LP | 23 | 0,2073 | 0,2137 | 1,2385 | 0,9756 |
+
+A tabela apresenta os líderes descritivos identificados acima. As métricas
+de erro utilizam as 25 partições de cada característica; em LP, o
+subconjunto finito comum para correlações contém 23 partições. Predições
+constantes permanecem na avaliação dos erros. RMSE e MAE são expressos
+nas escalas originais das características e não devem ser comparados
+diretamente entre elas.
+
+Os contrastes médios pareados ANN–GBLUP favorecem os GBLUP para todos
+os pares e métricas principais em Cer e BM. Para LP, seis contrastes de
+correlação favorecem as ANN em relação ao GBLUP-AD ou GBLUP-ADE em
+24 partições finitas, enquanto todos os contrastes de erro favorecem os
+GBLUP. Esses resultados específicos por par utilizam subconjuntos
+elegíveis distintos da comparação nas partições comuns aos sete modelos.
+
+As classificações individuais após a média das cinco predições OOF
+por planta apresentam um resultado complementar:
+
+| Característica | Maior Spearman global (modelo; valor) | Menor erro absoluto médio de postos (modelo; posições) | Maior recuperação do grupo superior (modelo; indivíduos) |
+|:--|:--|:--|:--|
+| Cer | GBLUP-A; 0,6425 | GBLUP-A; 36,40 | GBLUP-A, AD e ADE (empate); 22/39 |
+| BM | ANN-0; 0,2686 | ANN-0; 54,24 | ANN-0; 12/39 |
+| LP | ANN-L2; 0,2308 | ANN-L2; 54,27 | ANN-L1+L2; 13/39 |
+
+Os critérios de ordenação e recuperação do grupo superior favorecem
+configurações ANN para BM e LP, apesar das maiores correlações nas
+partições comuns e do menor RMSE médio do GBLUP-A. As duas avaliações
+utilizam unidades distintas: partições externas e indivíduos após
+a agregação OOF, respectivamente.
+
+O kappa com ponderação linear varia de 0,7821 a 1,0000 para Cer,
+de 0,6603 a 0,9615 para BM e de 0,4359 a 0,9872 para LP. O GBLUP-AD
+e o GBLUP-ADE apresentam a maior concordância pareada em cada
+característica, incluindo quintis idênticos em Cer. A concordância
+diz respeito aos estratos preditos, e não à qualidade preditiva em
+relação aos BLUPs.
+
+#### Regularização explícita dos pesos
+
+Nas simulações, L1 e L1+L2 melhoram as quatro métricas genéticas
+principais em relação à ANN-0 em C1. As diferenças entre variantes ANN
+são pequenas em C2. Em C3, L2 apresenta as maiores correlações genéticas
+entre as ANN, enquanto L1+L2 apresenta os menores erros genéticos.
+L1 lidera as métricas de erro genético em C4, L2 lidera as quatro
+métricas genéticas principais entre as ANN em C5 e L1+L2 as lidera em C6.
+
+Para as características reais, os líderes descritivos entre as
+variantes ANN são:
+
+| Critério | Cer | BM | LP |
+|:--|:--|:--|:--|
+| Pearson médio (partições comuns) | ANN-L1+L2 | ANN-L1+L2 | ANN-L2 |
+| Spearman médio (partições comuns) | ANN-L1+L2 | ANN-0 | ANN-L2 |
+| RMSE médio | ANN-L1+L2 | ANN-L1+L2 | ANN-L1 |
+| MAE médio | ANN-L1+L2 | ANN-L2 | ANN-L1 |
+| Spearman global | ANN-L1+L2 | ANN-0 | ANN-L2 |
+| Recuperação do grupo superior | ANN-L1 | ANN-0 | ANN-L1+L2 |
+
+Os resultados de calibração acrescentam outra perspectiva. Nos dados
+reais, os GBLUP apresentam o menor viés médio em valor absoluto para
+cada característica, enquanto ANN-L1 para Cer e LP e ANN-L1+L2 para
+BM apresentam inclinações médias mais próximas de um. Uma inclinação
+média próxima de um não implica boa calibração em todas as partições.
+
+Os benefícios das penalizações explícitas dependem do cenário, da
+característica e da métrica de avaliação. Essas comparações estão
+condicionadas à seleção da arquitetura e da taxa de aprendizado com a
+ANN-0 e ao seu compartilhamento entre as variantes dentro de cada
+tarefa externa. Os coeficientes de penalização aplicáveis são
+selecionados para cada variante penalizada. As quatro variantes
+utilizam early stopping; a ANN-0 é a referência sem penalizações
+explícitas L1/L2.
+
+#### Conclusões científicas integradas
+
+Sob os desenhos de validação cruzada avaliados, os modelos GBLUP
+apresentam as médias descritivas mais favoráveis nas quatro métricas
+genéticas principais em cada cenário simulado. O GBLUP-A lidera
+as métricas de associação nas partições comuns e o RMSE médio
+para as três características reais, enquanto a classificação
+individual e a recuperação do grupo superior revelam vantagens
+complementares de configurações ANN para BM e LP.
+
+Nenhuma configuração de penalização explícita lidera consistentemente
+todos os cenários, características e critérios. Os resultados enfatizam
+a distinção entre associação preditiva, erro de predição, calibração,
+classificação individual e concordância entre modelos. O procedimento
+apropriado depende do objetivo da avaliação e da população representada
+pelos dados.
+
+Esses resultados são descritivos e condicionados aos conjuntos de dados,
+cenários, desenhos de validação e procedimentos ajustados. Não
+estabelecem superioridade universal de modelos, efeitos causais isolados
+da regularização ou ganho genético realizado. Os resultados completos
+e as figuras são apresentados no [M05](simulated_data_comparison.html)
+e no [R05](real_data_comparison.html).
 
 ### Limites de interpretação
 
